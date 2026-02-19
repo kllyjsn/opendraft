@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { CompletenessBadge } from "@/components/CompletenessBadge";
+import { StripeConnectPanel } from "@/components/StripeConnectPanel";
 import { TrendingUp, Package, Eye, Trash2, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -84,7 +85,7 @@ export default function Dashboard() {
     <div className="min-h-screen flex flex-col">
       <Navbar />
       <main className="flex-1 container mx-auto px-4 py-10">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-3xl font-black">Seller Dashboard</h1>
             <p className="text-muted-foreground mt-1">Manage your listings and track earnings</p>
@@ -94,6 +95,11 @@ export default function Dashboard() {
               <Plus className="h-4 w-4 mr-2" /> New listing
             </Button>
           </Link>
+        </div>
+
+        {/* Stripe Connect */}
+        <div className="mb-8">
+          <StripeConnectPanel />
         </div>
 
         {/* Stats */}

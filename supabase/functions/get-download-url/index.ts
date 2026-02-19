@@ -51,8 +51,11 @@ Deno.serve(async (req) => {
     // ------------------------------------------------------------------
     // Step 2: Parse request
     // ------------------------------------------------------------------
-    const { listingId } = await req.json();
-    if (!listingId) throw new Error("listingId is required");
+    const body = await req.json();
+    const listingId = body?.listingId;
+    if (!listingId || typeof listingId !== "string") throw new Error("listingId is required");
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(listingId)) throw new Error("Invalid listingId format");
 
     // ------------------------------------------------------------------
     // Step 3: Verify purchase — buyer must own this listing

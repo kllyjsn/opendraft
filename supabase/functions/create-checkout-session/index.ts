@@ -71,10 +71,19 @@ Deno.serve(async (req) => {
     // Supports two modes: listingId (legacy) or productId (Stripe product)
     // ------------------------------------------------------------------
     const body = await req.json();
-    const { listingId, productId } = body;
+    const listingId = body?.listingId;
+    const productId = body?.productId;
 
     if (!listingId && !productId) {
       throw new Error("Either listingId or productId is required");
+    }
+
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (listingId && (typeof listingId !== "string" || !uuidRegex.test(listingId))) {
+      throw new Error("Invalid listingId format");
+    }
+    if (productId && (typeof productId !== "string" || productId.length > 255)) {
+      throw new Error("Invalid productId format");
     }
 
     // ------------------------------------------------------------------

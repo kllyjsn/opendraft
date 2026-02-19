@@ -10,8 +10,10 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { prompt } = await req.json();
-    if (!prompt?.trim()) throw new Error("Prompt is required");
+    const body = await req.json();
+    const prompt = body?.prompt;
+    if (!prompt || typeof prompt !== "string" || !prompt.trim()) throw new Error("Prompt is required");
+    if (prompt.length > 500) throw new Error("Prompt must be 500 characters or less");
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");

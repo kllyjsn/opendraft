@@ -5,9 +5,10 @@ import { ListingCard } from "@/components/ListingCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, Zap, TrendingUp, ArrowRight, SlidersHorizontal, X } from "lucide-react";
+import { Search, TrendingUp, SlidersHorizontal, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { BuildSearch } from "@/components/BuildSearch";
 
 const CATEGORIES = ["All", "SaaS Tool", "AI App", "Landing Page", "Utility", "Game", "Other"];
 const COMPLETENESS = ["All", "Prototype", "MVP", "Production Ready"];
@@ -89,41 +90,38 @@ export default function Index() {
       <Navbar />
 
       {/* Hero */}
-      <section className="relative overflow-hidden py-20 md:py-28">
+      <section className="relative overflow-hidden py-16 md:py-24">
         <div className="absolute inset-0 gradient-hero opacity-10 pointer-events-none" />
         <div className="absolute -top-32 -right-32 h-96 w-96 rounded-full bg-primary/20 blur-3xl pointer-events-none" />
         <div className="absolute -bottom-32 -left-32 h-96 w-96 rounded-full bg-accent/20 blur-3xl pointer-events-none" />
 
         <div className="container mx-auto px-4 text-center relative z-10">
-        <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary mb-6">
-            <Zap className="h-3.5 w-3.5" />
-            {totalCount > 0 ? `${totalCount} projects ready to buy` : "Instant access. Instant payouts."}
+          <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary mb-6">
+            ⚡ {totalCount > 0 ? `${totalCount} projects ready to ship` : "Instant access. Instant payouts."}
           </div>
 
-          <h1 className="text-5xl md:text-7xl font-black tracking-tight mb-6 leading-tight">
-            Ship faster.<br />
-            <span className="text-gradient">Get paid instantly.</span>
+          <h1 className="text-5xl md:text-6xl font-black tracking-tight mb-4 leading-tight">
+            What do you want<br />
+            <span className="text-gradient">to build?</span>
           </h1>
 
-          <p className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto mb-8 leading-relaxed">
-            Buy ready-to-ship projects and launch in hours — not months. Sell your builds and get paid the moment someone checks out.
+          <p className="text-base md:text-lg text-muted-foreground max-w-lg mx-auto mb-8 leading-relaxed">
+            Describe your idea — we'll find a ready-made project to buy and ship today.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <a href="#browse">
-              <Button size="lg" className="gradient-hero text-white border-0 shadow-glow hover:opacity-90 text-base px-8">
-                Browse projects <ArrowRight className="h-4 w-4 ml-1" />
-              </Button>
-            </a>
-            <Link to={user ? "/sell" : "/login"}>
-              <Button size="lg" variant="outline" className="text-base px-8">
-                {user ? "List your project" : "Start selling"}
-              </Button>
+          <BuildSearch />
+
+          <div className="mt-8 flex items-center justify-center gap-4 text-xs text-muted-foreground">
+            <span>or</span>
+            <a href="#browse" className="underline hover:text-foreground transition-colors">browse all projects</a>
+            <span>·</span>
+            <Link to={user ? "/sell" : "/login"} className="underline hover:text-foreground transition-colors">
+              {user ? "list your project" : "start selling"}
             </Link>
           </div>
 
           {/* Stats */}
-          <div className="mt-12 flex flex-wrap justify-center gap-8 text-sm text-muted-foreground">
+          <div className="mt-10 flex flex-wrap justify-center gap-8 text-sm text-muted-foreground">
             {[
               { label: "Download on purchase", value: "Instant" },
               { label: "Seller payout", value: "Instant" },

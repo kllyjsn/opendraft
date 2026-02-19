@@ -21,6 +21,7 @@ export type Database = {
           created_at: string
           demo_url: string | null
           description: string
+          file_path: string | null
           github_url: string | null
           id: string
           price: number
@@ -39,6 +40,7 @@ export type Database = {
           created_at?: string
           demo_url?: string | null
           description: string
+          file_path?: string | null
           github_url?: string | null
           id?: string
           price: number
@@ -57,6 +59,7 @@ export type Database = {
           created_at?: string
           demo_url?: string | null
           description?: string
+          file_path?: string | null
           github_url?: string | null
           id?: string
           price?: number

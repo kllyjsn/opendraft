@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { CompletenessBadge } from "@/components/CompletenessBadge";
-import { Upload, Plus, X, Link as LinkIcon, Github } from "lucide-react";
+import { Upload, Plus, X, Link as LinkIcon, Github, FileArchive, CheckCircle2 } from "lucide-react";
 import { Navigate } from "react-router-dom";
 
 const TECH_SUGGESTIONS = ["React", "Next.js", "Tailwind", "TypeScript", "Python", "Supabase", "OpenAI", "Stripe", "Node.js", "PostgreSQL", "Vue", "Svelte", "FastAPI", "Django"];
@@ -40,9 +40,11 @@ export default function Sell() {
     github_url: "",
     demo_url: "",
     screenshots: [] as string[],
+    file_path: null as string | null,
   });
   const [techInput, setTechInput] = useState("");
   const [uploadingScreenshot, setUploadingScreenshot] = useState(false);
+  const [uploadingFile, setUploadingFile] = useState(false);
 
   if (!loading && !user) return <Navigate to="/login" replace />;
 
@@ -76,6 +78,20 @@ export default function Sell() {
     setUploadingScreenshot(false);
   }
 
+  async function uploadProjectFile(file: File) {
+    if (!user) return;
+    setUploadingFile(true);
+    const path = `${user.id}/${Date.now()}-${file.name}`;
+    const { data, error } = await supabase.storage.from("listing-files").upload(path, file, { upsert: true });
+    if (error) {
+      toast({ title: "Upload failed", description: error.message, variant: "destructive" });
+    } else {
+      update("file_path", data.path);
+      toast({ title: "ZIP uploaded ✓", description: "Buyers will receive this after purchase." });
+    }
+    setUploadingFile(false);
+  }
+
   async function handleSubmit() {
     if (!user) return;
     setSubmitting(true);
@@ -97,6 +113,7 @@ export default function Sell() {
       github_url: form.github_url || null,
       demo_url: form.demo_url || null,
       screenshots: form.screenshots,
+      file_path: form.file_path,
       status: "pending" as const,
     }]);
 
@@ -258,6 +275,48 @@ export default function Sell() {
           {/* Step 3 */}
           {step === 3 && (
             <>
+              {/* ZIP File Upload */}
+              <div>
+                <label className="block text-sm font-semibold mb-1.5 flex items-center gap-2">
+                  <FileArchive className="h-4 w-4" /> Project ZIP file
+                </label>
+                {form.file_path ? (
+                  <div className="flex items-center gap-3 rounded-xl border border-primary/40 bg-primary/5 p-3">
+                    <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-primary">ZIP uploaded</p>
+                      <p className="text-xs text-muted-foreground truncate">{form.file_path.split("/").pop()}</p>
+                    </div>
+                    <button
+                      onClick={() => update("file_path", null)}
+                      className="text-muted-foreground hover:text-foreground"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <label className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-border hover:border-primary cursor-pointer transition-colors p-8 text-muted-foreground hover:text-primary">
+                    {uploadingFile ? (
+                      <div className="h-6 w-6 rounded-full border-2 border-primary border-t-transparent animate-spin mb-2" />
+                    ) : (
+                      <FileArchive className="h-8 w-8 mb-2" />
+                    )}
+                    <span className="text-sm font-medium">{uploadingFile ? "Uploading…" : "Upload project ZIP"}</span>
+                    <span className="text-xs mt-1">Max 50MB · .zip files only</span>
+                    <input
+                      type="file"
+                      accept=".zip,application/zip"
+                      className="hidden"
+                      disabled={uploadingFile}
+                      onChange={(e) => e.target.files?.[0] && uploadProjectFile(e.target.files[0])}
+                    />
+                  </label>
+                )}
+                <p className="text-xs text-muted-foreground mt-1.5">
+                  Buyers receive a secure download link immediately after purchase. You can also use GitHub below.
+                </p>
+              </div>
+
               <div>
                 <label className="block text-sm font-semibold mb-1.5 flex items-center gap-2">
                   <Github className="h-4 w-4" /> GitHub repo URL

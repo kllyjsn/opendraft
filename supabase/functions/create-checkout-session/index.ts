@@ -187,6 +187,9 @@ Deno.serve(async (req) => {
         buyer_id: buyerId,
         seller_id: listing.seller_id,
         price: String(unitAmount),
+        // Track whether the seller gets an immediate payout (destination charge).
+        // If seller is not onboarded, this is empty and platform holds their share.
+        seller_stripe_account_id: sellerStripeAccountId ?? "",
       };
     }
 

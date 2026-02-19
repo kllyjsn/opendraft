@@ -321,7 +321,7 @@ async function handleCheckoutSessionCompleted(
   resendApiKey: string | null
 ) {
   const session = event.data.object as Stripe.Checkout.Session;
-  const { listing_id, buyer_id, seller_id, price } = session.metadata ?? {};
+  const { listing_id, buyer_id, seller_id, price, seller_stripe_account_id } = session.metadata ?? {};
 
   // Only process listing-based purchases (productId purchases don't need DB records here)
   if (!listing_id || !buyer_id || !seller_id || !price) {
@@ -341,6 +341,13 @@ async function handleCheckoutSessionCompleted(
   const platformFee = Math.round(amount * 0.2);
   const sellerAmount = amount - platformFee;
 
+  // payout_transferred = true means the seller received their share immediately via
+  // a Stripe Destination Charge. If the seller wasn't connected, this is false and
+  // the platform holds their earnings until they connect Stripe and trigger a transfer.
+  const payoutTransferred = !!seller_stripe_account_id;
+
+  console.log(`Purchase: listing=${listing_id}, amount=${amount}, seller_connected=${payoutTransferred}`);
+
   // Insert the purchase record into our DB
   const insertRes = await fetch(`${supabaseUrl}/rest/v1/purchases`, {
     method: "POST",
@@ -359,6 +366,7 @@ async function handleCheckoutSessionCompleted(
       seller_amount: sellerAmount,
       stripe_session_id: session.id,
       stripe_payment_intent_id: session.payment_intent as string | null,
+      payout_transferred: payoutTransferred,
     }),
   });
 

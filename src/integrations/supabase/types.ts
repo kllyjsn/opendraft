@@ -120,6 +120,7 @@ export type Database = {
           created_at: string
           id: string
           listing_id: string
+          payout_transferred: boolean
           platform_fee: number
           seller_amount: number
           seller_id: string
@@ -132,6 +133,7 @@ export type Database = {
           created_at?: string
           id?: string
           listing_id: string
+          payout_transferred?: boolean
           platform_fee: number
           seller_amount: number
           seller_id: string
@@ -144,6 +146,7 @@ export type Database = {
           created_at?: string
           id?: string
           listing_id?: string
+          payout_transferred?: boolean
           platform_fee?: number
           seller_amount?: number
           seller_id?: string

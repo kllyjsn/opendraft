@@ -1,22 +1,204 @@
+/**
+ * Success Page
+ * ------------------------------------
+ * Shown after a buyer completes Stripe Checkout.
+ *
+ * Stripe redirects to: /success?session_id={CHECKOUT_SESSION_ID}
+ *
+ * We use the session_id to:
+ *  1. Call get-checkout-session to verify the payment actually succeeded
+ *  2. Display confirmed purchase details (product name, amount paid)
+ *  3. Guide the buyer to their purchases in Profile
+ *
+ * This pattern prevents users from bookmarking /success and claiming
+ * a purchase without having paid — we verify with Stripe every time.
+ */
+
+import { useEffect, useState } from "react";
+import { useSearchParams, Link } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
-import { CheckCircle, ShoppingBag, ArrowRight } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { CheckCircle, ShoppingBag, ArrowRight, Loader2, AlertCircle, Package } from "lucide-react";
+
+interface SessionDetails {
+  status: string;
+  paymentStatus: string;
+  amountTotal: number | null;
+  currency: string;
+  productName: string | null;
+  productImage: string | null;
+  metadata: Record<string, string> | null;
+}
 
 export default function Success() {
+  const [searchParams] = useSearchParams();
+  const sessionId = searchParams.get("session_id");
+
+  const [session, setSession] = useState<SessionDetails | null>(null);
+  const [loading, setLoading] = useState(!!sessionId);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!sessionId) return;
+    verifySession(sessionId);
+  }, [sessionId]);
+
+  /**
+   * Verifies the Stripe session via our get-checkout-session edge function.
+   * This confirms the payment actually completed before showing the success UI.
+   */
+  async function verifySession(sid: string) {
+    setLoading(true);
+    try {
+      const { data, error: fnError } = await supabase.functions.invoke("get-checkout-session", {
+        body: { sessionId: sid },
+      });
+      if (fnError) throw new Error(fnError.message);
+      if (data?.error) throw new Error(data.error);
+      setSession(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not verify payment");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // Format currency from cents
+  function formatAmount(cents: number | null, currency: string) {
+    if (!cents) return null;
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: currency?.toUpperCase() || "USD",
+    }).format(cents / 100);
+  }
+
+  // Loading state while verifying with Stripe
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <main className="flex-1 flex items-center justify-center px-4 py-20">
+          <div className="text-center">
+            <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto mb-4" />
+            <p className="text-muted-foreground">Verifying your payment…</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Error state — payment could not be verified
+  if (error) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <main className="flex-1 flex items-center justify-center px-4 py-20">
+          <div className="text-center max-w-md">
+            <div className="inline-flex h-20 w-20 items-center justify-center rounded-full bg-muted mb-6">
+              <AlertCircle className="h-10 w-10 text-muted-foreground" />
+            </div>
+            <h1 className="text-2xl font-black mb-3">Payment verification failed</h1>
+            <p className="text-muted-foreground mb-6 text-sm">{error}</p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Link to="/profile">
+                <Button variant="outline">View my purchases</Button>
+              </Link>
+              <Link to="/">
+                <Button className="gradient-hero text-white border-0">Back to marketplace</Button>
+              </Link>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Payment was NOT completed (e.g. session open/expired, user navigated directly)
+  const paymentSucceeded = session?.paymentStatus === "paid" || session?.status === "complete";
+
+  if (session && !paymentSucceeded) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <main className="flex-1 flex items-center justify-center px-4 py-20">
+          <div className="text-center max-w-md">
+            <div className="text-5xl mb-4">⏳</div>
+            <h1 className="text-2xl font-black mb-3">Payment not completed</h1>
+            <p className="text-muted-foreground mb-6 text-sm">
+              Your payment hasn't been confirmed yet. If you were charged, please check your profile — it may take a moment to process.
+            </p>
+            <Link to="/profile">
+              <Button className="gradient-hero text-white border-0">View my purchases</Button>
+            </Link>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  // ✅ Payment confirmed
+  const amountFormatted = session ? formatAmount(session.amountTotal, session.currency) : null;
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
       <main className="flex-1 flex items-center justify-center px-4 py-20">
-        <div className="text-center max-w-md">
+        <div className="text-center max-w-md w-full">
+          {/* Success icon */}
           <div className="inline-flex h-20 w-20 items-center justify-center rounded-full gradient-hero shadow-glow mb-6">
             <CheckCircle className="h-10 w-10 text-white" />
           </div>
-          <h1 className="text-3xl font-black mb-3">Purchase successful! 🎉</h1>
-          <p className="text-muted-foreground mb-8">
-            Your project is ready. Head to your profile to access the download link or GitHub repo.
+
+          <h1 className="text-3xl font-black mb-2">Purchase successful! 🎉</h1>
+          <p className="text-muted-foreground mb-6">
+            Your payment was confirmed by Stripe. Head to your profile to access your purchase.
           </p>
+
+          {/* Purchase summary card */}
+          {session && (
+            <div className="rounded-2xl border border-border bg-card p-5 mb-8 text-left shadow-card">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Purchase Summary</p>
+              <div className="flex items-center gap-3">
+                {session.productImage ? (
+                  <img src={session.productImage} alt={session.productName ?? "Product"} className="h-12 w-12 rounded-lg object-cover flex-shrink-0" />
+                ) : (
+                  <div className="h-12 w-12 rounded-lg gradient-hero opacity-70 flex items-center justify-center flex-shrink-0">
+                    <Package className="h-6 w-6 text-white" />
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold truncate">{session.productName ?? "Project"}</p>
+                  {amountFormatted && (
+                    <p className="text-sm text-muted-foreground">Paid {amountFormatted}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Destination charge info — shows the platform handled the transfer */}
+              <div className="mt-4 pt-4 border-t border-border">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Payment status</span>
+                  <span className="font-semibold text-primary capitalize">{session.paymentStatus}</span>
+                </div>
+                {amountFormatted && (
+                  <div className="flex justify-between text-sm mt-1">
+                    <span className="text-muted-foreground">Amount paid</span>
+                    <span className="font-bold">{amountFormatted}</span>
+                  </div>
+                )}
+                <p className="text-xs text-muted-foreground mt-3">
+                  80% of this sale is automatically transferred to the seller's Stripe account via Connect Destination Charge.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Actions */}
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link to="/profile">
               <Button className="gradient-hero text-white border-0 shadow-glow hover:opacity-90">

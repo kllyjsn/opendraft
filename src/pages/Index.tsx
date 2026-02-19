@@ -123,8 +123,8 @@ export default function Index() {
           {/* Stats */}
           <div className="mt-10 flex flex-wrap justify-center gap-8 text-sm text-muted-foreground">
             {[
-              { label: "Download on purchase", value: "0 wait" },
-              { label: "Platform fee", value: "10%" },
+              { label: "Download on purchase", value: "Instant" },
+              { label: "Platform cut", value: "10%" },
               { label: "Projects available", value: totalCount > 0 ? `${totalCount}+` : "Growing" },
             ].map(({ label, value }) => (
               <div key={label} className="text-center">

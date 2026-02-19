@@ -110,7 +110,7 @@ export default function Index() {
 
         <div className="container mx-auto px-4 text-center relative z-10">
           <div className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/8 px-4 py-1.5 text-sm font-semibold text-primary mb-7 backdrop-blur-sm">
-            ⚡ Buy today. Ship tomorrow.
+            ⚡ Yours to create.
           </div>
 
           <h1 className="text-5xl md:text-7xl font-black tracking-tight mb-5 leading-[1.05]">

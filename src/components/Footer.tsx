@@ -43,7 +43,7 @@ export function Footer() {
         </div>
         <div className="mt-8 pt-6 border-t border-border flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-muted-foreground">
           <span>© 2026 OpenDraft. All rights reserved.</span>
-          <span>Platform fee: 20% per sale. Sellers keep 80%.</span>
+          <span>Instant delivery. Get paid the moment your project sells.</span>
         </div>
       </div>
     </footer>

@@ -287,6 +287,11 @@ Deno.serve(async (req) => {
 
       if (event.type === "checkout.session.completed") {
         await handleCheckoutSessionCompleted(event, supabaseUrl, supabaseServiceKey, resendApiKey ?? null);
+      } else if (event.type === "checkout.session.async_payment_succeeded") {
+        // Async payment methods (e.g. bank transfer) land here once funds clear
+        await handleCheckoutSessionCompleted(event, supabaseUrl, supabaseServiceKey, resendApiKey ?? null);
+      } else if (event.type === "checkout.session.async_payment_failed") {
+        console.log("Async payment failed — purchase NOT granted:", (event.data.object as Stripe.Checkout.Session).id);
       } else {
         console.log(`Unhandled V1 event type: ${event.type}`);
       }
@@ -321,6 +326,14 @@ async function handleCheckoutSessionCompleted(
   // Only process listing-based purchases (productId purchases don't need DB records here)
   if (!listing_id || !buyer_id || !seller_id || !price) {
     console.log("Non-listing checkout session completed (product-based purchase) — skipping DB insert");
+    return;
+  }
+
+  // Guard: only grant access when payment is fully confirmed.
+  // checkout.session.completed can fire with payment_status==='processing' for
+  // async payment methods (e.g. bank transfers). We must not unlock the file yet.
+  if (session.payment_status !== "paid") {
+    console.log(`Skipping purchase insert — payment_status is '${session.payment_status}', not 'paid'. Will handle on payment_intent.succeeded.`);
     return;
   }
 

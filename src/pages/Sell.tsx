@@ -95,12 +95,13 @@ export default function Sell() {
   async function handleSubmit() {
     if (!user) return;
     setSubmitting(true);
-    const priceInCents = Math.round(parseFloat(form.price) * 100);
-    if (priceInCents < 100) {
-      toast({ title: "Minimum price is $1.00", variant: "destructive" });
+    const priceFloat = parseFloat(form.price);
+    if (isNaN(priceFloat) || priceFloat < 0) {
+      toast({ title: "Price must be $0.00 or more", variant: "destructive" });
       setSubmitting(false);
       return;
     }
+    const priceInCents = Math.round(priceFloat * 100);
 
     const { error } = await supabase.from("listings").insert([{
       seller_id: user.id,
@@ -126,7 +127,7 @@ export default function Sell() {
     setSubmitting(false);
   }
 
-  const isStep1Valid = form.title && form.description && form.price && parseFloat(form.price) >= 1;
+  const isStep1Valid = form.title && form.description && form.price !== "" && parseFloat(form.price) >= 0;
   const isStep2Valid = form.completeness_badge && form.category;
 
   return (
@@ -183,7 +184,7 @@ export default function Sell() {
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
                   <Input
                     type="number"
-                    min="1"
+                    min="0"
                     step="0.01"
                     placeholder="29.00"
                     value={form.price}
@@ -191,7 +192,7 @@ export default function Sell() {
                     className="pl-7"
                   />
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">Minimum $1.00 · Paid out to you instantly on every sale</p>
+                <p className="text-xs text-muted-foreground mt-1">Set to $0.00 to offer it free · Paid out to you instantly on every sale</p>
               </div>
             </>
           )}

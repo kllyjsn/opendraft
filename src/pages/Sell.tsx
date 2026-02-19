@@ -1,0 +1,332 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Navbar } from "@/components/Navbar";
+import { Footer } from "@/components/Footer";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { CompletenessBadge } from "@/components/CompletenessBadge";
+import { Upload, Plus, X, Link as LinkIcon, Github } from "lucide-react";
+import { Navigate } from "react-router-dom";
+
+const TECH_SUGGESTIONS = ["React", "Next.js", "Tailwind", "TypeScript", "Python", "Supabase", "OpenAI", "Stripe", "Node.js", "PostgreSQL", "Vue", "Svelte", "FastAPI", "Django"];
+const CATEGORIES = [
+  { value: "saas_tool", label: "SaaS Tool" },
+  { value: "ai_app", label: "AI App" },
+  { value: "landing_page", label: "Landing Page" },
+  { value: "utility", label: "Utility" },
+  { value: "game", label: "Game" },
+  { value: "other", label: "Other" },
+];
+
+type Step = 1 | 2 | 3;
+
+export default function Sell() {
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [step, setStep] = useState<Step>(1);
+  const [submitting, setSubmitting] = useState(false);
+
+  const [form, setForm] = useState({
+    title: "",
+    description: "",
+    price: "",
+    completeness_badge: "prototype" as "prototype" | "mvp" | "production_ready",
+    category: "other" as string,
+    tech_stack: [] as string[],
+    github_url: "",
+    demo_url: "",
+    screenshots: [] as string[],
+  });
+  const [techInput, setTechInput] = useState("");
+  const [uploadingScreenshot, setUploadingScreenshot] = useState(false);
+
+  if (!loading && !user) return <Navigate to="/login" replace />;
+
+  function update(field: string, value: unknown) {
+    setForm((f) => ({ ...f, [field]: value }));
+  }
+
+  function addTech(tag: string) {
+    const t = tag.trim();
+    if (t && !form.tech_stack.includes(t)) {
+      update("tech_stack", [...form.tech_stack, t]);
+    }
+    setTechInput("");
+  }
+
+  function removeTech(tag: string) {
+    update("tech_stack", form.tech_stack.filter((t) => t !== tag));
+  }
+
+  async function uploadScreenshot(file: File) {
+    if (!user) return;
+    setUploadingScreenshot(true);
+    const path = `${user.id}/${Date.now()}-${file.name}`;
+    const { data, error } = await supabase.storage.from("listing-screenshots").upload(path, file, { upsert: true });
+    if (error) {
+      toast({ title: "Upload failed", description: error.message, variant: "destructive" });
+    } else {
+      const { data: urlData } = supabase.storage.from("listing-screenshots").getPublicUrl(data.path);
+      update("screenshots", [...form.screenshots, urlData.publicUrl]);
+    }
+    setUploadingScreenshot(false);
+  }
+
+  async function handleSubmit() {
+    if (!user) return;
+    setSubmitting(true);
+    const priceInCents = Math.round(parseFloat(form.price) * 100);
+    if (priceInCents < 100) {
+      toast({ title: "Minimum price is $1.00", variant: "destructive" });
+      setSubmitting(false);
+      return;
+    }
+
+    const { error } = await supabase.from("listings").insert([{
+      seller_id: user.id,
+      title: form.title,
+      description: form.description,
+      price: priceInCents,
+      completeness_badge: form.completeness_badge as "prototype" | "mvp" | "production_ready",
+      category: form.category as "saas_tool" | "ai_app" | "landing_page" | "utility" | "game" | "other",
+      tech_stack: form.tech_stack,
+      github_url: form.github_url || null,
+      demo_url: form.demo_url || null,
+      screenshots: form.screenshots,
+      status: "pending" as const,
+    }]);
+
+    if (error) {
+      toast({ title: "Failed to create listing", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Listing submitted! 🎉", description: "Your listing is pending review and will go live soon." });
+      navigate("/dashboard");
+    }
+    setSubmitting(false);
+  }
+
+  const isStep1Valid = form.title && form.description && form.price && parseFloat(form.price) >= 1;
+  const isStep2Valid = form.completeness_badge && form.category;
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      <Navbar />
+      <main className="flex-1 container mx-auto px-4 py-10 max-w-2xl">
+        <h1 className="text-3xl font-black mb-2">List your project</h1>
+        <p className="text-muted-foreground mb-8">Your listing will be reviewed before going live (usually within 24 hours).</p>
+
+        {/* Step indicator */}
+        <div className="flex items-center gap-2 mb-8">
+          {([1, 2, 3] as Step[]).map((s) => (
+            <div key={s} className="flex items-center gap-2">
+              <div className={`h-8 w-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
+                step >= s ? "gradient-hero text-white shadow-glow" : "bg-muted text-muted-foreground"
+              }`}>
+                {s}
+              </div>
+              {s < 3 && <div className={`h-0.5 w-12 rounded-full transition-all ${step > s ? "bg-primary" : "bg-muted"}`} />}
+            </div>
+          ))}
+          <span className="ml-2 text-sm text-muted-foreground">
+            {step === 1 ? "Basic info" : step === 2 ? "Details & tags" : "Files & media"}
+          </span>
+        </div>
+
+        <div className="rounded-2xl border border-border bg-card p-6 shadow-card space-y-5">
+          {/* Step 1 */}
+          {step === 1 && (
+            <>
+              <div>
+                <label className="block text-sm font-semibold mb-1.5">Project title *</label>
+                <Input placeholder="e.g. AI Email Writer SaaS" value={form.title} onChange={(e) => update("title", e.target.value)} />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold mb-1.5">Description *</label>
+                <textarea
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring min-h-32 resize-none"
+                  placeholder="Describe what this project does, what's included, and what stage it's at..."
+                  value={form.description}
+                  onChange={(e) => update("description", e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold mb-1.5">Price (USD) *</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                  <Input
+                    type="number"
+                    min="1"
+                    step="0.01"
+                    placeholder="29.00"
+                    value={form.price}
+                    onChange={(e) => update("price", e.target.value)}
+                    className="pl-7"
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">Minimum $1.00 · You keep 80% after platform fee</p>
+              </div>
+            </>
+          )}
+
+          {/* Step 2 */}
+          {step === 2 && (
+            <>
+              <div>
+                <label className="block text-sm font-semibold mb-3">Completeness badge *</label>
+                <div className="grid grid-cols-1 gap-3">
+                  {(["prototype", "mvp", "production_ready"] as const).map((b) => (
+                    <button
+                      key={b}
+                      onClick={() => update("completeness_badge", b)}
+                      className={`rounded-xl border-2 p-4 text-left transition-all ${
+                        form.completeness_badge === b ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground"
+                      }`}
+                    >
+                      <CompletenessBadge level={b} showTooltip={false} />
+                      <p className="text-xs text-muted-foreground mt-2">
+                        {b === "prototype" && "Early concept, rough edges, core idea present"}
+                        {b === "mvp" && "Core features work end-to-end, ready to iterate"}
+                        {b === "production_ready" && "Polished, documented, and deployable"}
+                      </p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold mb-2">Category *</label>
+                <div className="flex flex-wrap gap-2">
+                  {CATEGORIES.map(({ value, label }) => (
+                    <button
+                      key={value}
+                      onClick={() => update("category", value)}
+                      className={`rounded-full px-4 py-1.5 text-sm font-medium transition-all border ${
+                        form.category === value
+                          ? "gradient-hero text-white border-transparent shadow-sm"
+                          : "border-border hover:border-primary text-muted-foreground"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold mb-2">Tech stack tags</label>
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {form.tech_stack.map((tag) => (
+                    <span key={tag} className="flex items-center gap-1 rounded-full bg-primary/10 text-primary px-3 py-1 text-sm font-medium">
+                      {tag}
+                      <button onClick={() => removeTech(tag)}><X className="h-3 w-3" /></button>
+                    </span>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Add a tag (e.g. React)"
+                    value={techInput}
+                    onChange={(e) => setTechInput(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && addTech(techInput)}
+                  />
+                  <Button variant="outline" size="icon" onClick={() => addTech(techInput)}><Plus className="h-4 w-4" /></Button>
+                </div>
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {TECH_SUGGESTIONS.filter((t) => !form.tech_stack.includes(t)).slice(0, 8).map((tag) => (
+                    <button
+                      key={tag}
+                      onClick={() => addTech(tag)}
+                      className="rounded-md bg-muted px-2 py-0.5 text-xs text-muted-foreground hover:bg-muted/70 transition-colors"
+                    >
+                      + {tag}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Step 3 */}
+          {step === 3 && (
+            <>
+              <div>
+                <label className="block text-sm font-semibold mb-1.5 flex items-center gap-2">
+                  <Github className="h-4 w-4" /> GitHub repo URL
+                </label>
+                <Input placeholder="https://github.com/you/your-project" value={form.github_url} onChange={(e) => update("github_url", e.target.value)} />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold mb-1.5 flex items-center gap-2">
+                  <LinkIcon className="h-4 w-4" /> Demo URL
+                </label>
+                <Input placeholder="https://your-demo.vercel.app" value={form.demo_url} onChange={(e) => update("demo_url", e.target.value)} />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold mb-1.5">Screenshots (up to 5)</label>
+                <div className="flex flex-wrap gap-3 mb-3">
+                  {form.screenshots.map((src, i) => (
+                    <div key={i} className="relative h-24 w-36 rounded-lg overflow-hidden">
+                      <img src={src} alt={`Screenshot ${i + 1}`} className="w-full h-full object-cover" />
+                      <button
+                        onClick={() => update("screenshots", form.screenshots.filter((_, idx) => idx !== i))}
+                        className="absolute top-1 right-1 h-5 w-5 rounded-full bg-black/60 text-white flex items-center justify-center"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                  {form.screenshots.length < 5 && (
+                    <label className="h-24 w-36 rounded-lg border-2 border-dashed border-border hover:border-primary flex flex-col items-center justify-center cursor-pointer transition-colors text-muted-foreground hover:text-primary">
+                      {uploadingScreenshot ? (
+                        <div className="h-5 w-5 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+                      ) : (
+                        <>
+                          <Upload className="h-5 w-5 mb-1" />
+                          <span className="text-xs">Upload</span>
+                        </>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => e.target.files?.[0] && uploadScreenshot(e.target.files[0])}
+                      />
+                    </label>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">JPG, PNG, or WebP. Max 5 screenshots.</p>
+              </div>
+            </>
+          )}
+
+          {/* Navigation */}
+          <div className="flex justify-between pt-2">
+            {step > 1 ? (
+              <Button variant="outline" onClick={() => setStep((s) => (s - 1) as Step)}>Back</Button>
+            ) : <div />}
+            {step < 3 ? (
+              <Button
+                onClick={() => setStep((s) => (s + 1) as Step)}
+                disabled={step === 1 ? !isStep1Valid : !isStep2Valid}
+                className="gradient-hero text-white border-0 shadow-glow hover:opacity-90"
+              >
+                Next step
+              </Button>
+            ) : (
+              <Button
+                onClick={handleSubmit}
+                disabled={submitting}
+                className="gradient-hero text-white border-0 shadow-glow hover:opacity-90"
+              >
+                {submitting ? "Submitting..." : "Submit listing 🚀"}
+              </Button>
+            )}
+          </div>
+        </div>
+      </main>
+      <Footer />
+    </div>
+  );
+}

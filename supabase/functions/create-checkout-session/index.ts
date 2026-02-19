@@ -1,4 +1,27 @@
-import Stripe from "https://esm.sh/stripe@14.21.0";
+/**
+ * create-checkout-session Edge Function
+ * ------------------------------------
+ * Creates a Stripe Checkout Session using a "Destination Charge" pattern.
+ *
+ * Destination Charge design:
+ *  - The customer pays the PLATFORM (us)
+ *  - We take an application_fee_amount (our cut, e.g. 20%)
+ *  - The remaining funds are transferred to the seller's connected account
+ *    via transfer_data.destination
+ *
+ * This gives us full control over the payment experience while still
+ * routing funds to the right seller automatically.
+ *
+ * Can handle two modes:
+ *  1. listingId (legacy): fetches listing from our DB, looks up seller's account
+ *  2. productId (new): fetches product from Stripe, gets account from metadata
+ */
+
+// ---------------------------------------------------------------------------
+// PLACEHOLDER: STRIPE_SECRET_KEY must be set in your Lovable Cloud secrets.
+// This is the PLATFORM secret key — NOT a connected account key.
+// ---------------------------------------------------------------------------
+import Stripe from "https://esm.sh/stripe@17.7.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -6,107 +29,219 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const PLATFORM_FEE_PERCENT = 0.2; // 20%
+// The percentage of each sale the platform retains (20% = 0.20)
+// PLACEHOLDER: Adjust this to change your platform fee percentage
+const PLATFORM_FEE_PERCENT = 0.2;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    // ------------------------------------------------------------------
+    // Step 1: Validate required environment variables
+    // ------------------------------------------------------------------
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not configured");
+    if (!stripeKey) {
+      throw new Error("STRIPE_SECRET_KEY is not configured. Add it in your Cloud secrets.");
+    }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    if (!supabaseUrl || !supabaseServiceKey) throw new Error("Supabase env vars not configured");
+    if (!supabaseUrl || !supabaseServiceKey) {
+      throw new Error("Supabase environment variables are not configured.");
+    }
 
-    // Validate auth
+    // ------------------------------------------------------------------
+    // Step 2: Authenticate the buyer (optional but recommended)
+    // We validate the session to get the buyer ID for purchase tracking.
+    // ------------------------------------------------------------------
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("Missing Authorization header");
+    let buyerId: string | null = null;
 
-    const userRes = await fetch(`${supabaseUrl}/auth/v1/user`, {
-      headers: { Authorization: authHeader, apikey: supabaseServiceKey },
-    });
-    const userData = await userRes.json();
-    if (!userData?.id) throw new Error("Invalid user session");
-    const buyerId = userData.id;
+    if (authHeader) {
+      const userRes = await fetch(`${supabaseUrl}/auth/v1/user`, {
+        headers: { Authorization: authHeader, apikey: supabaseServiceKey },
+      });
+      const userData = await userRes.json();
+      if (userData?.id) buyerId = userData.id;
+    }
 
-    const { listingId } = await req.json();
-    if (!listingId) throw new Error("Missing listingId");
+    // ------------------------------------------------------------------
+    // Step 3: Parse the request body
+    // Supports two modes: listingId (legacy) or productId (Stripe product)
+    // ------------------------------------------------------------------
+    const body = await req.json();
+    const { listingId, productId } = body;
 
-    // Fetch listing
-    const listingRes = await fetch(
-      `${supabaseUrl}/rest/v1/listings?id=eq.${listingId}&select=*`,
-      { headers: { apikey: supabaseServiceKey, Authorization: `Bearer ${supabaseServiceKey}` } }
-    );
-    const listings = await listingRes.json();
-    const listing = listings?.[0];
-    if (!listing) throw new Error("Listing not found");
+    if (!listingId && !productId) {
+      throw new Error("Either listingId or productId is required");
+    }
 
-    // Check not already purchased
-    const purchaseRes = await fetch(
-      `${supabaseUrl}/rest/v1/purchases?listing_id=eq.${listingId}&buyer_id=eq.${buyerId}&select=id`,
-      { headers: { apikey: supabaseServiceKey, Authorization: `Bearer ${supabaseServiceKey}` } }
-    );
-    const existing = await purchaseRes.json();
-    if (existing?.length > 0) throw new Error("You already own this project");
-
-    // Fetch seller's Stripe Connect account
-    const profileRes = await fetch(
-      `${supabaseUrl}/rest/v1/profiles?user_id=eq.${listing.seller_id}&select=stripe_account_id,stripe_onboarded`,
-      { headers: { apikey: supabaseServiceKey, Authorization: `Bearer ${supabaseServiceKey}` } }
-    );
-    const profiles = await profileRes.json();
-    const sellerProfile = profiles?.[0];
-
-    const stripe = new Stripe(stripeKey, { apiVersion: "2024-06-20" });
+    // ------------------------------------------------------------------
+    // Step 4: Initialize the Stripe Client
+    // Using platform-level credentials — destination charges originate here
+    // ------------------------------------------------------------------
+    const stripeClient = new Stripe(stripeKey);
     const origin = req.headers.get("origin") || "https://opendraft.lovable.app";
-    const platformFee = Math.round(listing.price * PLATFORM_FEE_PERCENT);
 
-    // Build session params — use Connect if seller is onboarded
-    const sessionParams: Stripe.Checkout.SessionCreateParams = {
-      payment_method_types: ["card"],
-      line_items: [
-        {
-          price_data: {
-            currency: "usd",
-            product_data: {
-              name: listing.title,
-              description: listing.description?.slice(0, 200) || undefined,
-              images: listing.screenshots?.[0] ? [listing.screenshots[0]] : undefined,
-            },
-            unit_amount: listing.price,
+    let lineItem: Stripe.Checkout.SessionCreateParams.LineItem;
+    let sellerStripeAccountId: string | null = null;
+    let unitAmount: number;
+    let sessionMetadata: Record<string, string> = {};
+
+    if (productId) {
+      // ----------------------------------------------------------------
+      // Mode A: Stripe Product-based checkout
+      //
+      // Fetch the product from Stripe to get:
+      //  - The default price (to build the line item)
+      //  - The seller's connected account ID (from metadata)
+      // ----------------------------------------------------------------
+      const product = await stripeClient.products.retrieve(productId, {
+        expand: ["default_price"],
+      });
+
+      const price = product.default_price as Stripe.Price | null;
+      if (!price?.unit_amount) {
+        throw new Error("Product has no default price configured");
+      }
+
+      unitAmount = price.unit_amount;
+
+      // Get the seller's connected account from product metadata
+      // This was stored when the product was created (see create-product function)
+      sellerStripeAccountId = product.metadata?.seller_stripe_account_id ?? null;
+
+      // Build the line item using price_data (not a Price ID) for flexibility
+      lineItem = {
+        price_data: {
+          currency: price.currency || "usd",
+          product_data: {
+            name: product.name,
+            description: product.description || undefined,
+            images: product.images?.length ? product.images : undefined,
           },
-          quantity: 1,
+          unit_amount: unitAmount,
         },
-      ],
-      mode: "payment",
-      success_url: `${origin}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/listing/${listingId}`,
-      metadata: {
+        quantity: 1,
+      };
+
+      sessionMetadata = {
+        product_id: productId,
+        seller_stripe_account_id: sellerStripeAccountId ?? "",
+        price: String(unitAmount),
+        ...(buyerId ? { buyer_id: buyerId } : {}),
+      };
+    } else {
+      // ----------------------------------------------------------------
+      // Mode B: Legacy listing-based checkout (fetches from our DB)
+      // ----------------------------------------------------------------
+      if (!buyerId) throw new Error("Authentication required for listing purchases");
+
+      // Check for duplicate purchase
+      const purchaseRes = await fetch(
+        `${supabaseUrl}/rest/v1/purchases?listing_id=eq.${listingId}&buyer_id=eq.${buyerId}&select=id`,
+        { headers: { apikey: supabaseServiceKey, Authorization: `Bearer ${supabaseServiceKey}` } }
+      );
+      const existing = await purchaseRes.json();
+      if (existing?.length > 0) throw new Error("You already own this project");
+
+      // Fetch the listing details
+      const listingRes = await fetch(
+        `${supabaseUrl}/rest/v1/listings?id=eq.${listingId}&select=*`,
+        { headers: { apikey: supabaseServiceKey, Authorization: `Bearer ${supabaseServiceKey}` } }
+      );
+      const listings = await listingRes.json();
+      const listing = listings?.[0];
+      if (!listing) throw new Error("Listing not found");
+
+      unitAmount = listing.price;
+
+      // Fetch seller's Stripe Connect account from their profile
+      const profileRes = await fetch(
+        `${supabaseUrl}/rest/v1/profiles?user_id=eq.${listing.seller_id}&select=stripe_account_id,stripe_onboarded`,
+        { headers: { apikey: supabaseServiceKey, Authorization: `Bearer ${supabaseServiceKey}` } }
+      );
+      const profiles = await profileRes.json();
+      const sellerProfile = profiles?.[0];
+
+      if (sellerProfile?.stripe_account_id && sellerProfile?.stripe_onboarded) {
+        sellerStripeAccountId = sellerProfile.stripe_account_id;
+      }
+
+      lineItem = {
+        price_data: {
+          currency: "usd",
+          product_data: {
+            name: listing.title,
+            description: listing.description?.slice(0, 200) || undefined,
+            images: listing.screenshots?.[0] ? [listing.screenshots[0]] : undefined,
+          },
+          unit_amount: unitAmount,
+        },
+        quantity: 1,
+      };
+
+      sessionMetadata = {
         listing_id: listingId,
         buyer_id: buyerId,
         seller_id: listing.seller_id,
-        price: String(listing.price),
-      },
+        price: String(unitAmount),
+      };
+    }
+
+    // ------------------------------------------------------------------
+    // Step 5: Calculate the platform application fee
+    //
+    // application_fee_amount = what the platform keeps (in cents)
+    // The rest is automatically transferred to the seller's connected account
+    // via transfer_data.destination (Destination Charge pattern)
+    // ------------------------------------------------------------------
+    const applicationFeeAmount = Math.round(unitAmount * PLATFORM_FEE_PERCENT);
+
+    console.log(`Checkout: amount=${unitAmount}, fee=${applicationFeeAmount}, seller=${sellerStripeAccountId}`);
+
+    // ------------------------------------------------------------------
+    // Step 6: Build the Checkout Session parameters
+    // ------------------------------------------------------------------
+    const sessionParams: Stripe.Checkout.SessionCreateParams = {
+      payment_method_types: ["card"],
+      line_items: [lineItem],
+      mode: "payment",
+      // success_url includes the session_id so we can look up the purchase
+      success_url: `${origin}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: listingId ? `${origin}/listing/${listingId}` : `${origin}/storefront`,
+      metadata: sessionMetadata,
     };
 
-    // Add Connect transfer if seller has an onboarded Stripe account
-    if (sellerProfile?.stripe_account_id && sellerProfile?.stripe_onboarded) {
+    // ------------------------------------------------------------------
+    // Step 7: Add Destination Charge if seller has an onboarded account
+    //
+    // payment_intent_data.application_fee_amount = platform fee (we keep this)
+    // payment_intent_data.transfer_data.destination = seller's account (they get remainder)
+    //
+    // Without this, all funds go to the platform (still valid for testing).
+    // ------------------------------------------------------------------
+    if (sellerStripeAccountId) {
       sessionParams.payment_intent_data = {
-        application_fee_amount: platformFee,
+        // Platform keeps this amount (e.g., 20% of the sale)
+        application_fee_amount: applicationFeeAmount,
         transfer_data: {
-          destination: sellerProfile.stripe_account_id,
+          // Stripe automatically transfers (unitAmount - applicationFeeAmount) here
+          destination: sellerStripeAccountId,
         },
       };
     }
 
-    const session = await stripe.checkout.sessions.create(sessionParams);
+    const session = await stripeClient.checkout.sessions.create(sessionParams);
 
+    // Return the hosted checkout URL for the frontend to redirect to
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
+    console.error("create-checkout-session error:", message);
     return new Response(JSON.stringify({ error: message }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

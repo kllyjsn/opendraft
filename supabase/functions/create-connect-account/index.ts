@@ -1,4 +1,22 @@
-import Stripe from "https://esm.sh/stripe@14.21.0";
+/**
+ * create-connect-account Edge Function
+ * ------------------------------------
+ * Creates a Stripe Connect account for a seller using the V2 API,
+ * then generates an Account Link for onboarding.
+ *
+ * Flow:
+ *  1. Authenticate the calling user via Supabase JWT
+ *  2. Check if the user already has a Stripe Connect account stored in their profile
+ *  3. If not, create a new V2 account (platform is responsible for fees/losses)
+ *  4. Save the account ID back to the user's profile in the DB
+ *  5. Generate a Stripe Account Link (hosted onboarding UI) and return its URL
+ */
+
+// ---------------------------------------------------------------------------
+// PLACEHOLDER: STRIPE_SECRET_KEY must be set in your Lovable Cloud secrets.
+// It must start with "sk_test_" (test mode) or "sk_live_" (production).
+// ---------------------------------------------------------------------------
+import Stripe from "https://esm.sh/stripe@17.7.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -8,70 +26,162 @@ const corsHeaders = {
 };
 
 Deno.serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    // ------------------------------------------------------------------
+    // Step 1: Validate required environment variables
+    // ------------------------------------------------------------------
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY not configured");
+    if (!stripeKey) {
+      // PLACEHOLDER: Set STRIPE_SECRET_KEY in your Cloud secrets dashboard
+      throw new Error("STRIPE_SECRET_KEY is not configured. Add it in your Cloud secrets.");
+    }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
-    // Auth
+    // ------------------------------------------------------------------
+    // Step 2: Authenticate the user from the Authorization header
+    // The frontend passes the Supabase session JWT as a Bearer token.
+    // ------------------------------------------------------------------
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
+      return new Response(JSON.stringify({ error: "Unauthorized: missing Bearer token" }), {
+        status: 401,
+        headers: corsHeaders,
+      });
     }
 
+    // Create a Supabase client scoped to the user's session to verify their identity
     const userClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } },
     });
     const { data: { user }, error: authError } = await userClient.auth.getUser();
     if (authError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
+      return new Response(JSON.stringify({ error: "Unauthorized: invalid session" }), {
+        status: 401,
+        headers: corsHeaders,
+      });
     }
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2024-06-20" });
+    // ------------------------------------------------------------------
+    // Step 3: Initialize the Stripe Client
+    // Using stripeClient pattern for all Stripe requests.
+    // The API version is set automatically by the SDK.
+    // ------------------------------------------------------------------
+    const stripeClient = new Stripe(stripeKey);
+
+    // The return/refresh URLs tell Stripe where to redirect after onboarding
     const origin = req.headers.get("origin") || "https://opendraft.lovable.app";
 
-    // Check if seller already has a Connect account
+    // ------------------------------------------------------------------
+    // Step 4: Check if seller already has a Connect account in our DB
+    // We store the Stripe account ID in the profiles table to avoid
+    // creating duplicate accounts for the same user.
+    // ------------------------------------------------------------------
     const adminClient = createClient(supabaseUrl, supabaseServiceKey);
     const { data: profile } = await adminClient
       .from("profiles")
-      .select("stripe_account_id, stripe_onboarded")
+      .select("stripe_account_id, stripe_onboarded, username")
       .eq("user_id", user.id)
       .single();
 
     let accountId = profile?.stripe_account_id;
 
-    // Create new account if none exists
     if (!accountId) {
-      const account = await stripe.accounts.create({
-        type: "express",
-        email: user.email,
-        capabilities: {
-          card_payments: { requested: true },
-          transfers: { requested: true },
+      // ----------------------------------------------------------------
+      // Step 5: Create a new Stripe Connect account using the V2 API
+      //
+      // Key design choices:
+      //  - "dashboard: 'express'" gives the seller a Stripe-hosted dashboard
+      //  - "fees_collector: 'application'" means OUR platform collects fees
+      //    (we charge buyers and transfer to sellers, keeping a platform fee)
+      //  - "losses_collector: 'application'" means we're responsible for disputes
+      //  - We request "stripe_balance > stripe_transfers" capability so
+      //    sellers can receive payouts via Stripe balance transfers
+      //
+      // IMPORTANT: Do NOT pass `type` at the top level. The V2 API does not
+      // use type: 'express' | 'standard' | 'custom'. Use `dashboard` instead.
+      // ----------------------------------------------------------------
+      const account = await stripeClient.v2.core.accounts.create({
+        // Display name shown in the Stripe dashboard for this connected account
+        display_name: profile?.username || user.email?.split("@")[0] || "Seller",
+        // Contact email for Stripe to reach the connected account holder
+        contact_email: user.email,
+        identity: {
+          // Country of the account holder — required for compliance
+          country: "us",
         },
-        metadata: { user_id: user.id },
+        // 'express' gives sellers a Stripe-hosted Express dashboard
+        dashboard: "express",
+        defaults: {
+          responsibilities: {
+            // Our platform collects all fees from buyers
+            fees_collector: "application",
+            // Our platform is responsible for any dispute losses
+            losses_collector: "application",
+          },
+        },
+        configuration: {
+          recipient: {
+            capabilities: {
+              stripe_balance: {
+                stripe_transfers: {
+                  // Request the ability to receive transfers to stripe balance
+                  requested: true,
+                },
+              },
+            },
+          },
+        },
       });
-      accountId = account.id;
 
+      accountId = account.id;
+      console.log(`Created new V2 Connect account: ${accountId} for user: ${user.id}`);
+
+      // ----------------------------------------------------------------
+      // Step 6: Persist the account ID in the user's profile
+      // This mapping lets us look up the seller's Stripe account ID
+      // when processing payments or checking onboarding status.
+      // ----------------------------------------------------------------
       await adminClient
         .from("profiles")
         .update({ stripe_account_id: accountId, stripe_onboarded: false })
         .eq("user_id", user.id);
+    } else {
+      console.log(`Reusing existing Connect account: ${accountId} for user: ${user.id}`);
     }
 
-    // Create onboarding link
-    const accountLink = await stripe.accountLinks.create({
+    // ------------------------------------------------------------------
+    // Step 7: Create a Stripe Account Link (hosted onboarding URL)
+    //
+    // The Account Link gives the seller a secure, Stripe-hosted page
+    // where they enter their personal/business details, bank account, etc.
+    //
+    // Using the V2 accountLinks API with 'account_onboarding' use case.
+    // ------------------------------------------------------------------
+    const accountLink = await stripeClient.v2.core.accountLinks.create({
       account: accountId,
-      refresh_url: `${origin}/dashboard?connect=refresh`,
-      return_url: `${origin}/dashboard?connect=success`,
-      type: "account_onboarding",
+      use_case: {
+        type: "account_onboarding",
+        account_onboarding: {
+          // 'recipient' configuration enables stripe_balance transfers
+          configurations: ["recipient"],
+          // refresh_url: where to send the seller if the link expires
+          refresh_url: `${origin}/dashboard?connect=refresh`,
+          // return_url: where to send the seller after completing onboarding
+          // We include the accountId so the frontend can poll for status
+          return_url: `${origin}/dashboard?connect=success&accountId=${accountId}`,
+        },
+      },
     });
 
+    console.log(`Generated account link for account: ${accountId}`);
+
+    // Return the hosted onboarding URL to the frontend
     return new Response(JSON.stringify({ url: accountLink.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

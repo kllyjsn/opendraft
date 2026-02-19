@@ -14,6 +14,7 @@ import Success from "./pages/Success";
 import Checkout from "./pages/Checkout";
 import Admin from "./pages/Admin";
 import FAQ from "./pages/FAQ";
+import Storefront from "./pages/Storefront";
 
 const queryClient = new QueryClient();
 
@@ -34,6 +35,7 @@ const App = () => (
           <Route path="/checkout/:id" element={<Checkout />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/faq" element={<FAQ />} />
+          <Route path="/storefront" element={<Storefront />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

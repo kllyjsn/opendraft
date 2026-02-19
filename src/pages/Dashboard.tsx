@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { CompletenessBadge } from "@/components/CompletenessBadge";
 import { StripeConnectPanel } from "@/components/StripeConnectPanel";
+import { CreateProductPanel } from "@/components/CreateProductPanel";
 import { TrendingUp, Package, Eye, Trash2, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -97,9 +98,10 @@ export default function Dashboard() {
           </Link>
         </div>
 
-        {/* Stripe Connect */}
-        <div className="mb-8">
+        {/* Stripe Connect + Product Creation */}
+        <div className="mb-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
           <StripeConnectPanel />
+          <CreateProductPanel />
         </div>
 
         {/* Stats */}

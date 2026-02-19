@@ -38,10 +38,10 @@ interface SaleSummary {
   total_sales: number;
 }
 
-const statusStyle: Record<string, string> = {
-  pending: "bg-orange-100 text-orange-700",
-  live: "bg-green-100 text-green-700",
-  hidden: "bg-muted text-muted-foreground",
+const statusConfig: Record<string, { label: string; className: string }> = {
+  pending: { label: "Pending", className: "bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300" },
+  live: { label: "Live", className: "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300" },
+  hidden: { label: "Hidden", className: "bg-muted text-muted-foreground" },
 };
 
 export default function Dashboard() {
@@ -66,7 +66,6 @@ export default function Dashboard() {
     }
 
     async function fetchSales() {
-      // Fetch full sales history with listing titles for the sales table
       const { data } = await supabase
         .from("purchases")
         .select("id,created_at,amount_paid,seller_amount,platform_fee,listing_id,buyer_id,listings(title)")
@@ -97,51 +96,58 @@ export default function Dashboard() {
     }
   }
 
+  const stats = [
+    {
+      label: "Total earned",
+      value: `$${(summary.total_earned / 100).toFixed(2)}`,
+      icon: <TrendingUp className="h-5 w-5 text-primary" />,
+      accent: "from-primary/10 to-primary/5",
+    },
+    {
+      label: "Total sales",
+      value: summary.total_sales,
+      icon: <Package className="h-5 w-5 text-secondary" />,
+      accent: "from-secondary/10 to-secondary/5",
+    },
+    {
+      label: "Active listings",
+      value: listings.filter((l) => l.status === "live").length,
+      icon: <Eye className="h-5 w-5 text-accent" />,
+      accent: "from-accent/10 to-accent/5",
+    },
+  ];
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
       <main className="flex-1 container mx-auto px-4 py-10">
-        <div className="flex items-center justify-between mb-6">
+
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-black">Seller Dashboard</h1>
-            <p className="text-muted-foreground mt-1">Manage your listings and track earnings</p>
+            <p className="text-muted-foreground mt-1 text-sm">Manage your listings and track earnings</p>
           </div>
           <Link to="/sell">
-            <Button className="gradient-hero text-white border-0 shadow-glow hover:opacity-90">
+            <Button className="gradient-hero text-white border-0 shadow-glow hover:opacity-90 transition-opacity">
               <Plus className="h-4 w-4 mr-2" /> New listing
             </Button>
           </Link>
         </div>
 
         {/* Stripe Connect + Product Creation */}
-        <div className="mb-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="mb-8 grid grid-cols-1 lg:grid-cols-2 gap-5">
           <StripeConnectPanel />
           <CreateProductPanel />
         </div>
 
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
-          {[
-            {
-              label: "Total earned",
-              value: `$${(summary.total_earned / 100).toFixed(2)}`,
-              icon: <TrendingUp className="h-5 w-5 text-primary" />,
-            },
-            {
-              label: "Total sales",
-              value: summary.total_sales,
-              icon: <Package className="h-5 w-5 text-secondary" />,
-            },
-            {
-              label: "Active listings",
-              value: listings.filter((l) => l.status === "live").length,
-              icon: <Eye className="h-5 w-5 text-accent" />,
-            },
-          ].map(({ label, value, icon }) => (
-            <div key={label} className="rounded-2xl border border-border bg-card p-5 shadow-card">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-sm text-muted-foreground">{label}</p>
-                {icon}
+          {stats.map(({ label, value, icon, accent }) => (
+            <div key={label} className={`rounded-2xl border border-border/60 bg-gradient-to-br ${accent} p-5 shadow-card`}>
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
+                <div className="rounded-lg bg-background/60 p-1.5">{icon}</div>
               </div>
               <p className="text-3xl font-black">{value}</p>
             </div>
@@ -149,64 +155,70 @@ export default function Dashboard() {
         </div>
 
         {/* Listings table */}
-        <h2 className="text-xl font-bold mb-4">Your listings</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-bold">Your listings</h2>
+          <span className="text-sm text-muted-foreground">{listings.length} total</span>
+        </div>
+
         {dataLoading ? (
           <div className="space-y-3">
             {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="h-16 rounded-xl bg-muted animate-pulse" />
+              <div key={i} className="h-16 rounded-2xl bg-muted animate-pulse" />
             ))}
           </div>
         ) : listings.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border p-12 text-center">
-            <div className="text-4xl mb-3">📦</div>
+          <div className="rounded-2xl border border-dashed border-border/60 p-14 text-center">
+            <div className="text-4xl mb-4">📦</div>
             <h3 className="font-bold mb-1">No listings yet</h3>
-            <p className="text-muted-foreground text-sm mb-4">Create your first listing to start earning</p>
+            <p className="text-muted-foreground text-sm mb-5">Create your first listing to start earning</p>
             <Link to="/sell">
-              <Button className="gradient-hero text-white border-0">Create listing</Button>
+              <Button className="gradient-hero text-white border-0 shadow-glow hover:opacity-90">Create listing</Button>
             </Link>
           </div>
         ) : (
-          <div className="rounded-2xl border border-border overflow-hidden shadow-card">
+          <div className="rounded-2xl border border-border/60 overflow-hidden shadow-card">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="bg-muted/50">
+                <thead className="bg-muted/40 border-b border-border/60">
                   <tr>
-                    <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Listing</th>
-                    <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Price</th>
-                    <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Status</th>
-                    <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Sales</th>
-                    <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Views</th>
-                    <th className="px-4 py-3" />
+                    <th className="px-5 py-3.5 text-left text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Listing</th>
+                    <th className="px-5 py-3.5 text-left text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Price</th>
+                    <th className="px-5 py-3.5 text-left text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Status</th>
+                    <th className="px-5 py-3.5 text-left text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Sales</th>
+                    <th className="px-5 py-3.5 text-left text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Views</th>
+                    <th className="px-5 py-3.5" />
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border">
+                <tbody className="divide-y divide-border/40">
                   {listings.map((l) => (
-                    <tr key={l.id} className="hover:bg-muted/30 transition-colors">
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <Link to={`/listing/${l.id}`} className="font-medium hover:text-primary transition-colors line-clamp-1">
+                    <tr key={l.id} className="hover:bg-muted/20 transition-colors group">
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-2.5">
+                          <Link to={`/listing/${l.id}`} className="font-semibold hover:text-primary transition-colors line-clamp-1">
                             {l.title}
                           </Link>
                           <CompletenessBadge level={l.completeness_badge} showTooltip={false} />
                         </div>
                       </td>
-                      <td className="px-4 py-3 font-medium">${(l.price / 100).toFixed(2)}</td>
-                      <td className="px-4 py-3">
-                        <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ${statusStyle[l.status]}`}>
-                          {l.status}
+                      <td className="px-5 py-4 font-semibold">${(l.price / 100).toFixed(2)}</td>
+                      <td className="px-5 py-4">
+                        <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusConfig[l.status]?.className}`}>
+                          {statusConfig[l.status]?.label ?? l.status}
                         </span>
                       </td>
-                      <td className="px-4 py-3">{l.sales_count}</td>
-                      <td className="px-4 py-3">{l.view_count}</td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2 justify-end">
+                      <td className="px-5 py-4 text-muted-foreground">{l.sales_count}</td>
+                      <td className="px-5 py-4 text-muted-foreground">{l.view_count}</td>
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
                           <Link to={`/listing/${l.id}`}>
-                            <Button variant="ghost" size="icon" className="h-8 w-8"><Eye className="h-3.5 w-3.5" /></Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted">
+                              <Eye className="h-3.5 w-3.5" />
+                            </Button>
                           </Link>
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 text-destructive hover:text-destructive"
+                            className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
                             onClick={() => deleteListing(l.id)}
                           >
                             <Trash2 className="h-3.5 w-3.5" />
@@ -221,56 +233,53 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* ─────────────────────────────────────────────── */}
-        {/* Sales History — powered by Stripe Connect       */}
-        {/* Shows each purchase with amount, fee breakdown  */}
-        {/* ─────────────────────────────────────────────── */}
-        <h2 className="text-xl font-bold mb-4 mt-12 flex items-center gap-2">
-          <ShoppingBag className="h-5 w-5 text-primary" /> Sales history
-        </h2>
+        {/* Sales History */}
+        <div className="flex items-center gap-2 mt-14 mb-4">
+          <ShoppingBag className="h-5 w-5 text-primary" />
+          <h2 className="text-lg font-bold">Sales history</h2>
+          {sales.length > 0 && (
+            <span className="text-sm text-muted-foreground ml-auto">{sales.length} transactions</span>
+          )}
+        </div>
+
         {sales.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border p-8 text-center text-muted-foreground text-sm">
-            No sales yet — they'll appear here once a buyer completes checkout via Stripe.
+          <div className="rounded-2xl border border-dashed border-border/60 p-10 text-center text-muted-foreground text-sm">
+            No sales yet — they'll appear here once a buyer completes checkout.
           </div>
         ) : (
-          <div className="rounded-2xl border border-border overflow-hidden shadow-card">
+          <div className="rounded-2xl border border-border/60 overflow-hidden shadow-card">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="bg-muted/50">
+                <thead className="bg-muted/40 border-b border-border/60">
                   <tr>
-                    <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Date</th>
-                    <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Product</th>
-                    <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Sale price</th>
-                    <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Platform fee (20%)</th>
-                    <th className="px-4 py-3 text-left font-semibold text-muted-foreground">You received (80%)</th>
+                    <th className="px-5 py-3.5 text-left text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Date</th>
+                    <th className="px-5 py-3.5 text-left text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Product</th>
+                    <th className="px-5 py-3.5 text-left text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Sale price</th>
+                    <th className="px-5 py-3.5 text-left text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Platform fee</th>
+                    <th className="px-5 py-3.5 text-left text-[10px] font-bold uppercase tracking-widest text-muted-foreground">You received</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border">
+                <tbody className="divide-y divide-border/40">
                   {sales.map((sale) => (
-                    <tr key={sale.id} className="hover:bg-muted/30 transition-colors">
-                      <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
+                    <tr key={sale.id} className="hover:bg-muted/20 transition-colors">
+                      <td className="px-5 py-4 text-muted-foreground whitespace-nowrap">
                         {new Date(sale.created_at).toLocaleDateString()}
                       </td>
-                      <td className="px-4 py-3 font-medium max-w-[200px] truncate">
+                      <td className="px-5 py-4 font-medium max-w-[200px] truncate">
                         {sale.listings?.title ?? <span className="text-muted-foreground italic">Deleted listing</span>}
                       </td>
-                      <td className="px-4 py-3">${(sale.amount_paid / 100).toFixed(2)}</td>
-                      <td className="px-4 py-3 text-muted-foreground">
-                        −${(sale.platform_fee / 100).toFixed(2)}
-                      </td>
-                      {/* seller_amount is what was transferred to their Stripe Connect account */}
-                      <td className="px-4 py-3 font-bold text-primary">
-                        ${(sale.seller_amount / 100).toFixed(2)}
-                      </td>
+                      <td className="px-5 py-4">${(sale.amount_paid / 100).toFixed(2)}</td>
+                      <td className="px-5 py-4 text-muted-foreground">−${(sale.platform_fee / 100).toFixed(2)}</td>
+                      <td className="px-5 py-4 font-bold text-primary">${(sale.seller_amount / 100).toFixed(2)}</td>
                     </tr>
                   ))}
                 </tbody>
-                <tfoot className="bg-muted/30 border-t border-border">
+                <tfoot className="bg-muted/30 border-t border-border/60">
                   <tr>
-                    <td colSpan={4} className="px-4 py-3 text-sm font-semibold text-muted-foreground text-right">
-                      Total transferred to your Stripe account:
+                    <td colSpan={4} className="px-5 py-4 text-sm font-semibold text-muted-foreground text-right">
+                      Total transferred to your account:
                     </td>
-                    <td className="px-4 py-3 font-black text-primary">
+                    <td className="px-5 py-4 font-black text-primary text-base">
                       ${(summary.total_earned / 100).toFixed(2)}
                     </td>
                   </tr>

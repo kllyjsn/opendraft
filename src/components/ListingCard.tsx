@@ -26,60 +26,76 @@ export function ListingCard({
 
   return (
     <Link to={`/listing/${id}`} className="group block">
-      <Card className="overflow-hidden border-border/60 shadow-card hover:shadow-glow transition-all duration-300 hover:-translate-y-1 h-full">
+      <Card className="overflow-hidden border-border/50 shadow-card hover:shadow-glow transition-all duration-300 hover:-translate-y-1.5 h-full bg-card">
         {/* Thumbnail */}
         <div className="relative h-44 bg-muted overflow-hidden">
           {thumbnail ? (
-            <img src={thumbnail} alt={title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+            <img
+              src={thumbnail}
+              alt={title}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            />
           ) : (
-            <div className="w-full h-full flex items-center justify-center" style={{ background: "var(--gradient-hero)" }}>
+            <div className="w-full h-full flex items-center justify-center gradient-hero opacity-80">
               <span className="text-4xl">⚡</span>
             </div>
           )}
-          {/* Gradient scrim so overlays are always legible */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-black/20 pointer-events-none" />
-          {/* Owned badge — top-right */}
+          {/* Gradient scrim */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
+
+          {/* Owned badge */}
           {owned && (
-            <div className="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-xs font-bold text-primary-foreground shadow-glow">
+            <div className="absolute top-2.5 right-2.5 flex items-center gap-1 rounded-full bg-primary px-2.5 py-1 text-xs font-bold text-primary-foreground shadow-glow">
               <CheckCircle className="h-3 w-3" />
               Owned
             </div>
           )}
-          {/* Badge — bottom-left for breathing room */}
-          <div className="absolute bottom-2 left-2">
+
+          {/* Completeness badge — bottom-left */}
+          <div className="absolute bottom-2.5 left-2.5">
             <CompletenessBadge level={completeness_badge} showTooltip={false} />
           </div>
-          {/* Price — bottom-right (hide if owned) */}
+
+          {/* Price — bottom-right */}
           {!owned && (
-            <div className="absolute bottom-2 right-2">
-              <span className="rounded-full bg-black/75 text-white px-2.5 py-0.5 text-sm font-bold backdrop-blur-sm">
+            <div className="absolute bottom-2.5 right-2.5">
+              <span className="rounded-full bg-black/70 text-white px-2.5 py-0.5 text-sm font-bold backdrop-blur-sm tracking-tight">
                 {priceLabel}
               </span>
             </div>
           )}
         </div>
 
-        <CardContent className="p-4">
-          <h3 className="font-bold text-base leading-tight line-clamp-1 mb-1 group-hover:text-primary transition-colors">{title}</h3>
-          <p className="text-xs text-muted-foreground line-clamp-2 mb-3">{description}</p>
+        <CardContent className="p-4 space-y-2.5">
+          <div>
+            <h3 className="font-bold text-[0.9rem] leading-snug line-clamp-1 group-hover:text-primary transition-colors duration-200">
+              {title}
+            </h3>
+            <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5 leading-relaxed">{description}</p>
+          </div>
 
           {/* Tech stack */}
           {tech_stack.length > 0 && (
-            <div className="flex flex-wrap gap-1 mb-3">
+            <div className="flex flex-wrap gap-1">
               {tech_stack.slice(0, 4).map((tag) => (
-                <span key={tag} className="rounded-md bg-muted px-1.5 py-0.5 text-xs text-muted-foreground font-medium">
+                <span
+                  key={tag}
+                  className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground font-medium tracking-tight"
+                >
                   {tag}
                 </span>
               ))}
               {tech_stack.length > 4 && (
-                <span className="rounded-md bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">+{tech_stack.length - 4}</span>
+                <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                  +{tech_stack.length - 4}
+                </span>
               )}
             </div>
           )}
 
           {/* Stats */}
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between text-xs text-muted-foreground pt-0.5 border-t border-border/50">
+            <div className="flex items-center gap-2.5">
               {avg_rating !== undefined && (
                 <span className="flex items-center gap-0.5">
                   <Star className="h-3 w-3 fill-accent text-accent" />
@@ -91,7 +107,7 @@ export function ListingCard({
                 {view_count}
               </span>
             </div>
-            <span>{sales_count} sold</span>
+            <span className="font-medium">{sales_count} sold</span>
           </div>
         </CardContent>
       </Card>

@@ -75,11 +75,20 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { name, description, priceInCents, currency = "usd" } = body;
 
-    if (!name || typeof name !== "string") {
+    if (!name || typeof name !== "string" || name.trim().length === 0) {
       throw new Error("Product name is required");
     }
-    if (!priceInCents || typeof priceInCents !== "number" || priceInCents < 100) {
-      throw new Error("priceInCents must be a number >= 100 (minimum $1.00)");
+    if (name.length > 200) {
+      throw new Error("Product name must be 200 characters or less");
+    }
+    if (description !== undefined && (typeof description !== "string" || description.length > 2000)) {
+      throw new Error("Description must be a string of 2000 characters or less");
+    }
+    if (!priceInCents || typeof priceInCents !== "number" || !Number.isInteger(priceInCents) || priceInCents < 100 || priceInCents > 10000000) {
+      throw new Error("priceInCents must be an integer between 100 and 10000000");
+    }
+    if (typeof currency !== "string" || currency.length !== 3) {
+      throw new Error("Currency must be a 3-letter ISO code");
     }
 
     // ------------------------------------------------------------------

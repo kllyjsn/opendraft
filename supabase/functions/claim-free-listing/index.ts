@@ -39,8 +39,11 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { listingId } = await req.json();
-    if (!listingId) throw new Error("listingId is required");
+    const body = await req.json();
+    const listingId = body?.listingId;
+    if (!listingId || typeof listingId !== "string") throw new Error("listingId is required");
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(listingId)) throw new Error("Invalid listingId format");
 
     const adminClient = createClient(supabaseUrl, supabaseServiceKey);
 

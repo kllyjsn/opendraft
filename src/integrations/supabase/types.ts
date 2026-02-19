@@ -207,7 +207,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      increment_sales_count: {
+        Args: { listing_id_param: string }
+        Returns: undefined
+      }
+      increment_seller_sales: {
+        Args: { seller_id_param: string }
+        Returns: undefined
+      }
     }
     Enums: {
       completeness_badge: "prototype" | "mvp" | "production_ready"

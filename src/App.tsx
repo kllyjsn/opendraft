@@ -11,6 +11,7 @@ import Sell from "./pages/Sell";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import Success from "./pages/Success";
+import Checkout from "./pages/Checkout";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/success" element={<Success />} />
+          <Route path="/checkout/:id" element={<Checkout />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

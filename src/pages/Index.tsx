@@ -120,18 +120,6 @@ export default function Index() {
             </Link>
           </div>
 
-          {/* Stats */}
-          <div className="mt-10 flex flex-wrap justify-center gap-8 text-sm text-muted-foreground">
-            {[
-              { label: "Download on purchase", value: "Instant" },
-              { label: "Projects available", value: totalCount > 0 ? `${totalCount}+` : "Growing" },
-            ].map(({ label, value }) => (
-              <div key={label} className="text-center">
-                <div className="text-2xl font-black text-foreground">{value}</div>
-                <div>{label}</div>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
 

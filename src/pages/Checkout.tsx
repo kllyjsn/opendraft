@@ -121,15 +121,17 @@ export default function Checkout() {
                 </div>
               )}
               <div className="flex-1 min-w-0">
-                <h3 className="font-bold leading-snug mb-1">{listing.title}</h3>
-                <div className="flex flex-wrap items-center gap-2 mb-1">
+                <div className="flex items-start justify-between gap-2 mb-1">
+                  <h3 className="font-bold leading-snug">{listing.title}</h3>
+                  <span className="flex-shrink-0 text-xl font-black">{price}</span>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
                   <CompletenessBadge level={listing.completeness_badge} showTooltip={false} />
                   {listing.tech_stack?.slice(0, 3).map((t) => (
                     <span key={t} className="rounded-md bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">{t}</span>
                   ))}
                 </div>
               </div>
-              <div className="flex-shrink-0 text-xl font-black">{price}</div>
             </div>
             <div className="mt-4 pt-4 border-t border-border flex justify-between text-sm">
               <span className="text-muted-foreground">Total</span>

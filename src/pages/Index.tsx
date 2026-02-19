@@ -168,18 +168,6 @@ export default function Index() {
             Filters
             {hasFilters && <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />}
           </Button>
-          {/* Free toggle */}
-          <Button
-            size="sm"
-            variant={freeOnly ? "default" : "outline"}
-            onClick={() => setFreeOnly(!freeOnly)}
-            className={freeOnly
-              ? "gradient-hero text-white border-0 shadow-glow hover:opacity-90"
-              : "border-border/60 text-muted-foreground hover:text-foreground"
-            }
-          >
-            🆓 Free
-          </Button>
           {/* Sort */}
           <div className="flex gap-1.5">
             {SORT_OPTIONS.map((s) => (
@@ -238,19 +226,6 @@ export default function Index() {
                   </button>
                 ))}
               </div>
-            </div>
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">Price</p>
-              <button
-                onClick={() => setFreeOnly(!freeOnly)}
-                className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all ${
-                  freeOnly
-                    ? "gradient-hero text-white shadow-sm"
-                    : "bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground"
-                }`}
-              >
-                🆓 Free only
-              </button>
             </div>
             {hasFilters && (
               <button

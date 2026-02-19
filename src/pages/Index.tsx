@@ -97,7 +97,7 @@ export default function Index() {
 
         <div className="container mx-auto px-4 text-center relative z-10">
           <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary mb-6">
-            ⚡ {totalCount > 0 ? `${totalCount} projects ready to ship` : "Instant access. Instant payouts."}
+            ⚡ {totalCount > 0 ? `${totalCount} projects ready to ship` : "Buy today. Ship tomorrow."}
           </div>
 
           <h1 className="text-5xl md:text-6xl font-black tracking-tight mb-4 leading-tight">
@@ -123,8 +123,8 @@ export default function Index() {
           {/* Stats */}
           <div className="mt-10 flex flex-wrap justify-center gap-8 text-sm text-muted-foreground">
             {[
-              { label: "Download on purchase", value: "Instant" },
-              { label: "Seller payout", value: "Instant" },
+              { label: "Download on purchase", value: "0 wait" },
+              { label: "Platform fee", value: "10%" },
               { label: "Projects available", value: totalCount > 0 ? `${totalCount}+` : "Growing" },
             ].map(({ label, value }) => (
               <div key={label} className="text-center">

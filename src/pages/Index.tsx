@@ -95,20 +95,18 @@ export default function Index() {
         <div className="absolute -bottom-32 -left-32 h-96 w-96 rounded-full bg-accent/20 blur-3xl pointer-events-none" />
 
         <div className="container mx-auto px-4 text-center relative z-10">
-          <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary mb-6">
+        <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary mb-6">
             <Zap className="h-3.5 w-3.5" />
-            {totalCount > 0 ? `${totalCount} vibe-coded projects for sale` : "The marketplace for vibe-coded projects"}
+            {totalCount > 0 ? `${totalCount} projects ready to buy` : "Instant access. Instant payouts."}
           </div>
 
           <h1 className="text-5xl md:text-7xl font-black tracking-tight mb-6 leading-tight">
-            Buy & sell{" "}
-            <span className="text-gradient">open</span>
-            <br />
-            drafts
+            Ship faster.<br />
+            <span className="text-gradient">Get paid instantly.</span>
           </h1>
 
           <p className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto mb-8 leading-relaxed">
-            Prototypes, MVPs, AI apps — all stages welcome. Get a head start or cash in on your creations.
+            Buy ready-to-ship projects and launch in hours — not months. Sell your builds and get paid the moment someone checks out.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -127,9 +125,9 @@ export default function Index() {
           {/* Stats */}
           <div className="mt-12 flex flex-wrap justify-center gap-8 text-sm text-muted-foreground">
             {[
-              { label: "Instant access", value: "⚡" },
-              { label: "After purchase", value: "Paid instantly" },
-              { label: "Delivery", value: "Instant" },
+              { label: "Download on purchase", value: "Instant" },
+              { label: "Seller payout", value: "Instant" },
+              { label: "Projects available", value: totalCount > 0 ? `${totalCount}+` : "Growing" },
             ].map(({ label, value }) => (
               <div key={label} className="text-center">
                 <div className="text-2xl font-black text-foreground">{value}</div>

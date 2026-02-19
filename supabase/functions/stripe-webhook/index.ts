@@ -45,6 +45,86 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, stripe-signature, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// Helper: Generate a signed download URL from storage (valid 24 hours)
+async function getSignedDownloadUrl(supabaseUrl: string, supabaseServiceKey: string, filePath: string): Promise<string | null> {
+  try {
+    const res = await fetch(
+      `${supabaseUrl}/storage/v1/object/sign/listing-files/${filePath}`,
+      {
+        method: "POST",
+        headers: {
+          apikey: supabaseServiceKey,
+          Authorization: `Bearer ${supabaseServiceKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ expiresIn: 86400 }), // 24 hours
+      }
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.signedURL ? `${supabaseUrl}/storage/v1${data.signedURL}` : null;
+  } catch {
+    return null;
+  }
+}
+
+// Helper: Send buyer confirmation email via Resend
+async function sendBuyerEmail({
+  buyerEmail, listingTitle, signedUrl, githubUrl, amountPaid, resendApiKey,
+}: {
+  buyerEmail: string; listingTitle: string; signedUrl: string | null;
+  githubUrl: string | null; amountPaid: number; resendApiKey: string;
+}) {
+  const paid = `$${(amountPaid / 100).toFixed(2)}`;
+  const hasFile = !!signedUrl;
+  const hasGithub = !!githubUrl;
+
+  const deliverySection = hasFile
+    ? `<a href="${signedUrl}" style="display:inline-block;background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;font-weight:700;font-size:16px;padding:14px 32px;border-radius:12px;text-decoration:none;margin-bottom:12px;">⬇ Download your project</a>
+       <p style="color:#9ca3af;font-size:12px;margin:8px 0 0;">This link expires in 24 hours. You can generate a new one anytime from your <a href="https://opendraft.co/profile" style="color:#7c3aed;">profile page</a>.</p>`
+    : hasGithub
+    ? `<a href="${githubUrl}" style="display:inline-block;background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;font-weight:700;font-size:16px;padding:14px 32px;border-radius:12px;text-decoration:none;">View on GitHub</a>`
+    : `<p style="color:#6b7280;">Head to your <a href="https://opendraft.co/profile" style="color:#7c3aed;">profile page</a> to access your purchase.</p>`;
+
+  const html = `<!DOCTYPE html>
+<html><head><meta charset="utf-8" /></head>
+<body style="margin:0;padding:0;background:#f9fafb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;padding:40px 16px;">
+    <tr><td align="center">
+      <table width="560" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:16px;overflow:hidden;border:1px solid #e5e7eb;">
+        <tr><td style="background:linear-gradient(135deg,#7c3aed,#4f46e5);padding:32px 40px;text-align:center;">
+          <p style="margin:0;color:#ddd6fe;font-size:13px;">OpenDraft</p>
+          <h1 style="margin:8px 0 0;color:#fff;font-size:28px;font-weight:900;">🎉 Your purchase is ready</h1>
+        </td></tr>
+        <tr><td style="padding:36px 40px;text-align:center;">
+          <p style="margin:0 0 8px;color:#374151;font-size:16px;text-align:left;">You just bought:</p>
+          <p style="margin:0 0 28px;color:#111827;font-size:20px;font-weight:800;text-align:left;">${listingTitle}</p>
+          <p style="margin:0 0 28px;color:#6b7280;font-size:14px;text-align:left;">Paid <strong style="color:#111827;">${paid}</strong></p>
+          ${deliverySection}
+        </td></tr>
+        <tr><td style="padding:24px 40px;border-top:1px solid #f3f4f6;">
+          <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">
+            Questions? Reply to this email or visit <a href="https://opendraft.co" style="color:#7c3aed;">opendraft.co</a>
+          </p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>`;
+
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { "Authorization": `Bearer ${resendApiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      from: "OpenDraft <noreply@opendraft.lovable.app>",
+      to: [buyerEmail],
+      subject: `Your download is ready: ${listingTitle}`,
+      html,
+    }),
+  });
+  if (!res.ok) throw new Error(`Resend error [${res.status}]: ${await res.text()}`);
+}
+
 // Helper: Send seller notification email via Resend
 async function sendSellerEmail({
   sellerEmail, sellerName, listingTitle, sellerAmount, buyerEmail, resendApiKey,
@@ -288,11 +368,11 @@ async function handleCheckoutSessionCompleted(
     }),
   ]);
 
-  // Send seller notification email if Resend is configured
+  // Send seller + buyer emails if Resend is configured
   if (resendApiKey) {
     try {
       const [listingRes, sellerRes, buyerRes] = await Promise.all([
-        fetch(`${supabaseUrl}/rest/v1/listings?id=eq.${listing_id}&select=title`, {
+        fetch(`${supabaseUrl}/rest/v1/listings?id=eq.${listing_id}&select=title,file_path,github_url`, {
           headers: { apikey: supabaseServiceKey, Authorization: `Bearer ${supabaseServiceKey}` },
         }),
         fetch(`${supabaseUrl}/auth/v1/admin/users/${seller_id}`, {
@@ -307,16 +387,36 @@ async function handleCheckoutSessionCompleted(
         listingRes.json(), sellerRes.json(), buyerRes.json(),
       ]);
 
-      await sendSellerEmail({
-        sellerEmail: sellerUser?.email,
-        sellerName: sellerUser?.user_metadata?.name ?? "",
-        listingTitle: listingData?.[0]?.title ?? "Your project",
-        sellerAmount,
-        buyerEmail: buyerUser?.email ?? "a buyer",
-        resendApiKey,
-      });
+      const listingInfo = listingData?.[0];
+      const buyerEmail = buyerUser?.email;
+
+      // Generate a 24-hour signed download URL if a ZIP exists
+      let signedUrl: string | null = null;
+      if (listingInfo?.file_path) {
+        signedUrl = await getSignedDownloadUrl(supabaseUrl, supabaseServiceKey, listingInfo.file_path);
+      }
+
+      // Send both emails in parallel
+      await Promise.all([
+        sendSellerEmail({
+          sellerEmail: sellerUser?.email,
+          sellerName: sellerUser?.user_metadata?.name ?? "",
+          listingTitle: listingInfo?.title ?? "Your project",
+          sellerAmount,
+          buyerEmail: buyerEmail ?? "a buyer",
+          resendApiKey,
+        }),
+        buyerEmail ? sendBuyerEmail({
+          buyerEmail,
+          listingTitle: listingInfo?.title ?? "Your purchase",
+          signedUrl,
+          githubUrl: listingInfo?.github_url ?? null,
+          amountPaid: amount,
+          resendApiKey,
+        }) : Promise.resolve(),
+      ]);
     } catch (emailErr) {
-      console.error("Failed to send sale email:", emailErr);
+      console.error("Failed to send emails:", emailErr);
     }
   }
 

@@ -116,8 +116,15 @@ export default function Sell() {
     <div className="min-h-screen flex flex-col">
       <Navbar />
       <main className="flex-1 container mx-auto px-4 py-10 max-w-2xl">
-        <h1 className="text-3xl font-black mb-2">List your project</h1>
-        <p className="text-muted-foreground mb-8">Your listing will be reviewed before going live (usually within 24 hours).</p>
+
+        {/* Seller value prop */}
+        <div className="mb-8">
+          <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-primary mb-3">
+            ⚡ Instant payouts
+          </div>
+          <h1 className="text-3xl font-black mb-2">Turn your project into income</h1>
+          <p className="text-muted-foreground">List once. Sell forever. The moment someone buys, you get paid — no waiting, no invoices.</p>
+        </div>
 
         {/* Step indicator */}
         <div className="flex items-center gap-2 mb-8">
@@ -167,7 +174,7 @@ export default function Sell() {
                     className="pl-7"
                   />
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">Minimum $1.00 · You keep 80% after platform fee</p>
+                <p className="text-xs text-muted-foreground mt-1">Minimum $1.00 · Paid out to you instantly on every sale</p>
               </div>
             </>
           )}

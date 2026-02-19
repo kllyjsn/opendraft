@@ -102,9 +102,9 @@ export default function Index() {
 
           <h1 className="text-5xl md:text-7xl font-black tracking-tight mb-6 leading-tight">
             Buy & sell{" "}
-            <span className="text-gradient">vibe-coded</span>
+            <span className="text-gradient">open</span>
             <br />
-            projects
+            drafts
           </h1>
 
           <p className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto mb-8 leading-relaxed">

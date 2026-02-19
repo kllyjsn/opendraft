@@ -11,7 +11,7 @@ export function Footer() {
               <div className="h-7 w-7 rounded-lg gradient-hero flex items-center justify-center">
                 <Zap className="h-3.5 w-3.5 text-white" />
               </div>
-              <span className="text-gradient">VibeMarket</span>
+              <span className="text-gradient">OpenDraft</span>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
               The marketplace for vibe-coded projects. Buy and sell AI-generated apps, tools, and templates.
@@ -42,7 +42,7 @@ export function Footer() {
           </div>
         </div>
         <div className="mt-8 pt-6 border-t border-border flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-muted-foreground">
-          <span>© 2026 VibeMarket. All rights reserved.</span>
+          <span>© 2026 OpenDraft. All rights reserved.</span>
           <span>Platform fee: 20% per sale. Sellers keep 80%.</span>
         </div>
       </div>

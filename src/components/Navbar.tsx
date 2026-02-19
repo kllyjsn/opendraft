@@ -1,11 +1,13 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { Zap, Menu, X } from "lucide-react";
+import { useAdmin } from "@/hooks/useAdmin";
+import { Zap, Menu, X, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 
 export function Navbar() {
   const { user, signOut, loading } = useAuth();
+  const { isAdmin } = useAdmin();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -32,14 +34,19 @@ export function Navbar() {
           </Link>
           {user && (
             <>
-              <Link to="/sell" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-                Sell
+          <Link to="/sell" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+              Sell
+            </Link>
+            <Link to="/dashboard" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+              Dashboard
+            </Link>
+            {isAdmin && (
+              <Link to="/admin" className="text-sm font-medium text-primary hover:opacity-80 transition-colors flex items-center gap-1">
+                <ShieldCheck className="h-3.5 w-3.5" /> Admin
               </Link>
-              <Link to="/dashboard" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-                Dashboard
-              </Link>
-            </>
-          )}
+            )}
+          </>
+        )}
         </div>
 
         {/* Auth buttons */}
@@ -84,6 +91,11 @@ export function Navbar() {
               <Link to="/sell" className="text-sm font-medium" onClick={() => setMenuOpen(false)}>Sell</Link>
               <Link to="/dashboard" className="text-sm font-medium" onClick={() => setMenuOpen(false)}>Dashboard</Link>
               <Link to="/profile" className="text-sm font-medium" onClick={() => setMenuOpen(false)}>Profile</Link>
+              {isAdmin && (
+                <Link to="/admin" className="text-sm font-medium text-primary flex items-center gap-1" onClick={() => setMenuOpen(false)}>
+                  <ShieldCheck className="h-3.5 w-3.5" /> Admin
+                </Link>
+              )}
               <Button variant="outline" size="sm" onClick={handleSignOut}>Sign out</Button>
             </>
           ) : (

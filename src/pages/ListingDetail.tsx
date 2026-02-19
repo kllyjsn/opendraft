@@ -6,7 +6,7 @@ import { Footer } from "@/components/Footer";
 import { CompletenessBadge } from "@/components/CompletenessBadge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { ExternalLink, Github, Star, ShoppingCart, ChevronLeft, ChevronRight, Download } from "lucide-react";
+import { ExternalLink, Github, Star, ShoppingCart, ChevronLeft, ChevronRight, Download, Eye, Package } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface Listing {
@@ -66,9 +66,7 @@ export default function ListingDetail() {
     const { data } = await supabase.from("listings").select("*").eq("id", id).single();
     if (data) {
       setListing(data as Listing);
-      // increment view count
       await supabase.from("listings").update({ view_count: (data.view_count ?? 0) + 1 }).eq("id", id);
-      // fetch seller
       const { data: profile } = await supabase.from("profiles").select("username,avatar_url,total_sales").eq("user_id", data.seller_id).single();
       setSeller(profile);
     }
@@ -125,8 +123,8 @@ export default function ListingDetail() {
         <Navbar />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <div className="h-8 w-8 rounded-full gradient-hero animate-spin mx-auto mb-4" />
-            <p className="text-muted-foreground">Loading...</p>
+            <div className="h-10 w-10 rounded-full gradient-hero animate-spin mx-auto mb-4 opacity-80" />
+            <p className="text-muted-foreground text-sm">Loading project…</p>
           </div>
         </div>
       </div>
@@ -141,6 +139,7 @@ export default function ListingDetail() {
           <div className="text-center">
             <div className="text-5xl mb-4">🤔</div>
             <h2 className="text-xl font-bold mb-2">Listing not found</h2>
+            <p className="text-sm text-muted-foreground mb-5">It may have been removed or the link is incorrect.</p>
             <Link to="/"><Button>Back to marketplace</Button></Link>
           </div>
         </div>
@@ -159,17 +158,23 @@ export default function ListingDetail() {
     <div className="min-h-screen flex flex-col">
       <Navbar />
       <main className="flex-1 container mx-auto px-4 py-10">
-        <Link to="/" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-6">
-          <ChevronLeft className="h-4 w-4" /> Back to browse
+        {/* Breadcrumb */}
+        <Link
+          to="/"
+          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-8 group"
+        >
+          <ChevronLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" />
+          Back to browse
         </Link>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
           {/* Left: images + description */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-8">
+
             {/* Image gallery */}
             {listing.screenshots.length > 0 ? (
               <div className="space-y-3">
-                <div className="relative rounded-2xl overflow-hidden bg-muted aspect-video">
+                <div className="relative rounded-2xl overflow-hidden bg-muted aspect-video ring-1 ring-border/40 shadow-card">
                   <img
                     src={listing.screenshots[activeImg]}
                     alt={`Screenshot ${activeImg + 1}`}
@@ -179,16 +184,26 @@ export default function ListingDetail() {
                     <>
                       <button
                         onClick={() => setActiveImg((i) => (i - 1 + listing.screenshots.length) % listing.screenshots.length)}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-black/50 text-white flex items-center justify-center backdrop-blur-sm"
+                        className="absolute left-3 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-black/60 text-white flex items-center justify-center backdrop-blur-sm hover:bg-black/80 transition-colors"
                       >
                         <ChevronLeft className="h-4 w-4" />
                       </button>
                       <button
                         onClick={() => setActiveImg((i) => (i + 1) % listing.screenshots.length)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-black/50 text-white flex items-center justify-center backdrop-blur-sm"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-black/60 text-white flex items-center justify-center backdrop-blur-sm hover:bg-black/80 transition-colors"
                       >
                         <ChevronRight className="h-4 w-4" />
                       </button>
+                      {/* Slide dots */}
+                      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+                        {listing.screenshots.map((_, i) => (
+                          <button
+                            key={i}
+                            onClick={() => setActiveImg(i)}
+                            className={`h-1.5 rounded-full transition-all duration-300 ${activeImg === i ? "w-5 bg-white" : "w-1.5 bg-white/50"}`}
+                          />
+                        ))}
+                      </div>
                     </>
                   )}
                 </div>
@@ -198,8 +213,8 @@ export default function ListingDetail() {
                       <button
                         key={i}
                         onClick={() => setActiveImg(i)}
-                        className={`flex-shrink-0 h-16 w-24 rounded-lg overflow-hidden border-2 transition-all ${
-                          activeImg === i ? "border-primary" : "border-transparent opacity-60 hover:opacity-100"
+                        className={`flex-shrink-0 h-16 w-24 rounded-xl overflow-hidden border-2 transition-all ${
+                          activeImg === i ? "border-primary shadow-glow" : "border-transparent opacity-50 hover:opacity-80"
                         }`}
                       >
                         <img src={src} alt={`Thumb ${i}`} className="w-full h-full object-cover" />
@@ -209,34 +224,45 @@ export default function ListingDetail() {
                 )}
               </div>
             ) : (
-              <div className="rounded-2xl aspect-video gradient-hero opacity-50 flex items-center justify-center">
+              <div className="rounded-2xl aspect-video gradient-hero opacity-40 flex items-center justify-center ring-1 ring-border/40">
                 <span className="text-6xl">⚡</span>
               </div>
             )}
 
-            {/* Description */}
-            <div>
-              <h1 className="text-3xl font-black mb-3">{listing.title}</h1>
-              <div className="flex flex-wrap items-center gap-3 mb-4">
+            {/* Title + meta */}
+            <div className="space-y-3">
+              <h1 className="text-3xl md:text-4xl font-black leading-tight">{listing.title}</h1>
+              <div className="flex flex-wrap items-center gap-3">
                 <CompletenessBadge level={listing.completeness_badge} />
                 {avgRating !== null && (
-                  <span className="flex items-center gap-1 text-sm text-muted-foreground">
+                  <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
                     <Star className="h-4 w-4 fill-accent text-accent" />
-                    {avgRating.toFixed(1)} ({reviews.length} reviews)
+                    <span className="font-semibold text-foreground">{avgRating.toFixed(1)}</span>
+                    <span>({reviews.length} {reviews.length === 1 ? "review" : "reviews"})</span>
                   </span>
                 )}
-                <span className="text-sm text-muted-foreground">{listing.sales_count} sold</span>
+                <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                  <Package className="h-3.5 w-3.5" />
+                  {listing.sales_count} sold
+                </span>
+                <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                  <Eye className="h-3.5 w-3.5" />
+                  {listing.view_count} views
+                </span>
               </div>
-              <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">{listing.description}</p>
+              <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap text-[0.95rem]">{listing.description}</p>
             </div>
 
             {/* Tech stack */}
             {listing.tech_stack.length > 0 && (
               <div>
-                <h3 className="font-semibold mb-2">Tech Stack</h3>
+                <h3 className="font-bold mb-3 text-sm uppercase tracking-wider text-muted-foreground">Tech Stack</h3>
                 <div className="flex flex-wrap gap-2">
                   {listing.tech_stack.map((tag) => (
-                    <span key={tag} className="rounded-lg bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">
+                    <span
+                      key={tag}
+                      className="rounded-lg bg-muted border border-border/40 px-3 py-1 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                    >
                       {tag}
                     </span>
                   ))}
@@ -246,20 +272,30 @@ export default function ListingDetail() {
 
             {/* Reviews */}
             <div>
-              <h3 className="font-semibold text-lg mb-4">Reviews {reviews.length > 0 && `(${reviews.length})`}</h3>
+              <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                Reviews
+                {reviews.length > 0 && (
+                  <span className="rounded-full bg-muted px-2 py-0.5 text-sm text-muted-foreground font-normal">{reviews.length}</span>
+                )}
+              </h3>
               {reviews.length === 0 ? (
-                <p className="text-muted-foreground text-sm">No reviews yet. Be the first to buy and review!</p>
+                <div className="rounded-2xl border border-dashed border-border bg-muted/30 p-8 text-center">
+                  <Star className="h-8 w-8 text-muted-foreground/30 mx-auto mb-3" />
+                  <p className="text-sm text-muted-foreground">No reviews yet. Be the first to buy and review!</p>
+                </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {reviews.map((r) => (
-                    <div key={r.id} className="rounded-xl border border-border bg-card p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                          <Star key={i} className={`h-3.5 w-3.5 ${i < r.rating ? "fill-accent text-accent" : "text-muted"}`} />
-                        ))}
-                        <span className="text-xs text-muted-foreground ml-auto">{new Date(r.created_at).toLocaleDateString()}</span>
+                    <div key={r.id} className="rounded-2xl border border-border/60 bg-card p-4 shadow-card">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-0.5">
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <Star key={i} className={`h-3.5 w-3.5 ${i < r.rating ? "fill-accent text-accent" : "text-muted-foreground/30"}`} />
+                          ))}
+                        </div>
+                        <span className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</span>
                       </div>
-                      {r.review_text && <p className="text-sm text-muted-foreground">{r.review_text}</p>}
+                      {r.review_text && <p className="text-sm text-muted-foreground leading-relaxed">{r.review_text}</p>}
                     </div>
                   ))}
                 </div>
@@ -269,14 +305,17 @@ export default function ListingDetail() {
 
           {/* Right: buy card */}
           <div className="space-y-4">
-            <div className="rounded-2xl border border-border bg-card p-6 shadow-card sticky top-20">
-              <div className="text-4xl font-black mb-1">{priceLabel}</div>
-              <p className="text-xs text-muted-foreground mb-5">One-time purchase. Instant delivery.</p>
+            <div className="rounded-2xl border border-border/60 bg-card p-6 shadow-card sticky top-20">
+              {/* Price */}
+              <div className="mb-5">
+                <div className="text-4xl font-black mb-0.5">{priceLabel}</div>
+                <p className="text-xs text-muted-foreground">One-time purchase · Instant delivery</p>
+              </div>
 
               {purchased ? (
                 <div className="space-y-3">
-                  <div className="rounded-xl bg-primary/10 border border-primary/30 p-3 text-center">
-                    <p className="font-semibold text-primary text-sm">✓ You own this project</p>
+                  <div className="rounded-xl bg-primary/8 border border-primary/20 px-4 py-3 text-center">
+                    <p className="font-bold text-primary text-sm">✓ You own this project</p>
                   </div>
                   <Button
                     onClick={handleDownload}
@@ -284,47 +323,57 @@ export default function ListingDetail() {
                     className="w-full gradient-hero text-white border-0 shadow-glow hover:opacity-90 h-12 text-base font-bold"
                   >
                     <Download className="h-4 w-4 mr-2" />
-                    {downloading ? "Preparing download..." : "Download Project"}
+                    {downloading ? "Preparing download…" : "Download Project"}
                   </Button>
                 </div>
               ) : (
                 <Link to={user ? `/checkout/${listing.id}` : "/login"}>
-                  <Button className="w-full gradient-hero text-white border-0 shadow-glow hover:opacity-90 h-12 text-base font-bold">
+                  <Button className="w-full gradient-hero text-white border-0 shadow-glow hover:opacity-90 h-12 text-base font-bold transition-opacity">
                     <ShoppingCart className="h-4 w-4 mr-2" />
                     Buy Now — {priceLabel}
                   </Button>
                 </Link>
               )}
 
-              {listing.demo_url && (
-                <a href={listing.demo_url} target="_blank" rel="noopener noreferrer">
-                  <Button variant="outline" className="w-full mt-3">
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    View Demo
-                  </Button>
-                </a>
+              {/* Secondary actions */}
+              {(listing.demo_url || listing.github_url) && (
+                <div className="mt-3 space-y-2">
+                  {listing.demo_url && (
+                    <a href={listing.demo_url} target="_blank" rel="noopener noreferrer">
+                      <Button variant="outline" className="w-full border-border/60 hover:border-primary/40 transition-colors">
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                        View Live Demo
+                      </Button>
+                    </a>
+                  )}
+                  {listing.github_url && (
+                    <a href={listing.github_url} target="_blank" rel="noopener noreferrer">
+                      <Button variant="outline" className="w-full border-border/60 hover:border-primary/40 transition-colors">
+                        <Github className="h-4 w-4 mr-2" />
+                        View on GitHub
+                      </Button>
+                    </a>
+                  )}
+                </div>
               )}
-              {listing.github_url && (
-                <a href={listing.github_url} target="_blank" rel="noopener noreferrer">
-                  <Button variant="outline" className="w-full mt-2">
-                    <Github className="h-4 w-4 mr-2" />
-                    View on GitHub
-                  </Button>
-                </a>
-              )}
+
+              {/* Trust line */}
+              <p className="mt-4 text-center text-[11px] text-muted-foreground">
+                🔒 Secure checkout via Stripe
+              </p>
             </div>
 
             {/* Seller card */}
             {seller && (
-              <div className="rounded-2xl border border-border bg-card p-5">
-                <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Seller</h4>
+              <div className="rounded-2xl border border-border/60 bg-card p-5 shadow-card">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-4">Seller</p>
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full gradient-hero flex items-center justify-center text-white font-bold">
+                  <div className="h-10 w-10 rounded-full gradient-hero flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-glow">
                     {seller.username?.[0]?.toUpperCase() ?? "?"}
                   </div>
                   <div>
-                    <p className="font-semibold">{seller.username ?? "Anonymous"}</p>
-                    <p className="text-xs text-muted-foreground">{seller.total_sales} sales</p>
+                    <p className="font-bold text-sm">{seller.username ?? "Anonymous"}</p>
+                    <p className="text-xs text-muted-foreground">{seller.total_sales ?? 0} total sales</p>
                   </div>
                 </div>
               </div>

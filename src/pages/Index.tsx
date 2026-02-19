@@ -102,66 +102,80 @@ export default function Index() {
       <Navbar />
 
       {/* Hero */}
-      <section className="relative overflow-hidden py-16 md:py-24">
-        <div className="absolute inset-0 gradient-hero opacity-10 pointer-events-none" />
-        <div className="absolute -top-32 -right-32 h-96 w-96 rounded-full bg-primary/20 blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-32 -left-32 h-96 w-96 rounded-full bg-accent/20 blur-3xl pointer-events-none" />
+      <section className="relative overflow-hidden py-20 md:py-28">
+        {/* Ambient orbs */}
+        <div className="absolute -top-40 -right-40 h-[500px] w-[500px] rounded-full bg-primary/15 blur-[100px] pointer-events-none" />
+        <div className="absolute -bottom-40 -left-40 h-[500px] w-[500px] rounded-full bg-accent/15 blur-[100px] pointer-events-none" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[600px] w-[600px] rounded-full bg-secondary/8 blur-[120px] pointer-events-none" />
 
         <div className="container mx-auto px-4 text-center relative z-10">
-          <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary mb-6">
+          <div className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/8 px-4 py-1.5 text-sm font-semibold text-primary mb-7 backdrop-blur-sm">
             ⚡ Buy today. Ship tomorrow.
           </div>
 
-          <h1 className="text-5xl md:text-6xl font-black tracking-tight mb-4 leading-tight">
+          <h1 className="text-5xl md:text-7xl font-black tracking-tight mb-5 leading-[1.05]">
             What do you want<br />
             <span className="text-gradient">to build?</span>
           </h1>
 
-          <p className="text-base md:text-lg text-muted-foreground max-w-lg mx-auto mb-8 leading-relaxed">
+          <p className="text-base md:text-lg text-muted-foreground max-w-md mx-auto mb-10 leading-relaxed">
             Describe your idea — we'll find a ready-made project to buy and ship today.
           </p>
 
           <BuildSearch />
 
-          <div className="mt-8 flex items-center justify-center gap-4 text-xs text-muted-foreground">
+          <div className="mt-8 flex items-center justify-center gap-3 text-xs text-muted-foreground">
             <span>or</span>
-            <a href="#browse" className="underline hover:text-foreground transition-colors">browse all projects</a>
+            <a href="#browse" className="underline underline-offset-4 hover:text-foreground transition-colors">browse all projects</a>
             <span>·</span>
-            <Link to={user ? "/sell" : "/login"} className="underline hover:text-foreground transition-colors">
+            <Link to={user ? "/sell" : "/login"} className="underline underline-offset-4 hover:text-foreground transition-colors">
               {user ? "list your project" : "start selling"}
             </Link>
           </div>
-
         </div>
       </section>
 
       {/* Browse */}
-      <section id="browse" className="container mx-auto px-4 pb-20">
+      <section id="browse" className="container mx-auto px-4 pb-24">
+        {/* Section label */}
+        <div className="flex items-baseline justify-between mb-5">
+          <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
+            {totalCount > 0 && !loading ? `${totalCount} projects` : "All projects"}
+          </h2>
+        </div>
+
         {/* Search + filters bar */}
-        <div className="flex flex-col md:flex-row gap-3 mb-6">
+        <div className="flex flex-col md:flex-row gap-3 mb-5">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search projects..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-9"
+              className="pl-9 bg-card border-border/60 focus-visible:border-primary/50 focus-visible:shadow-glow transition-all"
             />
           </div>
-          <Button variant="outline" onClick={() => setFiltersOpen(!filtersOpen)} className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setFiltersOpen(!filtersOpen)}
+            className={`flex items-center gap-2 border-border/60 transition-colors ${filtersOpen ? "border-primary/50 text-primary bg-primary/5" : ""}`}
+          >
             <SlidersHorizontal className="h-4 w-4" />
             Filters
-            {hasFilters && <span className="h-2 w-2 rounded-full bg-primary" />}
+            {hasFilters && <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />}
           </Button>
           {/* Sort */}
-          <div className="flex gap-1">
+          <div className="flex gap-1.5">
             {SORT_OPTIONS.map((s) => (
               <Button
                 key={s}
                 size="sm"
                 variant={sort === s ? "default" : "outline"}
                 onClick={() => setSort(s)}
-                className={sort === s ? "gradient-hero text-white border-0" : ""}
+                className={sort === s
+                  ? "gradient-hero text-white border-0 shadow-glow hover:opacity-90"
+                  : "border-border/60 text-muted-foreground hover:text-foreground"
+                }
               >
                 {s === "Popular" && <TrendingUp className="h-3.5 w-3.5 mr-1" />}
                 {s}
@@ -172,18 +186,18 @@ export default function Index() {
 
         {/* Filter chips */}
         {filtersOpen && (
-          <div className="mb-6 rounded-xl border border-border bg-card p-4 space-y-4">
+          <div className="mb-6 rounded-2xl border border-border/60 bg-card p-5 space-y-4 shadow-card">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Category</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">Category</p>
               <div className="flex flex-wrap gap-2">
                 {CATEGORIES.map((c) => (
                   <button
                     key={c}
                     onClick={() => setCategory(c)}
-                    className={`rounded-full px-3 py-1 text-sm font-medium transition-all ${
+                    className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all ${
                       category === c
                         ? "gradient-hero text-white shadow-sm"
-                        : "bg-muted text-muted-foreground hover:bg-muted/70"
+                        : "bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground"
                     }`}
                   >
                     {c}
@@ -192,16 +206,16 @@ export default function Index() {
               </div>
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Completeness</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">Completeness</p>
               <div className="flex flex-wrap gap-2">
                 {COMPLETENESS.map((c) => (
                   <button
                     key={c}
                     onClick={() => setCompleteness(c)}
-                    className={`rounded-full px-3 py-1 text-sm font-medium transition-all ${
+                    className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all ${
                       completeness === c
                         ? "gradient-hero text-white shadow-sm"
-                        : "bg-muted text-muted-foreground hover:bg-muted/70"
+                        : "bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground"
                     }`}
                   >
                     {c}
@@ -212,9 +226,9 @@ export default function Index() {
             {hasFilters && (
               <button
                 onClick={() => { setSearch(""); setCategory("All"); setCompleteness("All"); }}
-                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors font-medium"
               >
-                <X className="h-3 w-3" /> Clear filters
+                <X className="h-3 w-3" /> Clear all filters
               </button>
             )}
           </div>
@@ -224,18 +238,20 @@ export default function Index() {
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="h-72 rounded-xl bg-muted animate-pulse" />
+              <div key={i} className="h-72 rounded-2xl bg-muted animate-pulse" />
             ))}
           </div>
         ) : listings.length === 0 ? (
-          <div className="text-center py-24">
-            <div className="text-5xl mb-4">🔮</div>
+          <div className="text-center py-28">
+            <div className="text-5xl mb-5">🔮</div>
             <h3 className="text-xl font-bold mb-2">No listings found</h3>
-            <p className="text-muted-foreground mb-6">
+            <p className="text-muted-foreground mb-6 text-sm">
               {hasFilters ? "Try adjusting your filters" : "Be the first to list a project!"}
             </p>
             <Link to="/sell">
-              <Button className="gradient-hero text-white border-0 shadow-glow">List your project</Button>
+              <Button className="gradient-hero text-white border-0 shadow-glow hover:opacity-90">
+                List your project
+              </Button>
             </Link>
           </div>
         ) : (

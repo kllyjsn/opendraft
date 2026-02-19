@@ -20,7 +20,7 @@ interface Listing {
 
 export default function Checkout() {
   const { id } = useParams<{ id: string }>();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [listing, setListing] = useState<Listing | null>(null);
   const [loading, setLoading] = useState(true);
@@ -28,13 +28,14 @@ export default function Checkout() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (authLoading) return;
     if (!user) {
       navigate("/login");
       return;
     }
     if (!id) return;
     fetchListing();
-  }, [id, user]);
+  }, [id, user, authLoading]);
 
   async function fetchListing() {
     const { data } = await supabase

@@ -16,7 +16,7 @@ function NavItem({ to, children, onClick }: { to: string; children: React.ReactN
       className={cn(
         "relative text-sm font-medium transition-colors",
         active
-          ? "text-foreground after:absolute after:-bottom-0.5 after:left-0 after:right-0 after:h-px after:rounded-full after:bg-primary after:content-['']"
+          ? "text-foreground after:absolute after:-bottom-0.5 after:left-0 after:right-0 after:h-px after:rounded-full after:bg-primary after:content-[''] after:block"
           : "text-muted-foreground hover:text-foreground"
       )}
     >

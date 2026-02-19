@@ -31,15 +31,19 @@ export function ListingCard({
           {thumbnail ? (
             <img src={thumbnail} alt={title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
           ) : (
-            <div className="w-full h-full gradient-hero opacity-60 flex items-center justify-center">
+            <div className="w-full h-full flex items-center justify-center" style={{ background: "var(--gradient-hero)" }}>
               <span className="text-4xl">⚡</span>
             </div>
           )}
-          <div className="absolute top-2 left-2">
+          {/* Gradient scrim so overlays are always legible */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-black/20 pointer-events-none" />
+          {/* Badge — bottom-left for breathing room */}
+          <div className="absolute bottom-2 left-2">
             <CompletenessBadge level={completeness_badge} showTooltip={false} />
           </div>
-          <div className="absolute top-2 right-2">
-            <span className="rounded-full bg-black/70 text-white px-2.5 py-0.5 text-sm font-bold backdrop-blur-sm">
+          {/* Price — bottom-right */}
+          <div className="absolute bottom-2 right-2">
+            <span className="rounded-full bg-black/75 text-white px-2.5 py-0.5 text-sm font-bold backdrop-blur-sm">
               {priceLabel}
             </span>
           </div>

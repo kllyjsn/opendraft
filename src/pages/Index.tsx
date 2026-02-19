@@ -1,14 +1,258 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState, useEffect } from "react";
+import { Navbar } from "@/components/Navbar";
+import { Footer } from "@/components/Footer";
+import { ListingCard } from "@/components/ListingCard";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
+import { Search, Zap, TrendingUp, ArrowRight, SlidersHorizontal, X } from "lucide-react";
+import { Link } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 
-const Index = () => {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
-    </div>
-  );
+const CATEGORIES = ["All", "SaaS Tool", "AI App", "Landing Page", "Utility", "Game", "Other"];
+const COMPLETENESS = ["All", "Prototype", "MVP", "Production Ready"];
+const SORT_OPTIONS = ["Newest", "Popular"];
+
+const categoryMap: Record<string, string> = {
+  "SaaS Tool": "saas_tool",
+  "AI App": "ai_app",
+  "Landing Page": "landing_page",
+  "Utility": "utility",
+  "Game": "game",
+  "Other": "other",
+};
+const completenessMap: Record<string, string> = {
+  "Prototype": "prototype",
+  "MVP": "mvp",
+  "Production Ready": "production_ready",
 };
 
-export default Index;
+interface Listing {
+  id: string;
+  title: string;
+  description: string;
+  price: number;
+  completeness_badge: "prototype" | "mvp" | "production_ready";
+  tech_stack: string[];
+  screenshots: string[];
+  sales_count: number;
+  view_count: number;
+}
+
+export default function Index() {
+  const { user } = useAuth();
+  const [listings, setListings] = useState<Listing[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("All");
+  const [completeness, setCompleteness] = useState("All");
+  const [sort, setSort] = useState("Newest");
+  const [totalCount, setTotalCount] = useState(0);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+
+  useEffect(() => {
+    fetchListings();
+  }, [search, category, completeness, sort]);
+
+  async function fetchListings() {
+    setLoading(true);
+    let query = supabase
+      .from("listings")
+      .select("id,title,description,price,completeness_badge,tech_stack,screenshots,sales_count,view_count", { count: "exact" })
+      .eq("status", "live");
+
+    if (search) {
+      query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`);
+    }
+    if (category !== "All" && categoryMap[category]) {
+      query = query.eq("category", categoryMap[category] as "saas_tool" | "ai_app" | "landing_page" | "utility" | "game" | "other");
+    }
+    if (completeness !== "All" && completenessMap[completeness]) {
+      query = query.eq("completeness_badge", completenessMap[completeness] as "prototype" | "mvp" | "production_ready");
+    }
+    if (sort === "Newest") {
+      query = query.order("created_at", { ascending: false });
+    } else {
+      query = query.order("sales_count", { ascending: false });
+    }
+
+    const { data, count } = await query.limit(48);
+    setListings((data as Listing[]) ?? []);
+    setTotalCount(count ?? 0);
+    setLoading(false);
+  }
+
+  const hasFilters = search || category !== "All" || completeness !== "All";
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      <Navbar />
+
+      {/* Hero */}
+      <section className="relative overflow-hidden py-20 md:py-28">
+        <div className="absolute inset-0 gradient-hero opacity-10 pointer-events-none" />
+        <div className="absolute -top-32 -right-32 h-96 w-96 rounded-full bg-primary/20 blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-32 -left-32 h-96 w-96 rounded-full bg-accent/20 blur-3xl pointer-events-none" />
+
+        <div className="container mx-auto px-4 text-center relative z-10">
+          <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary mb-6">
+            <Zap className="h-3.5 w-3.5" />
+            {totalCount > 0 ? `${totalCount} vibe-coded projects for sale` : "The marketplace for vibe-coded projects"}
+          </div>
+
+          <h1 className="text-5xl md:text-7xl font-black tracking-tight mb-6 leading-tight">
+            Buy & sell{" "}
+            <span className="text-gradient">vibe-coded</span>
+            <br />
+            projects
+          </h1>
+
+          <p className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto mb-8 leading-relaxed">
+            Prototypes, MVPs, AI apps — all stages welcome. Get a head start or cash in on your creations.
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <a href="#browse">
+              <Button size="lg" className="gradient-hero text-white border-0 shadow-glow hover:opacity-90 text-base px-8">
+                Browse projects <ArrowRight className="h-4 w-4 ml-1" />
+              </Button>
+            </a>
+            <Link to={user ? "/sell" : "/login"}>
+              <Button size="lg" variant="outline" className="text-base px-8">
+                {user ? "List your project" : "Start selling"}
+              </Button>
+            </Link>
+          </div>
+
+          {/* Stats */}
+          <div className="mt-12 flex flex-wrap justify-center gap-8 text-sm text-muted-foreground">
+            {[
+              { label: "Platform fee", value: "20%" },
+              { label: "Sellers keep", value: "80%" },
+              { label: "Delivery", value: "Instant" },
+            ].map(({ label, value }) => (
+              <div key={label} className="text-center">
+                <div className="text-2xl font-black text-foreground">{value}</div>
+                <div>{label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Browse */}
+      <section id="browse" className="container mx-auto px-4 pb-20">
+        {/* Search + filters bar */}
+        <div className="flex flex-col md:flex-row gap-3 mb-6">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search projects..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <Button variant="outline" onClick={() => setFiltersOpen(!filtersOpen)} className="flex items-center gap-2">
+            <SlidersHorizontal className="h-4 w-4" />
+            Filters
+            {hasFilters && <span className="h-2 w-2 rounded-full bg-primary" />}
+          </Button>
+          {/* Sort */}
+          <div className="flex gap-1">
+            {SORT_OPTIONS.map((s) => (
+              <Button
+                key={s}
+                size="sm"
+                variant={sort === s ? "default" : "outline"}
+                onClick={() => setSort(s)}
+                className={sort === s ? "gradient-hero text-white border-0" : ""}
+              >
+                {s === "Popular" && <TrendingUp className="h-3.5 w-3.5 mr-1" />}
+                {s}
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        {/* Filter chips */}
+        {filtersOpen && (
+          <div className="mb-6 rounded-xl border border-border bg-card p-4 space-y-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Category</p>
+              <div className="flex flex-wrap gap-2">
+                {CATEGORIES.map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => setCategory(c)}
+                    className={`rounded-full px-3 py-1 text-sm font-medium transition-all ${
+                      category === c
+                        ? "gradient-hero text-white shadow-sm"
+                        : "bg-muted text-muted-foreground hover:bg-muted/70"
+                    }`}
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Completeness</p>
+              <div className="flex flex-wrap gap-2">
+                {COMPLETENESS.map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => setCompleteness(c)}
+                    className={`rounded-full px-3 py-1 text-sm font-medium transition-all ${
+                      completeness === c
+                        ? "gradient-hero text-white shadow-sm"
+                        : "bg-muted text-muted-foreground hover:bg-muted/70"
+                    }`}
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {hasFilters && (
+              <button
+                onClick={() => { setSearch(""); setCategory("All"); setCompleteness("All"); }}
+                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <X className="h-3 w-3" /> Clear filters
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Grid */}
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="h-72 rounded-xl bg-muted animate-pulse" />
+            ))}
+          </div>
+        ) : listings.length === 0 ? (
+          <div className="text-center py-24">
+            <div className="text-5xl mb-4">🔮</div>
+            <h3 className="text-xl font-bold mb-2">No listings found</h3>
+            <p className="text-muted-foreground mb-6">
+              {hasFilters ? "Try adjusting your filters" : "Be the first to list a project!"}
+            </p>
+            <Link to="/sell">
+              <Button className="gradient-hero text-white border-0 shadow-glow">List your project</Button>
+            </Link>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+            {listings.map((listing) => (
+              <ListingCard key={listing.id} {...listing} />
+            ))}
+          </div>
+        )}
+      </section>
+
+      <Footer />
+    </div>
+  );
+}

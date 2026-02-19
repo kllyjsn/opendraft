@@ -53,9 +53,13 @@ export function StripeConnectPanel() {
     try {
       const { data, error: fnError } = await supabase.functions.invoke("check-connect-status");
       if (fnError) throw new Error(fnError.message);
+      if (data?.error) throw new Error(data.error);
       setStatus(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to check status");
+      // Don't surface a scary error if the user simply has no account yet —
+      // fall back to the "not connected" state so the CTA is shown instead.
+      console.error("check-connect-status:", err);
+      setStatus({ onboarded: false, readyToReceivePayments: false });
     } finally {
       setLoading(false);
     }

@@ -1,14 +1,29 @@
+/**
+ * StripeConnectPanel Component
+ * ------------------------------------
+ * Displays the seller's Stripe Connect onboarding status and
+ * allows them to start/continue the onboarding flow.
+ *
+ * Onboarding states:
+ *  1. No account → Show "Connect Stripe account" CTA
+ *  2. Account exists, not fully onboarded → Show progress with status
+ *  3. Fully onboarded (readyToReceivePayments) → Show "Active" badge
+ *
+ * Status is always fetched LIVE from the API (no caching) to ensure accuracy.
+ */
+
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, Loader2, Zap, AlertCircle } from "lucide-react";
+import { CheckCircle, Loader2, Zap, AlertCircle, Clock } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 
 interface ConnectStatus {
   onboarded: boolean;
-  charges_enabled?: boolean;
-  payouts_enabled?: boolean;
-  details_submitted?: boolean;
+  readyToReceivePayments?: boolean;
+  onboardingComplete?: boolean;
+  requirementsStatus?: string | null;
+  accountId?: string;
 }
 
 export function StripeConnectPanel() {
@@ -18,16 +33,21 @@ export function StripeConnectPanel() {
   const [connecting, setConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Read and clear the ?connect= query param (set by Stripe's return_url)
   const connectParam = searchParams.get("connect");
 
   useEffect(() => {
     checkStatus();
-    // Clear connect param from URL after reading it
+    // Clear the connect param from URL after reading it (clean URL)
     if (connectParam) {
-      setSearchParams((p) => { p.delete("connect"); return p; }, { replace: true });
+      setSearchParams((p) => { p.delete("connect"); p.delete("accountId"); return p; }, { replace: true });
     }
   }, []);
 
+  /**
+   * Fetches live onboarding status from the check-connect-status edge function.
+   * We always call the API (not a cached value) so status is always accurate.
+   */
   async function checkStatus() {
     setLoading(true);
     try {
@@ -41,6 +61,10 @@ export function StripeConnectPanel() {
     }
   }
 
+  /**
+   * Starts the Connect onboarding flow by calling create-connect-account.
+   * On success, redirects to Stripe's hosted onboarding page.
+   */
   async function handleConnect() {
     setConnecting(true);
     setError(null);
@@ -48,6 +72,7 @@ export function StripeConnectPanel() {
       const { data, error: fnError } = await supabase.functions.invoke("create-connect-account");
       if (fnError) throw new Error(fnError.message);
       if (data?.error) throw new Error(data.error);
+      // Redirect to Stripe's hosted onboarding UI
       if (data?.url) window.location.href = data.url;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to start onboarding");
@@ -55,6 +80,7 @@ export function StripeConnectPanel() {
     }
   }
 
+  // Loading skeleton
   if (loading) {
     return (
       <div className="rounded-2xl border border-border bg-card p-6 shadow-card">
@@ -69,7 +95,8 @@ export function StripeConnectPanel() {
     );
   }
 
-  if (status?.onboarded) {
+  // Fully onboarded — ready to receive payments
+  if (status?.readyToReceivePayments) {
     return (
       <div className="rounded-2xl border border-border bg-card p-6 shadow-card">
         <div className="flex items-start justify-between gap-4">
@@ -82,18 +109,24 @@ export function StripeConnectPanel() {
               <p className="text-sm text-muted-foreground">
                 You receive <span className="font-semibold text-foreground">80%</span> of every sale, paid directly to your bank. The platform retains 20%.
               </p>
+              {status.accountId && (
+                <p className="text-xs text-muted-foreground mt-1 font-mono">
+                  Account: {status.accountId}
+                </p>
+              )}
               <div className="flex gap-4 mt-3">
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <span className={`h-2 w-2 rounded-full ${status.charges_enabled ? "bg-green-500" : "bg-orange-400"}`} />
-                  Charges {status.charges_enabled ? "enabled" : "pending"}
+                  <span className="h-2 w-2 rounded-full bg-green-500" />
+                  Transfers active
                 </div>
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <span className={`h-2 w-2 rounded-full ${status.payouts_enabled ? "bg-green-500" : "bg-orange-400"}`} />
-                  Payouts {status.payouts_enabled ? "enabled" : "pending"}
+                  <span className="h-2 w-2 rounded-full bg-green-500" />
+                  No pending requirements
                 </div>
               </div>
             </div>
           </div>
+          {/* "Manage" button re-generates an onboarding link for the seller's Stripe dashboard */}
           <Button variant="outline" size="sm" onClick={handleConnect} disabled={connecting}>
             {connecting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Manage"}
           </Button>
@@ -102,7 +135,39 @@ export function StripeConnectPanel() {
     );
   }
 
-  // Show "returned from Stripe" banner if they just finished onboarding
+  // Account exists but not yet ready — onboarding in progress
+  if (status?.accountId && !status?.readyToReceivePayments) {
+    const isPendingRequirements = status.requirementsStatus === "currently_due" || status.requirementsStatus === "past_due";
+
+    return (
+      <div className="rounded-2xl border border-border bg-card p-6 shadow-card">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <div className="h-10 w-10 rounded-xl bg-orange-100 flex items-center justify-center flex-shrink-0">
+              <Clock className="h-5 w-5 text-orange-600" />
+            </div>
+            <div>
+              <h3 className="font-bold mb-0.5">Onboarding in progress</h3>
+              <p className="text-sm text-muted-foreground">
+                {isPendingRequirements
+                  ? "Stripe needs more information before you can receive payments."
+                  : "Your account is being verified by Stripe. This can take a few minutes."}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Status: <span className="font-medium capitalize">{status.requirementsStatus?.replace("_", " ") ?? "pending"}</span>
+              </p>
+            </div>
+          </div>
+          <Button size="sm" onClick={handleConnect} disabled={connecting} className="gradient-hero text-white border-0">
+            {connecting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : isPendingRequirements ? "Complete setup" : "Check status"}
+          </Button>
+        </div>
+        {error && <div className="mt-3 text-xs text-destructive">{error}</div>}
+      </div>
+    );
+  }
+
+  // No account yet — show "returned from Stripe" banner if applicable
   const justReturned = connectParam === "success" || connectParam === "refresh";
 
   return (
@@ -130,9 +195,7 @@ export function StripeConnectPanel() {
               </span>
             ))}
           </div>
-          {error && (
-            <div className="mb-3 text-xs text-destructive">{error}</div>
-          )}
+          {error && <div className="mb-3 text-xs text-destructive">{error}</div>}
           <Button
             onClick={handleConnect}
             disabled={connecting}

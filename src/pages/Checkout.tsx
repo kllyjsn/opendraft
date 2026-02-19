@@ -116,20 +116,20 @@ export default function Checkout() {
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Order Summary</p>
             <div className="flex gap-4 items-start">
               {listing.screenshots?.[0] && (
-                <div className="flex-shrink-0 h-16 w-24 rounded-lg overflow-hidden bg-muted">
+                <div className="flex-shrink-0 h-16 w-16 rounded-lg overflow-hidden bg-muted">
                   <img src={listing.screenshots[0]} alt={listing.title} className="w-full h-full object-cover" />
                 </div>
               )}
               <div className="flex-1 min-w-0">
-                <div className="flex items-start justify-between gap-2 mb-1">
-                  <h3 className="font-bold leading-snug">{listing.title}</h3>
-                  <span className="flex-shrink-0 text-xl font-black">{price}</span>
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <CompletenessBadge level={listing.completeness_badge} showTooltip={false} />
-                  {listing.tech_stack?.slice(0, 3).map((t) => (
-                    <span key={t} className="rounded-md bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">{t}</span>
-                  ))}
+                <h3 className="font-bold leading-snug mb-2 truncate">{listing.title}</h3>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <CompletenessBadge level={listing.completeness_badge} showTooltip={false} />
+                    {listing.tech_stack?.slice(0, 2).map((t) => (
+                      <span key={t} className="rounded-md bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">{t}</span>
+                    ))}
+                  </div>
+                  <span className="text-lg font-black flex-shrink-0">{price}</span>
                 </div>
               </div>
             </div>

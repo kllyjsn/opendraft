@@ -1,1 +1,25 @@
 project_id = "xwumrdcagsuwqeelyxih"
+
+# Stripe webhook must NOT verify JWT — Stripe sends requests without a Supabase auth token.
+# We verify the request authenticity using the Stripe webhook signature (STRIPE_WEBHOOK_SECRET) instead.
+[functions.stripe-webhook]
+verify_jwt = false
+
+# These functions are called by the frontend with a user session — JWT verification is fine.
+# Listed here for documentation clarity.
+[functions.create-connect-account]
+verify_jwt = true
+
+[functions.check-connect-status]
+verify_jwt = true
+
+[functions.create-product]
+verify_jwt = true
+
+# get-products is public (storefront) — no auth required
+[functions.get-products]
+verify_jwt = false
+
+# create-checkout-session accepts optional auth (guest checkout or authenticated)
+[functions.create-checkout-session]
+verify_jwt = false

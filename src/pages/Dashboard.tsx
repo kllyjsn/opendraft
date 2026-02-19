@@ -8,8 +8,19 @@ import { useAuth } from "@/hooks/useAuth";
 import { CompletenessBadge } from "@/components/CompletenessBadge";
 import { StripeConnectPanel } from "@/components/StripeConnectPanel";
 import { CreateProductPanel } from "@/components/CreateProductPanel";
-import { TrendingUp, Package, Eye, Trash2, Plus } from "lucide-react";
+import { TrendingUp, Package, Eye, Trash2, Plus, ShoppingBag } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+
+interface Sale {
+  id: string;
+  created_at: string;
+  amount_paid: number;
+  seller_amount: number;
+  platform_fee: number;
+  listing_id: string;
+  buyer_id: string;
+  listings: { title: string } | null;
+}
 
 interface Listing {
   id: string;
@@ -37,6 +48,7 @@ export default function Dashboard() {
   const { user, loading } = useAuth();
   const { toast } = useToast();
   const [listings, setListings] = useState<Listing[]>([]);
+  const [sales, setSales] = useState<Sale[]>([]);
   const [summary, setSummary] = useState<SaleSummary>({ total_earned: 0, total_sales: 0 });
   const [dataLoading, setDataLoading] = useState(true);
 
@@ -53,21 +65,24 @@ export default function Dashboard() {
       setDataLoading(false);
     }
 
-    async function fetchSummary() {
+    async function fetchSales() {
+      // Fetch full sales history with listing titles for the sales table
       const { data } = await supabase
         .from("purchases")
-        .select("seller_amount")
-        .eq("seller_id", user!.id);
-      if (data) {
-        setSummary({
-          total_earned: data.reduce((s, p) => s + (p.seller_amount ?? 0), 0),
-          total_sales: data.length,
-        });
-      }
+        .select("id,created_at,amount_paid,seller_amount,platform_fee,listing_id,buyer_id,listings(title)")
+        .eq("seller_id", user!.id)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      const salesData = (data as unknown as Sale[]) ?? [];
+      setSales(salesData);
+      setSummary({
+        total_earned: salesData.reduce((s, p) => s + (p.seller_amount ?? 0), 0),
+        total_sales: salesData.length,
+      });
     }
 
     fetchListings();
-    fetchSummary();
+    fetchSales();
   }, [user]);
 
   if (!loading && !user) return <Navigate to="/login" replace />;
@@ -201,6 +216,65 @@ export default function Dashboard() {
                     </tr>
                   ))}
                 </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* ─────────────────────────────────────────────── */}
+        {/* Sales History — powered by Stripe Connect       */}
+        {/* Shows each purchase with amount, fee breakdown  */}
+        {/* ─────────────────────────────────────────────── */}
+        <h2 className="text-xl font-bold mb-4 mt-12 flex items-center gap-2">
+          <ShoppingBag className="h-5 w-5 text-primary" /> Sales history
+        </h2>
+        {sales.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-border p-8 text-center text-muted-foreground text-sm">
+            No sales yet — they'll appear here once a buyer completes checkout via Stripe.
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-border overflow-hidden shadow-card">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/50">
+                  <tr>
+                    <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Date</th>
+                    <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Product</th>
+                    <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Sale price</th>
+                    <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Platform fee (20%)</th>
+                    <th className="px-4 py-3 text-left font-semibold text-muted-foreground">You received (80%)</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {sales.map((sale) => (
+                    <tr key={sale.id} className="hover:bg-muted/30 transition-colors">
+                      <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
+                        {new Date(sale.created_at).toLocaleDateString()}
+                      </td>
+                      <td className="px-4 py-3 font-medium max-w-[200px] truncate">
+                        {sale.listings?.title ?? <span className="text-muted-foreground italic">Deleted listing</span>}
+                      </td>
+                      <td className="px-4 py-3">${(sale.amount_paid / 100).toFixed(2)}</td>
+                      <td className="px-4 py-3 text-muted-foreground">
+                        −${(sale.platform_fee / 100).toFixed(2)}
+                      </td>
+                      {/* seller_amount is what was transferred to their Stripe Connect account */}
+                      <td className="px-4 py-3 font-bold text-primary">
+                        ${(sale.seller_amount / 100).toFixed(2)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot className="bg-muted/30 border-t border-border">
+                  <tr>
+                    <td colSpan={4} className="px-4 py-3 text-sm font-semibold text-muted-foreground text-right">
+                      Total transferred to your Stripe account:
+                    </td>
+                    <td className="px-4 py-3 font-black text-primary">
+                      ${(summary.total_earned / 100).toFixed(2)}
+                    </td>
+                  </tr>
+                </tfoot>
               </table>
             </div>
           </div>

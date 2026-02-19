@@ -32,6 +32,9 @@ export function Navbar() {
           <Link to="/" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
             Browse
           </Link>
+          <Link to="/storefront" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            Storefront
+          </Link>
           {user && (
             <>
           <Link to="/sell" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">

@@ -118,14 +118,78 @@ Deno.serve(async (req) => {
 
     // ------------------------------------------------------------------
     // Step 6: Update our DB to reflect the current live status
-    // This keeps the DB in sync for any server-side checks
     // ------------------------------------------------------------------
+    const { data: profileBefore } = await adminClient
+      .from("profiles")
+      .select("stripe_onboarded")
+      .eq("user_id", user.id)
+      .single();
+
     await adminClient
       .from("profiles")
       .update({ stripe_onboarded: onboarded })
       .eq("user_id", user.id);
 
-    console.log(`Account ${profile.stripe_account_id} status — onboarded: ${onboarded}, ready: ${readyToReceivePayments}, requirementsStatus: ${requirementsStatus}`);
+    // ------------------------------------------------------------------
+    // Step 7: Trigger pending payout transfer if seller just became onboarded
+    //
+    // When a seller connects Stripe for the first time (transitions from
+    // not-onboarded → onboarded), we automatically transfer any earnings
+    // they accumulated while unconnected ("Earn Now, Pay Later" model).
+    // ------------------------------------------------------------------
+    const justBecameOnboarded = !profileBefore?.stripe_onboarded && onboarded;
+    let pendingPayoutResult = null;
+
+    if (justBecameOnboarded) {
+      console.log(`Seller ${user.id} just completed onboarding — triggering pending payout transfer`);
+      try {
+        // Query unpaid purchases for this seller
+        const { data: pendingPurchases } = await adminClient
+          .from("purchases")
+          .select("id, seller_amount, stripe_payment_intent_id")
+          .eq("seller_id", user.id)
+          .eq("payout_transferred", false);
+
+        if (pendingPurchases && pendingPurchases.length > 0) {
+          const stripeClient = new Stripe(stripeKey);
+          let transferred = 0;
+
+          for (const purchase of pendingPurchases) {
+            try {
+              await stripeClient.transfers.create({
+                amount: purchase.seller_amount,
+                currency: "usd",
+                destination: profile.stripe_account_id,
+                ...(purchase.stripe_payment_intent_id
+                  ? { source_transaction: purchase.stripe_payment_intent_id }
+                  : {}),
+                metadata: { purchase_id: purchase.id },
+              });
+              await adminClient.from("purchases").update({ payout_transferred: true }).eq("id", purchase.id);
+              transferred++;
+            } catch (transferErr) {
+              console.error(`Failed to transfer for purchase ${purchase.id}:`, transferErr);
+            }
+          }
+
+          pendingPayoutResult = { transferred, total: pendingPurchases.length };
+          console.log(`Auto-transferred ${transferred}/${pendingPurchases.length} pending payouts for seller ${user.id}`);
+        }
+      } catch (payoutErr) {
+        console.error("Failed to auto-transfer pending payouts:", payoutErr);
+      }
+    }
+
+    // Also include the pending earnings amount for the dashboard display
+    const { data: pendingRows } = await adminClient
+      .from("purchases")
+      .select("seller_amount")
+      .eq("seller_id", user.id)
+      .eq("payout_transferred", false);
+
+    const pendingEarnings = (pendingRows ?? []).reduce((sum, p) => sum + p.seller_amount, 0);
+
+    console.log(`Account ${profile.stripe_account_id} status — onboarded: ${onboarded}, ready: ${readyToReceivePayments}, pendingEarnings: ${pendingEarnings}`);
 
     return new Response(
       JSON.stringify({
@@ -133,8 +197,9 @@ Deno.serve(async (req) => {
         readyToReceivePayments,
         onboardingComplete,
         requirementsStatus: requirementsStatus ?? null,
-        // Include the raw V2 account ID for debugging
         accountId: profile.stripe_account_id,
+        pendingEarnings,
+        ...(pendingPayoutResult ? { autoTransferred: pendingPayoutResult } : {}),
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

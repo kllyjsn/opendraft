@@ -24,6 +24,7 @@ interface ConnectStatus {
   onboardingComplete?: boolean;
   requirementsStatus?: string | null;
   accountId?: string;
+  pendingEarnings?: number;
 }
 
 export function StripeConnectPanel() {
@@ -173,6 +174,8 @@ export function StripeConnectPanel() {
 
   // No account yet — show "returned from Stripe" banner if applicable
   const justReturned = connectParam === "success" || connectParam === "refresh";
+  const pendingEarnings = status?.pendingEarnings ?? 0;
+  const hasPendingEarnings = pendingEarnings > 0;
 
   return (
     <div className="rounded-2xl border border-border bg-card p-6 shadow-card">
@@ -182,6 +185,24 @@ export function StripeConnectPanel() {
           Stripe is still verifying your account. This can take a few minutes — check back shortly or complete any outstanding steps.
         </div>
       )}
+
+      {/* Pending earnings banner — shown when seller has sales but no Stripe yet */}
+      {hasPendingEarnings && (
+        <div className="mb-5 rounded-xl border border-primary/20 bg-primary/5 p-4 flex items-center gap-3">
+          <div className="h-9 w-9 rounded-lg gradient-hero flex items-center justify-center flex-shrink-0">
+            <Zap className="h-4 w-4 text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold text-foreground">
+              ${(pendingEarnings / 100).toFixed(2)} waiting for you
+            </p>
+            <p className="text-xs text-muted-foreground">
+              You have sales! Connect Stripe to receive your earnings instantly.
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-start gap-3">
         <div className="h-10 w-10 rounded-xl gradient-hero flex items-center justify-center flex-shrink-0">
           <Zap className="h-5 w-5 text-white" />
@@ -207,6 +228,8 @@ export function StripeConnectPanel() {
           >
             {connecting ? (
               <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Redirecting to Stripe…</>
+            ) : hasPendingEarnings ? (
+              <><Zap className="h-4 w-4 mr-2" /> Collect ${(pendingEarnings / 100).toFixed(2)} now</>
             ) : (
               <><Zap className="h-4 w-4 mr-2" /> Connect Stripe account</>
             )}

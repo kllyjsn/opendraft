@@ -43,7 +43,13 @@ export default function Checkout() {
       .select("id,title,description,price,completeness_badge,screenshots,tech_stack")
       .eq("id", id)
       .single();
-    setListing(data as Listing | null);
+    const listing = data as Listing | null;
+    // Redirect free listings back to the detail page (they use the claim flow)
+    if (listing && listing.price === 0) {
+      navigate(`/listing/${listing.id}`, { replace: true });
+      return;
+    }
+    setListing(listing);
     setLoading(false);
   }
 

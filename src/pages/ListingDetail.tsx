@@ -6,7 +6,7 @@ import { Footer } from "@/components/Footer";
 import { CompletenessBadge } from "@/components/CompletenessBadge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { ExternalLink, Github, Star, ShoppingCart, ChevronLeft, ChevronRight, Download, Eye, Package } from "lucide-react";
+import { ExternalLink, Github, Star, ShoppingCart, ChevronLeft, ChevronRight, Download, Eye, Package, Gift } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface Listing {
@@ -51,6 +51,7 @@ export default function ListingDetail() {
   const [loading, setLoading] = useState(true);
   const [purchased, setPurchased] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [claiming, setClaiming] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -117,6 +118,30 @@ export default function ListingDetail() {
     }
   }
 
+  async function handleClaim() {
+    if (!user || !listing) return;
+    setClaiming(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/claim-free-listing`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.access_token}`,
+        },
+        body: JSON.stringify({ listingId: listing.id }),
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error ?? "Failed to claim");
+      setPurchased(true);
+      toast({ title: "Project claimed! 🎉", description: "You now have access to download it." });
+    } catch (e) {
+      toast({ title: "Claim failed", description: e instanceof Error ? e.message : "Unknown error", variant: "destructive" });
+    } finally {
+      setClaiming(false);
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -152,7 +177,8 @@ export default function ListingDetail() {
     ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length
     : null;
 
-  const priceLabel = `$${(listing.price / 100).toFixed(2)}`;
+  const isFree = listing.price === 0;
+  const priceLabel = isFree ? "Free" : `$${(listing.price / 100).toFixed(2)}`;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -308,8 +334,10 @@ export default function ListingDetail() {
             <div className="rounded-2xl border border-border/60 bg-card p-6 shadow-card sticky top-20">
               {/* Price */}
               <div className="mb-5">
-                <div className="text-4xl font-black mb-0.5">{priceLabel}</div>
-                <p className="text-xs text-muted-foreground">One-time purchase · Instant delivery</p>
+                <div className={`text-4xl font-black mb-0.5 ${isFree ? "text-primary" : ""}`}>{priceLabel}</div>
+                <p className="text-xs text-muted-foreground">
+                  {isFree ? "Free forever · Instant access" : "One-time purchase · Instant delivery"}
+                </p>
               </div>
 
               {purchased ? (
@@ -326,6 +354,24 @@ export default function ListingDetail() {
                     {downloading ? "Preparing download…" : "Download Project"}
                   </Button>
                 </div>
+              ) : isFree ? (
+                user ? (
+                  <Button
+                    onClick={handleClaim}
+                    disabled={claiming}
+                    className="w-full gradient-hero text-white border-0 shadow-glow hover:opacity-90 h-12 text-base font-bold transition-opacity"
+                  >
+                    <Gift className="h-4 w-4 mr-2" />
+                    {claiming ? "Claiming…" : "Get for Free"}
+                  </Button>
+                ) : (
+                  <Link to="/login">
+                    <Button className="w-full gradient-hero text-white border-0 shadow-glow hover:opacity-90 h-12 text-base font-bold transition-opacity">
+                      <Gift className="h-4 w-4 mr-2" />
+                      Sign in to claim free
+                    </Button>
+                  </Link>
+                )
               ) : (
                 <Link to={user ? `/checkout/${listing.id}` : "/login"}>
                   <Button className="w-full gradient-hero text-white border-0 shadow-glow hover:opacity-90 h-12 text-base font-bold transition-opacity">
@@ -358,9 +404,11 @@ export default function ListingDetail() {
               )}
 
               {/* Trust line */}
-              <p className="mt-4 text-center text-[11px] text-muted-foreground">
-                🔒 Secure checkout via Stripe
-              </p>
+              {!isFree && (
+                <p className="mt-4 text-center text-[11px] text-muted-foreground">
+                  🔒 Secure checkout via Stripe
+                </p>
+              )}
             </div>
 
             {/* Seller card */}

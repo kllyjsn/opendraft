@@ -22,7 +22,7 @@ export function ListingCard({
   tech_stack, screenshots, sales_count, view_count, avg_rating, owned,
 }: ListingCardProps) {
   const thumbnail = screenshots?.[0];
-  const priceLabel = `$${(price / 100).toFixed(2)}`;
+  const priceLabel = price === 0 ? "Free" : `$${(price / 100).toFixed(2)}`;
 
   return (
     <Link to={`/listing/${id}`} className="group block">

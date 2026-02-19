@@ -48,13 +48,14 @@ export default function Index() {
   const [category, setCategory] = useState("All");
   const [completeness, setCompleteness] = useState("All");
   const [sort, setSort] = useState("Newest");
+  const [freeOnly, setFreeOnly] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [ownedIds, setOwnedIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetchListings();
-  }, [search, category, completeness, sort]);
+  }, [search, category, completeness, sort, freeOnly]);
 
   useEffect(() => {
     if (!user) { setOwnedIds(new Set()); return; }
@@ -83,6 +84,9 @@ export default function Index() {
     if (completeness !== "All" && completenessMap[completeness]) {
       query = query.eq("completeness_badge", completenessMap[completeness] as "prototype" | "mvp" | "production_ready");
     }
+    if (freeOnly) {
+      query = query.eq("price", 0);
+    }
     if (sort === "Newest") {
       query = query.order("created_at", { ascending: false });
     } else {
@@ -95,7 +99,7 @@ export default function Index() {
     setLoading(false);
   }
 
-  const hasFilters = search || category !== "All" || completeness !== "All";
+  const hasFilters = search || category !== "All" || completeness !== "All" || freeOnly;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -164,6 +168,18 @@ export default function Index() {
             Filters
             {hasFilters && <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />}
           </Button>
+          {/* Free toggle */}
+          <Button
+            size="sm"
+            variant={freeOnly ? "default" : "outline"}
+            onClick={() => setFreeOnly(!freeOnly)}
+            className={freeOnly
+              ? "gradient-hero text-white border-0 shadow-glow hover:opacity-90"
+              : "border-border/60 text-muted-foreground hover:text-foreground"
+            }
+          >
+            🆓 Free
+          </Button>
           {/* Sort */}
           <div className="flex gap-1.5">
             {SORT_OPTIONS.map((s) => (
@@ -223,9 +239,22 @@ export default function Index() {
                 ))}
               </div>
             </div>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">Price</p>
+              <button
+                onClick={() => setFreeOnly(!freeOnly)}
+                className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all ${
+                  freeOnly
+                    ? "gradient-hero text-white shadow-sm"
+                    : "bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+                }`}
+              >
+                🆓 Free only
+              </button>
+            </div>
             {hasFilters && (
               <button
-                onClick={() => { setSearch(""); setCategory("All"); setCompleteness("All"); }}
+                onClick={() => { setSearch(""); setCategory("All"); setCompleteness("All"); setFreeOnly(false); }}
                 className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors font-medium"
               >
                 <X className="h-3 w-3" /> Clear all filters

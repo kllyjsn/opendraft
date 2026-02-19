@@ -6,10 +6,10 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const PLATFORM_FEE_PERCENT = 0.2; // 20%
+
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
@@ -23,12 +23,8 @@ Deno.serve(async (req) => {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("Missing Authorization header");
 
-    // Get user from auth token
     const userRes = await fetch(`${supabaseUrl}/auth/v1/user`, {
-      headers: {
-        Authorization: authHeader,
-        apikey: supabaseServiceKey,
-      },
+      headers: { Authorization: authHeader, apikey: supabaseServiceKey },
     });
     const userData = await userRes.json();
     if (!userData?.id) throw new Error("Invalid user session");
@@ -37,15 +33,10 @@ Deno.serve(async (req) => {
     const { listingId } = await req.json();
     if (!listingId) throw new Error("Missing listingId");
 
-    // Fetch listing from Supabase
+    // Fetch listing
     const listingRes = await fetch(
       `${supabaseUrl}/rest/v1/listings?id=eq.${listingId}&select=*`,
-      {
-        headers: {
-          apikey: supabaseServiceKey,
-          Authorization: `Bearer ${supabaseServiceKey}`,
-        },
-      }
+      { headers: { apikey: supabaseServiceKey, Authorization: `Bearer ${supabaseServiceKey}` } }
     );
     const listings = await listingRes.json();
     const listing = listings?.[0];
@@ -54,21 +45,25 @@ Deno.serve(async (req) => {
     // Check not already purchased
     const purchaseRes = await fetch(
       `${supabaseUrl}/rest/v1/purchases?listing_id=eq.${listingId}&buyer_id=eq.${buyerId}&select=id`,
-      {
-        headers: {
-          apikey: supabaseServiceKey,
-          Authorization: `Bearer ${supabaseServiceKey}`,
-        },
-      }
+      { headers: { apikey: supabaseServiceKey, Authorization: `Bearer ${supabaseServiceKey}` } }
     );
     const existing = await purchaseRes.json();
     if (existing?.length > 0) throw new Error("You already own this project");
 
+    // Fetch seller's Stripe Connect account
+    const profileRes = await fetch(
+      `${supabaseUrl}/rest/v1/profiles?user_id=eq.${listing.seller_id}&select=stripe_account_id,stripe_onboarded`,
+      { headers: { apikey: supabaseServiceKey, Authorization: `Bearer ${supabaseServiceKey}` } }
+    );
+    const profiles = await profileRes.json();
+    const sellerProfile = profiles?.[0];
+
     const stripe = new Stripe(stripeKey, { apiVersion: "2024-06-20" });
-
     const origin = req.headers.get("origin") || "https://opendraft.lovable.app";
+    const platformFee = Math.round(listing.price * PLATFORM_FEE_PERCENT);
 
-    const session = await stripe.checkout.sessions.create({
+    // Build session params — use Connect if seller is onboarded
+    const sessionParams: Stripe.Checkout.SessionCreateParams = {
       payment_method_types: ["card"],
       line_items: [
         {
@@ -93,7 +88,19 @@ Deno.serve(async (req) => {
         seller_id: listing.seller_id,
         price: String(listing.price),
       },
-    });
+    };
+
+    // Add Connect transfer if seller has an onboarded Stripe account
+    if (sellerProfile?.stripe_account_id && sellerProfile?.stripe_onboarded) {
+      sessionParams.payment_intent_data = {
+        application_fee_amount: platformFee,
+        transfer_data: {
+          destination: sellerProfile.stripe_account_id,
+        },
+      };
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionParams);
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

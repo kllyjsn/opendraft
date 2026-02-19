@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { CompletenessBadge } from "@/components/CompletenessBadge";
 import { Button } from "@/components/ui/button";
-import { Download, Github, ExternalLink, Star } from "lucide-react";
+import { Download, Github, Star, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface Purchase {
@@ -38,6 +38,7 @@ export default function Profile() {
   const [dataLoading, setDataLoading] = useState(true);
   const [reviewForm, setReviewForm] = useState<{ purchaseId: string; rating: number; text: string } | null>(null);
   const [submittingReview, setSubmittingReview] = useState(false);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -67,6 +68,33 @@ export default function Profile() {
   if (!loading && !user) return <Navigate to="/login" replace />;
 
   const reviewedPurchaseIds = new Set(reviews.map((r) => r.purchase_id));
+
+  async function handleDownload(listingId: string) {
+    if (!user) return;
+    setDownloadingId(listingId);
+    try {
+      const { data, error } = await supabase.functions.invoke("get-download-url", {
+        body: { listingId },
+      });
+      if (error || data?.error) throw new Error(error?.message ?? data?.error);
+
+      if (data.signedUrl) {
+        // Trigger ZIP download
+        const a = document.createElement("a");
+        a.href = data.signedUrl;
+        a.download = `${data.title ?? "project"}.zip`;
+        a.click();
+      } else if (data.githubUrl) {
+        window.open(data.githubUrl, "_blank");
+      } else {
+        toast({ title: "No file available", description: "The seller hasn't uploaded a file for this listing yet.", variant: "destructive" });
+      }
+    } catch (err) {
+      toast({ title: "Download failed", description: err instanceof Error ? err.message : "Unknown error", variant: "destructive" });
+    } finally {
+      setDownloadingId(null);
+    }
+  }
 
   async function submitReview() {
     if (!reviewForm || !user) return;
@@ -154,6 +182,20 @@ export default function Profile() {
                         Purchased {new Date(purchase.created_at).toLocaleDateString()} · ${(purchase.amount_paid / 100).toFixed(2)}
                       </p>
                       <div className="flex flex-wrap gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs"
+                          disabled={downloadingId === purchase.listing_id}
+                          onClick={() => handleDownload(purchase.listing_id)}
+                        >
+                          {downloadingId === purchase.listing_id ? (
+                            <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                          ) : (
+                            <Download className="h-3 w-3 mr-1" />
+                          )}
+                          Download
+                        </Button>
                         {listing?.github_url && (
                           <a href={listing.github_url} target="_blank" rel="noopener noreferrer">
                             <Button size="sm" variant="outline" className="h-7 text-xs">

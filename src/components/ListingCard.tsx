@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { CompletenessBadge } from "./CompletenessBadge";
-import { Star, Eye } from "lucide-react";
+import { Star, Eye, CheckCircle } from "lucide-react";
 
 interface ListingCardProps {
   id: string;
@@ -14,11 +14,12 @@ interface ListingCardProps {
   sales_count: number;
   view_count: number;
   avg_rating?: number;
+  owned?: boolean;
 }
 
 export function ListingCard({
   id, title, description, price, completeness_badge,
-  tech_stack, screenshots, sales_count, view_count, avg_rating,
+  tech_stack, screenshots, sales_count, view_count, avg_rating, owned,
 }: ListingCardProps) {
   const thumbnail = screenshots?.[0];
   const priceLabel = `$${(price / 100).toFixed(2)}`;
@@ -37,16 +38,25 @@ export function ListingCard({
           )}
           {/* Gradient scrim so overlays are always legible */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-black/20 pointer-events-none" />
+          {/* Owned badge — top-right */}
+          {owned && (
+            <div className="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-xs font-bold text-primary-foreground shadow-glow">
+              <CheckCircle className="h-3 w-3" />
+              Owned
+            </div>
+          )}
           {/* Badge — bottom-left for breathing room */}
           <div className="absolute bottom-2 left-2">
             <CompletenessBadge level={completeness_badge} showTooltip={false} />
           </div>
-          {/* Price — bottom-right */}
-          <div className="absolute bottom-2 right-2">
-            <span className="rounded-full bg-black/75 text-white px-2.5 py-0.5 text-sm font-bold backdrop-blur-sm">
-              {priceLabel}
-            </span>
-          </div>
+          {/* Price — bottom-right (hide if owned) */}
+          {!owned && (
+            <div className="absolute bottom-2 right-2">
+              <span className="rounded-full bg-black/75 text-white px-2.5 py-0.5 text-sm font-bold backdrop-blur-sm">
+                {priceLabel}
+              </span>
+            </div>
+          )}
         </div>
 
         <CardContent className="p-4">

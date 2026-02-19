@@ -6,7 +6,8 @@ import { Footer } from "@/components/Footer";
 import { CompletenessBadge } from "@/components/CompletenessBadge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { ExternalLink, Github, Star, ShoppingCart, ChevronLeft, ChevronRight } from "lucide-react";
+import { ExternalLink, Github, Star, ShoppingCart, ChevronLeft, ChevronRight, Download } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface Listing {
   id: string;
@@ -42,12 +43,14 @@ interface Profile {
 export default function ListingDetail() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
+  const { toast } = useToast();
   const [listing, setListing] = useState<Listing | null>(null);
   const [seller, setSeller] = useState<Profile | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [activeImg, setActiveImg] = useState(0);
   const [loading, setLoading] = useState(true);
   const [purchased, setPurchased] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -81,6 +84,39 @@ export default function ListingDetail() {
     if (!user) return;
     const { data } = await supabase.from("purchases").select("id").eq("listing_id", id).eq("buyer_id", user.id).maybeSingle();
     setPurchased(!!data);
+  }
+
+  async function handleDownload() {
+    if (!user || !listing) return;
+    setDownloading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-download-url`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.access_token}`,
+        },
+        body: JSON.stringify({ listingId: listing.id }),
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error ?? "Failed to get download URL");
+
+      if (result.signedUrl) {
+        const a = document.createElement("a");
+        a.href = result.signedUrl;
+        a.download = `${listing.title}.zip`;
+        a.click();
+      } else if (result.githubUrl) {
+        window.open(result.githubUrl, "_blank");
+      } else {
+        toast({ title: "No file available", description: "The seller hasn't uploaded a file yet." });
+      }
+    } catch (e) {
+      toast({ title: "Download failed", description: e instanceof Error ? e.message : "Unknown error", variant: "destructive" });
+    } finally {
+      setDownloading(false);
+    }
   }
 
   if (loading) {
@@ -238,12 +274,18 @@ export default function ListingDetail() {
               <p className="text-xs text-muted-foreground mb-5">One-time purchase. Instant delivery.</p>
 
               {purchased ? (
-                <div className="rounded-xl bg-primary/10 border border-primary/30 p-4 text-center">
-                  <p className="font-semibold text-primary text-sm mb-1">✓ You own this project</p>
-                  <p className="text-xs text-muted-foreground">Check your profile for download access</p>
-                  <Link to="/profile">
-                    <Button variant="outline" size="sm" className="mt-3 w-full">View in profile</Button>
-                  </Link>
+                <div className="space-y-3">
+                  <div className="rounded-xl bg-primary/10 border border-primary/30 p-3 text-center">
+                    <p className="font-semibold text-primary text-sm">✓ You own this project</p>
+                  </div>
+                  <Button
+                    onClick={handleDownload}
+                    disabled={downloading}
+                    className="w-full gradient-hero text-white border-0 shadow-glow hover:opacity-90 h-12 text-base font-bold"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    {downloading ? "Preparing download..." : "Download Project"}
+                  </Button>
                 </div>
               ) : (
                 <Link to={user ? `/checkout/${listing.id}` : "/login"}>

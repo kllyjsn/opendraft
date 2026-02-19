@@ -50,10 +50,22 @@ export default function Index() {
   const [sort, setSort] = useState("Newest");
   const [totalCount, setTotalCount] = useState(0);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [ownedIds, setOwnedIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetchListings();
   }, [search, category, completeness, sort]);
+
+  useEffect(() => {
+    if (!user) { setOwnedIds(new Set()); return; }
+    supabase
+      .from("purchases")
+      .select("listing_id")
+      .eq("buyer_id", user.id)
+      .then(({ data }) => {
+        setOwnedIds(new Set((data ?? []).map((p) => p.listing_id)));
+      });
+  }, [user]);
 
   async function fetchListings() {
     setLoading(true);
@@ -229,7 +241,7 @@ export default function Index() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {listings.map((listing) => (
-              <ListingCard key={listing.id} {...listing} />
+              <ListingCard key={listing.id} {...listing} owned={ownedIds.has(listing.id)} />
             ))}
           </div>
         )}

@@ -9,6 +9,15 @@ import { useAuth } from "@/hooks/useAuth";
 import { ExternalLink, Github, Star, ShoppingCart, ChevronLeft, ChevronRight, Download, Eye, Package, Gift } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
+const BUILT_WITH_LABELS: Record<string, string> = {
+  lovable: "Lovable",
+  claude_code: "Claude Code",
+  cursor: "Cursor",
+  bolt: "Bolt",
+  replit: "Replit",
+  other: "Other",
+};
+
 interface Listing {
   id: string;
   title: string;
@@ -24,6 +33,7 @@ interface Listing {
   view_count: number;
   seller_id: string;
   created_at: string;
+  built_with: string | null;
 }
 
 interface Review {
@@ -275,6 +285,11 @@ export default function ListingDetail() {
                   <Eye className="h-3.5 w-3.5" />
                   {listing.view_count} views
                 </span>
+                {listing.built_with && BUILT_WITH_LABELS[listing.built_with] && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-accent/10 border border-accent/20 px-2.5 py-0.5 text-xs font-semibold text-accent">
+                    🛠 Built with {BUILT_WITH_LABELS[listing.built_with]}
+                  </span>
+                )}
               </div>
               <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap text-[0.95rem]">{listing.description}</p>
             </div>

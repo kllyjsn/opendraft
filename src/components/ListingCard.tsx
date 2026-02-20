@@ -15,11 +15,21 @@ interface ListingCardProps {
   view_count: number;
   avg_rating?: number;
   owned?: boolean;
+  built_with?: string | null;
 }
+
+const BUILT_WITH_LABELS: Record<string, string> = {
+  lovable: "Lovable",
+  claude_code: "Claude Code",
+  cursor: "Cursor",
+  bolt: "Bolt",
+  replit: "Replit",
+  other: "Other",
+};
 
 export function ListingCard({
   id, title, description, price, completeness_badge,
-  tech_stack, screenshots, sales_count, view_count, avg_rating, owned,
+  tech_stack, screenshots, sales_count, view_count, avg_rating, owned, built_with,
 }: ListingCardProps) {
   const thumbnail = screenshots?.[0];
   const priceLabel = price === 0 ? "Free" : `$${(price / 100).toFixed(2)}`;
@@ -72,6 +82,11 @@ export function ListingCard({
               {title}
             </h3>
             <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5 leading-relaxed">{description}</p>
+            {built_with && BUILT_WITH_LABELS[built_with] && (
+              <span className="inline-flex items-center gap-1 mt-1 rounded-md bg-accent/10 border border-accent/20 px-1.5 py-0.5 text-[10px] text-accent font-semibold tracking-tight">
+                🛠 {BUILT_WITH_LABELS[built_with]}
+              </span>
+            )}
           </div>
 
           {/* Tech stack */}

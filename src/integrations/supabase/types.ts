@@ -72,6 +72,7 @@ export type Database = {
       }
       listings: {
         Row: {
+          built_with: string | null
           category: Database["public"]["Enums"]["listing_category"]
           completeness_badge: Database["public"]["Enums"]["completeness_badge"]
           created_at: string
@@ -91,6 +92,7 @@ export type Database = {
           view_count: number | null
         }
         Insert: {
+          built_with?: string | null
           category?: Database["public"]["Enums"]["listing_category"]
           completeness_badge?: Database["public"]["Enums"]["completeness_badge"]
           created_at?: string
@@ -110,6 +112,7 @@ export type Database = {
           view_count?: number | null
         }
         Update: {
+          built_with?: string | null
           category?: Database["public"]["Enums"]["listing_category"]
           completeness_badge?: Database["public"]["Enums"]["completeness_badge"]
           created_at?: string

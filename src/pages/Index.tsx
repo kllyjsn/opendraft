@@ -38,6 +38,7 @@ interface Listing {
   screenshots: string[];
   sales_count: number;
   view_count: number;
+  built_with: string | null;
 }
 
 export default function Index() {
@@ -72,7 +73,7 @@ export default function Index() {
     setLoading(true);
     let query = supabase
       .from("listings")
-      .select("id,title,description,price,completeness_badge,tech_stack,screenshots,sales_count,view_count", { count: "exact" })
+      .select("id,title,description,price,completeness_badge,tech_stack,screenshots,sales_count,view_count,built_with", { count: "exact" })
       .eq("status", "live");
 
     if (search) {

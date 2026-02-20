@@ -21,6 +21,15 @@ const CATEGORIES = [
   { value: "other", label: "Other" },
 ];
 
+const BUILT_WITH_OPTIONS = [
+  { value: "lovable", label: "Lovable" },
+  { value: "claude_code", label: "Claude Code" },
+  { value: "cursor", label: "Cursor" },
+  { value: "bolt", label: "Bolt" },
+  { value: "replit", label: "Replit" },
+  { value: "other", label: "Other" },
+];
+
 type Step = 1 | 2 | 3;
 
 export default function Sell() {
@@ -39,6 +48,7 @@ export default function Sell() {
     tech_stack: [] as string[],
     github_url: "",
     demo_url: "",
+    built_with: "" as string,
     screenshots: [] as string[],
     file_path: null as string | null,
   });
@@ -113,6 +123,7 @@ export default function Sell() {
       tech_stack: form.tech_stack,
       github_url: form.github_url || null,
       demo_url: form.demo_url || null,
+      built_with: form.built_with || null,
       screenshots: form.screenshots,
       file_path: form.file_path,
       status: "pending" as const,
@@ -128,7 +139,7 @@ export default function Sell() {
   }
 
   const isStep1Valid = form.title && form.description && form.price !== "" && parseFloat(form.price) >= 0;
-  const isStep2Valid = form.completeness_badge && form.category;
+  const isStep2Valid = form.completeness_badge && form.category && form.built_with;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -220,6 +231,25 @@ export default function Sell() {
                     </button>
                   ))}
                 </div>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold mb-2">Built with *</label>
+                <div className="flex flex-wrap gap-2">
+                  {BUILT_WITH_OPTIONS.map(({ value, label }) => (
+                    <button
+                      key={value}
+                      onClick={() => update("built_with", value)}
+                      className={`rounded-full px-4 py-1.5 text-sm font-medium transition-all border ${
+                        form.built_with === value
+                          ? "gradient-hero text-white border-transparent shadow-sm"
+                          : "border-border hover:border-primary text-muted-foreground"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1.5">Tag which tool was used to build this project</p>
               </div>
               <div>
                 <label className="block text-sm font-semibold mb-2">Category *</label>

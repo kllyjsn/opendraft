@@ -18,6 +18,7 @@
 // ---------------------------------------------------------------------------
 import Stripe from "https://esm.sh/stripe@17.7.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { sanitizeStripeKey } from "../_shared/sanitize-stripe-key.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -32,10 +33,11 @@ Deno.serve(async (req) => {
     // ------------------------------------------------------------------
     // Step 1: Validate required environment variables
     // ------------------------------------------------------------------
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    let stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) {
       throw new Error("STRIPE_SECRET_KEY is not configured. Add it in your Cloud secrets.");
     }
+    stripeKey = sanitizeStripeKey(stripeKey);
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;

@@ -16,6 +16,7 @@
 
 import Stripe from "https://esm.sh/stripe@17.7.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { sanitizeStripeKey } from "../_shared/sanitize-stripe-key.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -27,7 +28,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY")!;
+    let stripeKey = sanitizeStripeKey(Deno.env.get("STRIPE_SECRET_KEY")!);
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;

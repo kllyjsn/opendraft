@@ -14,6 +14,7 @@
 // PLACEHOLDER: STRIPE_SECRET_KEY must be set in your Lovable Cloud secrets.
 // ---------------------------------------------------------------------------
 import Stripe from "https://esm.sh/stripe@17.7.0";
+import { sanitizeStripeKey } from "../_shared/sanitize-stripe-key.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -28,10 +29,11 @@ Deno.serve(async (req) => {
     // ------------------------------------------------------------------
     // Step 1: Validate required environment variables
     // ------------------------------------------------------------------
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    let stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) {
       throw new Error("STRIPE_SECRET_KEY is not configured. Add it in your Cloud secrets.");
     }
+    stripeKey = sanitizeStripeKey(stripeKey);
 
     // ------------------------------------------------------------------
     // Step 2: Initialize the Stripe Client (platform-level)

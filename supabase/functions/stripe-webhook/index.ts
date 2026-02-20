@@ -38,6 +38,7 @@
 //  - STRIPE_WEBHOOK_SECRET (starts with whsec_)
 // ---------------------------------------------------------------------------
 import Stripe from "https://esm.sh/stripe@17.7.0";
+import { sanitizeStripeKey } from "../_shared/sanitize-stripe-key.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -177,13 +178,14 @@ Deno.serve(async (req) => {
     // ------------------------------------------------------------------
     // Step 1: Validate required environment variables
     // ------------------------------------------------------------------
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    let stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     const resendApiKey = Deno.env.get("RESEND_API_KEY");
 
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not configured");
+    stripeKey = sanitizeStripeKey(stripeKey);
     if (!supabaseUrl || !supabaseServiceKey) throw new Error("Supabase vars not configured");
 
     // ------------------------------------------------------------------

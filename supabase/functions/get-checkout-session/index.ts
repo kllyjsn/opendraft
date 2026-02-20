@@ -12,6 +12,7 @@
 // PLACEHOLDER: STRIPE_SECRET_KEY must be set in your Cloud secrets.
 // ---------------------------------------------------------------------------
 import Stripe from "https://esm.sh/stripe@17.7.0";
+import { sanitizeStripeKey } from "../_shared/sanitize-stripe-key.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -23,8 +24,9 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    let stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not configured");
+    stripeKey = sanitizeStripeKey(stripeKey);
 
     const { sessionId } = await req.json();
     if (!sessionId) throw new Error("sessionId is required");

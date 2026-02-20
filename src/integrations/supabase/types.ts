@@ -70,7 +70,7 @@ export type Database = {
           buyer_id: string
           created_at: string
           id: string
-          listing_id: string
+          listing_id: string | null
           seller_id: string
           updated_at: string
         }
@@ -78,7 +78,7 @@ export type Database = {
           buyer_id: string
           created_at?: string
           id?: string
-          listing_id: string
+          listing_id?: string | null
           seller_id: string
           updated_at?: string
         }
@@ -86,7 +86,7 @@ export type Database = {
           buyer_id?: string
           created_at?: string
           id?: string
-          listing_id?: string
+          listing_id?: string | null
           seller_id?: string
           updated_at?: string
         }

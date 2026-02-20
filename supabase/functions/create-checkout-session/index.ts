@@ -22,6 +22,7 @@
 // This is the PLATFORM secret key — NOT a connected account key.
 // ---------------------------------------------------------------------------
 import Stripe from "npm:stripe@17.7.0";
+import { sanitizeStripeKey } from "../_shared/sanitize-stripe-key.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -40,14 +41,11 @@ Deno.serve(async (req) => {
     // ------------------------------------------------------------------
     // Step 1: Validate required environment variables
     // ------------------------------------------------------------------
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    let stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) {
       throw new Error("STRIPE_SECRET_KEY is not configured. Add it in your Cloud secrets.");
     }
-    
-    // Diagnostic: find non-ASCII characters
-    const nonAscii = [...stripeKey].map((c, i) => ({ i, c, code: c.charCodeAt(0) })).filter(x => x.code > 127);
-    console.log(`STRIPE_SECRET_KEY length: ${stripeKey.length}, non-ASCII chars:`, JSON.stringify(nonAscii.slice(0, 10)));
+    stripeKey = sanitizeStripeKey(stripeKey);
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");

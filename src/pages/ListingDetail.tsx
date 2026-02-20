@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { ExternalLink, Github, Star, ShoppingCart, ChevronLeft, ChevronRight, Download, Eye, Package, Gift } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { MakeOfferDialog } from "@/components/MakeOfferDialog";
 
 const BUILT_WITH_LABELS: Record<string, string> = {
   lovable: "Lovable",
@@ -394,6 +395,17 @@ export default function ListingDetail() {
                     Buy Now — {priceLabel}
                   </Button>
                 </Link>
+              )}
+
+              {/* Make an offer (only for paid, non-owned listings) */}
+              {!purchased && !isFree && user && listing.seller_id !== user.id && (
+                <div className="mt-3">
+                  <MakeOfferDialog
+                    listingId={listing.id}
+                    listingTitle={listing.title}
+                    askingPrice={listing.price}
+                  />
+                </div>
               )}
 
               {/* Secondary actions */}

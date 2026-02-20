@@ -133,6 +133,95 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          link: string | null
+          message: string
+          metadata: Json | null
+          read: boolean
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          link?: string | null
+          message: string
+          metadata?: Json | null
+          read?: boolean
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          link?: string | null
+          message?: string
+          metadata?: Json | null
+          read?: boolean
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      offers: {
+        Row: {
+          buyer_id: string
+          counter_amount: number | null
+          created_at: string
+          id: string
+          listing_id: string
+          message: string | null
+          offer_amount: number
+          original_price: number
+          seller_id: string
+          seller_message: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          buyer_id: string
+          counter_amount?: number | null
+          created_at?: string
+          id?: string
+          listing_id: string
+          message?: string | null
+          offer_amount: number
+          original_price: number
+          seller_id: string
+          seller_message?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          buyer_id?: string
+          counter_amount?: number | null
+          created_at?: string
+          id?: string
+          listing_id?: string
+          message?: string | null
+          offer_amount?: number
+          original_price?: number
+          seller_id?: string
+          seller_message?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offers_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null

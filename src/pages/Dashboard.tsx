@@ -8,8 +8,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { CompletenessBadge } from "@/components/CompletenessBadge";
 import { StripeConnectPanel } from "@/components/StripeConnectPanel";
 import { CreateProductPanel } from "@/components/CreateProductPanel";
-import { TrendingUp, Package, Eye, Trash2, Plus, ShoppingBag } from "lucide-react";
+import { TrendingUp, Package, Eye, Trash2, Plus, ShoppingBag, HandCoins } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { OffersManager } from "@/components/OffersManager";
 
 interface Sale {
   id: string;
@@ -51,6 +52,9 @@ export default function Dashboard() {
   const [sales, setSales] = useState<Sale[]>([]);
   const [summary, setSummary] = useState<SaleSummary>({ total_earned: 0, total_sales: 0 });
   const [dataLoading, setDataLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<"listings" | "offers" | "sales">(
+    new URLSearchParams(window.location.search).get("tab") === "offers" ? "offers" : "listings"
+  );
 
   useEffect(() => {
     if (!user) return;
@@ -154,7 +158,31 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* Listings table */}
+        {/* Tabs */}
+        <div className="flex gap-1 mb-6 rounded-xl bg-muted/50 p-1 w-fit">
+          {([
+            { key: "listings" as const, label: "Listings", icon: <Package className="h-3.5 w-3.5" /> },
+            { key: "offers" as const, label: "Offers", icon: <HandCoins className="h-3.5 w-3.5" /> },
+            { key: "sales" as const, label: "Sales", icon: <ShoppingBag className="h-3.5 w-3.5" /> },
+          ]).map(({ key, label, icon }) => (
+            <button
+              key={key}
+              onClick={() => setActiveTab(key)}
+              className={`flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition-all ${
+                activeTab === key
+                  ? "bg-background shadow-sm text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {icon} {label}
+            </button>
+          ))}
+        </div>
+
+        {activeTab === "offers" && <OffersManager />}
+
+        {activeTab === "listings" && (
+          <>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold">Your listings</h2>
           <span className="text-sm text-muted-foreground">{listings.length} total</span>
@@ -233,8 +261,13 @@ export default function Dashboard() {
           </div>
         )}
 
+          </>
+        )}
+
+        {activeTab === "sales" && (
+          <>
         {/* Sales History */}
-        <div className="flex items-center gap-2 mt-14 mb-4">
+        <div className="flex items-center gap-2 mt-0 mb-4">
           <ShoppingBag className="h-5 w-5 text-primary" />
           <h2 className="text-lg font-bold">Sales history</h2>
           {sales.length > 0 && (
@@ -287,6 +320,8 @@ export default function Dashboard() {
               </table>
             </div>
           </div>
+        )}
+          </>
         )}
       </main>
       <Footer />

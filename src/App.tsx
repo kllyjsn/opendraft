@@ -16,6 +16,7 @@ import Admin from "./pages/Admin";
 import FAQ from "./pages/FAQ";
 import Storefront from "./pages/Storefront";
 import CloudPage from "./pages/Cloud";
+import Messages from "./pages/Messages";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +39,7 @@ const App = () => (
           <Route path="/faq" element={<FAQ />} />
           <Route path="/storefront" element={<Storefront />} />
           <Route path="/cloud" element={<CloudPage />} />
+          <Route path="/messages" element={<Messages />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

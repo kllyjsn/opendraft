@@ -76,6 +76,7 @@ Deno.serve(async (req) => {
     const listingId = body?.listingId;
     const productId = body?.productId;
     const discountCodeId = body?.discountCodeId;
+    const offerId = body?.offerId;
 
     if (!listingId && !productId) {
       throw new Error("Either listingId or productId is required");
@@ -90,6 +91,9 @@ Deno.serve(async (req) => {
     }
     if (discountCodeId && (typeof discountCodeId !== "string" || !uuidRegex.test(discountCodeId))) {
       throw new Error("Invalid discountCodeId format");
+    }
+    if (offerId && (typeof offerId !== "string" || !uuidRegex.test(offerId))) {
+      throw new Error("Invalid offerId format");
     }
 
     // ------------------------------------------------------------------
@@ -171,6 +175,20 @@ Deno.serve(async (req) => {
       if (!listing) throw new Error("Listing not found");
 
       unitAmount = listing.price;
+
+      // Check for accepted offer pricing
+      if (offerId && buyerId) {
+        const offerRes = await fetch(
+          `${supabaseUrl}/rest/v1/offers?id=eq.${offerId}&listing_id=eq.${listingId}&buyer_id=eq.${buyerId}&status=eq.accepted&select=offer_amount,counter_amount`,
+          { headers: { apikey: supabaseServiceKey, Authorization: `Bearer ${supabaseServiceKey}` } }
+        );
+        const offerData = await offerRes.json();
+        const offer = offerData?.[0];
+        if (offer) {
+          unitAmount = offer.counter_amount || offer.offer_amount;
+          console.log(`Applying accepted offer price: ${unitAmount} (was ${listing.price})`);
+        }
+      }
 
       // Fetch seller's Stripe Connect account from their profile
       const profileRes = await fetch(

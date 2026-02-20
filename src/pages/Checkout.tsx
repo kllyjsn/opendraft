@@ -31,6 +31,8 @@ export default function Checkout() {
   const [appliedDiscount, setAppliedDiscount] = useState<{ id: string; code: string; discount_type: string; discount_value: number } | null>(null);
   const [discountError, setDiscountError] = useState<string | null>(null);
   const [applyingDiscount, setApplyingDiscount] = useState(false);
+  const [offerPrice, setOfferPrice] = useState<number | null>(null);
+  const [offerId, setOfferId] = useState<string | null>(null);
 
   useEffect(() => {
     if (authLoading) return;
@@ -40,6 +42,13 @@ export default function Checkout() {
     }
     if (!id) return;
     fetchListing();
+    // Check for offer-based checkout
+    const params = new URLSearchParams(window.location.search);
+    const oId = params.get("offer");
+    if (oId) {
+      setOfferId(oId);
+      fetchOffer(oId);
+    }
   }, [id, user, authLoading]);
 
   async function fetchListing() {
@@ -56,6 +65,19 @@ export default function Checkout() {
     }
     setListing(listing);
     setLoading(false);
+  }
+
+  async function fetchOffer(oId: string) {
+    const { data } = await supabase
+      .from("offers")
+      .select("id, offer_amount, counter_amount, status")
+      .eq("id", oId)
+      .eq("status", "accepted")
+      .single();
+    if (data) {
+      const price = (data as any).counter_amount || (data as any).offer_amount;
+      setOfferPrice(price);
+    }
   }
 
   async function handleApplyDiscount() {
@@ -104,6 +126,7 @@ export default function Checkout() {
     try {
       const body: Record<string, string> = { listingId: listing.id };
       if (appliedDiscount) body.discountCodeId = appliedDiscount.id;
+      if (offerId) body.offerId = offerId;
 
       const { data, error: fnError } = await supabase.functions.invoke(
         "create-checkout-session",
@@ -147,7 +170,7 @@ export default function Checkout() {
     );
   }
 
-  const originalPrice = listing.price;
+  const originalPrice = offerPrice || listing.price;
   let finalPrice = originalPrice;
   if (appliedDiscount) {
     if (appliedDiscount.discount_type === "percentage") {
@@ -156,8 +179,11 @@ export default function Checkout() {
       finalPrice = Math.max(0, originalPrice - appliedDiscount.discount_value);
     }
   }
-  const priceDisplay = `$${(originalPrice / 100).toFixed(2)}`;
+  const priceDisplay = offerPrice
+    ? `$${(offerPrice / 100).toFixed(2)}`
+    : `$${(listing.price / 100).toFixed(2)}`;
   const finalPriceDisplay = `$${(finalPrice / 100).toFixed(2)}`;
+  const isOfferCheckout = !!offerPrice;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -191,7 +217,12 @@ export default function Checkout() {
                       <span key={t} className="rounded-md bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">{t}</span>
                     ))}
                   </div>
-                  <span className={`text-lg font-black flex-shrink-0 ${appliedDiscount ? "line-through text-muted-foreground text-sm" : ""}`}>{priceDisplay}</span>
+                  <span className={`text-lg font-black flex-shrink-0 ${appliedDiscount ? "line-through text-muted-foreground text-sm" : ""}`}>
+                    {priceDisplay}
+                    {isOfferCheckout && (
+                      <span className="block text-[10px] font-medium text-primary">Accepted offer</span>
+                    )}
+                  </span>
                 </div>
               </div>
             </div>

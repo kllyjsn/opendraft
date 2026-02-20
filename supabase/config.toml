@@ -23,3 +23,7 @@ verify_jwt = false
 # create-checkout-session accepts optional auth (guest checkout or authenticated)
 [functions.create-checkout-session]
 verify_jwt = false
+
+# handle-offer validates auth manually
+[functions.handle-offer]
+verify_jwt = false

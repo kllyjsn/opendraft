@@ -120,7 +120,7 @@ export default function Index() {
 
           <h1 className="text-5xl md:text-7xl font-black tracking-tight mb-5 leading-[1.05]">
             What do you want<br />
-            <span className="text-gradient">to build?</span>
+            <span className="text-gradient">to build/buy?</span>
           </h1>
 
           <p className="text-base md:text-lg text-muted-foreground max-w-md mx-auto mb-10 leading-relaxed">

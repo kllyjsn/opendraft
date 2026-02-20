@@ -122,7 +122,7 @@ export function ListingCard({
                 {view_count}
               </span>
             </div>
-            <span className="font-medium">{sales_count} sold</span>
+            <span className="font-medium capitalize">{completeness_badge === "production_ready" ? "Full App" : completeness_badge === "mvp" ? "MVP" : "Prototype"}</span>
           </div>
         </CardContent>
       </Card>

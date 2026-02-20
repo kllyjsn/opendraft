@@ -187,7 +187,7 @@ export default function Sell() {
                     category: data.category || f.category,
                     completeness_badge: (data.completeness as typeof f.completeness_badge) || f.completeness_badge,
                     demo_url: data.demo_url || f.demo_url,
-                    screenshots: data.screenshot_url ? [data.screenshot_url, ...f.screenshots].slice(0, 5) : f.screenshots,
+                    screenshots: data.screenshots?.length ? [...data.screenshots, ...f.screenshots].slice(0, 5) : data.screenshot_url ? [data.screenshot_url, ...f.screenshots].slice(0, 5) : f.screenshots,
                   }));
                   toast({ title: "✨ Project imported!", description: "Review the auto-filled details and adjust as needed." });
                 }}

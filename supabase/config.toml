@@ -33,3 +33,23 @@ verify_jwt = false
 
 [functions.send-message]
 verify_jwt = false
+
+# match-listings is public — used on homepage for anonymous search
+[functions.match-listings]
+verify_jwt = false
+
+# scrape-listing is public — used for Magic Import
+[functions.scrape-listing]
+verify_jwt = false
+
+# claim-free-listing is public
+[functions.claim-free-listing]
+verify_jwt = false
+
+# get-download-url validates auth manually
+[functions.get-download-url]
+verify_jwt = false
+
+# transfer-pending-payouts is internal
+[functions.transfer-pending-payouts]
+verify_jwt = false

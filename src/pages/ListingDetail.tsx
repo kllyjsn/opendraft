@@ -410,19 +410,7 @@ export default function ListingDetail() {
                 </div>
               )}
 
-              {/* Chat with seller (for any non-owner logged in user) */}
-              {user && listing.seller_id !== user.id && (
-                <div className="mt-3">
-                  <Button
-                    variant="outline"
-                    className="w-full border-border/60 hover:border-primary/40 transition-colors"
-                    onClick={() => setChatOpen(true)}
-                  >
-                    <MessageSquare className="h-4 w-4 mr-2" />
-                    Chat with Seller
-                  </Button>
-                </div>
-              )}
+              {/* Secondary actions */}
               {(listing.demo_url || listing.github_url) && (
                 <div className="mt-3 space-y-2">
                   {listing.demo_url && (
@@ -452,11 +440,11 @@ export default function ListingDetail() {
               )}
             </div>
 
-            {/* Seller card */}
+            {/* Seller card with integrated chat CTA */}
             {seller && (
               <div className="rounded-2xl border border-border/60 bg-card p-5 shadow-card">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-4">Seller</p>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 mb-4">
                   <div className="h-10 w-10 rounded-full gradient-hero flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-glow">
                     {seller.username?.[0]?.toUpperCase() ?? "?"}
                   </div>
@@ -465,6 +453,25 @@ export default function ListingDetail() {
                     <p className="text-xs text-muted-foreground">{seller.total_sales ?? 0} total sales</p>
                   </div>
                 </div>
+                {/* Chat CTA — always visible, prominent */}
+                {(!user || listing.seller_id !== user.id) && (
+                  user ? (
+                    <Button
+                      onClick={() => setChatOpen(true)}
+                      className="w-full h-11 text-sm font-bold bg-accent/10 text-accent border border-accent/30 hover:bg-accent/20 transition-colors"
+                    >
+                      <MessageSquare className="h-4 w-4 mr-2" />
+                      Ask {seller.username ?? "seller"} a question
+                    </Button>
+                  ) : (
+                    <Link to="/login">
+                      <Button className="w-full h-11 text-sm font-bold bg-accent/10 text-accent border border-accent/30 hover:bg-accent/20 transition-colors">
+                        <MessageSquare className="h-4 w-4 mr-2" />
+                        Sign in to ask a question
+                      </Button>
+                    </Link>
+                  )
+                )}
               </div>
             )}
           </div>

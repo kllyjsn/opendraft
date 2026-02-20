@@ -73,6 +73,7 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const listingId = body?.listingId;
     const productId = body?.productId;
+    const discountCodeId = body?.discountCodeId;
 
     if (!listingId && !productId) {
       throw new Error("Either listingId or productId is required");
@@ -84,6 +85,9 @@ Deno.serve(async (req) => {
     }
     if (productId && (typeof productId !== "string" || productId.length > 255)) {
       throw new Error("Invalid productId format");
+    }
+    if (discountCodeId && (typeof discountCodeId !== "string" || !uuidRegex.test(discountCodeId))) {
+      throw new Error("Invalid discountCodeId format");
     }
 
     // ------------------------------------------------------------------
@@ -203,7 +207,64 @@ Deno.serve(async (req) => {
     }
 
     // ------------------------------------------------------------------
-    // Step 5: Calculate the platform application fee
+    // Step 5: Apply discount code if provided
+    // Server-side validation: verify the code exists, is active, and hasn't
+    // been used by this buyer. Then adjust the unit amount accordingly.
+    // ------------------------------------------------------------------
+    let discountApplied = false;
+    let originalAmount = unitAmount;
+
+    if (discountCodeId && buyerId) {
+      // Fetch the discount code
+      const dcRes = await fetch(
+        `${supabaseUrl}/rest/v1/discount_codes?id=eq.${discountCodeId}&active=eq.true&select=id,code,discount_type,discount_value`,
+        { headers: { apikey: supabaseServiceKey, Authorization: `Bearer ${supabaseServiceKey}` } }
+      );
+      const dcData = await dcRes.json();
+      const discount = dcData?.[0];
+
+      if (!discount) throw new Error("Invalid or inactive discount code");
+
+      // Check if buyer already used this code
+      const usageRes = await fetch(
+        `${supabaseUrl}/rest/v1/discount_code_usage?discount_code_id=eq.${discountCodeId}&buyer_id=eq.${buyerId}&select=id`,
+        { headers: { apikey: supabaseServiceKey, Authorization: `Bearer ${supabaseServiceKey}` } }
+      );
+      const usageData = await usageRes.json();
+      if (usageData?.length > 0) throw new Error("Discount code already used");
+
+      // Apply the discount
+      if (discount.discount_type === "percentage") {
+        unitAmount = Math.max(0, Math.round(unitAmount * (1 - discount.discount_value / 100)));
+      } else {
+        unitAmount = Math.max(0, unitAmount - discount.discount_value);
+      }
+
+      // Record usage
+      await fetch(`${supabaseUrl}/rest/v1/discount_code_usage`, {
+        method: "POST",
+        headers: {
+          apikey: supabaseServiceKey,
+          Authorization: `Bearer ${supabaseServiceKey}`,
+          "Content-Type": "application/json",
+          Prefer: "return=minimal",
+        },
+        body: JSON.stringify({ discount_code_id: discountCodeId, buyer_id: buyerId }),
+      });
+
+      discountApplied = true;
+      sessionMetadata.discount_code_id = discountCodeId;
+      sessionMetadata.discount_code = discount.code;
+      sessionMetadata.original_price = String(originalAmount);
+
+      // Update the line item price
+      if (lineItem.price_data) {
+        lineItem.price_data.unit_amount = unitAmount;
+      }
+    }
+
+    // ------------------------------------------------------------------
+    // Step 6: Calculate the platform application fee
     //
     // application_fee_amount = what the platform keeps (in cents)
     // The rest is automatically transferred to the seller's connected account
@@ -211,7 +272,7 @@ Deno.serve(async (req) => {
     // ------------------------------------------------------------------
     const applicationFeeAmount = Math.round(unitAmount * PLATFORM_FEE_PERCENT);
 
-    console.log(`Checkout: amount=${unitAmount}, fee=${applicationFeeAmount}, seller=${sellerStripeAccountId}`);
+    console.log(`Checkout: amount=${unitAmount}${discountApplied ? ` (was ${originalAmount})` : ""}, fee=${applicationFeeAmount}, seller=${sellerStripeAccountId}`);
 
     // ------------------------------------------------------------------
     // Step 6: Build the Checkout Session parameters

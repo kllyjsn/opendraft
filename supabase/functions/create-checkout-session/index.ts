@@ -77,6 +77,7 @@ Deno.serve(async (req) => {
     const productId = body?.productId;
     const discountCodeId = body?.discountCodeId;
     const offerId = body?.offerId;
+    let pricingType: "one_time" | "monthly" = "one_time";
 
     if (!listingId && !productId) {
       throw new Error("Either listingId or productId is required");
@@ -165,7 +166,7 @@ Deno.serve(async (req) => {
       const existing = await purchaseRes.json();
       if (existing?.length > 0) throw new Error("You already own this project");
 
-      // Fetch the listing details
+      // Fetch the listing details (including pricing_type)
       const listingRes = await fetch(
         `${supabaseUrl}/rest/v1/listings?id=eq.${listingId}&select=*`,
         { headers: { apikey: supabaseServiceKey, Authorization: `Bearer ${supabaseServiceKey}` } }
@@ -173,6 +174,9 @@ Deno.serve(async (req) => {
       const listings = await listingRes.json();
       const listing = listings?.[0];
       if (!listing) throw new Error("Listing not found");
+
+      // Set pricing type from listing
+      pricingType = listing.pricing_type || "one_time";
 
       unitAmount = listing.price;
 
@@ -211,6 +215,8 @@ Deno.serve(async (req) => {
             images: listing.screenshots?.[0] ? [listing.screenshots[0]] : undefined,
           },
           unit_amount: unitAmount,
+          // Add recurring interval for monthly subscriptions
+          ...(pricingType === "monthly" ? { recurring: { interval: "month" as const } } : {}),
         },
         quantity: 1,
       };
@@ -292,15 +298,17 @@ Deno.serve(async (req) => {
     // ------------------------------------------------------------------
     const applicationFeeAmount = Math.round(unitAmount * PLATFORM_FEE_PERCENT);
 
-    console.log(`Checkout: amount=${unitAmount}${discountApplied ? ` (was ${originalAmount})` : ""}, fee=${applicationFeeAmount}, seller=${sellerStripeAccountId}`);
+    console.log(`Checkout: amount=${unitAmount}${discountApplied ? ` (was ${originalAmount})` : ""}, fee=${applicationFeeAmount}, seller=${sellerStripeAccountId}, mode=${pricingType}`);
 
     // ------------------------------------------------------------------
     // Step 6: Build the Checkout Session parameters
+    // Use "subscription" mode for monthly pricing, "payment" for one-time
     // ------------------------------------------------------------------
+    const isSubscription = pricingType === "monthly";
     const sessionParams: Stripe.Checkout.SessionCreateParams = {
       payment_method_types: ["card"],
       line_items: [lineItem],
-      mode: "payment",
+      mode: isSubscription ? "subscription" : "payment",
       // success_url includes the session_id so we can look up the purchase
       success_url: `${origin}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: listingId ? `${origin}/listing/${listingId}` : `${origin}/storefront`,
@@ -316,14 +324,25 @@ Deno.serve(async (req) => {
     // Without this, all funds go to the platform (still valid for testing).
     // ------------------------------------------------------------------
     if (sellerStripeAccountId) {
-      sessionParams.payment_intent_data = {
-        // Platform keeps this amount (e.g., 20% of the sale)
-        application_fee_amount: applicationFeeAmount,
-        transfer_data: {
-          // Stripe automatically transfers (unitAmount - applicationFeeAmount) here
-          destination: sellerStripeAccountId,
-        },
-      };
+      if (isSubscription) {
+        // For subscriptions, use subscription_data with application_fee_percent
+        // and transfer_data to route recurring payments to the seller
+        sessionParams.subscription_data = {
+          application_fee_percent: PLATFORM_FEE_PERCENT * 100,
+          transfer_data: {
+            destination: sellerStripeAccountId,
+          },
+          metadata: sessionMetadata,
+        };
+      } else {
+        // For one-time payments, use payment_intent_data with destination charges
+        sessionParams.payment_intent_data = {
+          application_fee_amount: applicationFeeAmount,
+          transfer_data: {
+            destination: sellerStripeAccountId,
+          },
+        };
+      }
     }
 
     const session = await stripeClient.checkout.sessions.create(sessionParams);

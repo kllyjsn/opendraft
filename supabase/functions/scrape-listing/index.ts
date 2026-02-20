@@ -58,39 +58,34 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         url: formattedUrl,
-        formats: [
-          "markdown",
-          "screenshot",
-          "links",
-          {
-            type: "json",
-            prompt: `Analyze this web application/project page and extract the following information:
+        formats: ["markdown", "screenshot", "extract"],
+        extract: {
+          prompt: `Analyze this web application/project page and extract the following information:
 - title: The name/title of the project or app (short, catchy)
 - description: A compelling 2-4 sentence description of what this project does, its key features, and value proposition. Write it as if you're selling it on a marketplace.
 - tech_stack: An array of technologies used (e.g. ["React", "TypeScript", "Tailwind", "Supabase"]). Infer from the page content, meta tags, or visible tech indicators.
 - category: One of: "saas_tool", "ai_app", "landing_page", "utility", "game", "other". Pick the best fit.
 - completeness: One of: "prototype", "mvp", "production_ready". Judge based on polish, features visible, and overall quality.`,
-            schema: {
-              type: "object",
-              properties: {
-                title: { type: "string" },
-                description: { type: "string" },
-                tech_stack: { type: "array", items: { type: "string" } },
-                category: {
-                  type: "string",
-                  enum: ["saas_tool", "ai_app", "landing_page", "utility", "game", "other"],
-                },
-                completeness: {
-                  type: "string",
-                  enum: ["prototype", "mvp", "production_ready"],
-                },
+          schema: {
+            type: "object",
+            properties: {
+              title: { type: "string" },
+              description: { type: "string" },
+              tech_stack: { type: "array", items: { type: "string" } },
+              category: {
+                type: "string",
+                enum: ["saas_tool", "ai_app", "landing_page", "utility", "game", "other"],
               },
-              required: ["title", "description"],
+              completeness: {
+                type: "string",
+                enum: ["prototype", "mvp", "production_ready"],
+              },
             },
+            required: ["title", "description"],
           },
-        ],
+        },
         onlyMainContent: true,
-        waitFor: 3000,
+        waitFor: 5000,
       }),
     });
 
@@ -109,7 +104,7 @@ Deno.serve(async (req) => {
 
     // Extract data from response (Firecrawl nests under data)
     const result = scrapeData.data || scrapeData;
-    const extracted = result.json || result.extract || {};
+    const extracted = result.extract || result.json || {};
     const screenshot = result.screenshot || null;
     const metadata = result.metadata || {};
 

@@ -8,13 +8,13 @@ verify_jwt = false
 # These functions are called by the frontend with a user session — JWT verification is fine.
 # Listed here for documentation clarity.
 [functions.create-connect-account]
-verify_jwt = true
+verify_jwt = false
 
 [functions.check-connect-status]
-verify_jwt = true
+verify_jwt = false
 
 [functions.create-product]
-verify_jwt = true
+verify_jwt = false
 
 # get-products is public (storefront) — no auth required
 [functions.get-products]

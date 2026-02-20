@@ -21,7 +21,7 @@
 // PLACEHOLDER: STRIPE_SECRET_KEY must be set in your Lovable Cloud secrets.
 // This is the PLATFORM secret key — NOT a connected account key.
 // ---------------------------------------------------------------------------
-import Stripe from "https://esm.sh/stripe@17.7.0";
+import Stripe from "npm:stripe@17.7.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

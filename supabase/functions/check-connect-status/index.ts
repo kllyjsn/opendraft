@@ -16,7 +16,7 @@
 // ---------------------------------------------------------------------------
 // PLACEHOLDER: STRIPE_SECRET_KEY must be set in your Lovable Cloud secrets.
 // ---------------------------------------------------------------------------
-import Stripe from "https://esm.sh/stripe@17.7.0";
+import Stripe from "https://esm.sh/stripe@17.7.0?target=denonext";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { sanitizeStripeKey } from "../_shared/sanitize-stripe-key.ts";
 
@@ -83,39 +83,28 @@ Deno.serve(async (req) => {
     }
 
     // ------------------------------------------------------------------
-    // Step 4: Fetch live account status from Stripe V2 API
-    //
-    // We include "configuration.recipient" and "requirements" in the
-    // response so we can check capability status and any outstanding
-    // requirements (things the seller still needs to complete).
+    // Step 4: Fetch live account status from Stripe V1 API
     // ------------------------------------------------------------------
     const stripeClient = new Stripe(stripeKey);
 
-    const account = await stripeClient.v2.core.accounts.retrieve(
-      profile.stripe_account_id,
-      {
-        // Request these expanded sub-objects in the response
-        include: ["configuration.recipient", "requirements"],
-      }
-    );
+    const account = await stripeClient.accounts.retrieve(profile.stripe_account_id);
 
     // ------------------------------------------------------------------
     // Step 5: Determine onboarding completion status
-    //
-    // "readyToReceivePayments" = stripe_transfers capability is active
-    // "onboardingComplete" = no blocking requirements (currently_due or past_due)
     // ------------------------------------------------------------------
-    const readyToReceivePayments =
-      // @ts-ignore — V2 types may not be fully typed in older SDK versions
-      account?.configuration?.recipient?.capabilities?.stripe_balance?.stripe_transfers?.status === "active";
+    const chargesEnabled = account.charges_enabled ?? false;
+    const transfersEnabled = account.payouts_enabled ?? false;
+    const readyToReceivePayments = chargesEnabled && transfersEnabled;
 
-    // Check if there are any outstanding requirements blocking the account
-    // @ts-ignore
-    const requirementsStatus = account.requirements?.summary?.minimum_deadline?.status;
-    const onboardingComplete =
-      requirementsStatus !== "currently_due" && requirementsStatus !== "past_due";
+    const currentlyDue = account.requirements?.currently_due ?? [];
+    const pastDue = account.requirements?.past_due ?? [];
+    const requirementsStatus = pastDue.length > 0
+      ? "past_due"
+      : currentlyDue.length > 0
+        ? "currently_due"
+        : "none";
+    const onboardingComplete = currentlyDue.length === 0 && pastDue.length === 0;
 
-    // For backwards compatibility, "onboarded" means both conditions are met
     const onboarded = readyToReceivePayments && onboardingComplete;
 
     // ------------------------------------------------------------------

@@ -16,7 +16,7 @@
 // PLACEHOLDER: STRIPE_SECRET_KEY must be set in your Lovable Cloud secrets.
 // It must start with "sk_test_" (test mode) or "sk_live_" (production).
 // ---------------------------------------------------------------------------
-import Stripe from "https://esm.sh/stripe@17.7.0";
+import Stripe from "https://esm.sh/stripe@17.7.0?target=denonext";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { sanitizeStripeKey } from "../_shared/sanitize-stripe-key.ts";
 
@@ -94,59 +94,25 @@ Deno.serve(async (req) => {
 
     if (!accountId) {
       // ----------------------------------------------------------------
-      // Step 5: Create a new Stripe Connect account using the V2 API
-      //
-      // Key design choices:
-      //  - "dashboard: 'express'" gives the seller a Stripe-hosted dashboard
-      //  - "fees_collector: 'application'" means OUR platform collects fees
-      //    (we charge buyers and transfer to sellers, keeping a platform fee)
-      //  - "losses_collector: 'application'" means we're responsible for disputes
-      //  - We request "stripe_balance > stripe_transfers" capability so
-      //    sellers can receive payouts via Stripe balance transfers
-      //
-      // IMPORTANT: Do NOT pass `type` at the top level. The V2 API does not
-      // use type: 'express' | 'standard' | 'custom'. Use `dashboard` instead.
+      // Step 5: Create a new Stripe Connect Express account (V1 API)
       // ----------------------------------------------------------------
-      const account = await stripeClient.v2.core.accounts.create({
-        // Display name shown in the Stripe dashboard for this connected account
-        display_name: profile?.username || user.email?.split("@")[0] || "Seller",
-        // Contact email for Stripe to reach the connected account holder
-        contact_email: user.email,
-        identity: {
-          // Country of the account holder — required for compliance
-          country: "us",
+      const account = await stripeClient.accounts.create({
+        type: "express",
+        country: "US",
+        email: user.email,
+        capabilities: {
+          transfers: { requested: true },
         },
-        // 'express' gives sellers a Stripe-hosted Express dashboard
-        dashboard: "express",
-        defaults: {
-          responsibilities: {
-            // Our platform collects all fees from buyers
-            fees_collector: "application",
-            // Our platform is responsible for any dispute losses
-            losses_collector: "application",
-          },
-        },
-        configuration: {
-          recipient: {
-            capabilities: {
-              stripe_balance: {
-                stripe_transfers: {
-                  // Request the ability to receive transfers to stripe balance
-                  requested: true,
-                },
-              },
-            },
-          },
+        business_profile: {
+          name: profile?.username || user.email?.split("@")[0] || "Seller",
         },
       });
 
       accountId = account.id;
-      console.log(`Created new V2 Connect account: ${accountId} for user: ${user.id}`);
+      console.log(`Created new Connect account: ${accountId} for user: ${user.id}`);
 
       // ----------------------------------------------------------------
       // Step 6: Persist the account ID in the user's profile
-      // This mapping lets us look up the seller's Stripe account ID
-      // when processing payments or checking onboarding status.
       // ----------------------------------------------------------------
       await adminClient
         .from("profiles")
@@ -157,27 +123,13 @@ Deno.serve(async (req) => {
     }
 
     // ------------------------------------------------------------------
-    // Step 7: Create a Stripe Account Link (hosted onboarding URL)
-    //
-    // The Account Link gives the seller a secure, Stripe-hosted page
-    // where they enter their personal/business details, bank account, etc.
-    //
-    // Using the V2 accountLinks API with 'account_onboarding' use case.
+    // Step 7: Create a Stripe Account Link for onboarding
     // ------------------------------------------------------------------
-    const accountLink = await stripeClient.v2.core.accountLinks.create({
+    const accountLink = await stripeClient.accountLinks.create({
       account: accountId,
-      use_case: {
-        type: "account_onboarding",
-        account_onboarding: {
-          // 'recipient' configuration enables stripe_balance transfers
-          configurations: ["recipient"],
-          // refresh_url: where to send the seller if the link expires
-          refresh_url: `${origin}/dashboard?connect=refresh`,
-          // return_url: where to send the seller after completing onboarding
-          // We include the accountId so the frontend can poll for status
-          return_url: `${origin}/dashboard?connect=success&accountId=${accountId}`,
-        },
-      },
+      type: "account_onboarding",
+      refresh_url: `${origin}/dashboard?connect=refresh`,
+      return_url: `${origin}/dashboard?connect=success&accountId=${accountId}`,
     });
 
     console.log(`Generated account link for account: ${accountId}`);

@@ -6,9 +6,10 @@ import { Footer } from "@/components/Footer";
 import { CompletenessBadge } from "@/components/CompletenessBadge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { ExternalLink, Github, Star, ShoppingCart, ChevronLeft, ChevronRight, Download, Eye, Package, Gift } from "lucide-react";
+import { ExternalLink, Github, Star, ShoppingCart, ChevronLeft, ChevronRight, Download, Eye, Package, Gift, MessageSquare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { MakeOfferDialog } from "@/components/MakeOfferDialog";
+import { ChatDrawer } from "@/components/ChatDrawer";
 
 const BUILT_WITH_LABELS: Record<string, string> = {
   lovable: "Lovable",
@@ -63,6 +64,7 @@ export default function ListingDetail() {
   const [purchased, setPurchased] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [claiming, setClaiming] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -408,7 +410,19 @@ export default function ListingDetail() {
                 </div>
               )}
 
-              {/* Secondary actions */}
+              {/* Chat with seller (for any non-owner logged in user) */}
+              {user && listing.seller_id !== user.id && (
+                <div className="mt-3">
+                  <Button
+                    variant="outline"
+                    className="w-full border-border/60 hover:border-primary/40 transition-colors"
+                    onClick={() => setChatOpen(true)}
+                  >
+                    <MessageSquare className="h-4 w-4 mr-2" />
+                    Chat with Seller
+                  </Button>
+                </div>
+              )}
               {(listing.demo_url || listing.github_url) && (
                 <div className="mt-3 space-y-2">
                   {listing.demo_url && (
@@ -457,6 +471,18 @@ export default function ListingDetail() {
         </div>
       </main>
       <Footer />
+      
+      {user && listing && listing.seller_id !== user.id && (
+        <ChatDrawer
+          open={chatOpen}
+          onOpenChange={setChatOpen}
+          conversationId={null}
+          listingId={listing.id}
+          sellerId={listing.seller_id}
+          listingTitle={listing.title}
+          otherUsername={seller?.username ?? "Seller"}
+        />
+      )}
     </div>
   );
 }

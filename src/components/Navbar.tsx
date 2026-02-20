@@ -2,7 +2,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdmin } from "@/hooks/useAdmin";
-import { Zap, Menu, X, ShieldCheck } from "lucide-react";
+import { Zap, Menu, X, ShieldCheck, MessageSquare } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -58,6 +58,7 @@ export function Navbar() {
             <>
               <NavItem to="/sell">Sell</NavItem>
               <NavItem to="/dashboard">Dashboard</NavItem>
+              <NavItem to="/messages">Messages</NavItem>
             </>
           )}
           {isAdmin && (
@@ -123,6 +124,7 @@ export function Navbar() {
             <>
               <NavItem to="/sell" onClick={() => setMenuOpen(false)}>Sell</NavItem>
               <NavItem to="/dashboard" onClick={() => setMenuOpen(false)}>Dashboard</NavItem>
+              <NavItem to="/messages" onClick={() => setMenuOpen(false)}>Messages</NavItem>
               <NavItem to="/profile" onClick={() => setMenuOpen(false)}>Profile</NavItem>
               {isAdmin && (
                 <Link to="/admin" className="text-sm font-medium text-primary flex items-center gap-1" onClick={() => setMenuOpen(false)}>

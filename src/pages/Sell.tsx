@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { CompletenessBadge } from "@/components/CompletenessBadge";
+import { MagicImport } from "@/components/MagicImport";
 import { Upload, Plus, X, Link as LinkIcon, Github, FileArchive, CheckCircle2 } from "lucide-react";
 import { Navigate } from "react-router-dom";
 
@@ -176,6 +177,25 @@ export default function Sell() {
           {/* Step 1 */}
           {step === 1 && (
             <>
+              <MagicImport
+                onImport={(data) => {
+                  setForm((f) => ({
+                    ...f,
+                    title: data.title || f.title,
+                    description: data.description || f.description,
+                    tech_stack: data.tech_stack?.length ? data.tech_stack : f.tech_stack,
+                    category: data.category || f.category,
+                    completeness_badge: (data.completeness as typeof f.completeness_badge) || f.completeness_badge,
+                    demo_url: data.demo_url || f.demo_url,
+                    screenshots: data.screenshot_url ? [data.screenshot_url, ...f.screenshots].slice(0, 5) : f.screenshots,
+                  }));
+                  toast({ title: "✨ Project imported!", description: "Review the auto-filled details and adjust as needed." });
+                }}
+              />
+              <div className="relative">
+                <div className="absolute inset-x-0 top-1/2 h-px bg-border" />
+                <p className="relative bg-card text-xs text-muted-foreground text-center w-fit mx-auto px-3">or fill in manually</p>
+              </div>
               <div>
                 <label className="block text-sm font-semibold mb-1.5">Project title *</label>
                 <Input placeholder="e.g. AI Email Writer SaaS" value={form.title} onChange={(e) => update("title", e.target.value)} />

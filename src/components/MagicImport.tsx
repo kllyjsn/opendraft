@@ -18,6 +18,7 @@ interface ScrapedListing {
   category: string;
   completeness: string;
   screenshot_url: string | null;
+  screenshots: string[];
   demo_url: string;
 }
 

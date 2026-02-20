@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
 
     console.log("Scraping listing URL:", formattedUrl);
 
-    // Scrape the page for markdown content, screenshot, and links
+    // Step 1: Scrape the main page for content + screenshot + extraction
     const scrapeResponse = await fetch("https://api.firecrawl.dev/v1/scrape", {
       method: "POST",
       headers: {
@@ -102,11 +102,84 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Extract data from response (Firecrawl nests under data)
+    // Extract data from main scrape
     const result = scrapeData.data || scrapeData;
     const extracted = result.extract || result.json || {};
-    const screenshot = result.screenshot || null;
+    const mainScreenshot = result.screenshot || null;
     const metadata = result.metadata || {};
+
+    // Step 2: Map the site to find additional pages for screenshots
+    const screenshots: string[] = [];
+    if (mainScreenshot) screenshots.push(mainScreenshot);
+
+    try {
+      console.log("Mapping site for additional pages...");
+      const mapResponse = await fetch("https://api.firecrawl.dev/v1/map", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          url: formattedUrl,
+          limit: 20,
+          includeSubdomains: false,
+        }),
+      });
+
+      const mapData = await mapResponse.json();
+
+      if (mapResponse.ok && mapData.links?.length) {
+        // Filter out the main URL and pick up to 2 additional pages
+        const additionalUrls = (mapData.links as string[])
+          .filter((link: string) => {
+            const l = link.toLowerCase();
+            return (
+              l !== formattedUrl.toLowerCase() &&
+              !l.includes("/login") &&
+              !l.includes("/signup") &&
+              !l.includes("/auth") &&
+              !l.includes("/terms") &&
+              !l.includes("/privacy") &&
+              !l.includes("/api/") &&
+              !l.endsWith(".xml") &&
+              !l.endsWith(".json")
+            );
+          })
+          .slice(0, 2);
+
+        console.log("Scraping additional pages for screenshots:", additionalUrls);
+
+        // Scrape additional pages in parallel for screenshots only
+        const additionalScrapes = await Promise.allSettled(
+          additionalUrls.map((pageUrl: string) =>
+            fetch("https://api.firecrawl.dev/v1/scrape", {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${apiKey}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                url: pageUrl,
+                formats: ["screenshot"],
+                waitFor: 3000,
+              }),
+            }).then((r) => r.json())
+          )
+        );
+
+        for (const result of additionalScrapes) {
+          if (result.status === "fulfilled") {
+            const s = result.value?.data?.screenshot || result.value?.screenshot;
+            if (s) screenshots.push(s);
+          }
+        }
+      }
+    } catch (mapErr) {
+      console.warn("Failed to get additional screenshots (non-fatal):", mapErr);
+    }
+
+    console.log(`Collected ${screenshots.length} screenshot(s)`);
 
     // Build the response with extracted + fallback data
     const listing = {
@@ -115,7 +188,8 @@ Deno.serve(async (req) => {
       tech_stack: extracted.tech_stack || [],
       category: extracted.category || "other",
       completeness: extracted.completeness || "mvp",
-      screenshot_url: screenshot,
+      screenshot_url: screenshots[0] || null,
+      screenshots: screenshots.slice(0, 3),
       demo_url: formattedUrl,
       source_url: formattedUrl,
     };

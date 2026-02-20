@@ -44,6 +44,9 @@ Deno.serve(async (req) => {
     if (!stripeKey) {
       throw new Error("STRIPE_SECRET_KEY is not configured. Add it in your Cloud secrets.");
     }
+    
+    // Diagnostic: log key prefix and length to verify it's valid
+    console.log(`STRIPE_SECRET_KEY prefix: "${stripeKey.substring(0, 8)}...", length: ${stripeKey.length}, has non-ASCII: ${/[^\x20-\x7E]/.test(stripeKey)}`);
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");

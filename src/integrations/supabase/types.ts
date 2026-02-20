@@ -14,6 +14,62 @@ export type Database = {
   }
   public: {
     Tables: {
+      discount_code_usage: {
+        Row: {
+          buyer_id: string
+          discount_code_id: string
+          id: string
+          used_at: string
+        }
+        Insert: {
+          buyer_id: string
+          discount_code_id: string
+          id?: string
+          used_at?: string
+        }
+        Update: {
+          buyer_id?: string
+          discount_code_id?: string
+          id?: string
+          used_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discount_code_usage_discount_code_id_fkey"
+            columns: ["discount_code_id"]
+            isOneToOne: false
+            referencedRelation: "discount_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      discount_codes: {
+        Row: {
+          active: boolean
+          code: string
+          created_at: string
+          discount_type: string
+          discount_value: number
+          id: string
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          created_at?: string
+          discount_type: string
+          discount_value: number
+          id?: string
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          created_at?: string
+          discount_type?: string
+          discount_value?: number
+          id?: string
+        }
+        Relationships: []
+      }
       listings: {
         Row: {
           category: Database["public"]["Enums"]["listing_category"]

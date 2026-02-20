@@ -8,6 +8,7 @@ import { CompletenessBadge } from "@/components/CompletenessBadge";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useToast } from "@/hooks/use-toast";
 import { CheckCircle, XCircle, Eye, Loader2, ShieldCheck, Clock, BarChart3 } from "lucide-react";
+import { AdminDiscountCodes } from "@/components/AdminDiscountCodes";
 
 interface PendingListing {
   id: string;
@@ -265,6 +266,10 @@ export default function Admin() {
             ))}
           </div>
         )}
+        {/* Discount Codes Section */}
+        <div className="mt-12 pt-8 border-t border-border">
+          <AdminDiscountCodes />
+        </div>
       </main>
       <Footer />
     </div>

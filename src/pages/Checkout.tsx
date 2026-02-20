@@ -6,7 +6,8 @@ import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { CompletenessBadge } from "@/components/CompletenessBadge";
-import { Loader2, ShoppingCart, ChevronLeft, Lock } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Loader2, ShoppingCart, ChevronLeft, Lock, Tag } from "lucide-react";
 
 interface Listing {
   id: string;
@@ -26,6 +27,10 @@ export default function Checkout() {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [discountCode, setDiscountCode] = useState("");
+  const [appliedDiscount, setAppliedDiscount] = useState<{ id: string; code: string; discount_type: string; discount_value: number } | null>(null);
+  const [discountError, setDiscountError] = useState<string | null>(null);
+  const [applyingDiscount, setApplyingDiscount] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
@@ -53,15 +58,56 @@ export default function Checkout() {
     setLoading(false);
   }
 
+  async function handleApplyDiscount() {
+    const trimmed = discountCode.trim().toUpperCase();
+    if (!trimmed) return;
+    setApplyingDiscount(true);
+    setDiscountError(null);
+
+    // Look up active code
+    const { data: codes } = await supabase
+      .from("discount_codes")
+      .select("id,code,discount_type,discount_value")
+      .eq("code", trimmed)
+      .eq("active", true)
+      .limit(1);
+
+    if (!codes?.length) {
+      setDiscountError("Invalid or expired code");
+      setApplyingDiscount(false);
+      return;
+    }
+
+    // Check if already used by this buyer
+    const { data: usage } = await supabase
+      .from("discount_code_usage")
+      .select("id")
+      .eq("discount_code_id", codes[0].id)
+      .eq("buyer_id", user!.id)
+      .limit(1);
+
+    if (usage?.length) {
+      setDiscountError("You've already used this code");
+      setApplyingDiscount(false);
+      return;
+    }
+
+    setAppliedDiscount(codes[0] as any);
+    setApplyingDiscount(false);
+  }
+
   async function handleBuy() {
     if (!listing || !user) return;
     setProcessing(true);
     setError(null);
 
     try {
+      const body: Record<string, string> = { listingId: listing.id };
+      if (appliedDiscount) body.discountCodeId = appliedDiscount.id;
+
       const { data, error: fnError } = await supabase.functions.invoke(
         "create-checkout-session",
-        { body: { listingId: listing.id } }
+        { body }
       );
 
       if (fnError) throw new Error(fnError.message);
@@ -101,7 +147,17 @@ export default function Checkout() {
     );
   }
 
-  const price = `$${(listing.price / 100).toFixed(2)}`;
+  const originalPrice = listing.price;
+  let finalPrice = originalPrice;
+  if (appliedDiscount) {
+    if (appliedDiscount.discount_type === "percentage") {
+      finalPrice = Math.max(0, Math.round(originalPrice * (1 - appliedDiscount.discount_value / 100)));
+    } else {
+      finalPrice = Math.max(0, originalPrice - appliedDiscount.discount_value);
+    }
+  }
+  const priceDisplay = `$${(originalPrice / 100).toFixed(2)}`;
+  const finalPriceDisplay = `$${(finalPrice / 100).toFixed(2)}`;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -135,13 +191,41 @@ export default function Checkout() {
                       <span key={t} className="rounded-md bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">{t}</span>
                     ))}
                   </div>
-                  <span className="text-lg font-black flex-shrink-0">{price}</span>
+                  <span className={`text-lg font-black flex-shrink-0 ${appliedDiscount ? "line-through text-muted-foreground text-sm" : ""}`}>{priceDisplay}</span>
                 </div>
               </div>
             </div>
+
+            {/* Discount code input */}
+            <div className="mt-4 pt-4 border-t border-border">
+              {appliedDiscount ? (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm text-green-600 font-semibold">
+                    <Tag className="h-4 w-4" />
+                    {appliedDiscount.code} applied ({appliedDiscount.discount_type === "percentage" ? `${appliedDiscount.discount_value}% off` : `$${(appliedDiscount.discount_value / 100).toFixed(2)} off`})
+                  </div>
+                  <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setAppliedDiscount(null)}>Remove</Button>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Discount code"
+                    value={discountCode}
+                    onChange={(e) => { setDiscountCode(e.target.value); setDiscountError(null); }}
+                    className="font-mono uppercase flex-1"
+                    maxLength={20}
+                  />
+                  <Button variant="outline" size="sm" onClick={handleApplyDiscount} disabled={applyingDiscount || !discountCode.trim()}>
+                    {applyingDiscount ? <Loader2 className="h-4 w-4 animate-spin" /> : "Apply"}
+                  </Button>
+                </div>
+              )}
+              {discountError && <p className="text-xs text-destructive mt-1">{discountError}</p>}
+            </div>
+
             <div className="mt-4 pt-4 border-t border-border flex justify-between text-sm">
               <span className="text-muted-foreground">Total</span>
-              <span className="font-bold">{price}</span>
+              <span className="font-bold">{finalPriceDisplay}</span>
             </div>
           </div>
 
@@ -173,7 +257,7 @@ export default function Checkout() {
             {processing ? (
               <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Redirecting to payment…</>
             ) : (
-              <><ShoppingCart className="h-4 w-4 mr-2" /> Pay {price} securely</>
+              <><ShoppingCart className="h-4 w-4 mr-2" /> Pay {finalPriceDisplay} securely</>
             )}
           </Button>
 

@@ -490,6 +490,7 @@ export default function ListingDetail() {
           sellerId={listing.seller_id}
           listingTitle={listing.title}
           otherUsername={seller?.username ?? "Seller"}
+          otherUserId={listing.seller_id}
         />
       )}
     </div>

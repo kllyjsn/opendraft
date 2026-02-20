@@ -4,28 +4,46 @@ import { Footer } from "@/components/Footer";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { ChatDrawer } from "@/components/ChatDrawer";
-import { MessageSquare, Loader2 } from "lucide-react";
+import { usePresence } from "@/hooks/usePubNub";
+import { MessageSquare, Loader2, Search, Plus, Circle, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 
 interface Conversation {
   id: string;
-  listing_id: string;
+  listing_id: string | null;
   buyer_id: string;
   seller_id: string;
   updated_at: string;
   listing_title?: string;
   other_username?: string;
+  other_user_id?: string;
   last_message?: string;
   unread_count?: number;
 }
 
+interface UserResult {
+  user_id: string;
+  username: string;
+  avatar_url: string | null;
+}
+
 export default function Messages() {
   const { user, loading: authLoading } = useAuth();
+  const { isOnline } = usePresence();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeConvo, setActiveConvo] = useState<Conversation | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  // New conversation state
+  const [showNewChat, setShowNewChat] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<UserResult[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [dmTarget, setDmTarget] = useState<UserResult | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -49,40 +67,47 @@ export default function Messages() {
     }
 
     // Enrich with listing titles and other user profiles
-    const listingIds = [...new Set(convos.map((c) => c.listing_id))];
+    const listingIds = [...new Set(convos.map((c) => c.listing_id).filter(Boolean))] as string[];
     const otherUserIds = [...new Set(convos.map((c) => (c.buyer_id === user.id ? c.seller_id : c.buyer_id)))];
 
-    const [{ data: listings }, { data: profiles }, { data: lastMessages }] = await Promise.all([
-      supabase.from("listings").select("id, title").in("id", listingIds),
+    const [profilesRes, messagesRes, listingsRes] = await Promise.all([
       supabase.from("profiles").select("user_id, username").in("user_id", otherUserIds),
       supabase
         .from("messages")
         .select("conversation_id, content, created_at, read, sender_id")
         .in("conversation_id", convos.map((c) => c.id))
         .order("created_at", { ascending: false }),
+      listingIds.length > 0
+        ? supabase.from("listings").select("id, title").in("id", listingIds)
+        : Promise.resolve({ data: [] as { id: string; title: string }[] }),
     ]);
 
-    const listingMap = new Map(listings?.map((l) => [l.id, l.title]) ?? []);
-    const profileMap = new Map(profiles?.map((p) => [p.user_id, p.username]) ?? []);
+    const profiles = profilesRes.data;
+    const lastMessages = messagesRes.data;
+    const listings = listingsRes.data;
+
+    const listingMap = new Map(listings?.map((l: any) => [l.id, l.title]) ?? []);
+    const profileMap = new Map(profiles?.map((p: any) => [p.user_id, p.username]) ?? []);
 
     // Group last messages by conversation
     const lastMsgMap = new Map<string, { content: string; unread: number }>();
     for (const msg of lastMessages ?? []) {
       if (!lastMsgMap.has(msg.conversation_id)) {
         const unreadCount = (lastMessages ?? []).filter(
-          (m) => m.conversation_id === msg.conversation_id && !m.read && m.sender_id !== user.id
+          (m: any) => m.conversation_id === msg.conversation_id && !m.read && m.sender_id !== user.id
         ).length;
         lastMsgMap.set(msg.conversation_id, { content: msg.content, unread: unreadCount });
       }
     }
 
-    const enriched: Conversation[] = convos.map((c) => {
+    const enriched = convos.map((c): Conversation => {
       const otherId = c.buyer_id === user.id ? c.seller_id : c.buyer_id;
       const lastMsg = lastMsgMap.get(c.id);
       return {
         ...c,
-        listing_title: listingMap.get(c.listing_id) ?? "Unknown listing",
+        listing_title: c.listing_id ? (listingMap.get(c.listing_id) ?? "Unknown listing") : undefined,
         other_username: profileMap.get(otherId) ?? "Anonymous",
+        other_user_id: otherId,
         last_message: lastMsg?.content,
         unread_count: lastMsg?.unread ?? 0,
       };
@@ -94,6 +119,32 @@ export default function Messages() {
 
   function openChat(convo: Conversation) {
     setActiveConvo(convo);
+    setDrawerOpen(true);
+  }
+
+  async function searchUsers(query: string) {
+    setSearchQuery(query);
+    if (query.trim().length < 2) {
+      setSearchResults([]);
+      return;
+    }
+    setSearching(true);
+    const { data } = await supabase
+      .from("profiles")
+      .select("user_id, username, avatar_url")
+      .ilike("username", `%${query.trim()}%`)
+      .neq("user_id", user?.id ?? "")
+      .limit(10);
+    setSearchResults((data as UserResult[]) ?? []);
+    setSearching(false);
+  }
+
+  function startDM(target: UserResult) {
+    setDmTarget(target);
+    setShowNewChat(false);
+    setSearchQuery("");
+    setSearchResults([]);
+    setActiveConvo(null);
     setDrawerOpen(true);
   }
 
@@ -130,7 +181,67 @@ export default function Messages() {
     <div className="min-h-screen flex flex-col">
       <Navbar />
       <main className="flex-1 container mx-auto px-4 py-10 max-w-2xl">
-        <h1 className="text-3xl font-black mb-8">Messages</h1>
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-3xl font-black">Messages</h1>
+          <Button
+            onClick={() => setShowNewChat(!showNewChat)}
+            variant={showNewChat ? "outline" : "default"}
+            size="sm"
+            className={cn(!showNewChat && "gradient-hero text-white border-0 shadow-glow")}
+          >
+            {showNewChat ? <X className="h-4 w-4 mr-1" /> : <Plus className="h-4 w-4 mr-1" />}
+            {showNewChat ? "Cancel" : "New message"}
+          </Button>
+        </div>
+
+        {/* New chat - user search */}
+        {showNewChat && (
+          <div className="mb-6 rounded-2xl border border-primary/30 bg-card p-5 shadow-card">
+            <p className="text-sm font-bold mb-3">Start a conversation</p>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                value={searchQuery}
+                onChange={(e) => searchUsers(e.target.value)}
+                placeholder="Search users by name…"
+                className="pl-9"
+                autoFocus
+              />
+            </div>
+            {searching && (
+              <div className="flex items-center gap-2 mt-3 text-sm text-muted-foreground">
+                <Loader2 className="h-3 w-3 animate-spin" /> Searching…
+              </div>
+            )}
+            {searchResults.length > 0 && (
+              <div className="mt-3 space-y-1">
+                {searchResults.map((u) => (
+                  <button
+                    key={u.user_id}
+                    onClick={() => startDM(u)}
+                    className="w-full text-left flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-muted/60 transition-colors"
+                  >
+                    <div className="h-8 w-8 rounded-full gradient-hero flex items-center justify-center text-white text-xs font-bold shrink-0">
+                      {u.username?.[0]?.toUpperCase() ?? "?"}
+                    </div>
+                    <span className="text-sm font-medium flex-1 truncate">{u.username}</span>
+                    <Circle
+                      className={cn(
+                        "h-2.5 w-2.5 shrink-0",
+                        isOnline(u.user_id)
+                          ? "fill-emerald-500 text-emerald-500"
+                          : "fill-muted-foreground/30 text-muted-foreground/30"
+                      )}
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
+            {searchQuery.trim().length >= 2 && !searching && searchResults.length === 0 && (
+              <p className="text-sm text-muted-foreground mt-3">No users found</p>
+            )}
+          </div>
+        )}
 
         {loading ? (
           <div className="flex items-center justify-center py-20">
@@ -141,7 +252,7 @@ export default function Messages() {
             <MessageSquare className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
             <h2 className="text-lg font-bold mb-2">No conversations yet</h2>
             <p className="text-sm text-muted-foreground mb-4">
-              Start a conversation by clicking "Chat with Seller" on any listing.
+              Start a new conversation using the button above, or chat with a seller on any listing.
             </p>
             <Link to="/">
               <Button variant="outline">Browse listings</Button>
@@ -161,15 +272,30 @@ export default function Messages() {
                       <span className="font-bold text-sm truncate">
                         {convo.other_username}
                       </span>
+                      <Circle
+                        className={cn(
+                          "h-2 w-2 shrink-0",
+                          convo.other_user_id && isOnline(convo.other_user_id)
+                            ? "fill-emerald-500 text-emerald-500"
+                            : "fill-muted-foreground/30 text-muted-foreground/30"
+                        )}
+                      />
                       {(convo.unread_count ?? 0) > 0 && (
                         <span className="flex-shrink-0 h-5 min-w-[20px] px-1.5 rounded-full gradient-hero text-white text-[10px] font-bold flex items-center justify-center">
                           {convo.unread_count}
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-muted-foreground truncate mb-1">
-                      Re: {convo.listing_title}
-                    </p>
+                    {convo.listing_title && (
+                      <p className="text-xs text-muted-foreground truncate mb-1">
+                        Re: {convo.listing_title}
+                      </p>
+                    )}
+                    {!convo.listing_id && (
+                      <p className="text-xs text-muted-foreground truncate mb-1">
+                        Direct message
+                      </p>
+                    )}
                     {convo.last_message && (
                       <p className="text-sm text-muted-foreground truncate">
                         {convo.last_message}
@@ -189,10 +315,19 @@ export default function Messages() {
 
       <ChatDrawer
         open={drawerOpen}
-        onOpenChange={setDrawerOpen}
+        onOpenChange={(open) => {
+          setDrawerOpen(open);
+          if (!open) {
+            setDmTarget(null);
+            fetchConversations();
+          }
+        }}
         conversationId={activeConvo?.id ?? null}
+        listingId={activeConvo?.listing_id ?? undefined}
+        recipientId={dmTarget?.user_id}
         listingTitle={activeConvo?.listing_title}
-        otherUsername={activeConvo?.other_username}
+        otherUsername={dmTarget?.username ?? activeConvo?.other_username}
+        otherUserId={dmTarget?.user_id ?? activeConvo?.other_user_id}
       />
     </div>
   );

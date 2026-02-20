@@ -2,8 +2,8 @@ import { useState, useRef, useEffect } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Loader2 } from "lucide-react";
-import { usePubNub } from "@/hooks/usePubNub";
+import { Send, Loader2, Circle } from "lucide-react";
+import { usePubNub, usePresence } from "@/hooks/usePubNub";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 
@@ -13,8 +13,10 @@ interface ChatDrawerProps {
   conversationId: string | null;
   listingId?: string;
   sellerId?: string;
+  recipientId?: string;
   listingTitle?: string;
   otherUsername?: string;
+  otherUserId?: string;
 }
 
 export function ChatDrawer({
@@ -23,15 +25,20 @@ export function ChatDrawer({
   conversationId,
   listingId,
   sellerId,
+  recipientId,
   listingTitle,
   otherUsername,
+  otherUserId,
 }: ChatDrawerProps) {
   const { user } = useAuth();
   const { messages, sendMessage } = usePubNub(open ? conversationId : null);
+  const { isOnline } = usePresence();
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [localConvoId, setLocalConvoId] = useState(conversationId);
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  const otherOnline = otherUserId ? isOnline(otherUserId) : false;
 
   useEffect(() => {
     setLocalConvoId(conversationId);
@@ -45,7 +52,7 @@ export function ChatDrawer({
     if (!input.trim() || sending) return;
     setSending(true);
     try {
-      const result = await sendMessage(input.trim(), listingId, sellerId);
+      const result = await sendMessage(input.trim(), listingId, sellerId, recipientId);
       if (result.conversationId && !localConvoId) {
         setLocalConvoId(result.conversationId);
       }
@@ -61,11 +68,24 @@ export function ChatDrawer({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="flex flex-col p-0 w-full sm:max-w-md">
         <SheetHeader className="px-5 pt-5 pb-3 border-b border-border/40">
-          <SheetTitle className="text-base font-bold truncate">
+          <SheetTitle className="text-base font-bold truncate flex items-center gap-2">
             {otherUsername ? `Chat with ${otherUsername}` : "Chat"}
+            {otherUserId && (
+              <Circle
+                className={cn(
+                  "h-2.5 w-2.5 shrink-0",
+                  otherOnline ? "fill-emerald-500 text-emerald-500" : "fill-muted-foreground/30 text-muted-foreground/30"
+                )}
+              />
+            )}
           </SheetTitle>
           {listingTitle && (
             <p className="text-xs text-muted-foreground truncate">Re: {listingTitle}</p>
+          )}
+          {otherUserId && (
+            <p className="text-[10px] text-muted-foreground">
+              {otherOnline ? "Online" : "Offline"}
+            </p>
           )}
         </SheetHeader>
 

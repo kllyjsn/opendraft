@@ -34,7 +34,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { conversationId, listingId, sellerId, content } = await req.json();
+    const { conversationId, listingId, sellerId, recipientId, content } = await req.json();
 
     if (!content || typeof content !== "string" || content.trim().length === 0) {
       return new Response(JSON.stringify({ error: "Message content required" }), {
@@ -58,34 +58,65 @@ Deno.serve(async (req) => {
     let convoId = conversationId;
 
     // Create conversation if needed
-    if (!convoId && listingId && sellerId) {
-      // Check if conversation exists
-      const { data: existing } = await serviceClient
-        .from("conversations")
-        .select("id")
-        .eq("listing_id", listingId)
-        .eq("buyer_id", user.id)
-        .maybeSingle();
-
-      if (existing) {
-        convoId = existing.id;
-      } else {
-        const { data: newConvo, error: convoError } = await serviceClient
-          .from("conversations")
-          .insert({ listing_id: listingId, buyer_id: user.id, seller_id: sellerId })
-          .select("id")
-          .single();
-
-        if (convoError) throw new Error(convoError.message);
-        convoId = newConvo.id;
-      }
-    }
-
     if (!convoId) {
-      return new Response(JSON.stringify({ error: "Conversation ID required" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      // Case 1: Listing-based conversation
+      if (listingId && sellerId) {
+        const { data: existing } = await serviceClient
+          .from("conversations")
+          .select("id")
+          .eq("listing_id", listingId)
+          .eq("buyer_id", user.id)
+          .maybeSingle();
+
+        if (existing) {
+          convoId = existing.id;
+        } else {
+          const { data: newConvo, error: convoError } = await serviceClient
+            .from("conversations")
+            .insert({ listing_id: listingId, buyer_id: user.id, seller_id: sellerId })
+            .select("id")
+            .single();
+          if (convoError) throw new Error(convoError.message);
+          convoId = newConvo.id;
+        }
+      }
+      // Case 2: Direct message (no listing)
+      else if (recipientId) {
+        if (recipientId === user.id) {
+          return new Response(JSON.stringify({ error: "Cannot message yourself" }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        // Normalize: use LEAST/GREATEST to find existing DM regardless of who initiated
+        const least = user.id < recipientId ? user.id : recipientId;
+        const greatest = user.id < recipientId ? recipientId : user.id;
+
+        const { data: existing } = await serviceClient
+          .from("conversations")
+          .select("id")
+          .is("listing_id", null)
+          .or(`and(buyer_id.eq.${least},seller_id.eq.${greatest}),and(buyer_id.eq.${greatest},seller_id.eq.${least})`)
+          .maybeSingle();
+
+        if (existing) {
+          convoId = existing.id;
+        } else {
+          const { data: newConvo, error: convoError } = await serviceClient
+            .from("conversations")
+            .insert({ buyer_id: user.id, seller_id: recipientId })
+            .select("id")
+            .single();
+          if (convoError) throw new Error(convoError.message);
+          convoId = newConvo.id;
+        }
+      } else {
+        return new Response(JSON.stringify({ error: "Recipient or conversation required" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     // Verify participant

@@ -73,7 +73,7 @@ export default function Index() {
     setLoading(true);
     let query = supabase
       .from("listings")
-      .select("id,title,description,price,completeness_badge,tech_stack,screenshots,sales_count,view_count,built_with", { count: "exact" })
+      .select("id,title,description,price,pricing_type,completeness_badge,tech_stack,screenshots,sales_count,view_count,built_with", { count: "exact" })
       .eq("status", "live");
 
     if (search) {

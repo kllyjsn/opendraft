@@ -168,6 +168,7 @@ export type Database = {
           github_url: string | null
           id: string
           price: number
+          pricing_type: Database["public"]["Enums"]["pricing_type"]
           sales_count: number | null
           screenshots: string[] | null
           seller_id: string
@@ -188,6 +189,7 @@ export type Database = {
           github_url?: string | null
           id?: string
           price: number
+          pricing_type?: Database["public"]["Enums"]["pricing_type"]
           sales_count?: number | null
           screenshots?: string[] | null
           seller_id: string
@@ -208,6 +210,7 @@ export type Database = {
           github_url?: string | null
           id?: string
           price?: number
+          pricing_type?: Database["public"]["Enums"]["pricing_type"]
           sales_count?: number | null
           screenshots?: string[] | null
           seller_id?: string
@@ -562,6 +565,7 @@ export type Database = {
         | "game"
         | "other"
       listing_status: "pending" | "live" | "hidden"
+      pricing_type: "one_time" | "monthly"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -700,6 +704,7 @@ export const Constants = {
         "other",
       ],
       listing_status: ["pending", "live", "hidden"],
+      pricing_type: ["one_time", "monthly"],
     },
   },
 } as const

@@ -25,6 +25,7 @@ interface Listing {
   title: string;
   description: string;
   price: number;
+  pricing_type: "one_time" | "monthly";
   completeness_badge: "prototype" | "mvp" | "production_ready";
   category: string;
   tech_stack: string[];
@@ -191,7 +192,8 @@ export default function ListingDetail() {
     : null;
 
   const isFree = listing.price === 0;
-  const priceLabel = isFree ? "Free" : `$${(listing.price / 100).toFixed(2)}`;
+  const isMonthly = listing.pricing_type === "monthly";
+  const priceLabel = isFree ? "Free" : `$${(listing.price / 100).toFixed(2)}${isMonthly ? "/mo" : ""}`;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -354,7 +356,7 @@ export default function ListingDetail() {
               <div className="mb-5">
                 <div className={`text-4xl font-black mb-0.5 ${isFree ? "text-primary" : ""}`}>{priceLabel}</div>
                 <p className="text-xs text-muted-foreground">
-                  {isFree ? "Free forever · Instant access" : "One-time purchase · Instant delivery"}
+                  {isFree ? "Free forever · Instant access" : isMonthly ? "Monthly subscription · Cancel anytime" : "One-time purchase · Instant delivery"}
                 </p>
               </div>
 
@@ -391,10 +393,10 @@ export default function ListingDetail() {
                   </Link>
                 )
               ) : (
-                <Link to={user ? `/checkout/${listing.id}` : "/login"}>
+              <Link to={user ? `/checkout/${listing.id}` : "/login"}>
                   <Button className="w-full gradient-hero text-white border-0 shadow-glow hover:opacity-90 h-12 text-base font-bold transition-opacity">
                     <ShoppingCart className="h-4 w-4 mr-2" />
-                    Buy Now — {priceLabel}
+                    {isMonthly ? `Subscribe — ${priceLabel}` : `Buy Now — ${priceLabel}`}
                   </Button>
                 </Link>
               )}

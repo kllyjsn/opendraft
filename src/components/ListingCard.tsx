@@ -8,6 +8,7 @@ interface ListingCardProps {
   title: string;
   description: string;
   price: number; // cents
+  pricing_type?: "one_time" | "monthly";
   completeness_badge: "prototype" | "mvp" | "production_ready";
   tech_stack: string[];
   screenshots: string[];
@@ -28,11 +29,12 @@ const BUILT_WITH_LABELS: Record<string, string> = {
 };
 
 export function ListingCard({
-  id, title, description, price, completeness_badge,
+  id, title, description, price, pricing_type, completeness_badge,
   tech_stack, screenshots, sales_count, view_count, avg_rating, owned, built_with,
 }: ListingCardProps) {
   const thumbnail = screenshots?.[0];
-  const priceLabel = price === 0 ? "Free" : `$${(price / 100).toFixed(2)}`;
+  const isMonthly = pricing_type === "monthly";
+  const priceLabel = price === 0 ? "Free" : `$${(price / 100).toFixed(2)}${isMonthly ? "/mo" : ""}`;
 
   return (
     <Link to={`/listing/${id}`} className="group block">

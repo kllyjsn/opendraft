@@ -14,6 +14,7 @@ interface Listing {
   title: string;
   description: string;
   price: number;
+  pricing_type: "one_time" | "monthly";
   completeness_badge: "prototype" | "mvp" | "production_ready";
   screenshots: string[];
   tech_stack: string[];
@@ -54,7 +55,7 @@ export default function Checkout() {
   async function fetchListing() {
     const { data } = await supabase
       .from("listings")
-      .select("id,title,description,price,completeness_badge,screenshots,tech_stack")
+      .select("id,title,description,price,pricing_type,completeness_badge,screenshots,tech_stack")
       .eq("id", id)
       .single();
     const listing = data as Listing | null;
@@ -171,6 +172,7 @@ export default function Checkout() {
   }
 
   const originalPrice = offerPrice || listing.price;
+  const isMonthly = listing.pricing_type === "monthly";
   let finalPrice = originalPrice;
   if (appliedDiscount) {
     if (appliedDiscount.discount_type === "percentage") {
@@ -179,10 +181,11 @@ export default function Checkout() {
       finalPrice = Math.max(0, originalPrice - appliedDiscount.discount_value);
     }
   }
+  const priceSuffix = isMonthly ? "/mo" : "";
   const priceDisplay = offerPrice
-    ? `$${(offerPrice / 100).toFixed(2)}`
-    : `$${(listing.price / 100).toFixed(2)}`;
-  const finalPriceDisplay = `$${(finalPrice / 100).toFixed(2)}`;
+    ? `$${(offerPrice / 100).toFixed(2)}${priceSuffix}`
+    : `$${(listing.price / 100).toFixed(2)}${priceSuffix}`;
+  const finalPriceDisplay = `$${(finalPrice / 100).toFixed(2)}${priceSuffix}`;
   const isOfferCheckout = !!offerPrice;
 
   return (
@@ -262,7 +265,10 @@ export default function Checkout() {
 
           {/* What you get */}
           <div className="mb-6 space-y-2">
-            {["Instant delivery after payment", "Lifetime access to the project", "One-time payment — no recurring fees"].map((item) => (
+            {(isMonthly
+              ? ["Access as long as you're subscribed", "Cancel anytime — no lock-in", "Automatic monthly billing"]
+              : ["Instant delivery after payment", "Lifetime access to the project", "One-time payment — no recurring fees"]
+            ).map((item) => (
               <div key={item} className="flex items-center gap-2 text-sm text-muted-foreground">
                 <span className="h-4 w-4 rounded-full gradient-hero flex items-center justify-center flex-shrink-0">
                   <svg className="h-2.5 w-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
@@ -288,7 +294,7 @@ export default function Checkout() {
             {processing ? (
               <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Redirecting to payment…</>
             ) : (
-              <><ShoppingCart className="h-4 w-4 mr-2" /> Pay {finalPriceDisplay} securely</>
+              <><ShoppingCart className="h-4 w-4 mr-2" /> {isMonthly ? `Subscribe ${finalPriceDisplay}` : `Pay ${finalPriceDisplay} securely`}</>
             )}
           </Button>
 

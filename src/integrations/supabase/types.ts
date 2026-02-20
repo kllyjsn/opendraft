@@ -41,6 +41,30 @@ export type Database = {
         }
         Relationships: []
       }
+      cloud_waitlist: {
+        Row: {
+          company_name: string | null
+          created_at: string
+          email: string
+          id: string
+          message: string | null
+        }
+        Insert: {
+          company_name?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          message?: string | null
+        }
+        Update: {
+          company_name?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          message?: string | null
+        }
+        Relationships: []
+      }
       discount_code_usage: {
         Row: {
           buyer_id: string

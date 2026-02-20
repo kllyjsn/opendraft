@@ -11,6 +11,7 @@ import { CompletenessBadge } from "@/components/CompletenessBadge";
 import { MagicImport } from "@/components/MagicImport";
 import { Upload, Plus, X, Link as LinkIcon, Github, FileArchive, CheckCircle2 } from "lucide-react";
 import { Navigate } from "react-router-dom";
+import { logActivity } from "@/lib/activity-logger";
 
 const TECH_SUGGESTIONS = ["React", "Next.js", "Tailwind", "TypeScript", "Python", "Supabase", "OpenAI", "Stripe", "Node.js", "PostgreSQL", "Vue", "Svelte", "FastAPI", "Django"];
 const CATEGORIES = [
@@ -133,6 +134,7 @@ export default function Sell() {
     if (error) {
       toast({ title: "Failed to create listing", description: error.message, variant: "destructive" });
     } else {
+      logActivity({ event_type: "listing_submitted", event_data: { title: form.title, category: form.category, price: form.price, built_with: form.built_with }, page: "/sell" });
       toast({ title: "Listing submitted! 🎉", description: "Your listing is pending review and will go live soon." });
       navigate("/dashboard");
     }

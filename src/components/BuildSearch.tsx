@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 import { CompletenessBadge } from "@/components/CompletenessBadge";
 import { ArrowRight, Sparkles, Loader2, ShoppingCart, X } from "lucide-react";
+import { logActivity } from "@/lib/activity-logger";
 
 const PLACEHOLDERS = [
   "an AI email writer SaaS...",
@@ -60,6 +61,9 @@ export function BuildSearch() {
 
       if (fnError) throw new Error(fnError.message);
       if (data?.error) throw new Error(data.error);
+
+      // Log search query
+      logActivity({ event_type: "search", event_data: { query: prompt.trim(), has_results: !!data?.hasResults, result_count: data?.matches?.length ?? 0 } });
 
       if (data?.hasResults) {
         setResults(data.matches);

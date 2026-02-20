@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { logActivity } from "@/lib/activity-logger";
 
 interface ScrapedListing {
   title: string;
@@ -65,6 +66,33 @@ export function MagicImport({ onImport }: MagicImportProps) {
       if (!data?.success) throw new Error(data?.error || "Failed to scrape");
 
       setDone(true);
+
+      // Log the import
+      logActivity({ event_type: "magic_import", event_data: { url: url.trim(), title: data.listing?.title } });
+
+      // Auto-create draft listing from scraped data
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user && data.listing) {
+          const l = data.listing;
+          const priceInCents = 0; // Draft — seller sets price later
+          await (supabase as any).from("listings").insert({
+            seller_id: user.id,
+            title: l.title || "Untitled Import",
+            description: l.description || "",
+            price: priceInCents,
+            completeness_badge: l.completeness || "prototype",
+            category: l.category || "other",
+            tech_stack: l.tech_stack || [],
+            demo_url: l.demo_url || null,
+            screenshots: l.screenshots?.slice(0, 5) || [],
+            status: "pending",
+          });
+        }
+      } catch {
+        // Non-fatal — draft creation is best-effort
+      }
+
       // Short delay to show the success state before filling
       setTimeout(() => {
         onImport(data.listing);

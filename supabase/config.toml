@@ -53,3 +53,7 @@ verify_jwt = false
 # transfer-pending-payouts is internal
 [functions.transfer-pending-payouts]
 verify_jwt = false
+
+# og-image generates dynamic social share images — public access
+[functions.og-image]
+verify_jwt = false

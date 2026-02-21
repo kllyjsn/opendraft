@@ -83,9 +83,89 @@ const POSTS: Record<string, BlogPost> = {
       "The best time to list your project was yesterday. The second best time is now. [Create your listing on OpenDraft](/sell) and start turning your side project into income.",
     ],
   },
+  "best-ai-apps-to-buy-2026": {
+    slug: "best-ai-apps-to-buy-2026",
+    title: "The Best AI Apps to Buy in 2026: Ready-Made Solutions",
+    description: "Why build from scratch when you can buy a working AI app? Here are the most popular categories of AI-built apps available on marketplaces like OpenDraft.",
+    date: "2026-02-17",
+    readTime: "5 min read",
+    content: [
+      "## Why Buy an AI-Built App?",
+      "Building software from scratch — even with AI tools — still takes time. You need to set up auth, payments, databases, and deployment. What if you could skip all that and get a working app for less than the cost of a dinner out?",
+      "That's the promise of AI app marketplaces like OpenDraft. Builders create polished, working apps and sell them — either as one-time purchases or monthly subscriptions with ongoing support.",
+      "## Top Categories of AI Apps Worth Buying",
+      "### SaaS Dashboards",
+      "The most popular category. Admin panels, analytics dashboards, client portals — these are time-consuming to build from scratch but incredibly useful. On OpenDraft, you can find production-ready dashboards starting at **$29** with features like auth, role management, and Stripe integration already wired up.",
+      "### AI-Powered Tools",
+      "Content generators, image processors, chatbot builders, data analyzers — AI tools are the fastest-growing category. These often come with API integrations already configured, saving you hours of setup.",
+      "### Landing Pages & Marketing Sites",
+      "Need a high-converting landing page? Buying a pre-built one with proven design patterns, SEO optimization, and responsive design is far more cost-effective than hiring a designer. Prices typically range from **$15–$49**.",
+      "### Internal Tools & Utilities",
+      "Invoice generators, inventory trackers, scheduling apps, CRM tools — these \"boring\" utilities are often the highest-value purchases because they solve immediate business problems.",
+      "## What to Look For",
+      "When buying an AI-built app, look for these signals:\n- **Production Ready badge** — the app has been tested and polished\n- **Active builder** — the seller responds to messages and ships updates\n- **Demo URL** — you can try before you buy\n- **Tech stack transparency** — know what you're getting\n- **Reviews from other buyers** — social proof matters",
+      "## The Bottom Line",
+      "Buying an AI-built app is the fastest way to go from idea to working product. Browse [OpenDraft's marketplace](/) to find your next tool.",
+    ],
+  },
+  "how-to-price-your-side-project": {
+    slug: "how-to-price-your-side-project",
+    title: "How to Price Your Side Project: A Data-Driven Guide",
+    description: "Pricing your app wrong leaves money on the table. Here's a framework for setting the right price — whether you're selling one-time or as a subscription.",
+    date: "2026-02-16",
+    readTime: "5 min read",
+    content: [
+      "## The Pricing Problem",
+      "Most indie developers underprice their work. They look at how much time they spent building (a weekend) and price accordingly ($10). But buyers don't care about your time — they care about the **value** your app provides.",
+      "A client portal that saves a freelancer 5 hours per month is worth far more than $10. At $50/hour saved, that's $250/month in value. Charging $20/month for it is a steal for the buyer and great recurring revenue for you.",
+      "## The Pricing Framework",
+      "### Step 1: Identify the Value",
+      "Ask yourself: What does my app help someone achieve? How much time or money does it save them? What would they pay for an alternative solution (hiring a developer, using a SaaS tool with a monthly fee)?",
+      "### Step 2: Choose Your Model",
+      "**One-time purchase ($29–$199):** Best for tools the buyer will customize heavily. They get the code, fork it, and make it their own. Price higher for production-ready apps with auth, payments, and deployment.\n\n**Monthly subscription ($15–$30/month):** Best for apps where the buyer wants ongoing support, updates, and maintenance. This is where the real money is — 20 subscribers at $20/month = $400/month recurring.",
+      "### Step 3: Position Against Alternatives",
+      "Your competition isn't other apps on OpenDraft. It's:\n- Hiring a freelancer ($50–$200/hour)\n- Building it themselves (10–40 hours of their time)\n- Existing SaaS tools ($30–$100/month)\n\nPrice at 30–50% of the cheapest alternative and you'll convert.",
+      "### Step 4: Test and Iterate",
+      "Start at a price you're comfortable with. If you're getting views but no sales, try lowering the price or adding a live demo. If you're selling easily, raise the price — you were underpriced.",
+      "## Common Mistakes",
+      "**Pricing at $5–$10:** Signals low quality. Buyers assume something that cheap isn't worth their time.\n\n**No demo:** Buyers can't evaluate without seeing the app. Always include a demo URL.\n\n**One price for everything:** Consider offering tiers — basic (code only) and premium (code + setup support + feature requests).",
+      "## Start Listing",
+      "Ready to price and sell your project? [Create your listing on OpenDraft](/sell) and start earning what your work is truly worth.",
+    ],
+  },
+  "vibe-coding-vs-traditional-development": {
+    slug: "vibe-coding-vs-traditional-development",
+    title: "Vibe Coding vs Traditional Development: A Honest Comparison",
+    description: "Is vibe coding replacing traditional software development? Here's an honest look at where AI-assisted coding shines — and where it falls short.",
+    date: "2026-02-15",
+    readTime: "6 min read",
+    content: [
+      "## The Debate",
+      "Every tech community is having the same argument: \"AI will replace developers\" vs \"AI is just a tool.\" The truth, as usual, is more nuanced. Let's break down where vibe coding excels and where traditional development still wins.",
+      "## Where Vibe Coding Wins",
+      "### Speed to MVP",
+      "Nothing beats vibe coding for going from idea to working prototype. What used to take 2–4 weeks can now happen in a single afternoon. For founders validating ideas, freelancers building client projects, and indie hackers shipping side projects — this speed advantage is transformational.",
+      "### Accessibility",
+      "Non-developers can now build real software. Product managers, designers, marketers — anyone who can clearly articulate what they want can create working apps. This isn't a toy-level change; we're seeing production SaaS tools built entirely through AI prompts.",
+      "### Boilerplate Elimination",
+      "Authentication, CRUD operations, API integrations, payment processing — these are solved problems that AI handles exceptionally well. Traditional development requires writing (or copying) the same patterns repeatedly. AI tools generate them perfectly every time.",
+      "## Where Traditional Development Still Wins",
+      "### Complex Business Logic",
+      "Multi-step workflows, complex state machines, intricate authorization rules — these still benefit from careful human design. AI can generate the code, but a senior developer's architectural decisions around these systems produce more maintainable results.",
+      "### Performance-Critical Systems",
+      "Real-time systems, high-throughput data pipelines, and performance-sensitive applications need careful optimization that AI doesn't prioritize. A human developer with profiling tools will still outperform AI-generated code for these edge cases.",
+      "### Large Codebase Maintenance",
+      "AI excels at creating new code but can struggle with understanding and modifying large, interconnected codebases. For enterprise-scale applications with millions of lines of code, traditional development practices (code reviews, testing, documentation) remain essential.",
+      "## The Sweet Spot",
+      "The most productive approach in 2026 is **hybrid**: use AI to handle the 80% of work that's pattern-based (UI components, API routes, database queries), then apply traditional development skills to the 20% that requires architectural thinking and optimization.",
+      "Builders who embrace this hybrid approach are the ones thriving on OpenDraft — they use AI tools to build fast, then apply their expertise to polish, optimize, and maintain their projects for paying customers.",
+      "## The Real Question",
+      "It's not \"will AI replace developers?\" It's \"how quickly can you learn to work with AI?\" The builders who answer that question fastest are already [selling their projects](/sell) and building recurring revenue streams.",
+    ],
+  },
 };
 
-const POST_LIST = Object.values(POSTS);
+const POST_LIST = Object.values(POSTS).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
 function BlogIndex() {
   return (
@@ -190,7 +270,6 @@ function BlogPost() {
             if (block.startsWith("### ")) {
               return <h3 key={i} className="text-lg font-black mt-8 mb-3">{block.replace("### ", "")}</h3>;
             }
-            // Handle bold and links in text
             const parts = block.split(/(\*\*.*?\*\*|\[.*?\]\(.*?\))/g);
             return (
               <p key={i} className="text-muted-foreground leading-relaxed mb-4">

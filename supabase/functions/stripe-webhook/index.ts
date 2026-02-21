@@ -71,10 +71,10 @@ async function getSignedDownloadUrl(supabaseUrl: string, supabaseServiceKey: str
 
 // Helper: Send buyer confirmation email via Resend
 async function sendBuyerEmail({
-  buyerEmail, listingTitle, signedUrl, githubUrl, amountPaid, resendApiKey,
+  buyerEmail, listingTitle, signedUrl, githubUrl, amountPaid, resendApiKey, listingId,
 }: {
   buyerEmail: string; listingTitle: string; signedUrl: string | null;
-  githubUrl: string | null; amountPaid: number; resendApiKey: string;
+  githubUrl: string | null; amountPaid: number; resendApiKey: string; listingId?: string;
 }) {
   const paid = `$${(amountPaid / 100).toFixed(2)}`;
   const hasFile = !!signedUrl;
@@ -87,6 +87,8 @@ async function sendBuyerEmail({
     ? `<a href="${githubUrl}" style="display:inline-block;background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;font-weight:700;font-size:16px;padding:14px 32px;border-radius:12px;text-decoration:none;">View on GitHub</a>`
     : `<p style="color:#6b7280;">Head to your <a href="https://opendraft.co/profile" style="color:#7c3aed;">profile page</a> to access your purchase.</p>`;
 
+  const listingUrl = listingId ? `https://opendraft.co/listing/${listingId}` : "https://opendraft.co";
+
   const html = `<!DOCTYPE html>
 <html><head><meta charset="utf-8" /></head>
 <body style="margin:0;padding:0;background:#f9fafb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
@@ -95,17 +97,47 @@ async function sendBuyerEmail({
       <table width="560" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:16px;overflow:hidden;border:1px solid #e5e7eb;">
         <tr><td style="background:linear-gradient(135deg,#7c3aed,#4f46e5);padding:32px 40px;text-align:center;">
           <p style="margin:0;color:#ddd6fe;font-size:13px;">OpenDraft</p>
-          <h1 style="margin:8px 0 0;color:#fff;font-size:28px;font-weight:900;">🎉 Your purchase is ready</h1>
+          <h1 style="margin:8px 0 0;color:#fff;font-size:28px;font-weight:900;">🎉 Welcome aboard!</h1>
         </td></tr>
-        <tr><td style="padding:36px 40px;text-align:center;">
-          <p style="margin:0 0 8px;color:#374151;font-size:16px;text-align:left;">You just bought:</p>
-          <p style="margin:0 0 28px;color:#111827;font-size:20px;font-weight:800;text-align:left;">${listingTitle}</p>
-          <p style="margin:0 0 28px;color:#6b7280;font-size:14px;text-align:left;">Paid <strong style="color:#111827;">${paid}</strong></p>
+        <tr><td style="padding:36px 40px;">
+          <p style="margin:0 0 8px;color:#374151;font-size:16px;">You just purchased:</p>
+          <p style="margin:0 0 4px;color:#111827;font-size:20px;font-weight:800;">${listingTitle}</p>
+          <p style="margin:0 0 28px;color:#6b7280;font-size:14px;">Paid <strong style="color:#111827;">${paid}</strong></p>
           ${deliverySection}
         </td></tr>
+
+        <!-- What's included -->
+        <tr><td style="padding:0 40px 36px;">
+          <div style="background:#f8f7ff;border:1px solid #ede9fe;border-radius:12px;padding:24px;">
+            <p style="margin:0 0 16px;color:#4c1d95;font-size:15px;font-weight:800;">Here's what you get:</p>
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td style="padding:6px 0;color:#374151;font-size:14px;vertical-align:top;width:24px;">🔄</td>
+                <td style="padding:6px 0 6px 8px;color:#374151;font-size:14px;"><strong>Monthly updates</strong> — You'll receive ongoing improvements and new features every month.</td>
+              </tr>
+              <tr>
+                <td style="padding:6px 0;color:#374151;font-size:14px;vertical-align:top;width:24px;">💬</td>
+                <td style="padding:6px 0 6px 8px;color:#374151;font-size:14px;"><strong>Direct messaging</strong> — Message the builder directly for support and feature requests.</td>
+              </tr>
+              <tr>
+                <td style="padding:6px 0;color:#374151;font-size:14px;vertical-align:top;width:24px;">🛠</td>
+                <td style="padding:6px 0 6px 8px;color:#374151;font-size:14px;"><strong>In-app requests</strong> — Submit feature requests and get support at <a href="${listingUrl}" style="color:#7c3aed;font-weight:600;">opendraft.co</a>.</td>
+              </tr>
+              <tr>
+                <td style="padding:6px 0;color:#374151;font-size:14px;vertical-align:top;width:24px;">📦</td>
+                <td style="padding:6px 0 6px 8px;color:#374151;font-size:14px;"><strong>Stability & support</strong> — The builder maintains the app so you can focus on shipping.</td>
+              </tr>
+            </table>
+          </div>
+        </td></tr>
+
+        <tr><td style="padding:0 40px 36px;text-align:center;">
+          <a href="${listingUrl}" style="display:inline-block;background:#111827;color:#fff;font-weight:700;font-size:14px;padding:12px 28px;border-radius:10px;text-decoration:none;">View your project on OpenDraft →</a>
+        </td></tr>
+
         <tr><td style="padding:24px 40px;border-top:1px solid #f3f4f6;">
           <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">
-            Questions? Reply to this email or visit <a href="https://opendraft.co" style="color:#7c3aed;">opendraft.co</a>
+            Questions? Reply to this email or message the builder directly at <a href="https://opendraft.co" style="color:#7c3aed;">opendraft.co</a>
           </p>
         </td></tr>
       </table>
@@ -119,7 +151,7 @@ async function sendBuyerEmail({
     body: JSON.stringify({
       from: "OpenDraft <noreply@opendraft.lovable.app>",
       to: [buyerEmail],
-      subject: `Your download is ready: ${listingTitle}`,
+      subject: `Welcome aboard: ${listingTitle} — here's what to expect`,
       html,
     }),
   });
@@ -436,6 +468,7 @@ async function handleCheckoutSessionCompleted(
           githubUrl: listingInfo?.github_url ?? null,
           amountPaid: amount,
           resendApiKey,
+          listingId: listing_id,
         }) : Promise.resolve(),
       ]);
     } catch (emailErr) {

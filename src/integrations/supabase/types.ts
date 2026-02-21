@@ -41,6 +41,107 @@ export type Database = {
         }
         Relationships: []
       }
+      bounties: {
+        Row: {
+          budget: number
+          category: Database["public"]["Enums"]["listing_category"]
+          created_at: string
+          description: string
+          id: string
+          poster_id: string
+          status: Database["public"]["Enums"]["bounty_status"]
+          submissions_count: number
+          tech_stack: string[] | null
+          title: string
+          updated_at: string
+          winner_id: string | null
+          winner_listing_id: string | null
+        }
+        Insert: {
+          budget: number
+          category?: Database["public"]["Enums"]["listing_category"]
+          created_at?: string
+          description: string
+          id?: string
+          poster_id: string
+          status?: Database["public"]["Enums"]["bounty_status"]
+          submissions_count?: number
+          tech_stack?: string[] | null
+          title: string
+          updated_at?: string
+          winner_id?: string | null
+          winner_listing_id?: string | null
+        }
+        Update: {
+          budget?: number
+          category?: Database["public"]["Enums"]["listing_category"]
+          created_at?: string
+          description?: string
+          id?: string
+          poster_id?: string
+          status?: Database["public"]["Enums"]["bounty_status"]
+          submissions_count?: number
+          tech_stack?: string[] | null
+          title?: string
+          updated_at?: string
+          winner_id?: string | null
+          winner_listing_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bounties_winner_listing_id_fkey"
+            columns: ["winner_listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bounty_submissions: {
+        Row: {
+          bounty_id: string
+          created_at: string
+          id: string
+          listing_id: string
+          message: string | null
+          seller_id: string
+          status: string
+        }
+        Insert: {
+          bounty_id: string
+          created_at?: string
+          id?: string
+          listing_id: string
+          message?: string | null
+          seller_id: string
+          status?: string
+        }
+        Update: {
+          bounty_id?: string
+          created_at?: string
+          id?: string
+          listing_id?: string
+          message?: string | null
+          seller_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bounty_submissions_bounty_id_fkey"
+            columns: ["bounty_id"]
+            isOneToOne: false
+            referencedRelation: "bounties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bounty_submissions_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cloud_waitlist: {
         Row: {
           company_name: string | null
@@ -556,6 +657,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
+      bounty_status: "open" | "in_progress" | "completed" | "cancelled"
       completeness_badge: "prototype" | "mvp" | "production_ready"
       listing_category:
         | "saas_tool"
@@ -694,6 +796,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
+      bounty_status: ["open", "in_progress", "completed", "cancelled"],
       completeness_badge: ["prototype", "mvp", "production_ready"],
       listing_category: [
         "saas_tool",

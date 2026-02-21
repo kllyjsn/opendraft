@@ -55,6 +55,7 @@ export function Navbar() {
         {/* Desktop Nav */}
         <div className="hidden md:flex items-center gap-7">
           <NavItem to="/">Browse</NavItem>
+          <NavItem to="/bounties">Bounties</NavItem>
           <NavItem to="/cloud">Cloud</NavItem>
           {user && (
             <>
@@ -130,6 +131,7 @@ export function Navbar() {
       {menuOpen && (
         <div className="md:hidden border-t border-border/40 bg-background/95 backdrop-blur-xl px-4 py-5 flex flex-col gap-4">
           <NavItem to="/" onClick={() => setMenuOpen(false)}>Browse</NavItem>
+          <NavItem to="/bounties" onClick={() => setMenuOpen(false)}>Bounties</NavItem>
           <NavItem to="/cloud" onClick={() => setMenuOpen(false)}>Cloud</NavItem>
           {user ? (
             <>

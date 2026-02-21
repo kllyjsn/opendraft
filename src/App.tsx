@@ -17,6 +17,8 @@ import FAQ from "./pages/FAQ";
 import Storefront from "./pages/Storefront";
 import CloudPage from "./pages/Cloud";
 import Messages from "./pages/Messages";
+import Bounties from "./pages/Bounties";
+import BountyDetail from "./pages/BountyDetail";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +42,8 @@ const App = () => (
           <Route path="/storefront" element={<Storefront />} />
           <Route path="/cloud" element={<CloudPage />} />
           <Route path="/messages" element={<Messages />} />
+          <Route path="/bounties" element={<Bounties />} />
+          <Route path="/bounty/:id" element={<BountyDetail />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

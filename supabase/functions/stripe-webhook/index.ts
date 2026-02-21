@@ -70,13 +70,26 @@ async function getSignedDownloadUrl(supabaseUrl: string, supabaseServiceKey: str
 }
 
 // Helper: Send buyer confirmation email via Resend
+const BUILT_WITH_LABELS: Record<string, string> = {
+  lovable: "Lovable", claude_code: "Claude Code", cursor: "Cursor",
+  bolt: "Bolt", replit: "Replit", other: "Other",
+};
+
+const COMPLETENESS_LABELS: Record<string, string> = {
+  prototype: "Prototype", mvp: "MVP", production_ready: "Production Ready",
+};
+
 async function sendBuyerEmail({
   buyerEmail, listingTitle, signedUrl, githubUrl, amountPaid, resendApiKey, listingId,
+  description, techStack, builtWith, completenessBadge, demoUrl, pricingType,
 }: {
   buyerEmail: string; listingTitle: string; signedUrl: string | null;
   githubUrl: string | null; amountPaid: number; resendApiKey: string; listingId?: string;
+  description?: string | null; techStack?: string[]; builtWith?: string | null;
+  completenessBadge?: string | null; demoUrl?: string | null; pricingType?: string;
 }) {
   const paid = `$${(amountPaid / 100).toFixed(2)}`;
+  const isMonthly = pricingType === "monthly";
   const hasFile = !!signedUrl;
   const hasGithub = !!githubUrl;
 
@@ -88,6 +101,40 @@ async function sendBuyerEmail({
     : `<p style="color:#6b7280;">Head to your <a href="https://opendraft.co/profile" style="color:#7c3aed;">profile page</a> to access your purchase.</p>`;
 
   const listingUrl = listingId ? `https://opendraft.co/listing/${listingId}` : "https://opendraft.co";
+
+  // Build project details section from listing metadata
+  const shortDesc = description ? (description.length > 200 ? description.slice(0, 200).replace(/\n/g, " ") + "…" : description.replace(/\n/g, " ")) : null;
+  const badgeLabel = completenessBadge ? COMPLETENESS_LABELS[completenessBadge] ?? completenessBadge : null;
+  const toolLabel = builtWith ? BUILT_WITH_LABELS[builtWith] ?? builtWith : null;
+  const stackStr = (techStack && techStack.length > 0) ? techStack.slice(0, 6).join(" · ") : null;
+
+  let projectDetailsHtml = "";
+  if (shortDesc || badgeLabel || toolLabel || stackStr || demoUrl) {
+    const rows: string[] = [];
+    if (shortDesc) {
+      rows.push(`<p style="margin:0 0 12px;color:#6b7280;font-size:13px;line-height:1.5;">${shortDesc}</p>`);
+    }
+    const metaParts: string[] = [];
+    if (badgeLabel) metaParts.push(`<span style="display:inline-block;background:#ede9fe;color:#4c1d95;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;">${badgeLabel}</span>`);
+    if (toolLabel) metaParts.push(`<span style="display:inline-block;background:#f0fdf4;color:#166534;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;">🛠 ${toolLabel}</span>`);
+    if (isMonthly) metaParts.push(`<span style="display:inline-block;background:#eff6ff;color:#1e40af;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;">Monthly subscription</span>`);
+    if (metaParts.length > 0) {
+      rows.push(`<p style="margin:0 0 10px;">${metaParts.join(" ")}</p>`);
+    }
+    if (stackStr) {
+      rows.push(`<p style="margin:0 0 8px;color:#9ca3af;font-size:12px;"><strong style="color:#6b7280;">Tech:</strong> ${stackStr}</p>`);
+    }
+    if (demoUrl) {
+      rows.push(`<p style="margin:0;"><a href="${demoUrl}" style="color:#7c3aed;font-size:13px;font-weight:600;">View live demo →</a></p>`);
+    }
+    projectDetailsHtml = `
+        <tr><td style="padding:0 40px 24px;">
+          <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:20px;">
+            <p style="margin:0 0 10px;color:#374151;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;">About this project</p>
+            ${rows.join("\n            ")}
+          </div>
+        </td></tr>`;
+  }
 
   const html = `<!DOCTYPE html>
 <html><head><meta charset="utf-8" /></head>
@@ -102,9 +149,12 @@ async function sendBuyerEmail({
         <tr><td style="padding:36px 40px;">
           <p style="margin:0 0 8px;color:#374151;font-size:16px;">You just purchased:</p>
           <p style="margin:0 0 4px;color:#111827;font-size:20px;font-weight:800;">${listingTitle}</p>
-          <p style="margin:0 0 28px;color:#6b7280;font-size:14px;">Paid <strong style="color:#111827;">${paid}</strong></p>
+          <p style="margin:0 0 28px;color:#6b7280;font-size:14px;">Paid <strong style="color:#111827;">${paid}${isMonthly ? "/mo" : ""}</strong></p>
           ${deliverySection}
         </td></tr>
+
+        <!-- Project-specific details -->
+        ${projectDetailsHtml}
 
         <!-- What's included -->
         <tr><td style="padding:0 40px 36px;">
@@ -427,7 +477,7 @@ async function handleCheckoutSessionCompleted(
   if (resendApiKey) {
     try {
       const [listingRes, sellerRes, buyerRes] = await Promise.all([
-        fetch(`${supabaseUrl}/rest/v1/listings?id=eq.${listing_id}&select=title,file_path,github_url`, {
+        fetch(`${supabaseUrl}/rest/v1/listings?id=eq.${listing_id}&select=title,file_path,github_url,description,tech_stack,built_with,completeness_badge,demo_url,pricing_type`, {
           headers: { apikey: supabaseServiceKey, Authorization: `Bearer ${supabaseServiceKey}` },
         }),
         fetch(`${supabaseUrl}/auth/v1/admin/users/${seller_id}`, {
@@ -469,6 +519,12 @@ async function handleCheckoutSessionCompleted(
           amountPaid: amount,
           resendApiKey,
           listingId: listing_id,
+          description: listingInfo?.description ?? null,
+          techStack: listingInfo?.tech_stack ?? [],
+          builtWith: listingInfo?.built_with ?? null,
+          completenessBadge: listingInfo?.completeness_badge ?? null,
+          demoUrl: listingInfo?.demo_url ?? null,
+          pricingType: listingInfo?.pricing_type ?? "one_time",
         }) : Promise.resolve(),
       ]);
     } catch (emailErr) {

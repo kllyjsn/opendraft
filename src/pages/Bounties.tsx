@@ -170,7 +170,7 @@ export default function Bounties() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {bounties.map((b) => (
-              <BountyCard key={b.id} {...b} />
+              <BountyCard key={b.id} {...b} poster_id={b.poster_id} />
             ))}
           </div>
         )}

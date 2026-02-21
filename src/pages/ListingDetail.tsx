@@ -484,11 +484,13 @@ export default function ListingDetail() {
               <div className="rounded-2xl border border-border/60 bg-card p-5 shadow-card">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-4">Seller</p>
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="h-10 w-10 rounded-full gradient-hero flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-glow">
+                  <Link to={`/builder/${listing.seller_id}`} className="h-10 w-10 rounded-full gradient-hero flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-glow hover:opacity-80 transition-opacity">
                     {seller.username?.[0]?.toUpperCase() ?? "?"}
-                  </div>
+                  </Link>
                   <div>
-                    <p className="font-bold text-sm">{seller.username ?? "Anonymous"}</p>
+                    <Link to={`/builder/${listing.seller_id}`} className="font-bold text-sm hover:text-primary transition-colors">
+                      {seller.username ?? "Anonymous"}
+                    </Link>
                     <p className="text-xs text-muted-foreground">{seller.total_sales ?? 0} total sales</p>
                   </div>
                 </div>

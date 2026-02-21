@@ -39,6 +39,8 @@ interface Listing {
   sales_count: number;
   view_count: number;
   built_with: string | null;
+  seller_id: string;
+  seller_username?: string;
 }
 
 export default function Index() {
@@ -73,7 +75,7 @@ export default function Index() {
     setLoading(true);
     let query = supabase
       .from("listings")
-      .select("id,title,description,price,pricing_type,completeness_badge,tech_stack,screenshots,sales_count,view_count,built_with", { count: "exact" })
+      .select("id,title,description,price,pricing_type,completeness_badge,tech_stack,screenshots,sales_count,view_count,built_with,seller_id", { count: "exact" })
       .eq("status", "live");
 
     if (search) {
@@ -95,7 +97,20 @@ export default function Index() {
     }
 
     const { data, count } = await query.limit(48);
-    setListings((data as Listing[]) ?? []);
+    const listingsData = (data as Listing[]) ?? [];
+
+    // Fetch seller usernames
+    const sellerIds = [...new Set(listingsData.map((l) => l.seller_id))];
+    let profileMap: Record<string, string> = {};
+    if (sellerIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, username")
+        .in("user_id", sellerIds);
+      profileMap = Object.fromEntries((profiles ?? []).map((p) => [p.user_id, p.username ?? "Anonymous"]));
+    }
+
+    setListings(listingsData.map((l) => ({ ...l, seller_username: profileMap[l.seller_id] })));
     setTotalCount(count ?? 0);
     setLoading(false);
   }

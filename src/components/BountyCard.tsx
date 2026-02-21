@@ -21,12 +21,13 @@ interface BountyCardProps {
   status: string;
   submissions_count: number;
   created_at: string;
+  poster_id?: string;
   poster_username?: string;
 }
 
 export function BountyCard({
   id, title, description, budget, category, tech_stack,
-  status, submissions_count, created_at, poster_username,
+  status, submissions_count, created_at, poster_id, poster_username,
 }: BountyCardProps) {
   const daysAgo = Math.floor((Date.now() - new Date(created_at).getTime()) / 86400000);
   const timeLabel = daysAgo === 0 ? "Today" : daysAgo === 1 ? "1 day ago" : `${daysAgo} days ago`;
@@ -86,9 +87,17 @@ export function BountyCard({
                 {timeLabel}
               </span>
             </div>
-            {poster_username && (
+            {poster_username && poster_id ? (
+              <Link
+                to={`/builder/${poster_id}`}
+                onClick={(e) => e.stopPropagation()}
+                className="font-medium truncate max-w-[100px] hover:text-primary transition-colors"
+              >
+                by {poster_username}
+              </Link>
+            ) : poster_username ? (
               <span className="font-medium truncate max-w-[100px]">by {poster_username}</span>
-            )}
+            ) : null}
           </div>
         </CardContent>
       </Card>

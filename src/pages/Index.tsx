@@ -131,9 +131,6 @@ export default function Index() {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[600px] w-[600px] rounded-full bg-secondary/8 blur-[120px] pointer-events-none" />
 
         <div className="container mx-auto px-4 text-center relative z-10">
-          <div className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/8 px-4 py-1.5 text-sm font-semibold text-primary mb-7 backdrop-blur-sm">
-            ⚡ Yours to create.
-          </div>
 
           <h1 className="text-4xl md:text-7xl font-black tracking-tight mb-4 md:mb-5 leading-[1.05]">
             What do you want<br />

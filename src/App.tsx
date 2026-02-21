@@ -19,6 +19,7 @@ import CloudPage from "./pages/Cloud";
 import Messages from "./pages/Messages";
 import Bounties from "./pages/Bounties";
 import BountyDetail from "./pages/BountyDetail";
+import BuilderProfile from "./pages/BuilderProfile";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +45,7 @@ const App = () => (
           <Route path="/messages" element={<Messages />} />
           <Route path="/bounties" element={<Bounties />} />
           <Route path="/bounty/:id" element={<BountyDetail />} />
+          <Route path="/builder/:userId" element={<BuilderProfile />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

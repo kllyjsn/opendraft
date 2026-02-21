@@ -116,10 +116,10 @@ export default function Builders() {
                     <span>{b.followers_count ?? 0} followers</span>
                   </div>
                 </div>
-                {user && user.id !== b.user_id && (
+                {(!user || user.id !== b.user_id) && (
                   <div className="flex flex-col gap-1.5 shrink-0">
                     <FollowButton targetUserId={b.user_id} />
-                    <Button
+                    {user && user.id !== b.user_id && <Button
                       size="sm"
                       variant="outline"
                       className="h-7 text-xs gap-1"
@@ -130,7 +130,7 @@ export default function Builders() {
                     >
                       <MessageCircle className="h-3 w-3" />
                       Message
-                    </Button>
+                    </Button>}
                   </div>
                 )}
               </div>

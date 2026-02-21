@@ -22,7 +22,7 @@ export function HeroStats() {
   const items = [
     { icon: Users, label: "Builders", value: stats.builders },
     { icon: Package, label: "Live Projects", value: stats.projects },
-    { icon: ShoppingBag, label: "Sales", value: stats.sales },
+    { icon: ShoppingBag, label: "App Types", value: 8 },
   ];
 
   if (stats.builders === 0 && stats.projects === 0) return null;

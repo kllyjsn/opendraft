@@ -13,6 +13,7 @@ import { ChatDrawer } from "@/components/ChatDrawer";
 import { RemixChain } from "@/components/RemixChain";
 import { JsonLd } from "@/components/JsonLd";
 import { CanonicalTag } from "@/components/CanonicalTag";
+import { VerifiedBadge } from "@/components/VerifiedBadge";
 
 const BUILT_WITH_LABELS: Record<string, string> = {
   lovable: "Lovable",
@@ -54,6 +55,7 @@ interface Profile {
   username: string | null;
   avatar_url: string | null;
   total_sales: number;
+  verified: boolean;
 }
 
 export default function ListingDetail() {
@@ -113,7 +115,7 @@ export default function ListingDetail() {
     if (data) {
       setListing(data as Listing);
       await supabase.from("listings").update({ view_count: (data.view_count ?? 0) + 1 }).eq("id", id);
-      const { data: profile } = await supabase.from("profiles").select("username,avatar_url,total_sales").eq("user_id", data.seller_id).single();
+      const { data: profile } = await supabase.from("profiles").select("username,avatar_url,total_sales,verified").eq("user_id", data.seller_id).single();
       setSeller(profile);
     }
     setLoading(false);
@@ -225,6 +227,57 @@ export default function ListingDetail() {
     return schema;
   }, [listing, seller, avgRating, reviews]);
 
+  // FAQ schema for SEO
+  const faqSchema = useMemo(() => {
+    if (!listing) return null;
+    const badgeExplain: Record<string, string> = {
+      prototype: "an early-stage prototype — great for learning or building upon",
+      mvp: "a minimum viable product with core features working end-to-end",
+      production_ready: "a production-ready application suitable for real users",
+    };
+    const faqs = [
+      {
+        "@type": "Question",
+        name: `What do I get when I purchase "${listing.title}"?`,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: `You get instant access to download the full source code${listing.github_url ? " or view the GitHub repository" : ""}. This includes unlimited usage, direct access to the builder for support, and ongoing monthly updates.`,
+        },
+      },
+      {
+        "@type": "Question",
+        name: `What stage is "${listing.title}" at?`,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: `This project is marked as ${badgeExplain[listing.completeness_badge] ?? listing.completeness_badge}.`,
+        },
+      },
+      {
+        "@type": "Question",
+        name: `What tech stack does "${listing.title}" use?`,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: listing.tech_stack.length > 0
+            ? `It's built with ${listing.tech_stack.join(", ")}.`
+            : "The tech stack details are available on the listing page.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Can I get a refund?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "All sales are final, but you can message the builder directly if you have any issues. We encourage sellers to provide excellent support.",
+        },
+      },
+    ];
+    return {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: faqs,
+    };
+  }, [listing]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -265,6 +318,7 @@ export default function ListingDetail() {
       <Navbar />
       {listing && <CanonicalTag path={`/listing/${listing.id}`} />}
       {productSchema && <JsonLd data={productSchema} />}
+      {faqSchema && <JsonLd data={faqSchema} />}
       <main className="flex-1 container mx-auto px-4 py-10">
         {/* Breadcrumb */}
         <Link
@@ -570,9 +624,12 @@ export default function ListingDetail() {
                     {seller.username?.[0]?.toUpperCase() ?? "?"}
                   </Link>
                   <div>
-                    <Link to={`/builder/${listing.seller_id}`} className="font-bold text-sm hover:text-primary transition-colors">
-                      {seller.username ?? "Anonymous"}
-                    </Link>
+                    <div className="flex items-center gap-1">
+                      <Link to={`/builder/${listing.seller_id}`} className="font-bold text-sm hover:text-primary transition-colors">
+                        {seller.username ?? "Anonymous"}
+                      </Link>
+                      {seller.verified && <VerifiedBadge />}
+                    </div>
                     <p className="text-xs text-muted-foreground">{seller.total_sales ?? 0} total sales</p>
                   </div>
                 </div>

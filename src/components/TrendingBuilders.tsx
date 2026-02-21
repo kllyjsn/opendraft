@@ -44,7 +44,7 @@ export function TrendingBuilders() {
     load();
   }, []);
 
-  if (builders.length === 0) return null;
+  if (builders.length < 2) return null;
 
   return (
     <section className="py-12">

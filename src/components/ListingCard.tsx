@@ -68,19 +68,15 @@ export function ListingCard({
             </div>
           )}
 
-          {/* Completeness badge — bottom-left */}
-          <div className="absolute bottom-2.5 left-2.5">
+          {/* Badge + Price row */}
+          <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-end justify-between gap-1">
             <CompletenessBadge level={completeness_badge} showTooltip={false} />
-          </div>
-
-          {/* Price — bottom-right */}
-          {!owned && (
-            <div className="absolute bottom-2.5 right-2.5">
-              <span className="rounded-full bg-black/70 text-white px-2.5 py-0.5 text-sm font-bold backdrop-blur-sm tracking-tight">
+            {!owned && (
+              <span className="rounded-full bg-black/70 text-white px-2 py-0.5 text-xs md:text-sm font-bold backdrop-blur-sm tracking-tight shrink-0">
                 {priceLabel}
               </span>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         <CardContent className="p-4 space-y-2.5">

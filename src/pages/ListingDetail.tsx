@@ -6,7 +6,7 @@ import { Footer } from "@/components/Footer";
 import { CompletenessBadge } from "@/components/CompletenessBadge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { ExternalLink, Github, Star, ShoppingCart, ChevronLeft, ChevronRight, Download, Eye, Package, Gift, MessageSquare, GitFork } from "lucide-react";
+import { ExternalLink, Github, Star, ShoppingCart, ChevronLeft, ChevronRight, Download, Eye, Package, Gift, MessageSquare, GitFork, RefreshCw, Wrench, Shield, Infinity } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { MakeOfferDialog } from "@/components/MakeOfferDialog";
 import { ChatDrawer } from "@/components/ChatDrawer";
@@ -479,6 +479,48 @@ export default function ListingDetail() {
                   🔒 Secure checkout via Stripe
                 </p>
               )}
+
+              {/* What's included */}
+              <div className="mt-5 pt-5 border-t border-border/50">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">What's included</p>
+                <div className="space-y-3">
+                  <div className="flex gap-2.5">
+                    <Infinity className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-semibold text-xs">Unlimited usage</p>
+                      <p className="text-[11px] text-muted-foreground leading-relaxed">No caps or restrictions — use the app as much as you want.</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2.5">
+                    <MessageSquare className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-semibold text-xs">Direct builder access</p>
+                      <p className="text-[11px] text-muted-foreground leading-relaxed">Message the builder for support, ideas, and feature requests.</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2.5">
+                    <RefreshCw className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-semibold text-xs">Monthly updates</p>
+                      <p className="text-[11px] text-muted-foreground leading-relaxed">Bug fixes, improvements, and new features every month.</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2.5">
+                    <Wrench className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-semibold text-xs">Feature requests</p>
+                      <p className="text-[11px] text-muted-foreground leading-relaxed">Tell the builder what you need — they'll prioritize it.</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2.5">
+                    <Shield className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-semibold text-xs">Stability & support</p>
+                      <p className="text-[11px] text-muted-foreground leading-relaxed">The builder maintains the app so you can focus on your work.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Seller card with integrated chat CTA */}

@@ -45,7 +45,7 @@ export function ListingCard({
     <Link to={`/listing/${id}`} className="group block">
       <Card className="overflow-hidden border-border/50 shadow-card hover:shadow-glow transition-all duration-300 hover:-translate-y-1.5 h-full bg-card">
         {/* Thumbnail */}
-        <div className="relative h-44 bg-muted overflow-hidden">
+        <div className="relative h-32 md:h-44 bg-muted overflow-hidden">
           {thumbnail ? (
             <img
               src={thumbnail}

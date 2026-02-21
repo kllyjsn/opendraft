@@ -3,9 +3,11 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { FollowButton } from "@/components/FollowButton";
+import { ChatDrawer } from "@/components/ChatDrawer";
 import { useAuth } from "@/hooks/useAuth";
-import { Search, Users } from "lucide-react";
+import { Search, Users, MessageCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface Builder {
@@ -23,6 +25,8 @@ export default function Builders() {
   const [builders, setBuilders] = useState<Builder[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatTarget, setChatTarget] = useState<{ userId: string; username: string } | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -113,12 +117,35 @@ export default function Builders() {
                   </div>
                 </div>
                 {user && user.id !== b.user_id && (
-                  <FollowButton targetUserId={b.user_id} />
+                  <div className="flex flex-col gap-1.5 shrink-0">
+                    <FollowButton targetUserId={b.user_id} />
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-xs gap-1"
+                      onClick={() => {
+                        setChatTarget({ userId: b.user_id, username: b.username || "Anonymous" });
+                        setChatOpen(true);
+                      }}
+                    >
+                      <MessageCircle className="h-3 w-3" />
+                      Message
+                    </Button>
+                  </div>
                 )}
               </div>
             ))}
           </div>
         )}
+
+        <ChatDrawer
+          open={chatOpen}
+          onOpenChange={setChatOpen}
+          conversationId={null}
+          recipientId={chatTarget?.userId}
+          otherUsername={chatTarget?.username}
+          otherUserId={chatTarget?.userId}
+        />
       </main>
       <Footer />
     </div>

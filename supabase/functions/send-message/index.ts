@@ -167,6 +167,44 @@ Deno.serve(async (req) => {
       await fetch(url);
     }
 
+    // Send email notification to recipient
+    const resendKey = Deno.env.get("RESEND_API_KEY");
+    if (resendKey) {
+      try {
+        const recipientUserId = convo.buyer_id === user.id ? convo.seller_id : convo.buyer_id;
+        const [recipientAuth, senderProfile] = await Promise.all([
+          serviceClient.auth.admin.getUserById(recipientUserId),
+          serviceClient.from("profiles").select("username").eq("user_id", user.id).single(),
+        ]);
+        const recipientEmail = recipientAuth.data?.user?.email;
+        const senderName = senderProfile.data?.username || "Someone";
+        if (recipientEmail) {
+          await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${resendKey}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              from: "OpenDraft <notifications@opendraft.lovable.app>",
+              to: [recipientEmail],
+              subject: `New message from ${senderName} on OpenDraft`,
+              html: `
+              <div style="font-family:sans-serif;max-width:500px;margin:0 auto;padding:20px;">
+                <h2 style="color:#6366f1;">New message 💬</h2>
+                <p><strong>${senderName}</strong> sent you a message:</p>
+                <p style="color:#374151;border-left:3px solid #e5e7eb;padding-left:12px;margin:16px 0;">"${content.trim().slice(0, 200)}${content.trim().length > 200 ? "…" : ""}"</p>
+                <a href="https://opendraft.lovable.app/messages" style="display:inline-block;background:#6366f1;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;margin-top:8px;">View Messages</a>
+                <p style="color:#999;font-size:12px;margin-top:24px;">— OpenDraft</p>
+              </div>`,
+            }),
+          });
+        }
+      } catch (emailErr) {
+        console.error("Email notification failed:", emailErr);
+      }
+    }
+
     return new Response(
       JSON.stringify({ message, conversationId: convoId }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }

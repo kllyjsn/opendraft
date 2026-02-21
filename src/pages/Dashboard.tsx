@@ -8,9 +8,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { CompletenessBadge } from "@/components/CompletenessBadge";
 import { StripeConnectPanel } from "@/components/StripeConnectPanel";
 import { CreateProductPanel } from "@/components/CreateProductPanel";
-import { TrendingUp, Package, Eye, Trash2, Plus, ShoppingBag, HandCoins } from "lucide-react";
+import { TrendingUp, Package, Eye, Trash2, Plus, ShoppingBag, HandCoins, BarChart3 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { OffersManager } from "@/components/OffersManager";
+import { SellerAnalytics } from "@/components/SellerAnalytics";
 
 interface Sale {
   id: string;
@@ -52,8 +53,8 @@ export default function Dashboard() {
   const [sales, setSales] = useState<Sale[]>([]);
   const [summary, setSummary] = useState<SaleSummary>({ total_earned: 0, total_sales: 0 });
   const [dataLoading, setDataLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"listings" | "offers" | "sales">(
-    new URLSearchParams(window.location.search).get("tab") === "offers" ? "offers" : "listings"
+  const [activeTab, setActiveTab] = useState<"listings" | "offers" | "sales" | "analytics">(
+    (new URLSearchParams(window.location.search).get("tab") as "listings" | "offers" | "sales" | "analytics") || "listings"
   );
 
   useEffect(() => {
@@ -164,6 +165,7 @@ export default function Dashboard() {
             { key: "listings" as const, label: "Listings", icon: <Package className="h-3.5 w-3.5" /> },
             { key: "offers" as const, label: "Offers", icon: <HandCoins className="h-3.5 w-3.5" /> },
             { key: "sales" as const, label: "Sales", icon: <ShoppingBag className="h-3.5 w-3.5" /> },
+            { key: "analytics" as const, label: "Analytics", icon: <BarChart3 className="h-3.5 w-3.5" /> },
           ]).map(({ key, label, icon }) => (
             <button
               key={key}
@@ -323,6 +325,8 @@ export default function Dashboard() {
         )}
           </>
         )}
+
+        {activeTab === "analytics" && <SellerAnalytics />}
       </main>
       <Footer />
     </div>

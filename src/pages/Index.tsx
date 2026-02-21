@@ -133,12 +133,12 @@ export default function Index() {
         <div className="container mx-auto px-4 text-center relative z-10">
 
           <h1 className="text-4xl md:text-7xl font-black tracking-tight mb-4 md:mb-5 leading-[1.05]">
-            Hire a developer<br />
-            <span className="text-gradient">on retainer</span>
+            What do you want<br />
+            <span className="text-gradient">to build/buy?</span>
           </h1>
 
           <p className="text-sm md:text-lg text-muted-foreground max-w-lg mx-auto mb-8 md:mb-10 leading-relaxed">
-            Subscribe for ongoing support, bug fixes &amp; feature updates from the builder — or buy the code outright. Peace of mind, not just a file download.
+            Subscribe for ongoing stability, support &amp; feature updates — or buy the code outright to fork and make it yours.
           </p>
 
           <BuildSearch />

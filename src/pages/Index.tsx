@@ -137,8 +137,8 @@ export default function Index() {
             <span className="text-gradient">to build/buy?</span>
           </h1>
 
-          <p className="text-sm md:text-lg text-muted-foreground max-w-md mx-auto mb-8 md:mb-10 leading-relaxed">
-            Describe your idea — we'll find a ready-made project to buy and ship today.
+          <p className="text-sm md:text-lg text-muted-foreground max-w-lg mx-auto mb-8 md:mb-10 leading-relaxed">
+            Subscribe for ongoing stability, support &amp; feature updates — or buy the code outright to fork and make it yours.
           </p>
 
           <BuildSearch />

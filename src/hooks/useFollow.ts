@@ -62,6 +62,10 @@ export function useFollow(targetUserId: string | undefined) {
       if (!error) {
         setIsFollowing(true);
         setFollowersCount((c) => c + 1);
+        // Send follow notification (fire-and-forget)
+        supabase.functions.invoke("notify-follow", {
+          body: { followingId: targetUserId },
+        }).catch(() => {});
       }
     }
 

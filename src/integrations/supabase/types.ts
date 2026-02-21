@@ -291,6 +291,8 @@ export type Database = {
           id: string
           price: number
           pricing_type: Database["public"]["Enums"]["pricing_type"]
+          remix_count: number | null
+          remixed_from: string | null
           sales_count: number | null
           screenshots: string[] | null
           seller_id: string
@@ -312,6 +314,8 @@ export type Database = {
           id?: string
           price: number
           pricing_type?: Database["public"]["Enums"]["pricing_type"]
+          remix_count?: number | null
+          remixed_from?: string | null
           sales_count?: number | null
           screenshots?: string[] | null
           seller_id: string
@@ -333,6 +337,8 @@ export type Database = {
           id?: string
           price?: number
           pricing_type?: Database["public"]["Enums"]["pricing_type"]
+          remix_count?: number | null
+          remixed_from?: string | null
           sales_count?: number | null
           screenshots?: string[] | null
           seller_id?: string
@@ -342,7 +348,15 @@ export type Database = {
           updated_at?: string
           view_count?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "listings_remixed_from_fkey"
+            columns: ["remixed_from"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       messages: {
         Row: {
@@ -557,6 +571,45 @@ export type Database = {
           {
             foreignKeyName: "purchases_listing_id_fkey"
             columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      remix_chains: {
+        Row: {
+          child_listing_id: string
+          created_at: string
+          id: string
+          parent_listing_id: string
+          remixer_id: string
+        }
+        Insert: {
+          child_listing_id: string
+          created_at?: string
+          id?: string
+          parent_listing_id: string
+          remixer_id: string
+        }
+        Update: {
+          child_listing_id?: string
+          created_at?: string
+          id?: string
+          parent_listing_id?: string
+          remixer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "remix_chains_child_listing_id_fkey"
+            columns: ["child_listing_id"]
+            isOneToOne: true
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "remix_chains_parent_listing_id_fkey"
+            columns: ["parent_listing_id"]
             isOneToOne: false
             referencedRelation: "listings"
             referencedColumns: ["id"]

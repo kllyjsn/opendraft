@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -9,9 +9,14 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { CompletenessBadge } from "@/components/CompletenessBadge";
 import { MagicImport } from "@/components/MagicImport";
-import { Upload, Plus, X, Link as LinkIcon, Github, FileArchive, CheckCircle2 } from "lucide-react";
+import { Upload, Plus, X, Link as LinkIcon, Github, FileArchive, CheckCircle2, GitFork } from "lucide-react";
 import { Navigate } from "react-router-dom";
 import { logActivity } from "@/lib/activity-logger";
+
+interface RemixParent {
+  id: string;
+  title: string;
+}
 
 const TECH_SUGGESTIONS = ["React", "Next.js", "Tailwind", "TypeScript", "Python", "Supabase", "OpenAI", "Stripe", "Node.js", "PostgreSQL", "Vue", "Svelte", "FastAPI", "Django"];
 const CATEGORIES = [
@@ -37,9 +42,26 @@ type Step = 1 | 2 | 3;
 export default function Sell() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const [step, setStep] = useState<Step>(1);
   const [submitting, setSubmitting] = useState(false);
+  const [remixParent, setRemixParent] = useState<RemixParent | null>(null);
+
+  const remixId = searchParams.get("remix");
+
+  // Load remix parent info
+  useEffect(() => {
+    if (!remixId) return;
+    supabase
+      .from("listings")
+      .select("id, title")
+      .eq("id", remixId)
+      .single()
+      .then(({ data }) => {
+        if (data) setRemixParent(data);
+      });
+  }, [remixId]);
 
   const [form, setForm] = useState({
     title: "",
@@ -117,7 +139,7 @@ export default function Sell() {
     }
     const priceInCents = Math.round(priceFloat * 100);
 
-    const { error } = await supabase.from("listings").insert([{
+    const { data: insertedData, error } = await supabase.from("listings").insert([{
       seller_id: user.id,
       title: form.title,
       description: form.description,
@@ -132,13 +154,22 @@ export default function Sell() {
       screenshots: form.screenshots,
       file_path: form.file_path,
       status: "pending" as const,
-    }]);
+      remixed_from: remixParent?.id || null,
+    }]).select("id").single();
 
     if (error) {
       toast({ title: "Failed to create listing", description: error.message, variant: "destructive" });
     } else {
-      logActivity({ event_type: "listing_submitted", event_data: { title: form.title, category: form.category, price: form.price, built_with: form.built_with }, page: "/sell" });
-      toast({ title: "Listing submitted! 🎉", description: "Your listing is pending review and will go live soon." });
+      // Create remix chain entry if this is a remix
+      if (remixParent && insertedData?.id) {
+        await supabase.from("remix_chains").insert({
+          parent_listing_id: remixParent.id,
+          child_listing_id: insertedData.id,
+          remixer_id: user.id,
+        });
+      }
+      logActivity({ event_type: "listing_submitted", event_data: { title: form.title, category: form.category, price: form.price, built_with: form.built_with, remixed_from: remixParent?.id }, page: "/sell" });
+      toast({ title: remixParent ? "Remix submitted! 🔄" : "Listing submitted! 🎉", description: "Your listing is pending review and will go live soon." });
       navigate("/dashboard");
     }
     setSubmitting(false);
@@ -152,13 +183,24 @@ export default function Sell() {
       <Navbar />
       <main className="flex-1 container mx-auto px-4 py-10 max-w-2xl">
 
+        {/* Remix banner */}
+        {remixParent && (
+          <div className="mb-6 rounded-xl border border-primary/30 bg-primary/5 p-4 flex items-center gap-3">
+            <GitFork className="h-5 w-5 text-primary shrink-0" />
+            <div>
+              <p className="text-sm font-bold text-primary">Remixing: {remixParent.title}</p>
+              <p className="text-xs text-muted-foreground">Your improved version will link back to the original in the remix chain.</p>
+            </div>
+          </div>
+        )}
+
         {/* Seller value prop */}
         <div className="mb-8">
           <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-primary mb-3">
-            ⚡ Instant payouts
+            {remixParent ? "🔄 Remix" : "⚡ Instant payouts"}
           </div>
-          <h1 className="text-3xl font-black mb-2">Turn your project into income</h1>
-          <p className="text-muted-foreground">List once. Sell forever. The moment someone buys, you get paid — no waiting, no invoices.</p>
+          <h1 className="text-3xl font-black mb-2">{remixParent ? "Ship your remix" : "Turn your project into income"}</h1>
+          <p className="text-muted-foreground">{remixParent ? "Improve it, relist it, earn from your work. 20% platform fee applies." : "List once. Sell forever. The moment someone buys, you get paid — no waiting, no invoices."}</p>
         </div>
 
         {/* Step indicator */}

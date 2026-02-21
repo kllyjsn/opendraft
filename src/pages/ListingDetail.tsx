@@ -6,10 +6,11 @@ import { Footer } from "@/components/Footer";
 import { CompletenessBadge } from "@/components/CompletenessBadge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { ExternalLink, Github, Star, ShoppingCart, ChevronLeft, ChevronRight, Download, Eye, Package, Gift, MessageSquare } from "lucide-react";
+import { ExternalLink, Github, Star, ShoppingCart, ChevronLeft, ChevronRight, Download, Eye, Package, Gift, MessageSquare, GitFork } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { MakeOfferDialog } from "@/components/MakeOfferDialog";
 import { ChatDrawer } from "@/components/ChatDrawer";
+import { RemixChain } from "@/components/RemixChain";
 
 const BUILT_WITH_LABELS: Record<string, string> = {
   lovable: "Lovable",
@@ -401,6 +402,14 @@ export default function ListingDetail() {
                     <Download className="h-4 w-4 mr-2" />
                     {downloading ? "Preparing download…" : "Download Project"}
                   </Button>
+                  {listing.seller_id !== user?.id && (
+                    <Link to={`/sell?remix=${listing.id}`}>
+                      <Button variant="outline" className="w-full border-border/60 hover:border-primary/40 transition-colors">
+                        <GitFork className="h-4 w-4 mr-2" />
+                        Remix this project
+                      </Button>
+                    </Link>
+                  )}
                 </div>
               ) : isFree ? (
                 user ? (
@@ -503,8 +512,11 @@ export default function ListingDetail() {
                       </Button>
                     </Link>
                   )
-                )}
-              </div>
+            )}
+
+            {/* Remix chain visualization */}
+            <RemixChain listingId={listing.id} />
+          </div>
             )}
           </div>
         </div>

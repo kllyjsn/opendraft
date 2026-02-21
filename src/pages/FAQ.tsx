@@ -1,7 +1,10 @@
+import { useMemo } from "react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Zap, ShoppingCart, CreditCard, Shield, Package, DollarSign, RefreshCw } from "lucide-react";
+import { JsonLd } from "@/components/JsonLd";
+import { CanonicalTag } from "@/components/CanonicalTag";
 
 const sections = [
   {
@@ -117,9 +120,23 @@ const sections = [
 ];
 
 export default function FAQ() {
+  const faqSchema = useMemo(() => ({
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: sections.flatMap((s) =>
+      s.faqs.map((f) => ({
+        "@type": "Question",
+        name: f.q,
+        acceptedAnswer: { "@type": "Answer", text: f.a },
+      }))
+    ),
+  }), []);
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
+      <CanonicalTag path="/faq" />
+      <JsonLd data={faqSchema} />
       <main className="flex-1">
         {/* Hero */}
         <section className="border-b border-border bg-card/50 py-16">

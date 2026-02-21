@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/Navbar";
@@ -11,6 +11,8 @@ import { useToast } from "@/hooks/use-toast";
 import { MakeOfferDialog } from "@/components/MakeOfferDialog";
 import { ChatDrawer } from "@/components/ChatDrawer";
 import { RemixChain } from "@/components/RemixChain";
+import { JsonLd } from "@/components/JsonLd";
+import { CanonicalTag } from "@/components/CanonicalTag";
 
 const BUILT_WITH_LABELS: Record<string, string> = {
   lovable: "Lovable",
@@ -185,6 +187,44 @@ export default function ListingDetail() {
     }
   }
 
+  const avgRating = reviews.length > 0
+    ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length
+    : null;
+
+  const productSchema = useMemo(() => {
+    if (!listing) return null;
+    const priceVal = (listing.price / 100).toFixed(2);
+    const schema: Record<string, unknown> = {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      name: listing.title,
+      description: listing.description.slice(0, 300),
+      image: listing.screenshots?.[0] || "https://opendraft.co/og-image.png",
+      url: `https://opendraft.co/listing/${listing.id}`,
+      offers: {
+        "@type": "Offer",
+        price: priceVal,
+        priceCurrency: "USD",
+        availability: "https://schema.org/InStock",
+        seller: { "@type": "Person", name: seller?.username ?? "Anonymous" },
+      },
+    };
+    if (avgRating !== null && reviews.length > 0) {
+      schema.aggregateRating = {
+        "@type": "AggregateRating",
+        ratingValue: avgRating.toFixed(1),
+        reviewCount: reviews.length,
+      };
+      schema.review = reviews.slice(0, 5).map((r) => ({
+        "@type": "Review",
+        reviewRating: { "@type": "Rating", ratingValue: r.rating },
+        reviewBody: r.review_text ?? "",
+        datePublished: r.created_at.split("T")[0],
+      }));
+    }
+    return schema;
+  }, [listing, seller, avgRating, reviews]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -216,10 +256,6 @@ export default function ListingDetail() {
     );
   }
 
-  const avgRating = reviews.length > 0
-    ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length
-    : null;
-
   const isFree = listing.price === 0;
   const isMonthly = listing.pricing_type === "monthly";
   const priceLabel = isFree ? "Free" : `$${(listing.price / 100).toFixed(2)}${isMonthly ? "/mo" : ""}`;
@@ -227,6 +263,8 @@ export default function ListingDetail() {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
+      {listing && <CanonicalTag path={`/listing/${listing.id}`} />}
+      {productSchema && <JsonLd data={productSchema} />}
       <main className="flex-1 container mx-auto px-4 py-10">
         {/* Breadcrumb */}
         <Link

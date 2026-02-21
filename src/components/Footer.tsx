@@ -5,7 +5,7 @@ export function Footer() {
   return (
     <footer className="border-t border-border/40 bg-background mt-24">
       <div className="container mx-auto px-4 pt-12 pb-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-10 mb-12">
           {/* Brand */}
           <div className="md:col-span-1">
             <div className="flex items-center gap-2 font-black text-lg mb-4">
@@ -25,26 +25,35 @@ export function Footer() {
             <ul className="space-y-3 text-sm">
               <li><Link to="/" className="text-muted-foreground hover:text-foreground transition-colors">Browse projects</Link></li>
               <li><Link to="/sell" className="text-muted-foreground hover:text-foreground transition-colors">Sell a project</Link></li>
-              <li><Link to="/dashboard" className="text-muted-foreground hover:text-foreground transition-colors">Seller dashboard</Link></li>
+              <li><Link to="/builders" className="text-muted-foreground hover:text-foreground transition-colors">Discover builders</Link></li>
+              <li><Link to="/bounties" className="text-muted-foreground hover:text-foreground transition-colors">Bounties</Link></li>
             </ul>
           </div>
 
-          {/* Account */}
+          {/* Categories */}
           <div>
-            <h4 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">Account</h4>
+            <h4 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">Categories</h4>
             <ul className="space-y-3 text-sm">
-              <li><Link to="/login" className="text-muted-foreground hover:text-foreground transition-colors">Sign in</Link></li>
-              <li><Link to="/profile" className="text-muted-foreground hover:text-foreground transition-colors">My library</Link></li>
+              <li><Link to="/category/saas-tool" className="text-muted-foreground hover:text-foreground transition-colors">SaaS Tools</Link></li>
+              <li><Link to="/category/ai-app" className="text-muted-foreground hover:text-foreground transition-colors">AI Apps</Link></li>
+              <li><Link to="/category/landing-page" className="text-muted-foreground hover:text-foreground transition-colors">Landing Pages</Link></li>
+              <li><Link to="/category/utility" className="text-muted-foreground hover:text-foreground transition-colors">Utilities</Link></li>
+              <li><Link to="/category/game" className="text-muted-foreground hover:text-foreground transition-colors">Games</Link></li>
             </ul>
           </div>
 
-          {/* Legal */}
+          {/* Built With & Legal */}
           <div>
-            <h4 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">Legal</h4>
+            <h4 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">Built With</h4>
             <ul className="space-y-3 text-sm">
-              <li><a href="#" className="text-muted-foreground hover:text-foreground transition-colors">Terms of Service</a></li>
-              <li><a href="#" className="text-muted-foreground hover:text-foreground transition-colors">Privacy Policy</a></li>
-              <li><a href="#" className="text-muted-foreground hover:text-foreground transition-colors">DMCA Policy</a></li>
+              <li><Link to="/built-with/lovable" className="text-muted-foreground hover:text-foreground transition-colors">Lovable</Link></li>
+              <li><Link to="/built-with/cursor" className="text-muted-foreground hover:text-foreground transition-colors">Cursor</Link></li>
+              <li><Link to="/built-with/claude-code" className="text-muted-foreground hover:text-foreground transition-colors">Claude Code</Link></li>
+              <li><Link to="/built-with/bolt" className="text-muted-foreground hover:text-foreground transition-colors">Bolt</Link></li>
+              <li><Link to="/built-with/replit" className="text-muted-foreground hover:text-foreground transition-colors">Replit</Link></li>
+            </ul>
+            <h4 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4 mt-6">Legal</h4>
+            <ul className="space-y-3 text-sm">
               <li><Link to="/faq" className="text-muted-foreground hover:text-foreground transition-colors">FAQ</Link></li>
             </ul>
           </div>

@@ -311,10 +311,12 @@ export default function ListingDetail() {
                     <span>({reviews.length} {reviews.length === 1 ? "review" : "reviews"})</span>
                   </span>
                 )}
-                <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                  <Package className="h-3.5 w-3.5" />
-                  {listing.sales_count} sold
-                </span>
+                {listing.sales_count > 0 && (
+                  <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                    <Package className="h-3.5 w-3.5" />
+                    {listing.sales_count} sold
+                  </span>
+                )}
                 <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
                   <Eye className="h-3.5 w-3.5" />
                   {listing.view_count} views

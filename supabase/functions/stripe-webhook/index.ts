@@ -162,22 +162,39 @@ async function sendBuyerEmail({
             <p style="margin:0 0 16px;color:#4c1d95;font-size:15px;font-weight:800;">Here's what you get:</p>
             <table width="100%" cellpadding="0" cellspacing="0">
               <tr>
-                <td style="padding:6px 0;color:#374151;font-size:14px;vertical-align:top;width:24px;">🔄</td>
-                <td style="padding:6px 0 6px 8px;color:#374151;font-size:14px;"><strong>Monthly updates</strong> — You'll receive ongoing improvements and new features every month.</td>
+                <td style="padding:6px 0;color:#374151;font-size:14px;vertical-align:top;width:24px;">♾️</td>
+                <td style="padding:6px 0 6px 8px;color:#374151;font-size:14px;"><strong>Unlimited app usage</strong> — Use the app as much as you want, with no caps or restrictions.</td>
               </tr>
               <tr>
                 <td style="padding:6px 0;color:#374151;font-size:14px;vertical-align:top;width:24px;">💬</td>
-                <td style="padding:6px 0 6px 8px;color:#374151;font-size:14px;"><strong>Direct messaging</strong> — Message the builder directly for support and feature requests.</td>
+                <td style="padding:6px 0 6px 8px;color:#374151;font-size:14px;"><strong>Talk directly with the builder</strong> — Got an idea, a feature request, or need help? Message the builder right from <a href="${listingUrl}" style="color:#7c3aed;font-weight:600;">opendraft.co</a>. They're here to help.</td>
+              </tr>
+              <tr>
+                <td style="padding:6px 0;color:#374151;font-size:14px;vertical-align:top;width:24px;">🔄</td>
+                <td style="padding:6px 0 6px 8px;color:#374151;font-size:14px;"><strong>Monthly updates</strong> — Ongoing improvements, bug fixes, and new features shipped every month.</td>
               </tr>
               <tr>
                 <td style="padding:6px 0;color:#374151;font-size:14px;vertical-align:top;width:24px;">🛠</td>
-                <td style="padding:6px 0 6px 8px;color:#374151;font-size:14px;"><strong>In-app requests</strong> — Submit feature requests and get support at <a href="${listingUrl}" style="color:#7c3aed;font-weight:600;">opendraft.co</a>.</td>
+                <td style="padding:6px 0 6px 8px;color:#374151;font-size:14px;"><strong>Feature requests</strong> — Want something added? Submit requests in-app and the builder will prioritize what matters to you.</td>
               </tr>
               <tr>
                 <td style="padding:6px 0;color:#374151;font-size:14px;vertical-align:top;width:24px;">📦</td>
-                <td style="padding:6px 0 6px 8px;color:#374151;font-size:14px;"><strong>Stability & support</strong> — The builder maintains the app so you can focus on shipping.</td>
+                <td style="padding:6px 0 6px 8px;color:#374151;font-size:14px;"><strong>Stability & support</strong> — The builder maintains the app so you can focus on your work, not the tech.</td>
               </tr>
             </table>
+          </div>
+        </td></tr>
+
+        <!-- How to get the most out of it -->
+        <tr><td style="padding:0 40px 36px;">
+          <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:20px;">
+            <p style="margin:0 0 10px;color:#166534;font-size:14px;font-weight:800;">💡 How to get the most out of your purchase</p>
+            <ol style="margin:0;padding:0 0 0 20px;color:#374151;font-size:13px;line-height:1.8;">
+              <li><strong>Start using the app</strong> — dive in and explore all the features.</li>
+              <li><strong>Message the builder</strong> — introduce yourself, share your use case, and ask questions.</li>
+              <li><strong>Request features</strong> — tell the builder what would make this app perfect for you.</li>
+              <li><strong>Stay updated</strong> — check back monthly for new features and improvements.</li>
+            </ol>
           </div>
         </td></tr>
 

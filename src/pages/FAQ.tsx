@@ -1,7 +1,7 @@
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Zap, ShoppingCart, CreditCard, Shield, Package, DollarSign } from "lucide-react";
+import { Zap, ShoppingCart, CreditCard, Shield, Package, DollarSign, RefreshCw } from "lucide-react";
 
 const sections = [
   {
@@ -9,24 +9,28 @@ const sections = [
     title: "Buying Projects",
     faqs: [
       {
+        q: "What am I actually buying?",
+        a: "You're not just buying code — you're buying peace of mind. When you subscribe to a project, you get a developer on retainer: ongoing support, bug fixes, feature requests, and monthly updates. It's like having your own micro-SaaS team for a fraction of the cost.",
+      },
+      {
+        q: "How is this different from buying code on other marketplaces?",
+        a: "On most marketplaces, the transaction ends at download. Here, subscribing means the builder keeps your app alive and improving. You get direct access to message them, request features, and report issues. The code works — and keeps working.",
+      },
+      {
         q: "How do I buy a project?",
         a: "Browse the marketplace, click on any listing to view details, then click 'Buy Now'. You'll be redirected to a secure Stripe checkout page. After payment, you'll receive instant access to the project — no waiting, no approval process.",
       },
       {
-        q: "What do I receive after purchasing?",
-        a: "You get lifetime access to the project files, including all source code, assets, and documentation included by the seller. Delivery is instant — as soon as your payment is confirmed, the project is yours.",
+        q: "What's the difference between a subscription and a one-time purchase?",
+        a: "A subscription ($20/mo typical) gives you ongoing support, updates, and a direct line to the builder — essentially a developer on retainer. A one-time purchase gives you the code to fork and maintain yourself. Choose the subscription if you want peace of mind; choose one-time if you want full control.",
+      },
+      {
+        q: "Can I cancel my subscription?",
+        a: "Yes, you can cancel anytime. You'll keep access until the end of your billing period. No lock-in, no penalties.",
       },
       {
         q: "Is my payment secure?",
         a: "Yes. All payments are processed by Stripe, one of the world's most trusted payment processors. OpenDraft never stores your card details.",
-      },
-      {
-        q: "Can I get a refund?",
-        a: "Because projects are digital goods delivered instantly, all sales are final. We encourage you to read the full listing description, check the demo link, and review the tech stack before purchasing. If you believe there was a fraudulent listing, contact us.",
-      },
-      {
-        q: "What payment methods are accepted?",
-        a: "Any major credit or debit card (Visa, Mastercard, American Express) is accepted via Stripe. Additional methods like Apple Pay and Google Pay may be available depending on your browser and location.",
       },
     ],
   },
@@ -43,12 +47,30 @@ const sections = [
         a: "Any vibe-coded or AI-generated project: SaaS tools, landing pages, utilities, games, AI apps, templates, and more. The project must be your own work and must be functional as described.",
       },
       {
-        q: "How do I set my price?",
-        a: "You set the price when creating your listing. Most projects on OpenDraft range from $9 to $299 depending on complexity and completeness. You can choose a 'Prototype', 'MVP', or 'Production Ready' badge to set buyer expectations.",
+        q: "How should I think about pricing?",
+        a: "Think of subscriptions as selling a service, not a file. At $20/month, you're offering ongoing support, maintenance, and feature development. Most buyers aren't paying for code — they're paying for peace of mind and a developer they can rely on.",
       },
       {
         q: "Do I need to connect a payment account?",
         a: "Yes. To receive payouts, you must connect a Stripe account from your Dashboard. This is a one-time setup and allows Stripe to send earnings directly to your bank account.",
+      },
+    ],
+  },
+  {
+    icon: RefreshCw,
+    title: "Subscriptions & Support",
+    faqs: [
+      {
+        q: "What does 'developer on retainer' actually mean?",
+        a: "When a buyer subscribes to your project, they expect ongoing value: bug fixes, feature requests, and regular updates. You're not just selling code — you're offering a relationship. Think of it as a micro-SaaS where you're the team.",
+      },
+      {
+        q: "What's expected of me as a seller with subscribers?",
+        a: "Respond to messages, fix bugs, ship improvements, and keep the app running. Subscribers are paying for peace of mind — that their app works and someone is there if it doesn't.",
+      },
+      {
+        q: "How do buyers request features or report issues?",
+        a: "Every listing has built-in messaging. Subscribers can message the builder directly to request features, report bugs, or ask questions. It's a direct line — no ticketing system, no bureaucracy.",
       },
     ],
   },
@@ -58,7 +80,7 @@ const sections = [
     faqs: [
       {
         q: "How much does it cost to sell on OpenDraft?",
-        a: "Listing your project is completely free. OpenDraft charges a 20% platform fee on each sale, which is automatically deducted at checkout. The remaining 80% goes directly to you.",
+        a: "Listing your project is completely free. OpenDraft charges a 20% platform fee on each sale or subscription payment, which is automatically deducted. The remaining 80% goes directly to you.",
       },
       {
         q: "How does the fee split work?",
@@ -71,10 +93,6 @@ const sections = [
       {
         q: "Are there any hidden fees?",
         a: "No. The only fee is the 20% platform fee deducted from each sale. There are no listing fees, monthly fees, or withdrawal fees from OpenDraft. Standard Stripe processing fees may apply.",
-      },
-      {
-        q: "What currency does OpenDraft use?",
-        a: "All prices are listed and charged in USD. Stripe handles currency conversion for international buyers automatically.",
       },
     ],
   },

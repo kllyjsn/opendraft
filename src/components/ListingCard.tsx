@@ -17,7 +17,11 @@ interface ListingCardProps {
   avg_rating?: number;
   owned?: boolean;
   built_with?: string | null;
+  seller_id?: string;
+  seller_username?: string;
 }
+
+export type { ListingCardProps };
 
 const BUILT_WITH_LABELS: Record<string, string> = {
   lovable: "Lovable",
@@ -31,6 +35,7 @@ const BUILT_WITH_LABELS: Record<string, string> = {
 export function ListingCard({
   id, title, description, price, pricing_type, completeness_badge,
   tech_stack, screenshots, sales_count, view_count, avg_rating, owned, built_with,
+  seller_id, seller_username,
 }: ListingCardProps) {
   const thumbnail = screenshots?.[0];
   const isMonthly = pricing_type === "monthly";
@@ -124,7 +129,17 @@ export function ListingCard({
                 {view_count}
               </span>
             </div>
-            <span className="font-medium capitalize">{completeness_badge === "production_ready" ? "Full App" : completeness_badge === "mvp" ? "MVP" : "Prototype"}</span>
+            {seller_id && seller_username ? (
+              <Link
+                to={`/builder/${seller_id}`}
+                onClick={(e) => e.stopPropagation()}
+                className="font-medium truncate max-w-[100px] hover:text-primary transition-colors"
+              >
+                by {seller_username}
+              </Link>
+            ) : (
+              <span className="font-medium capitalize">{completeness_badge === "production_ready" ? "Full App" : completeness_badge === "mvp" ? "MVP" : "Prototype"}</span>
+            )}
           </div>
         </CardContent>
       </Card>

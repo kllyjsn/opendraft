@@ -20,7 +20,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { CheckCircle, ShoppingBag, ArrowRight, Loader2, AlertCircle, Package } from "lucide-react";
+import { CheckCircle, ShoppingBag, ArrowRight, Loader2, AlertCircle, Package, MessageSquare, RefreshCw, Wrench, Shield } from "lucide-react";
 
 interface SessionDetails {
   status: string;
@@ -148,20 +148,20 @@ export default function Success() {
     <div className="min-h-screen flex flex-col">
       <Navbar />
       <main className="flex-1 flex items-center justify-center px-4 py-20">
-        <div className="text-center max-w-md w-full">
+        <div className="text-center max-w-lg w-full">
           {/* Success icon */}
           <div className="inline-flex h-20 w-20 items-center justify-center rounded-full gradient-hero shadow-glow mb-6">
             <CheckCircle className="h-10 w-10 text-white" />
           </div>
 
-          <h1 className="text-3xl font-black mb-2">Purchase successful! 🎉</h1>
+          <h1 className="text-3xl font-black mb-2">Welcome aboard! 🎉</h1>
           <p className="text-muted-foreground mb-6">
-            Your payment was confirmed by Stripe. Head to your profile to access your purchase.
+            Your purchase is confirmed. Here's what you can expect as a customer.
           </p>
 
           {/* Purchase summary card */}
           {session && (
-            <div className="rounded-2xl border border-border bg-card p-5 mb-8 text-left shadow-card">
+            <div className="rounded-2xl border border-border bg-card p-5 mb-6 text-left shadow-card">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Purchase Summary</p>
               <div className="flex items-center gap-3">
                 {session.productImage ? (
@@ -178,25 +178,43 @@ export default function Success() {
                   )}
                 </div>
               </div>
-
-              {/* Destination charge info — shows the platform handled the transfer */}
-              <div className="mt-4 pt-4 border-t border-border">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Payment status</span>
-                  <span className="font-semibold text-primary capitalize">{session.paymentStatus}</span>
-                </div>
-                {amountFormatted && (
-                  <div className="flex justify-between text-sm mt-1">
-                    <span className="text-muted-foreground">Amount paid</span>
-                    <span className="font-bold">{amountFormatted}</span>
-                  </div>
-                )}
-                <p className="text-xs text-muted-foreground mt-3">
-                  80% of this sale is automatically transferred to the seller's Stripe account via Connect Destination Charge.
-                </p>
-              </div>
             </div>
           )}
+
+          {/* What's included */}
+          <div className="rounded-2xl border border-primary/20 bg-primary/5 p-6 mb-8 text-left">
+            <p className="font-bold text-sm uppercase tracking-wider text-primary mb-4">What's included</p>
+            <div className="space-y-4">
+              <div className="flex gap-3">
+                <RefreshCw className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-sm">Monthly updates</p>
+                  <p className="text-xs text-muted-foreground">Receive ongoing improvements and new features every month.</p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <MessageSquare className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-sm">Direct messaging</p>
+                  <p className="text-xs text-muted-foreground">Message the builder for support and feature requests anytime.</p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <Wrench className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-sm">In-app feature requests</p>
+                  <p className="text-xs text-muted-foreground">Submit requests and track progress at <a href="https://opendraft.co" className="text-primary font-medium hover:underline">opendraft.co</a>.</p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <Shield className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-sm">Stability & support</p>
+                  <p className="text-xs text-muted-foreground">The builder maintains the app so you can focus on shipping.</p>
+                </div>
+              </div>
+            </div>
+          </div>
 
           {/* Actions */}
           <div className="flex flex-col sm:flex-row gap-3 justify-center">

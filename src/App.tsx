@@ -19,8 +19,10 @@ import CloudPage from "./pages/Cloud";
 import Messages from "./pages/Messages";
 import Bounties from "./pages/Bounties";
 import BountyDetail from "./pages/BountyDetail";
-import BuilderProfile from "./pages/BuilderProfile";
 import Builders from "./pages/Builders";
+import BuilderProfile from "./pages/BuilderProfile";
+import Category from "./pages/Category";
+import BuiltWith from "./pages/BuiltWith";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +50,8 @@ const App = () => (
           <Route path="/bounty/:id" element={<BountyDetail />} />
           <Route path="/builders" element={<Builders />} />
           <Route path="/builder/:userId" element={<BuilderProfile />} />
+          <Route path="/category/:slug" element={<Category />} />
+          <Route path="/built-with/:tool" element={<BuiltWith />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

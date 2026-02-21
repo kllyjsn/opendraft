@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -9,6 +9,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useFollow } from "@/hooks/useFollow";
 import { Calendar, Package, Users, Star } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { JsonLd } from "@/components/JsonLd";
+import { CanonicalTag } from "@/components/CanonicalTag";
 
 interface ProfileData {
   user_id: string;
@@ -75,9 +77,29 @@ export default function BuilderProfile() {
     ? new Date(profile.created_at).toLocaleDateString("en-US", { month: "long", year: "numeric" })
     : "";
 
+  const personSchema = useMemo(() => {
+    if (!profile) return null;
+    return {
+      "@context": "https://schema.org",
+      "@type": "Person",
+      name: profile.username ?? "Anonymous",
+      url: `https://opendraft.co/builder/${profile.user_id}`,
+      image: profile.avatar_url ?? undefined,
+      description: profile.bio ?? `Builder on OpenDraft with ${profile.total_sales ?? 0} sales.`,
+    };
+  }, [profile]);
+
+  useEffect(() => {
+    if (!profile) return;
+    document.title = `${profile.username ?? "Builder"} — OpenDraft`;
+    return () => { document.title = "OpenDraft — Buy & Sell Vibe-Coded Projects"; };
+  }, [profile]);
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
+      {userId && <CanonicalTag path={`/builder/${userId}`} />}
+      {personSchema && <JsonLd data={personSchema} />}
 
       <main className="flex-1 container mx-auto px-4 py-10">
         {loading ? (

@@ -20,7 +20,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { CheckCircle, ShoppingBag, ArrowRight, Loader2, AlertCircle, Package, MessageSquare, RefreshCw, Wrench, Shield } from "lucide-react";
+import { CheckCircle, ShoppingBag, ArrowRight, Loader2, AlertCircle, Package, MessageSquare, RefreshCw, Wrench, Shield, Infinity, Lightbulb } from "lucide-react";
 
 interface SessionDetails {
   status: string;
@@ -182,38 +182,59 @@ export default function Success() {
           )}
 
           {/* What's included */}
-          <div className="rounded-2xl border border-primary/20 bg-primary/5 p-6 mb-8 text-left">
+          <div className="rounded-2xl border border-primary/20 bg-primary/5 p-6 mb-6 text-left">
             <p className="font-bold text-sm uppercase tracking-wider text-primary mb-4">What's included</p>
             <div className="space-y-4">
               <div className="flex gap-3">
-                <RefreshCw className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                <Infinity className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-semibold text-sm">Monthly updates</p>
-                  <p className="text-xs text-muted-foreground">Receive ongoing improvements and new features every month.</p>
+                  <p className="font-semibold text-sm">Unlimited app usage</p>
+                  <p className="text-xs text-muted-foreground">Use the app as much as you want — no caps or restrictions.</p>
                 </div>
               </div>
               <div className="flex gap-3">
                 <MessageSquare className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-semibold text-sm">Direct messaging</p>
-                  <p className="text-xs text-muted-foreground">Message the builder for support and feature requests anytime.</p>
+                  <p className="font-semibold text-sm">Talk directly with the builder</p>
+                  <p className="text-xs text-muted-foreground">Got an idea, feature request, or need help? Message the builder right from opendraft.co.</p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <RefreshCw className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-sm">Monthly updates</p>
+                  <p className="text-xs text-muted-foreground">Ongoing improvements, bug fixes, and new features shipped every month.</p>
                 </div>
               </div>
               <div className="flex gap-3">
                 <Wrench className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-semibold text-sm">In-app feature requests</p>
-                  <p className="text-xs text-muted-foreground">Submit requests and track progress at <a href="https://opendraft.co" className="text-primary font-medium hover:underline">opendraft.co</a>.</p>
+                  <p className="font-semibold text-sm">Feature requests</p>
+                  <p className="text-xs text-muted-foreground">Want something added? Submit requests and the builder will prioritize what matters to you.</p>
                 </div>
               </div>
               <div className="flex gap-3">
                 <Shield className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="font-semibold text-sm">Stability & support</p>
-                  <p className="text-xs text-muted-foreground">The builder maintains the app so you can focus on shipping.</p>
+                  <p className="text-xs text-muted-foreground">The builder maintains the app so you can focus on your work, not the tech.</p>
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* How to get the most out of it */}
+          <div className="rounded-2xl border border-accent/20 bg-accent/5 p-6 mb-8 text-left">
+            <p className="font-bold text-sm text-accent mb-3 flex items-center gap-2">
+              <Lightbulb className="h-4 w-4" />
+              How to get the most out of your purchase
+            </p>
+            <ol className="space-y-1.5 text-xs text-muted-foreground list-decimal list-inside">
+              <li><strong className="text-foreground">Start using the app</strong> — dive in and explore all the features.</li>
+              <li><strong className="text-foreground">Message the builder</strong> — introduce yourself, share your use case, and ask questions.</li>
+              <li><strong className="text-foreground">Request features</strong> — tell the builder what would make this app perfect for you.</li>
+              <li><strong className="text-foreground">Stay updated</strong> — check back monthly for new features and improvements.</li>
+            </ol>
           </div>
 
           {/* Actions */}

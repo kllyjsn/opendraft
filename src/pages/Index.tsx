@@ -9,6 +9,8 @@ import { Search, TrendingUp, SlidersHorizontal, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { BuildSearch } from "@/components/BuildSearch";
+import { HeroStats } from "@/components/HeroStats";
+import { FeaturedListings } from "@/components/FeaturedListings";
 
 const CATEGORIES = ["All", "SaaS Tool", "AI App", "Landing Page", "Utility", "Game", "Other"];
 const COMPLETENESS = ["All", "Prototype", "MVP", "Production Ready"];
@@ -122,7 +124,7 @@ export default function Index() {
       <Navbar />
 
       {/* Hero */}
-      <section className="relative overflow-hidden py-20 md:py-28">
+      <section className="relative overflow-hidden py-14 md:py-28">
         {/* Ambient orbs */}
         <div className="absolute -top-40 -right-40 h-[500px] w-[500px] rounded-full bg-primary/15 blur-[100px] pointer-events-none" />
         <div className="absolute -bottom-40 -left-40 h-[500px] w-[500px] rounded-full bg-accent/15 blur-[100px] pointer-events-none" />
@@ -133,12 +135,12 @@ export default function Index() {
             ⚡ Yours to create.
           </div>
 
-          <h1 className="text-5xl md:text-7xl font-black tracking-tight mb-5 leading-[1.05]">
+          <h1 className="text-4xl md:text-7xl font-black tracking-tight mb-4 md:mb-5 leading-[1.05]">
             What do you want<br />
             <span className="text-gradient">to build/buy?</span>
           </h1>
 
-          <p className="text-base md:text-lg text-muted-foreground max-w-md mx-auto mb-10 leading-relaxed">
+          <p className="text-sm md:text-lg text-muted-foreground max-w-md mx-auto mb-8 md:mb-10 leading-relaxed">
             Describe your idea — we'll find a ready-made project to buy and ship today.
           </p>
 
@@ -152,8 +154,12 @@ export default function Index() {
               {user ? "list your project" : "start selling"}
             </Link>
           </div>
+
+          <HeroStats />
         </div>
       </section>
+
+      <FeaturedListings />
 
       {/* Browse */}
       <section id="browse" className="container mx-auto px-4 pb-24">
@@ -256,7 +262,7 @@ export default function Index() {
 
         {/* Grid */}
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-5">
             {Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className="h-72 rounded-2xl bg-muted animate-pulse" />
             ))}
@@ -275,7 +281,7 @@ export default function Index() {
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-5">
             {listings.map((listing) => (
               <ListingCard key={listing.id} {...listing} owned={ownedIds.has(listing.id)} />
             ))}

@@ -23,6 +23,10 @@ import Builders from "./pages/Builders";
 import BuilderProfile from "./pages/BuilderProfile";
 import Category from "./pages/Category";
 import BuiltWith from "./pages/BuiltWith";
+import GuideSell from "./pages/GuideSell";
+import { BlogIndex, BlogPost } from "./pages/Blog";
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
 
 const queryClient = new QueryClient();
 
@@ -52,6 +56,11 @@ const App = () => (
           <Route path="/builder/:userId" element={<BuilderProfile />} />
           <Route path="/category/:slug" element={<Category />} />
           <Route path="/built-with/:tool" element={<BuiltWith />} />
+          <Route path="/guides/sell" element={<GuideSell />} />
+          <Route path="/blog" element={<BlogIndex />} />
+          <Route path="/blog/:slug" element={<BlogPost />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

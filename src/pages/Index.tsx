@@ -11,6 +11,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { BuildSearch } from "@/components/BuildSearch";
 import { HeroStats } from "@/components/HeroStats";
 import { FeaturedListings } from "@/components/FeaturedListings";
+import { HowItWorks } from "@/components/HowItWorks";
+import { TrendingBuilders } from "@/components/TrendingBuilders";
 
 const CATEGORIES = ["All", "SaaS Tool", "AI App", "Landing Page", "Utility", "Game", "Other"];
 const COMPLETENESS = ["All", "Prototype", "MVP", "Production Ready"];
@@ -156,7 +158,9 @@ export default function Index() {
         </div>
       </section>
 
+      <HowItWorks />
       <FeaturedListings />
+      <TrendingBuilders />
 
       {/* Browse */}
       <section id="browse" className="container mx-auto px-4 pb-24">

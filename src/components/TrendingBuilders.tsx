@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { TrendingUp } from "lucide-react";
 
@@ -10,6 +11,15 @@ interface TrendingBuilder {
   total_sales: number | null;
   listing_count: number;
 }
+
+const itemVariant = {
+  hidden: { opacity: 0, scale: 0.9 },
+  visible: (i: number) => ({
+    opacity: 1,
+    scale: 1,
+    transition: { duration: 0.4, delay: i * 0.06, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
+  }),
+};
 
 export function TrendingBuilders() {
   const [builders, setBuilders] = useState<TrendingBuilder[]>([]);
@@ -34,7 +44,6 @@ export function TrendingBuilders() {
       const countMap: Record<string, number> = {};
       (listings ?? []).forEach((l) => { countMap[l.seller_id] = (countMap[l.seller_id] || 0) + 1; });
 
-      // Only show builders with at least 1 listing
       const withListings = profiles
         .map((p) => ({ ...p, listing_count: countMap[p.user_id] || 0 }))
         .filter((p) => p.listing_count > 0);
@@ -47,34 +56,44 @@ export function TrendingBuilders() {
   if (builders.length < 2) return null;
 
   return (
-    <section className="py-12">
+    <section className="py-14">
       <div className="container mx-auto px-4">
-        <div className="flex items-center gap-2 mb-6">
-          <TrendingUp className="h-4 w-4 text-primary" />
-          <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
+        <div className="flex items-center gap-2 mb-7">
+          <div className="h-6 w-6 rounded-lg gradient-hero flex items-center justify-center">
+            <TrendingUp className="h-3.5 w-3.5 text-white" />
+          </div>
+          <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">
             Top Builders
           </h2>
         </div>
 
         <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-4 lg:grid-cols-8">
-          {builders.map((b) => (
-            <Link
+          {builders.map((b, i) => (
+            <motion.div
               key={b.user_id}
-              to={`/builder/${b.user_id}`}
-              className="flex-shrink-0 w-28 md:w-auto flex flex-col items-center gap-2 rounded-2xl border border-border/50 bg-card p-4 hover:shadow-card hover:border-primary/30 transition-all group"
+              custom={i}
+              variants={itemVariant}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
             >
-              {b.avatar_url ? (
-                <img src={b.avatar_url} alt="" className="h-12 w-12 rounded-full object-cover group-hover:scale-105 transition-transform" />
-              ) : (
-                <div className="h-12 w-12 rounded-full gradient-hero flex items-center justify-center text-white font-bold text-sm group-hover:scale-105 transition-transform">
-                  {(b.username?.[0] ?? "U").toUpperCase()}
+              <Link
+                to={`/builder/${b.user_id}`}
+                className="flex-shrink-0 w-28 md:w-auto flex flex-col items-center gap-2.5 rounded-2xl glass p-4 hover:shadow-glow hover:border-primary/30 transition-all group"
+              >
+                {b.avatar_url ? (
+                  <img src={b.avatar_url} alt="" className="h-12 w-12 rounded-full object-cover ring-2 ring-border/30 group-hover:ring-primary/40 group-hover:scale-110 transition-all duration-300" />
+                ) : (
+                  <div className="h-12 w-12 rounded-full gradient-hero flex items-center justify-center text-white font-bold text-sm ring-2 ring-border/30 group-hover:ring-primary/40 group-hover:scale-110 transition-all duration-300">
+                    {(b.username?.[0] ?? "U").toUpperCase()}
+                  </div>
+                )}
+                <div className="text-center min-w-0 w-full">
+                  <p className="font-semibold text-xs truncate">{b.username || "Anonymous"}</p>
+                  <p className="text-[10px] text-muted-foreground">{b.listing_count} projects</p>
                 </div>
-              )}
-              <div className="text-center min-w-0 w-full">
-                <p className="font-semibold text-xs truncate">{b.username || "Anonymous"}</p>
-                <p className="text-[10px] text-muted-foreground">{b.listing_count} projects</p>
-              </div>
-            </Link>
+              </Link>
+            </motion.div>
           ))}
         </div>
       </div>

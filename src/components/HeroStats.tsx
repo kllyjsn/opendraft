@@ -28,12 +28,12 @@ export function HeroStats() {
   if (stats.builders === 0 && stats.projects === 0) return null;
 
   return (
-    <div className="flex items-center justify-center gap-6 md:gap-10 mt-10">
+    <div className="flex items-center justify-center gap-5 md:gap-10 mt-12">
       {items.map(({ icon: Icon, label, value }) => (
-        <div key={label} className="flex items-center gap-2 text-muted-foreground">
+        <div key={label} className="flex items-center gap-2.5 glass rounded-full px-4 py-2">
           <Icon className="h-4 w-4 text-primary" />
-          <span className="text-lg md:text-xl font-bold text-foreground">{value}</span>
-          <span className="text-xs md:text-sm">{label}</span>
+          <span className="text-lg md:text-xl font-black text-foreground">{value}</span>
+          <span className="text-xs md:text-sm text-muted-foreground">{label}</span>
         </div>
       ))}
     </div>

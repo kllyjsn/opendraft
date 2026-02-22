@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { ListingCard } from "@/components/ListingCard";
@@ -46,6 +47,22 @@ interface Listing {
   seller_id: string;
   seller_username?: string;
 }
+
+const easeOut = [0.22, 1, 0.36, 1] as const;
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 30 },
+  visible: (i: number = 0) => ({
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.7, delay: i * 0.1, ease: easeOut as unknown as [number, number, number, number] },
+  }),
+};
+
+const staggerContainer = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.08 } },
+};
 
 export default function Index() {
   const { user } = useAuth();
@@ -103,7 +120,6 @@ export default function Index() {
     const { data, count } = await query.limit(48);
     const listingsData = (data as Listing[]) ?? [];
 
-    // Fetch seller usernames
     const sellerIds = [...new Set(listingsData.map((l) => l.seller_id))];
     let profileMap: Record<string, string> = {};
     if (sellerIds.length > 0) {
@@ -125,151 +141,233 @@ export default function Index() {
     <div className="min-h-screen flex flex-col">
       <Navbar />
 
-      {/* Hero */}
-      <section className="relative overflow-hidden py-14 md:py-28">
-        {/* Ambient orbs */}
-        <div className="absolute -top-40 -right-40 h-[500px] w-[500px] rounded-full bg-primary/15 blur-[100px] pointer-events-none" />
-        <div className="absolute -bottom-40 -left-40 h-[500px] w-[500px] rounded-full bg-accent/15 blur-[100px] pointer-events-none" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[600px] w-[600px] rounded-full bg-secondary/8 blur-[120px] pointer-events-none" />
+      {/* ── HERO ── */}
+      <section className="relative overflow-hidden py-20 md:py-36 grain-overlay">
+        {/* Animated gradient orbs */}
+        <div className="absolute -top-60 -right-60 h-[700px] w-[700px] rounded-full bg-primary/20 blur-[140px] animate-pulse-glow pointer-events-none" />
+        <div className="absolute -bottom-60 -left-60 h-[600px] w-[600px] rounded-full bg-accent/20 blur-[120px] animate-pulse-glow pointer-events-none" style={{ animationDelay: "2s" }} />
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 h-[500px] w-[500px] rounded-full bg-secondary/10 blur-[100px] animate-float pointer-events-none" />
+
+        {/* Grid lines */}
+        <div className="absolute inset-0 pointer-events-none opacity-[0.03]"
+          style={{
+            backgroundImage: `linear-gradient(hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)`,
+            backgroundSize: '60px 60px',
+          }}
+        />
 
         <div className="container mx-auto px-4 text-center relative z-10">
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={staggerContainer}
+          >
+            <motion.div variants={fadeUp} custom={0}>
+              <span className="inline-flex items-center gap-2 rounded-full glass px-4 py-1.5 text-xs font-semibold text-primary mb-6">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                The marketplace for AI-built apps
+              </span>
+            </motion.div>
 
-          <h1 className="text-4xl md:text-7xl font-black tracking-tight mb-4 md:mb-5 leading-[1.05]">
-            What do you want<br />
-            <span className="text-gradient">to build/buy?</span>
-          </h1>
+            <motion.h1
+              variants={fadeUp}
+              custom={1}
+              className="text-5xl md:text-8xl font-black tracking-tighter mb-5 md:mb-6 leading-[0.95]"
+            >
+              What do you want
+              <br />
+              <span className="text-gradient animate-gradient-shift inline-block"
+                style={{ backgroundImage: 'linear-gradient(135deg, hsl(265 85% 58%), hsl(330 90% 60%), hsl(185 90% 45%), hsl(265 85% 58%))', backgroundSize: '200% 200%' }}
+              >
+                to build?
+              </span>
+            </motion.h1>
 
-          <p className="text-sm md:text-lg text-muted-foreground max-w-lg mx-auto mb-8 md:mb-10 leading-relaxed">
-            Subscribe for ongoing stability, support &amp; feature updates — or buy the code outright to fork and make it yours.
-          </p>
+            <motion.p
+              variants={fadeUp}
+              custom={2}
+              className="text-sm md:text-lg text-muted-foreground max-w-lg mx-auto mb-10 md:mb-12 leading-relaxed"
+            >
+              Subscribe for ongoing support & updates — or buy the code outright to fork and make it yours.
+            </motion.p>
 
-          <BuildSearch />
+            <motion.div variants={fadeUp} custom={3}>
+              <BuildSearch />
+            </motion.div>
 
-          <div className="mt-8 flex items-center justify-center gap-3 text-xs text-muted-foreground">
-            <span>or</span>
-            <a href="#browse" className="underline underline-offset-4 hover:text-foreground transition-colors">browse all projects</a>
-            <span>·</span>
-            <Link to={user ? "/sell" : "/login"} className="underline underline-offset-4 hover:text-foreground transition-colors">
-              {user ? "list your project" : "start selling"}
-            </Link>
-          </div>
+            <motion.div
+              variants={fadeUp}
+              custom={4}
+              className="mt-8 flex items-center justify-center gap-3 text-xs text-muted-foreground"
+            >
+              <span>or</span>
+              <a href="#browse" className="underline underline-offset-4 hover:text-foreground transition-colors">browse all projects</a>
+              <span>·</span>
+              <Link to={user ? "/sell" : "/login"} className="underline underline-offset-4 hover:text-foreground transition-colors">
+                {user ? "list your project" : "start selling"}
+              </Link>
+            </motion.div>
 
-          <HeroStats />
+            <motion.div variants={fadeUp} custom={5}>
+              <HeroStats />
+            </motion.div>
+          </motion.div>
         </div>
       </section>
 
-      <HowItWorks />
-      <FeaturedListings />
-      <TrendingBuilders />
+      {/* ── HOW IT WORKS ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-100px" }}
+        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <HowItWorks />
+      </motion.div>
 
-      {/* Browse */}
+      {/* ── FEATURED ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-100px" }}
+        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <FeaturedListings />
+      </motion.div>
+
+      {/* ── TRENDING BUILDERS ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-100px" }}
+        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <TrendingBuilders />
+      </motion.div>
+
+      {/* ── BROWSE ── */}
       <section id="browse" className="container mx-auto px-4 pb-24">
-        {/* Section label */}
-        <div className="flex items-baseline justify-between mb-5">
-          <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-            {totalCount > 0 && !loading ? `${totalCount} projects` : "All projects"}
-          </h2>
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-50px" }}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+        >
+          {/* Section label */}
+          <div className="flex items-baseline justify-between mb-5">
+            <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
+              {totalCount > 0 && !loading ? `${totalCount} projects` : "All projects"}
+            </h2>
+          </div>
 
-        {/* Search + filters bar */}
-        <div className="flex flex-col md:flex-row gap-3 mb-5">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search projects..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 bg-card border-border/60 focus-visible:border-primary/50 focus-visible:shadow-glow transition-all"
-            />
+          {/* Search + filters bar */}
+          <div className="flex flex-col md:flex-row gap-3 mb-5">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search projects..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9 glass border-border/40 focus-visible:border-primary/50 focus-visible:shadow-glow transition-all"
+              />
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => setFiltersOpen(!filtersOpen)}
+              className={`flex items-center gap-2 border-border/40 transition-colors ${filtersOpen ? "border-primary/50 text-primary bg-primary/5" : ""}`}
+            >
+              <SlidersHorizontal className="h-4 w-4" />
+              Filters
+              {hasFilters && <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />}
+            </Button>
+            <div className="flex gap-1.5">
+              {SORT_OPTIONS.map((s) => (
+                <Button
+                  key={s}
+                  size="sm"
+                  variant={sort === s ? "default" : "outline"}
+                  onClick={() => setSort(s)}
+                  className={sort === s
+                    ? "gradient-hero text-white border-0 shadow-glow hover:opacity-90"
+                    : "border-border/40 text-muted-foreground hover:text-foreground"
+                  }
+                >
+                  {s === "Popular" && <TrendingUp className="h-3.5 w-3.5 mr-1" />}
+                  {s}
+                </Button>
+              ))}
+            </div>
           </div>
-          <Button
-            variant="outline"
-            onClick={() => setFiltersOpen(!filtersOpen)}
-            className={`flex items-center gap-2 border-border/60 transition-colors ${filtersOpen ? "border-primary/50 text-primary bg-primary/5" : ""}`}
-          >
-            <SlidersHorizontal className="h-4 w-4" />
-            Filters
-            {hasFilters && <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />}
-          </Button>
-          {/* Sort */}
-          <div className="flex gap-1.5">
-            {SORT_OPTIONS.map((s) => (
-              <Button
-                key={s}
-                size="sm"
-                variant={sort === s ? "default" : "outline"}
-                onClick={() => setSort(s)}
-                className={sort === s
-                  ? "gradient-hero text-white border-0 shadow-glow hover:opacity-90"
-                  : "border-border/60 text-muted-foreground hover:text-foreground"
-                }
-              >
-                {s === "Popular" && <TrendingUp className="h-3.5 w-3.5 mr-1" />}
-                {s}
-              </Button>
-            ))}
-          </div>
-        </div>
 
-        {/* Filter chips */}
-        {filtersOpen && (
-          <div className="mb-6 rounded-2xl border border-border/60 bg-card p-5 space-y-4 shadow-card">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">Category</p>
-              <div className="flex flex-wrap gap-2">
-                {CATEGORIES.map((c) => (
-                  <button
-                    key={c}
-                    onClick={() => setCategory(c)}
-                    className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all ${
-                      category === c
-                        ? "gradient-hero text-white shadow-sm"
-                        : "bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground"
-                    }`}
-                  >
-                    {c}
-                  </button>
-                ))}
+          {/* Filter chips */}
+          {filtersOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mb-6 rounded-2xl border border-border/40 glass-strong p-5 space-y-4"
+            >
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">Category</p>
+                <div className="flex flex-wrap gap-2">
+                  {CATEGORIES.map((c) => (
+                    <button
+                      key={c}
+                      onClick={() => setCategory(c)}
+                      className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all ${
+                        category === c
+                          ? "gradient-hero text-white shadow-sm"
+                          : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
+                      }`}
+                    >
+                      {c}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">Completeness</p>
-              <div className="flex flex-wrap gap-2">
-                {COMPLETENESS.map((c) => (
-                  <button
-                    key={c}
-                    onClick={() => setCompleteness(c)}
-                    className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all ${
-                      completeness === c
-                        ? "gradient-hero text-white shadow-sm"
-                        : "bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground"
-                    }`}
-                  >
-                    {c}
-                  </button>
-                ))}
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">Completeness</p>
+                <div className="flex flex-wrap gap-2">
+                  {COMPLETENESS.map((c) => (
+                    <button
+                      key={c}
+                      onClick={() => setCompleteness(c)}
+                      className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all ${
+                        completeness === c
+                          ? "gradient-hero text-white shadow-sm"
+                          : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
+                      }`}
+                    >
+                      {c}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-            {hasFilters && (
-              <button
-                onClick={() => { setSearch(""); setCategory("All"); setCompleteness("All"); setFreeOnly(false); }}
-                className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors font-medium"
-              >
-                <X className="h-3 w-3" /> Clear all filters
-              </button>
-            )}
-          </div>
-        )}
+              {hasFilters && (
+                <button
+                  onClick={() => { setSearch(""); setCategory("All"); setCompleteness("All"); setFreeOnly(false); }}
+                  className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors font-medium"
+                >
+                  <X className="h-3 w-3" /> Clear all filters
+                </button>
+              )}
+            </motion.div>
+          )}
+        </motion.div>
 
         {/* Grid */}
         {loading ? (
           <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-5">
             {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="h-72 rounded-2xl bg-muted animate-pulse" />
+              <div key={i} className="h-72 rounded-2xl bg-muted/50 animate-pulse" />
             ))}
           </div>
         ) : listings.length === 0 ? (
-          <div className="text-center py-28">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center py-28"
+          >
             <div className="text-5xl mb-5">🔮</div>
             <h3 className="text-xl font-bold mb-2">No listings found</h3>
             <p className="text-muted-foreground mb-6 text-sm">
@@ -280,13 +378,21 @@ export default function Index() {
                 List your project
               </Button>
             </Link>
-          </div>
+          </motion.div>
         ) : (
-          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-5">
-            {listings.map((listing) => (
-              <ListingCard key={listing.id} {...listing} owned={ownedIds.has(listing.id)} />
+          <motion.div
+            variants={staggerContainer}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-50px" }}
+            className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-5"
+          >
+            {listings.map((listing, i) => (
+              <motion.div key={listing.id} variants={fadeUp} custom={i % 8}>
+                <ListingCard {...listing} owned={ownedIds.has(listing.id)} />
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         )}
       </section>
 

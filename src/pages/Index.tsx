@@ -11,9 +11,11 @@ import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { BuildSearch } from "@/components/BuildSearch";
 import { HeroStats } from "@/components/HeroStats";
+import { SocialProof } from "@/components/SocialProof";
 import { FeaturedListings } from "@/components/FeaturedListings";
 import { HowItWorks } from "@/components/HowItWorks";
 import { TrendingBuilders } from "@/components/TrendingBuilders";
+import { CategoryShowcase } from "@/components/CategoryShowcase";
 
 const CATEGORIES = ["All", "SaaS Tool", "AI App", "Landing Page", "Utility", "Game", "Other"];
 const COMPLETENESS = ["All", "Prototype", "MVP", "Production Ready"];
@@ -188,7 +190,8 @@ export default function Index() {
               custom={2}
               className="text-sm md:text-lg text-muted-foreground max-w-lg mx-auto mb-10 md:mb-12 leading-relaxed"
             >
-              Subscribe for ongoing support & updates — or buy the code outright to fork and make it yours.
+              Pick an app. Launch today.
+              <span className="text-foreground font-medium"> We keep building it for you.</span>
             </motion.p>
 
             <motion.div variants={fadeUp} custom={3}>
@@ -210,6 +213,7 @@ export default function Index() {
 
             <motion.div variants={fadeUp} custom={5}>
               <HeroStats />
+              <SocialProof />
             </motion.div>
           </motion.div>
         </div>
@@ -243,6 +247,16 @@ export default function Index() {
         transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
       >
         <TrendingBuilders />
+      </motion.div>
+
+      {/* ── CATEGORY SHOWCASE ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-100px" }}
+        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <CategoryShowcase />
       </motion.div>
 
       {/* ── BROWSE ── */}

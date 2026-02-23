@@ -572,10 +572,33 @@ export default function ListingDetail() {
                 </p>
               )}
 
+              {/* Subscription value banner */}
+              <div className="mt-5 rounded-xl gradient-hero p-[1px]">
+                <div className="rounded-[11px] bg-card p-4 space-y-1.5 text-center">
+                  <p className="text-xs font-black uppercase tracking-wide text-primary">Your subscription includes</p>
+                  <p className="text-[13px] font-semibold leading-snug">Ongoing support & personalized feature requests</p>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">Tell us what you need — we build it for you. Like having a developer on retainer.</p>
+                </div>
+              </div>
+
               {/* What's included */}
               <div className="mt-5 pt-5 border-t border-border/50">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">What's included</p>
                 <div className="space-y-3">
+                  <div className="flex gap-2.5">
+                    <Shield className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-semibold text-xs">Dedicated support</p>
+                      <p className="text-[11px] text-muted-foreground leading-relaxed">Get direct help from the builder whenever you need it — no tickets, no wait.</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2.5">
+                    <Wrench className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-semibold text-xs">Personalized feature requests</p>
+                      <p className="text-[11px] text-muted-foreground leading-relaxed">Request custom features tailored to your needs — the builder prioritizes them for you.</p>
+                    </div>
+                  </div>
                   <div className="flex gap-2.5">
                     <Infinity className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
                     <div>
@@ -584,31 +607,17 @@ export default function ListingDetail() {
                     </div>
                   </div>
                   <div className="flex gap-2.5">
-                    <MessageSquare className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-semibold text-xs">Direct builder access</p>
-                      <p className="text-[11px] text-muted-foreground leading-relaxed">Message the builder for support, ideas, and feature requests.</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-2.5">
                     <RefreshCw className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
                     <div>
                       <p className="font-semibold text-xs">Monthly updates</p>
-                      <p className="text-[11px] text-muted-foreground leading-relaxed">Bug fixes, improvements, and new features every month.</p>
+                      <p className="text-[11px] text-muted-foreground leading-relaxed">Bug fixes, improvements, and new features shipped every month.</p>
                     </div>
                   </div>
                   <div className="flex gap-2.5">
-                    <Wrench className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                    <MessageSquare className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
                     <div>
-                      <p className="font-semibold text-xs">Feature requests</p>
-                      <p className="text-[11px] text-muted-foreground leading-relaxed">Tell the builder what you need — they'll prioritize it.</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-2.5">
-                    <Shield className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-semibold text-xs">Stability & support</p>
-                      <p className="text-[11px] text-muted-foreground leading-relaxed">The builder maintains the app so you can focus on your work.</p>
+                      <p className="font-semibold text-xs">Direct builder access</p>
+                      <p className="text-[11px] text-muted-foreground leading-relaxed">Message the builder anytime for ideas, questions, or collaboration.</p>
                     </div>
                   </div>
                 </div>

@@ -2,7 +2,7 @@ import { Zap, Clock, Wrench } from "lucide-react";
 
 const items = [
   { icon: Zap, label: "Faster than building from scratch", value: "10×" },
-  { icon: Clock, label: "Launch instantly & start improving", value: "Day 1" },
+  { icon: Clock, label: "Launch instantly & make it yours", value: "Day 1" },
   { icon: Wrench, label: "A team of professionals included", value: "$20/mo" },
 ];
 

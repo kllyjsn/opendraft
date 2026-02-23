@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { CanonicalTag } from "@/components/CanonicalTag";
 import { JsonLd } from "@/components/JsonLd";
 import { Button } from "@/components/ui/button";
+import { Rocket } from "lucide-react";
 
 const TOOL_META: Record<string, { label: string; description: string }> = {
   lovable: {
@@ -116,7 +117,16 @@ export default function BuiltWith() {
       <section className="border-b border-border bg-card/50 py-14">
         <div className="container mx-auto px-4 max-w-3xl">
           <h1 className="text-4xl font-black tracking-tight mb-3">Built with {meta.label}</h1>
-          <p className="text-muted-foreground text-lg leading-relaxed">{meta.description}</p>
+          <p className="text-muted-foreground text-lg leading-relaxed mb-6">{meta.description}</p>
+          <div className="inline-flex items-center gap-3 rounded-2xl border border-primary/20 bg-primary/5 px-5 py-3">
+            <Rocket className="h-5 w-5 text-primary" />
+            <span className="text-sm">
+              Built something with {meta.label}?{" "}
+              <Link to="/sell" className="font-semibold text-primary hover:underline underline-offset-4">
+                List it here and start earning →
+              </Link>
+            </span>
+          </div>
         </div>
       </section>
 

@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { useFollow } from "@/hooks/useFollow";
 import { Calendar, Package, Users, Star } from "lucide-react";
+import { BuilderStatsCard } from "@/components/BuilderStatsCard";
 import { useAuth } from "@/hooks/useAuth";
 import { JsonLd } from "@/components/JsonLd";
 import { CanonicalTag } from "@/components/CanonicalTag";
@@ -125,45 +126,62 @@ export default function BuilderProfile() {
           </div>
         ) : (
           <>
-            {/* Profile header */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 mb-10">
-              <Avatar className="h-20 w-20 text-2xl">
-                {profile.avatar_url && <AvatarImage src={profile.avatar_url} alt={profile.username ?? ""} />}
-                <AvatarFallback className="gradient-hero text-white text-2xl font-bold">
-                  {initial}
-                </AvatarFallback>
-              </Avatar>
-
+            {/* Profile header + stats card */}
+            <div className="flex flex-col lg:flex-row gap-8 mb-10">
               <div className="flex-1">
-                <div className="flex items-center gap-4 mb-2">
-                  <h1 className="text-2xl font-black">{profile.username ?? "Anonymous"}</h1>
-                  {user && userId && <FollowButton targetUserId={userId} />}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+                  <Avatar className="h-20 w-20 text-2xl">
+                    {profile.avatar_url && <AvatarImage src={profile.avatar_url} alt={profile.username ?? ""} />}
+                    <AvatarFallback className="gradient-hero text-white text-2xl font-bold">
+                      {initial}
+                    </AvatarFallback>
+                  </Avatar>
+
+                  <div className="flex-1">
+                    <div className="flex items-center gap-4 mb-2">
+                      <h1 className="text-2xl font-black">{profile.username ?? "Anonymous"}</h1>
+                      {user && userId && <FollowButton targetUserId={userId} />}
+                    </div>
+                    {profile.bio && (
+                      <p className="text-muted-foreground mb-3 max-w-lg">{profile.bio}</p>
+                    )}
+                    <div className="flex flex-wrap gap-5 text-sm text-muted-foreground">
+                      <span className="flex items-center gap-1.5">
+                        <Users className="h-4 w-4" />
+                        <strong className="text-foreground">{followersCount}</strong> followers
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <Users className="h-4 w-4" />
+                        <strong className="text-foreground">{followingCount}</strong> following
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <Package className="h-4 w-4" />
+                        <strong className="text-foreground">{listings.length}</strong> listings
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <Star className="h-4 w-4" />
+                        <strong className="text-foreground">{profile.total_sales ?? 0}</strong> sales
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <Calendar className="h-4 w-4" />
+                        Joined {joinDate}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                {profile.bio && (
-                  <p className="text-muted-foreground mb-3 max-w-lg">{profile.bio}</p>
-                )}
-                <div className="flex flex-wrap gap-5 text-sm text-muted-foreground">
-                  <span className="flex items-center gap-1.5">
-                    <Users className="h-4 w-4" />
-                    <strong className="text-foreground">{followersCount}</strong> followers
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <Users className="h-4 w-4" />
-                    <strong className="text-foreground">{followingCount}</strong> following
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <Package className="h-4 w-4" />
-                    <strong className="text-foreground">{listings.length}</strong> listings
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <Star className="h-4 w-4" />
-                    <strong className="text-foreground">{profile.total_sales ?? 0}</strong> sales
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <Calendar className="h-4 w-4" />
-                    Joined {joinDate}
-                  </span>
-                </div>
+              </div>
+
+              {/* Shareable stats card */}
+              <div className="w-full lg:w-80 shrink-0">
+                <BuilderStatsCard
+                  username={profile.username}
+                  avatarUrl={profile.avatar_url}
+                  bio={profile.bio}
+                  followersCount={followersCount}
+                  listingsCount={listings.length}
+                  totalSales={profile.total_sales ?? 0}
+                  userId={profile.user_id}
+                />
               </div>
             </div>
 

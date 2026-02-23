@@ -2,8 +2,8 @@ import { Zap, Clock, Wrench } from "lucide-react";
 
 const items = [
   { icon: Zap, label: "Faster than building from scratch", value: "10×" },
-  { icon: Clock, label: "To launch", value: "24 hrs" },
-  { icon: Wrench, label: "Ongoing support included", value: "$20/mo" },
+  { icon: Clock, label: "Launch instantly & start improving", value: "Day 1" },
+  { icon: Wrench, label: "A team of professionals included", value: "$20/mo" },
 ];
 
 export function HeroStats() {

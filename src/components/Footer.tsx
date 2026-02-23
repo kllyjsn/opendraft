@@ -3,9 +3,12 @@ import { Zap } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer className="border-t border-border/40 bg-background mt-24">
-      <div className="container mx-auto px-4 pt-12 pb-8">
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-10 mb-12">
+    <footer className="border-t border-border/40 bg-background mt-24 relative">
+      {/* Subtle top gradient */}
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+
+      <div className="container mx-auto px-4 pt-14 pb-8">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-10 mb-14">
           {/* Brand */}
           <div className="md:col-span-1">
             <div className="flex items-center gap-2 font-black text-lg mb-4">
@@ -21,50 +24,51 @@ export function Footer() {
 
           {/* Marketplace */}
           <div>
-            <h4 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">Marketplace</h4>
+            <h4 className="text-[11px] font-bold uppercase tracking-widest text-foreground mb-4">Marketplace</h4>
             <ul className="space-y-3 text-sm">
-              <li><Link to="/" className="text-muted-foreground hover:text-foreground transition-colors">Browse projects</Link></li>
-              <li><Link to="/sell" className="text-muted-foreground hover:text-foreground transition-colors">Sell a project</Link></li>
-              <li><Link to="/builders" className="text-muted-foreground hover:text-foreground transition-colors">Discover builders</Link></li>
-              <li><Link to="/bounties" className="text-muted-foreground hover:text-foreground transition-colors">Bounties</Link></li>
+              <li><Link to="/" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Browse projects</Link></li>
+              <li><Link to="/sell" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Sell a project</Link></li>
+              <li><Link to="/builders" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Discover builders</Link></li>
+              <li><Link to="/bounties" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Bounties</Link></li>
             </ul>
           </div>
 
           {/* Categories */}
           <div>
-            <h4 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">Categories</h4>
+            <h4 className="text-[11px] font-bold uppercase tracking-widest text-foreground mb-4">Categories</h4>
             <ul className="space-y-3 text-sm">
-              <li><Link to="/category/saas-tool" className="text-muted-foreground hover:text-foreground transition-colors">SaaS Tools</Link></li>
-              <li><Link to="/category/ai-app" className="text-muted-foreground hover:text-foreground transition-colors">AI Apps</Link></li>
-              <li><Link to="/category/landing-page" className="text-muted-foreground hover:text-foreground transition-colors">Landing Pages</Link></li>
-              <li><Link to="/category/utility" className="text-muted-foreground hover:text-foreground transition-colors">Utilities</Link></li>
-              <li><Link to="/category/game" className="text-muted-foreground hover:text-foreground transition-colors">Games</Link></li>
+              <li><Link to="/category/saas-tool" className="text-muted-foreground hover:text-foreground transition-colors duration-200">SaaS Tools</Link></li>
+              <li><Link to="/category/ai-app" className="text-muted-foreground hover:text-foreground transition-colors duration-200">AI Apps</Link></li>
+              <li><Link to="/category/landing-page" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Landing Pages</Link></li>
+              <li><Link to="/category/utility" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Utilities</Link></li>
+              <li><Link to="/category/game" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Games</Link></li>
             </ul>
           </div>
 
           {/* Built With & Legal */}
           <div>
-            <h4 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">Built With</h4>
+            <h4 className="text-[11px] font-bold uppercase tracking-widest text-foreground mb-4">Built With</h4>
             <ul className="space-y-3 text-sm">
-              <li><Link to="/built-with/lovable" className="text-muted-foreground hover:text-foreground transition-colors">Lovable</Link></li>
-              <li><Link to="/built-with/cursor" className="text-muted-foreground hover:text-foreground transition-colors">Cursor</Link></li>
-              <li><Link to="/built-with/claude-code" className="text-muted-foreground hover:text-foreground transition-colors">Claude Code</Link></li>
-              <li><Link to="/built-with/bolt" className="text-muted-foreground hover:text-foreground transition-colors">Bolt</Link></li>
-              <li><Link to="/built-with/replit" className="text-muted-foreground hover:text-foreground transition-colors">Replit</Link></li>
+              <li><Link to="/built-with/lovable" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Lovable</Link></li>
+              <li><Link to="/built-with/cursor" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Cursor</Link></li>
+              <li><Link to="/built-with/claude-code" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Claude Code</Link></li>
+              <li><Link to="/built-with/bolt" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Bolt</Link></li>
+              <li><Link to="/built-with/replit" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Replit</Link></li>
             </ul>
-            <h4 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4 mt-6">Legal</h4>
+            <h4 className="text-[11px] font-bold uppercase tracking-widest text-foreground mb-4 mt-8">Legal</h4>
             <ul className="space-y-3 text-sm">
-              <li><Link to="/terms" className="text-muted-foreground hover:text-foreground transition-colors">Terms of Service</Link></li>
-              <li><Link to="/privacy" className="text-muted-foreground hover:text-foreground transition-colors">Privacy Policy</Link></li>
-              <li><Link to="/faq" className="text-muted-foreground hover:text-foreground transition-colors">FAQ</Link></li>
-              <li><Link to="/blog" className="text-muted-foreground hover:text-foreground transition-colors">Blog</Link></li>
-              <li><Link to="/guides/sell" className="text-muted-foreground hover:text-foreground transition-colors">Seller Guide</Link></li>
+              <li><Link to="/terms" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Terms of Service</Link></li>
+              <li><Link to="/privacy" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Privacy Policy</Link></li>
+              <li><Link to="/faq" className="text-muted-foreground hover:text-foreground transition-colors duration-200">FAQ</Link></li>
+              <li><Link to="/blog" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Blog</Link></li>
+              <li><Link to="/guides/sell" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Seller Guide</Link></li>
             </ul>
           </div>
         </div>
 
         {/* Bottom bar */}
-        <div className="border-t border-border/40 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="divider-gradient mb-6" />
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
           <span className="text-xs text-muted-foreground">© 2026 OpenDraft. All rights reserved.</span>
           <span className="text-xs text-muted-foreground">Instant delivery · Get paid the moment you sell</span>
         </div>

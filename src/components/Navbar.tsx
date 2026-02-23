@@ -16,9 +16,9 @@ function NavItem({ to, children, onClick }: { to: string; children: React.ReactN
       to={to}
       onClick={onClick}
       className={cn(
-        "relative text-sm font-medium transition-colors",
+        "relative text-sm font-medium transition-colors duration-200",
         active
-          ? "text-foreground after:absolute after:-bottom-0.5 after:left-0 after:right-0 after:h-px after:rounded-full after:bg-primary after:content-[''] after:block"
+          ? "text-foreground after:absolute after:-bottom-0.5 after:left-0 after:right-0 after:h-[2px] after:rounded-full after:bg-primary after:content-[''] after:block"
           : "text-muted-foreground hover:text-foreground"
       )}
     >
@@ -42,11 +42,11 @@ export function Navbar() {
   const initial = user?.email?.[0]?.toUpperCase() ?? "U";
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-border/40 bg-background/85 backdrop-blur-xl">
+    <nav className="sticky top-0 z-50 border-b border-border/40 bg-background/80 backdrop-blur-2xl supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2 font-black text-xl tracking-tight shrink-0">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg gradient-hero shadow-glow">
+        <Link to="/" className="flex items-center gap-2.5 font-black text-xl tracking-tight shrink-0 group">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg gradient-hero shadow-glow group-hover:shadow-[0_0_40px_hsl(265_85%_58%_/_0.35)] transition-shadow duration-300">
             <Zap className="h-4 w-4 text-white" />
           </div>
           <span className="text-gradient">OpenDraft</span>
@@ -66,7 +66,7 @@ export function Navbar() {
                 <span className="relative inline-flex items-center">
                   Messages
                   {unreadCount > 0 && (
-                    <span className="ml-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold leading-none text-primary-foreground">
+                    <span className="ml-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold leading-none text-primary-foreground animate-scale-up">
                       {unreadCount > 99 ? "99+" : unreadCount}
                     </span>
                   )}
@@ -75,7 +75,7 @@ export function Navbar() {
             </>
           )}
           {isAdmin && (
-            <Link to="/admin" className="text-sm font-medium text-primary hover:opacity-80 transition-colors flex items-center gap-1">
+            <Link to="/admin" className="text-sm font-medium text-primary hover:opacity-80 transition-opacity duration-200 flex items-center gap-1">
               <ShieldCheck className="h-3.5 w-3.5" /> Admin
             </Link>
           )}
@@ -84,20 +84,20 @@ export function Navbar() {
         {/* Auth buttons */}
         <div className="hidden md:flex items-center gap-3">
           {loading ? (
-            <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
+            <div className="h-8 w-8 rounded-full skeleton-shimmer" />
           ) : user ? (
             <div className="flex items-center gap-3">
               <NotificationBell />
               <Link to="/profile" className="group relative">
-                <div className="h-8 w-8 rounded-full gradient-hero flex items-center justify-center text-white text-xs font-bold ring-2 ring-transparent group-hover:ring-primary/40 transition-all">
+                <div className="h-8 w-8 rounded-full gradient-hero flex items-center justify-center text-white text-xs font-bold ring-2 ring-transparent group-hover:ring-primary/40 transition-all duration-200 group-hover:shadow-glow">
                   {initial}
                 </div>
               </Link>
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
                 onClick={handleSignOut}
-                className="text-muted-foreground hover:text-foreground"
+                className="text-muted-foreground hover:text-foreground transition-colors duration-200"
               >
                 Sign out
               </Button>
@@ -105,12 +105,12 @@ export function Navbar() {
           ) : (
             <>
               <Link to="/login">
-                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground transition-colors duration-200">
                   Sign in
                 </Button>
               </Link>
               <Link to="/sell">
-                <Button size="sm" className="gradient-hero text-white border-0 shadow-glow hover:opacity-90 transition-opacity">
+                <Button size="sm" className="gradient-hero text-white border-0 shadow-glow hover:shadow-[0_0_40px_hsl(265_85%_58%_/_0.35)] hover:opacity-90 transition-all duration-300">
                   Start selling
                 </Button>
               </Link>
@@ -120,7 +120,7 @@ export function Navbar() {
 
         {/* Mobile menu button */}
         <button
-          className="md:hidden rounded-lg p-1.5 hover:bg-muted transition-colors"
+          className="md:hidden rounded-lg p-2 hover:bg-muted/80 transition-colors duration-200 active:scale-95"
           onClick={() => setMenuOpen(!menuOpen)}
           aria-label="Toggle menu"
         >
@@ -129,8 +129,13 @@ export function Navbar() {
       </div>
 
       {/* Mobile menu */}
-      {menuOpen && (
-        <div className="md:hidden border-t border-border/40 bg-background/95 backdrop-blur-xl px-4 py-5 flex flex-col gap-4">
+      <div
+        className={cn(
+          "md:hidden border-t border-border/40 bg-background/95 backdrop-blur-2xl px-4 overflow-hidden transition-all duration-300 ease-out",
+          menuOpen ? "max-h-[500px] py-5 opacity-100" : "max-h-0 py-0 opacity-0"
+        )}
+      >
+        <div className="flex flex-col gap-4">
           <NavItem to="/" onClick={() => setMenuOpen(false)}>Browse</NavItem>
           <NavItem to="/bounties" onClick={() => setMenuOpen(false)}>Bounties</NavItem>
           <NavItem to="/builders" onClick={() => setMenuOpen(false)}>Builders</NavItem>
@@ -155,7 +160,7 @@ export function Navbar() {
                   <ShieldCheck className="h-3.5 w-3.5" /> Admin
                 </Link>
               )}
-              <div className="pt-2 border-t border-border">
+              <div className="pt-3 border-t border-border/40">
                 <Button variant="outline" size="sm" onClick={handleSignOut} className="w-full">
                   Sign out
                 </Button>
@@ -169,7 +174,7 @@ export function Navbar() {
             </Link>
           )}
         </div>
-      )}
+      </div>
     </nav>
   );
 }

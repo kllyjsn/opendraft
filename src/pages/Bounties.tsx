@@ -77,9 +77,9 @@ export default function Bounties() {
       <Navbar />
 
       {/* Hero */}
-      <section className="relative overflow-hidden py-16 md:py-20">
-        <div className="absolute -top-40 -right-40 h-[500px] w-[500px] rounded-full bg-accent/15 blur-[100px] pointer-events-none" />
-        <div className="absolute -bottom-40 -left-40 h-[500px] w-[500px] rounded-full bg-primary/15 blur-[100px] pointer-events-none" />
+      <section className="relative overflow-hidden py-16 md:py-20 grain-overlay">
+        <div className="absolute -top-40 -right-40 h-[500px] w-[500px] rounded-full bg-accent/15 blur-[100px] pointer-events-none animate-pulse-glow" />
+        <div className="absolute -bottom-40 -left-40 h-[500px] w-[500px] rounded-full bg-primary/15 blur-[100px] pointer-events-none animate-pulse-glow" style={{ animationDelay: "2s" }} />
 
         <div className="container mx-auto px-4 text-center relative z-10">
           <div className="inline-flex items-center gap-2 rounded-full border border-accent/25 bg-accent/8 px-4 py-1.5 text-sm font-semibold text-accent mb-6">

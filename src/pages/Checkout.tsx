@@ -191,15 +191,15 @@ export default function Checkout() {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="flex-1 container mx-auto px-4 py-10 max-w-2xl">
+      <main className="flex-1 container mx-auto px-4 py-10 max-w-2xl page-enter">
         <Link
           to={`/listing/${listing.id}`}
-          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-8"
+          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-8 group transition-colors duration-200"
         >
-          <ChevronLeft className="h-4 w-4" /> Back to listing
+          <ChevronLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform duration-200" /> Back to listing
         </Link>
 
-        <div className="rounded-2xl border border-border bg-card p-8 shadow-card">
+        <div className="rounded-2xl border border-border bg-card p-8 shadow-card hover:shadow-card-hover transition-shadow duration-500">
           <h1 className="text-2xl font-black mb-6">Complete your purchase</h1>
 
           {/* Order summary */}

@@ -126,12 +126,12 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="flex-1 container mx-auto px-4 py-10">
+      <main className="flex-1 container mx-auto px-4 py-10 page-enter">
 
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-black">Seller Dashboard</h1>
+            <h1 className="text-3xl font-black tracking-tight">Seller Dashboard</h1>
             <p className="text-muted-foreground mt-1 text-sm">Manage your listings and track earnings</p>
           </div>
           <Link to="/sell">

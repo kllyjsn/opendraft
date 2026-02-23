@@ -101,7 +101,7 @@ export default function BuilderProfile() {
       {userId && <CanonicalTag path={`/builder/${userId}`} />}
       {personSchema && <JsonLd data={personSchema} />}
 
-      <main className="flex-1 container mx-auto px-4 py-10">
+      <main className="flex-1 container mx-auto px-4 py-10 page-enter">
         {loading ? (
           <div className="space-y-6">
             <div className="flex items-center gap-6">

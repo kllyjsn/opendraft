@@ -16,6 +16,7 @@ import { FeaturedListings } from "@/components/FeaturedListings";
 import { HowItWorks } from "@/components/HowItWorks";
 import { TrendingBuilders } from "@/components/TrendingBuilders";
 import { CategoryShowcase } from "@/components/CategoryShowcase";
+import { CtaBanner } from "@/components/CtaBanner";
 
 const CATEGORIES = ["All", "SaaS Tool", "AI App", "Landing Page", "Utility", "Game", "Other"];
 const COMPLETENESS = ["All", "Prototype", "MVP", "Production Ready"];
@@ -410,6 +411,7 @@ export default function Index() {
         )}
       </section>
 
+      <CtaBanner />
       <Footer />
     </div>
   );

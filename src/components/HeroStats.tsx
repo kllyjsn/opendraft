@@ -1,32 +1,12 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { Users, Package, ShoppingBag } from "lucide-react";
+import { Zap, Clock, Wrench } from "lucide-react";
+
+const items = [
+  { icon: Zap, label: "Faster than building from scratch", value: "10×" },
+  { icon: Clock, label: "To launch", value: "24 hrs" },
+  { icon: Wrench, label: "Ongoing support included", value: "$20/mo" },
+];
 
 export function HeroStats() {
-  const [stats, setStats] = useState({ builders: 0, projects: 0, sales: 0 });
-
-  useEffect(() => {
-    Promise.all([
-      supabase.from("profiles").select("id", { count: "exact", head: true }),
-      supabase.from("listings").select("id", { count: "exact", head: true }).eq("status", "live"),
-      supabase.from("purchases").select("id", { count: "exact", head: true }),
-    ]).then(([b, p, s]) => {
-      setStats({
-        builders: b.count ?? 0,
-        projects: p.count ?? 0,
-        sales: s.count ?? 0,
-      });
-    });
-  }, []);
-
-  const items = [
-    { icon: Users, label: "Builders", value: stats.builders },
-    { icon: Package, label: "Live Projects", value: stats.projects },
-    { icon: ShoppingBag, label: "App Types", value: "Unlimited" },
-  ];
-
-  if (stats.builders === 0 && stats.projects === 0) return null;
-
   return (
     <div className="flex items-center justify-center gap-5 md:gap-10 mt-12">
       {items.map(({ icon: Icon, label, value }) => (

@@ -64,7 +64,7 @@ export default function Builders() {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="container mx-auto px-4 py-10 flex-1">
+      <main className="container mx-auto px-4 py-10 flex-1 page-enter">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-black tracking-tight">Discover Builders</h1>
@@ -95,7 +95,7 @@ export default function Builders() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {builders.map((b) => (
-              <div key={b.user_id} className="rounded-2xl border border-border/50 bg-card p-5 flex items-start gap-4 hover:shadow-card transition-shadow">
+              <div key={b.user_id} className="rounded-2xl border border-border/50 bg-card p-5 flex items-start gap-4 hover:shadow-card-hover transition-all duration-300 hover:-translate-y-0.5">
                 <Link to={`/builder/${b.user_id}`} className="shrink-0">
                   {b.avatar_url ? (
                     <img src={b.avatar_url} alt="" className="h-12 w-12 rounded-full object-cover" />

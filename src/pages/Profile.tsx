@@ -123,7 +123,7 @@ export default function Profile() {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="flex-1 container mx-auto px-4 py-10 max-w-3xl">
+      <main className="flex-1 container mx-auto px-4 py-10 max-w-3xl page-enter">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
           <div className="h-14 w-14 rounded-full gradient-hero flex items-center justify-center text-white text-xl font-black shadow-glow">

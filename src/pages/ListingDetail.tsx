@@ -319,7 +319,7 @@ export default function ListingDetail() {
       {listing && <CanonicalTag path={`/listing/${listing.id}`} />}
       {productSchema && <JsonLd data={productSchema} />}
       {faqSchema && <JsonLd data={faqSchema} />}
-      <main className="flex-1 container mx-auto px-4 py-10">
+      <main className="flex-1 container mx-auto px-4 py-10 page-enter">
         {/* Breadcrumb */}
         <Link
           to="/"
@@ -336,23 +336,23 @@ export default function ListingDetail() {
             {/* Image gallery */}
             {listing.screenshots.length > 0 ? (
               <div className="space-y-3">
-                <div className="relative rounded-2xl overflow-hidden bg-muted aspect-video ring-1 ring-border/40 shadow-card">
+                <div className="relative rounded-2xl overflow-hidden bg-muted aspect-video ring-1 ring-border/40 shadow-card group/gallery">
                   <img
                     src={listing.screenshots[activeImg]}
                     alt={`Screenshot ${activeImg + 1}`}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover/gallery:scale-[1.02]"
                   />
                   {listing.screenshots.length > 1 && (
                     <>
                       <button
                         onClick={() => setActiveImg((i) => (i - 1 + listing.screenshots.length) % listing.screenshots.length)}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-black/60 text-white flex items-center justify-center backdrop-blur-sm hover:bg-black/80 transition-colors"
+                        className="absolute left-3 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-black/50 text-white flex items-center justify-center backdrop-blur-md hover:bg-black/70 transition-all duration-200 border border-white/10 opacity-0 group-hover/gallery:opacity-100 hover:scale-110"
                       >
                         <ChevronLeft className="h-4 w-4" />
                       </button>
                       <button
                         onClick={() => setActiveImg((i) => (i + 1) % listing.screenshots.length)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-black/60 text-white flex items-center justify-center backdrop-blur-sm hover:bg-black/80 transition-colors"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-black/50 text-white flex items-center justify-center backdrop-blur-md hover:bg-black/70 transition-all duration-200 border border-white/10 opacity-0 group-hover/gallery:opacity-100 hover:scale-110"
                       >
                         <ChevronRight className="h-4 w-4" />
                       </button>
@@ -474,7 +474,7 @@ export default function ListingDetail() {
 
           {/* Right: buy card */}
           <div className="space-y-4">
-            <div className="rounded-2xl border border-border/60 bg-card p-6 shadow-card sticky top-20">
+            <div className="rounded-2xl border border-border/60 bg-card p-6 shadow-card sticky top-20 hover:shadow-card-hover transition-shadow duration-500">
               {/* Price */}
               <div className="mb-5">
                 <div className={`text-4xl font-black mb-0.5 ${isFree ? "text-primary" : ""}`}>{priceLabel}</div>

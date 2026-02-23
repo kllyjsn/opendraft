@@ -148,13 +148,13 @@ export default function Success() {
     <div className="min-h-screen flex flex-col">
       <Navbar />
       <main className="flex-1 flex items-center justify-center px-4 py-20">
-        <div className="text-center max-w-lg w-full">
+        <div className="text-center max-w-lg w-full page-enter">
           {/* Success icon */}
-          <div className="inline-flex h-20 w-20 items-center justify-center rounded-full gradient-hero shadow-glow mb-6">
+          <div className="inline-flex h-20 w-20 items-center justify-center rounded-full gradient-hero shadow-glow mb-6 animate-scale-up">
             <CheckCircle className="h-10 w-10 text-white" />
           </div>
 
-          <h1 className="text-3xl font-black mb-2">Welcome aboard! 🎉</h1>
+          <h1 className="text-3xl font-black mb-2 tracking-tight">Welcome aboard! 🎉</h1>
           <p className="text-muted-foreground mb-6">
             Your purchase is confirmed. Here's what you can expect as a customer.
           </p>

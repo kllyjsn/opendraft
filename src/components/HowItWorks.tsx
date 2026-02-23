@@ -76,6 +76,15 @@ export function HowItWorks() {
                 </div>
                 <h3 className="font-bold text-lg mb-2.5">{step.title}</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">{step.description}</p>
+
+                {/* Connector arrow (visible on desktop between cards) */}
+                {i < steps.length - 1 && (
+                  <div className="hidden md:block absolute -right-3 top-1/2 -translate-y-1/2 z-10">
+                    <div className="h-6 w-6 rounded-full glass flex items-center justify-center text-muted-foreground/40">
+                      →
+                    </div>
+                  </div>
+                )}
               </motion.div>
             );
           })}

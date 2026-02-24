@@ -14,6 +14,7 @@ import { RemixChain } from "@/components/RemixChain";
 import { JsonLd } from "@/components/JsonLd";
 import { CanonicalTag } from "@/components/CanonicalTag";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
+import { FlagListingButton } from "@/components/FlagListingButton";
 
 const BUILT_WITH_LABELS: Record<string, string> = {
   lovable: "Lovable",
@@ -666,6 +667,11 @@ export default function ListingDetail() {
 
             {/* Remix chain visualization */}
             <RemixChain listingId={listing.id} />
+
+            {/* Report button */}
+            <div className="mt-3 flex justify-end">
+              <FlagListingButton listingId={listing.id} sellerId={listing.seller_id} />
+            </div>
           </div>
             )}
           </div>

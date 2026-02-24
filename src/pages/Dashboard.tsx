@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { OffersManager } from "@/components/OffersManager";
 import { SellerAnalytics } from "@/components/SellerAnalytics";
 import { ActivityFeed } from "@/components/ActivityFeed";
+import { VerifyListingPanel } from "@/components/VerifyListingPanel";
 
 interface Sale {
   id: string;
@@ -34,6 +35,9 @@ interface Listing {
   sales_count: number;
   view_count: number;
   created_at: string;
+  demo_url: string | null;
+  github_url: string | null;
+  domain_verified: boolean;
 }
 
 interface SaleSummary {
@@ -64,7 +68,7 @@ export default function Dashboard() {
     async function fetchListings() {
       const { data } = await supabase
         .from("listings")
-        .select("id,title,price,completeness_badge,status,sales_count,view_count,created_at")
+        .select("id,title,price,completeness_badge,status,sales_count,view_count,created_at,demo_url,github_url,domain_verified")
         .eq("seller_id", user!.id)
         .order("created_at", { ascending: false });
       setListings((data as Listing[]) ?? []);
@@ -225,41 +229,55 @@ export default function Dashboard() {
                 </thead>
                 <tbody className="divide-y divide-border/40">
                   {listings.map((l) => (
-                    <tr key={l.id} className="hover:bg-muted/20 transition-colors group">
-                      <td className="px-5 py-4">
-                        <div className="flex items-center gap-2.5">
-                          <Link to={`/listing/${l.id}`} className="font-semibold hover:text-primary transition-colors line-clamp-1">
-                            {l.title}
-                          </Link>
-                          <CompletenessBadge level={l.completeness_badge} showTooltip={false} />
-                        </div>
-                      </td>
-                      <td className="px-5 py-4 font-semibold">${(l.price / 100).toFixed(2)}</td>
-                      <td className="px-5 py-4">
-                        <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusConfig[l.status]?.className}`}>
-                          {statusConfig[l.status]?.label ?? l.status}
-                        </span>
-                      </td>
-                      <td className="px-5 py-4 text-muted-foreground">{l.sales_count}</td>
-                      <td className="px-5 py-4 text-muted-foreground">{l.view_count}</td>
-                      <td className="px-5 py-4">
-                        <div className="flex items-center gap-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Link to={`/listing/${l.id}`}>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted">
-                              <Eye className="h-3.5 w-3.5" />
+                    <React.Fragment key={l.id}>
+                      <tr className="hover:bg-muted/20 transition-colors group">
+                        <td className="px-5 py-4">
+                          <div className="flex items-center gap-2.5">
+                            <Link to={`/listing/${l.id}`} className="font-semibold hover:text-primary transition-colors line-clamp-1">
+                              {l.title}
+                            </Link>
+                            <CompletenessBadge level={l.completeness_badge} showTooltip={false} />
+                          </div>
+                        </td>
+                        <td className="px-5 py-4 font-semibold">${(l.price / 100).toFixed(2)}</td>
+                        <td className="px-5 py-4">
+                          <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusConfig[l.status]?.className}`}>
+                            {statusConfig[l.status]?.label ?? l.status}
+                          </span>
+                        </td>
+                        <td className="px-5 py-4 text-muted-foreground">{l.sales_count}</td>
+                        <td className="px-5 py-4 text-muted-foreground">{l.view_count}</td>
+                        <td className="px-5 py-4">
+                          <div className="flex items-center gap-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Link to={`/listing/${l.id}`}>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted">
+                                <Eye className="h-3.5 w-3.5" />
+                              </Button>
+                            </Link>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                              onClick={() => deleteListing(l.id)}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
                             </Button>
-                          </Link>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                            onClick={() => deleteListing(l.id)}
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
+                          </div>
+                        </td>
+                      </tr>
+                      {(l.demo_url || l.github_url) && !l.domain_verified && (
+                        <tr>
+                          <td colSpan={6} className="px-5 pb-4 pt-0">
+                            <VerifyListingPanel
+                              listingId={l.id}
+                              demoUrl={l.demo_url}
+                              githubUrl={l.github_url}
+                              domainVerified={l.domain_verified}
+                            />
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
                   ))}
                 </tbody>
               </table>

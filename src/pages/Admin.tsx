@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/button";
 import { CompletenessBadge } from "@/components/CompletenessBadge";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle, XCircle, Eye, Loader2, ShieldCheck, Clock, BarChart3 } from "lucide-react";
+import { CheckCircle, XCircle, Eye, Loader2, ShieldCheck, Clock, BarChart3, Flag } from "lucide-react";
 import { AdminDiscountCodes } from "@/components/AdminDiscountCodes";
+import { AdminFlagReview } from "@/components/AdminFlagReview";
 
 interface PendingListing {
   id: string;
@@ -266,6 +267,15 @@ export default function Admin() {
             ))}
           </div>
         )}
+        {/* Flagged Listings Section */}
+        <div className="mt-12 pt-8 border-t border-border">
+          <div className="flex items-center gap-2 mb-4">
+            <Flag className="h-5 w-5 text-destructive" />
+            <h2 className="text-lg font-bold">Community Flags</h2>
+          </div>
+          <AdminFlagReview />
+        </div>
+
         {/* Discount Codes Section */}
         <div className="mt-12 pt-8 border-t border-border">
           <AdminDiscountCodes />

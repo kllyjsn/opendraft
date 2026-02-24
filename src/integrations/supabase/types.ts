@@ -278,6 +278,85 @@ export type Database = {
         }
         Relationships: []
       }
+      listing_flags: {
+        Row: {
+          created_at: string
+          details: string | null
+          id: string
+          listing_id: string
+          reason: string
+          reporter_id: string
+          reviewed_by: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          listing_id: string
+          reason: string
+          reporter_id: string
+          reviewed_by?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          listing_id?: string
+          reason?: string
+          reporter_id?: string
+          reviewed_by?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_flags_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      listing_verifications: {
+        Row: {
+          created_at: string
+          id: string
+          listing_id: string
+          method: string
+          status: string
+          token: string
+          verified_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          listing_id: string
+          method?: string
+          status?: string
+          token?: string
+          verified_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          listing_id?: string
+          method?: string
+          status?: string
+          token?: string
+          verified_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_verifications_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listings: {
         Row: {
           built_with: string | null
@@ -286,6 +365,7 @@ export type Database = {
           created_at: string
           demo_url: string | null
           description: string
+          domain_verified: boolean
           file_path: string | null
           github_url: string | null
           id: string
@@ -309,6 +389,7 @@ export type Database = {
           created_at?: string
           demo_url?: string | null
           description: string
+          domain_verified?: boolean
           file_path?: string | null
           github_url?: string | null
           id?: string
@@ -332,6 +413,7 @@ export type Database = {
           created_at?: string
           demo_url?: string | null
           description?: string
+          domain_verified?: boolean
           file_path?: string | null
           github_url?: string | null
           id?: string

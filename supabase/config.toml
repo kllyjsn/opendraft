@@ -61,3 +61,7 @@ verify_jwt = false
 # generate-listing-concept — admin-only, auth checked in code
 [functions.generate-listing-concept]
 verify_jwt = false
+
+# generate-template-app — admin-only, generates full source code ZIP
+[functions.generate-template-app]
+verify_jwt = false

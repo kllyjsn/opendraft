@@ -8,7 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { CompletenessBadge } from "@/components/CompletenessBadge";
 import { StripeConnectPanel } from "@/components/StripeConnectPanel";
 import { CreateProductPanel } from "@/components/CreateProductPanel";
-import { TrendingUp, Package, Eye, Trash2, Plus, ShoppingBag, HandCoins, BarChart3, Rss } from "lucide-react";
+import { TrendingUp, Package, Eye, Trash2, Plus, ShoppingBag, HandCoins, BarChart3, Rss, Pencil } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { OffersManager } from "@/components/OffersManager";
 import { SellerAnalytics } from "@/components/SellerAnalytics";
@@ -252,6 +252,11 @@ export default function Dashboard() {
                             <Link to={`/listing/${l.id}`}>
                               <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted">
                                 <Eye className="h-3.5 w-3.5" />
+                              </Button>
+                            </Link>
+                            <Link to={`/listing/${l.id}/edit`}>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted">
+                                <Pencil className="h-3.5 w-3.5" />
                               </Button>
                             </Link>
                             <Button

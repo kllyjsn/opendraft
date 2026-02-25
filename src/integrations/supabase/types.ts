@@ -767,6 +767,39 @@ export type Database = {
         }
         Relationships: []
       }
+      webhook_events: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          event_type: string
+          id: string
+          payload: Json
+          processed_at: string | null
+          processing_status: string
+          stripe_event_id: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          event_type: string
+          id?: string
+          payload?: Json
+          processed_at?: string | null
+          processing_status?: string
+          stripe_event_id: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          event_type?: string
+          id?: string
+          payload?: Json
+          processed_at?: string | null
+          processing_status?: string
+          stripe_event_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       public_profiles: {

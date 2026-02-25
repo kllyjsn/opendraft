@@ -422,11 +422,16 @@ async function handleCheckoutSessionCompleted(
   resendApiKey: string | null
 ) {
   const session = event.data.object as Stripe.Checkout.Session;
-  const { listing_id, buyer_id, seller_id, price, seller_stripe_account_id } = session.metadata ?? {};
+  const metadata = session.metadata ?? {};
+  const { listing_id, buyer_id, seller_id, price, seller_stripe_account_id } = metadata;
+
+  console.log(`Checkout session ${session.id} completed. Metadata:`, JSON.stringify(metadata));
+  console.log(`Payment status: ${session.payment_status}, Amount total: ${session.amount_total}`);
 
   // Only process listing-based purchases (productId purchases don't need DB records here)
   if (!listing_id || !buyer_id || !seller_id || !price) {
-    console.log("Non-listing checkout session completed (product-based purchase) — skipping DB insert");
+    console.warn("Missing required metadata for purchase record — skipping DB insert. Fields present:", 
+      Object.keys(metadata).join(", ") || "(none)");
     return;
   }
 
@@ -473,8 +478,11 @@ async function handleCheckoutSessionCompleted(
 
   if (!insertRes.ok) {
     const err = await insertRes.text();
+    console.error(`CRITICAL: Purchase insert FAILED for session ${session.id}. Status: ${insertRes.status}. Error: ${err}`);
+    console.error(`Lost purchase data: listing=${listing_id}, buyer=${buyer_id}, seller=${seller_id}, amount=${amount}`);
     throw new Error(`Failed to insert purchase: ${err}`);
   }
+  console.log(`Purchase record inserted successfully for session ${session.id}`);
 
   // Increment sales counters
   await Promise.all([

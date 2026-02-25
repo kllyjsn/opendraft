@@ -11,6 +11,7 @@ import { CheckCircle, XCircle, Eye, Loader2, ShieldCheck, Clock, BarChart3, Flag
 import { AdminDiscountCodes } from "@/components/AdminDiscountCodes";
 import { AdminFlagReview } from "@/components/AdminFlagReview";
 import { AdminConceptGenerator } from "@/components/AdminConceptGenerator";
+import { AdminMarketResearch } from "@/components/AdminMarketResearch";
 
 interface PendingListing {
   id: string;
@@ -275,6 +276,11 @@ export default function Admin() {
             <h2 className="text-lg font-bold">Community Flags</h2>
           </div>
           <AdminFlagReview />
+        </div>
+
+        {/* Deep Market Research */}
+        <div className="mt-12 pt-8 border-t border-border">
+          <AdminMarketResearch />
         </div>
 
         {/* AI Concept Generator */}

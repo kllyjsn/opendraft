@@ -1,10 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { CompletenessBadge } from "@/components/CompletenessBadge";
-import { ArrowRight, Sparkles, Loader2, ShoppingCart, X } from "lucide-react";
+import { ArrowRight, Sparkles, Loader2, ShoppingCart, X, Wand2 } from "lucide-react";
 import { logActivity } from "@/lib/activity-logger";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 
 const PLACEHOLDERS = [
   "an AI email writer SaaS...",
@@ -30,8 +32,12 @@ interface MatchedListing {
 }
 
 export function BuildSearch() {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
   const [prompt, setPrompt] = useState("");
   const [loading, setLoading] = useState(false);
+  const [generating, setGenerating] = useState(false);
   const [results, setResults] = useState<MatchedListing[] | null>(null);
   const [noMatch, setNoMatch] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -200,15 +206,51 @@ export function BuildSearch() {
             <div className="text-3xl mb-3">🔮</div>
             <h3 className="font-bold mb-1">No exact match found</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Be the first to build and sell <span className="text-foreground font-medium">"{prompt}"</span> on OpenDraft.
+              We can <span className="text-foreground font-medium">auto-generate</span> a template for <span className="text-foreground font-medium">"{prompt}"</span> — or list your own.
             </p>
             <div className="flex flex-col sm:flex-row gap-2 justify-center">
-              <Link to="/sell">
-                <Button size="sm" className="gradient-hero text-white border-0 shadow-glow hover:opacity-90">
-                  List it for sale
+              <Button
+                size="sm"
+                className="gradient-hero text-white border-0 shadow-glow hover:opacity-90 gap-2"
+                disabled={generating}
+                onClick={async () => {
+                  if (!user) {
+                    navigate("/login");
+                    return;
+                  }
+                  setGenerating(true);
+                  try {
+                    const { data, error: fnErr } = await supabase.functions.invoke("generate-template-app", {
+                      body: { count: 1, themes: [prompt.trim()] },
+                    });
+                    if (fnErr) throw new Error(fnErr.message);
+                    if (!data?.success) throw new Error(data?.error || "Generation failed");
+                    const result = data.results?.[0];
+                    if (result?.success && result.listing_id) {
+                      toast({ title: "Template generated! 🎉", description: "Redirecting to your new listing…" });
+                      navigate(`/listing/${result.listing_id}/edit`);
+                    } else {
+                      throw new Error(result?.error || "Generation failed");
+                    }
+                  } catch (err) {
+                    toast({ title: "Generation failed", description: err instanceof Error ? err.message : "Unknown error", variant: "destructive" });
+                  } finally {
+                    setGenerating(false);
+                  }
+                }}
+              >
+                {generating ? (
+                  <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Generating…</>
+                ) : (
+                  <><Wand2 className="h-3.5 w-3.5" /> Generate it for me</>
+                )}
+              </Button>
+              <Link to={user ? "/sell" : "/login"}>
+                <Button size="sm" variant="outline">
+                  List it myself
                 </Button>
               </Link>
-              <Button size="sm" variant="outline" onClick={reset}>
+              <Button size="sm" variant="ghost" onClick={reset}>
                 Try a different idea
               </Button>
             </div>

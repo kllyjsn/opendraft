@@ -486,11 +486,13 @@ serve(async (req) => {
 
     // Check if this is a service-role call (cron job)
     const AUTO_GEN_EMAIL = "kllyjsn@gmail.com";
+    let isAdmin = false;
     if (token === SUPABASE_SERVICE_ROLE_KEY) {
       // Cron/service-role bypass — use Jason Kelley as the seller
       const { data: authUsers } = await supabase.auth.admin.listUsers();
       const targetUser = authUsers?.users?.find((u: any) => u.email === AUTO_GEN_EMAIL);
       if (targetUser) sellerId = targetUser.id;
+      isAdmin = true;
     } else if (token) {
       const supabaseAnon = createClient(
         SUPABASE_URL,
@@ -501,20 +503,22 @@ serve(async (req) => {
       } = await supabaseAnon.auth.getUser(token);
       if (user) {
         sellerId = user.id;
-        // Verify admin role
+        // Check if admin (for higher limits)
         const { data: roleData } = await supabase
           .from("user_roles")
           .select("role")
           .eq("user_id", sellerId)
           .eq("role", "admin")
           .maybeSingle();
-        if (!roleData) throw new Error("Unauthorized — admin only");
+        isAdmin = !!roleData;
       }
     }
     if (!sellerId) throw new Error("Authentication required");
 
     const body = await req.json().catch(() => ({}));
-    const count = Math.min(Math.max(body.count || 1, 1), 5);
+    // Non-admins limited to 1 template at a time
+    const maxCount = isAdmin ? 5 : 1;
+    const count = Math.min(Math.max(body.count || 1, 1), maxCount);
     const themes: string[] = body.themes || [];
 
     /* ── Pick themes (use provided or random from pool) ──────── */

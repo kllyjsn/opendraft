@@ -573,6 +573,25 @@ export default function ListingDetail() {
                 </p>
               )}
 
+              {/* Early Adopter Advantage */}
+              {listing.sales_count <= 5 && (
+                <div className="mt-5 rounded-xl border border-accent/30 bg-accent/5 p-4 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-accent/15 text-accent text-xs">🚀</span>
+                    <p className="text-xs font-black uppercase tracking-wide text-accent">Early Adopter Advantage</p>
+                  </div>
+                  <p className="text-[13px] font-semibold leading-snug">Be first — shape this product for your needs</p>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">
+                    Early buyers get the builder's full attention. Request features, influence the roadmap, and get a product tailored to <span className="text-foreground font-medium">your</span> workflow — before anyone else.
+                  </p>
+                  {listing.sales_count === 0 && (
+                    <p className="text-[10px] font-bold text-accent flex items-center gap-1">
+                      ✨ No buyers yet — you'll be #1
+                    </p>
+                  )}
+                </div>
+              )}
+
               {/* Subscription value banner */}
               <div className="mt-5 rounded-xl gradient-hero p-[1px]">
                 <div className="rounded-[11px] bg-card p-4 space-y-1.5 text-center">

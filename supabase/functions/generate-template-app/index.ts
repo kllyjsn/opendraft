@@ -485,15 +485,12 @@ serve(async (req) => {
     let sellerId: string | null = null;
 
     // Check if this is a service-role call (cron job)
+    const AUTO_GEN_EMAIL = "kllyjsn@gmail.com";
     if (token === SUPABASE_SERVICE_ROLE_KEY) {
-      // Cron/service-role bypass — use the first admin as the seller
-      const { data: adminUser } = await supabase
-        .from("user_roles")
-        .select("user_id")
-        .eq("role", "admin")
-        .limit(1)
-        .maybeSingle();
-      if (adminUser) sellerId = adminUser.user_id;
+      // Cron/service-role bypass — use Jason Kelley as the seller
+      const { data: authUsers } = await supabase.auth.admin.listUsers();
+      const targetUser = authUsers?.users?.find((u: any) => u.email === AUTO_GEN_EMAIL);
+      if (targetUser) sellerId = targetUser.id;
     } else if (token) {
       const supabaseAnon = createClient(
         SUPABASE_URL,

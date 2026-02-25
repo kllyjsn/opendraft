@@ -266,6 +266,11 @@ export function BuildSearch() {
                       </span>
                     </div>
                     <p className="text-xs text-muted-foreground line-clamp-1 mb-2">{listing.reason}</p>
+                    {listing.sales_count <= 3 && (
+                      <p className="text-[10px] font-bold text-accent flex items-center gap-1 mb-1.5">
+                        🚀 {listing.sales_count === 0 ? "No buyers yet — be first & shape the roadmap" : "Early adopter — influence future features"}
+                      </p>
+                    )}
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
                         <CompletenessBadge level={listing.completeness_badge} showTooltip={false} />

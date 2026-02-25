@@ -270,8 +270,46 @@ async function sendSellerEmail({
   if (!res.ok) throw new Error(`Resend error [${res.status}]: ${await res.text()}`);
 }
 
+// Helper: Log a webhook event to the audit table
+async function logWebhookEvent(
+  supabaseUrl: string,
+  supabaseServiceKey: string,
+  stripeEventId: string,
+  eventType: string,
+  payload: Record<string, unknown>,
+  status: string,
+  errorMessage?: string
+) {
+  try {
+    await fetch(`${supabaseUrl}/rest/v1/webhook_events`, {
+      method: "POST",
+      headers: {
+        apikey: supabaseServiceKey,
+        Authorization: `Bearer ${supabaseServiceKey}`,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal,resolution=merge-duplicates",
+      },
+      body: JSON.stringify({
+        stripe_event_id: stripeEventId,
+        event_type: eventType,
+        payload,
+        processing_status: status,
+        error_message: errorMessage ?? null,
+        processed_at: status === "success" ? new Date().toISOString() : null,
+      }),
+    });
+  } catch (logErr) {
+    console.error("Failed to log webhook event:", logErr);
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  let supabaseUrl = "";
+  let supabaseServiceKey = "";
+  let stripeEventId = "unknown";
+  let eventType = "unknown";
 
   try {
     // ------------------------------------------------------------------
@@ -279,8 +317,8 @@ Deno.serve(async (req) => {
     // ------------------------------------------------------------------
     let stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
-    const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const resendApiKey = Deno.env.get("RESEND_API_KEY");
 
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not configured");
@@ -296,23 +334,10 @@ Deno.serve(async (req) => {
     const body = await req.text();
     const sig = req.headers.get("stripe-signature");
 
-    // ------------------------------------------------------------------
-    // Step 3: Verify the webhook signature
-    //
-    // This proves the request came from Stripe and wasn't tampered with.
-    // PLACEHOLDER: Set STRIPE_WEBHOOK_SECRET in your Cloud secrets.
-    // Without verification, anyone could send fake webhook payloads.
-    // ------------------------------------------------------------------
     if (!sig) {
       throw new Error("Missing stripe-signature header — is this a legitimate Stripe webhook?");
     }
 
-    // ------------------------------------------------------------------
-    // Step 4: Detect whether this is a V2 thin event or a V1 event
-    //
-    // V2 thin events have a "type" field that starts with "v2."
-    // We parse the body first to check before constructing the event.
-    // ------------------------------------------------------------------
     let parsedBody: Record<string, unknown>;
     try {
       parsedBody = JSON.parse(body);
@@ -320,30 +345,36 @@ Deno.serve(async (req) => {
       throw new Error("Invalid JSON in webhook body");
     }
 
-    const eventType = typeof parsedBody.type === "string" ? parsedBody.type : "";
+    stripeEventId = (parsedBody.id as string) ?? "unknown";
+    eventType = typeof parsedBody.type === "string" ? parsedBody.type : "";
     const isV2ThinEvent = eventType.startsWith("v2.");
 
-    if (isV2ThinEvent) {
-      // ----------------------------------------------------------------
-      // V2 THIN EVENT HANDLING
-      //
-      // Thin events contain ONLY the event ID and type — no data payload.
-      // We must verify the thin event signature and then fetch the full event.
-      //
-      // Step 4a: Parse the thin event (signature verification happens here)
-      // Step 4b: Retrieve the full event data from the V2 events API
-      // Step 4c: Route to the appropriate handler based on event type
-      // ----------------------------------------------------------------
+    // ------------------------------------------------------------------
+    // Step 3: Log event receipt immediately (before processing)
+    // ------------------------------------------------------------------
+    await logWebhookEvent(supabaseUrl, supabaseServiceKey, stripeEventId, eventType, parsedBody, "received");
 
-      // Parse and verify the thin event signature
-      // Note: For V2 thin events, use parseThinEvent (not constructEvent)
+    // ------------------------------------------------------------------
+    // Step 4: Idempotency check — skip if already processed successfully
+    // ------------------------------------------------------------------
+    const existingRes = await fetch(
+      `${supabaseUrl}/rest/v1/webhook_events?stripe_event_id=eq.${stripeEventId}&processing_status=eq.success&select=id`,
+      { headers: { apikey: supabaseServiceKey, Authorization: `Bearer ${supabaseServiceKey}` } }
+    );
+    const existing = await existingRes.json();
+    if (Array.isArray(existing) && existing.length > 0) {
+      console.log(`Skipping duplicate event ${stripeEventId} — already processed successfully`);
+      return new Response(JSON.stringify({ received: true, duplicate: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (isV2ThinEvent) {
       let thinEvent: { id: string; type: string };
       try {
         if (webhookSecret) {
-          // stripeClient.parseThinEvent verifies signature & returns { id, type }
           thinEvent = stripeClient.parseThinEvent(body, sig, webhookSecret) as { id: string; type: string };
         } else {
-          // No secret configured — log a warning (insecure for production)
           console.warn("WARNING: No STRIPE_WEBHOOK_SECRET set. Skipping thin event signature verification.");
           thinEvent = { id: parsedBody.id as string, type: eventType };
         }
@@ -352,14 +383,8 @@ Deno.serve(async (req) => {
       }
 
       console.log(`Processing V2 thin event: ${thinEvent.type} (id: ${thinEvent.id})`);
-
-      // ----------------------------------------------------------------
-      // Retrieve the full V2 event data from Stripe
-      // The thin event is just a notification — all the data is here:
-      // ----------------------------------------------------------------
       const fullEvent = await stripeClient.v2.core.events.retrieve(thinEvent.id);
 
-      // Route to the correct handler based on event type
       if (thinEvent.type === "v2.core.account[requirements].updated") {
         await handleAccountRequirementsUpdated(fullEvent, supabaseUrl, supabaseServiceKey);
       } else if (thinEvent.type.startsWith("v2.core.account[configuration.") && thinEvent.type.endsWith("].capability_status_updated")) {
@@ -369,12 +394,6 @@ Deno.serve(async (req) => {
       }
 
     } else {
-      // ----------------------------------------------------------------
-      // V1 EVENT HANDLING (standard Stripe events)
-      //
-      // V1 events contain full data payloads and use constructEvent
-      // for signature verification.
-      // ----------------------------------------------------------------
       let event: Stripe.Event;
 
       if (webhookSecret) {
@@ -389,7 +408,6 @@ Deno.serve(async (req) => {
       if (event.type === "checkout.session.completed") {
         await handleCheckoutSessionCompleted(event, supabaseUrl, supabaseServiceKey, resendApiKey ?? null);
       } else if (event.type === "checkout.session.async_payment_succeeded") {
-        // Async payment methods (e.g. bank transfer) land here once funds clear
         await handleCheckoutSessionCompleted(event, supabaseUrl, supabaseServiceKey, resendApiKey ?? null);
       } else if (event.type === "checkout.session.async_payment_failed") {
         console.log("Async payment failed — purchase NOT granted:", (event.data.object as Stripe.Checkout.Session).id);
@@ -398,12 +416,21 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Mark event as successfully processed
+    await logWebhookEvent(supabaseUrl, supabaseServiceKey, stripeEventId, eventType, parsedBody, "success");
+
     return new Response(JSON.stringify({ received: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
     console.error("Webhook error:", message);
+
+    // Log the failure so we can retry or investigate
+    if (supabaseUrl && supabaseServiceKey) {
+      await logWebhookEvent(supabaseUrl, supabaseServiceKey, stripeEventId, eventType, {}, "failed", message);
+    }
+
     return new Response(JSON.stringify({ error: message }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -436,10 +463,19 @@ async function handleCheckoutSessionCompleted(
   }
 
   // Guard: only grant access when payment is fully confirmed.
-  // checkout.session.completed can fire with payment_status==='processing' for
-  // async payment methods (e.g. bank transfers). We must not unlock the file yet.
   if (session.payment_status !== "paid") {
     console.log(`Skipping purchase insert — payment_status is '${session.payment_status}', not 'paid'. Will handle on payment_intent.succeeded.`);
+    return;
+  }
+
+  // Idempotency: check if we already recorded this purchase
+  const dupeCheckRes = await fetch(
+    `${supabaseUrl}/rest/v1/purchases?stripe_session_id=eq.${session.id}&select=id`,
+    { headers: { apikey: supabaseServiceKey, Authorization: `Bearer ${supabaseServiceKey}` } }
+  );
+  const dupeRows = await dupeCheckRes.json();
+  if (Array.isArray(dupeRows) && dupeRows.length > 0) {
+    console.log(`Purchase already exists for session ${session.id} — skipping duplicate insert`);
     return;
   }
 
@@ -447,42 +483,54 @@ async function handleCheckoutSessionCompleted(
   const platformFee = Math.round(amount * 0.2);
   const sellerAmount = amount - platformFee;
 
-  // payout_transferred = true means the seller received their share immediately via
-  // a Stripe Destination Charge. If the seller wasn't connected, this is false and
-  // the platform holds their earnings until they connect Stripe and trigger a transfer.
   const payoutTransferred = !!seller_stripe_account_id;
 
   console.log(`Purchase: listing=${listing_id}, amount=${amount}, seller_connected=${payoutTransferred}`);
 
-  // Insert the purchase record into our DB
-  const insertRes = await fetch(`${supabaseUrl}/rest/v1/purchases`, {
-    method: "POST",
-    headers: {
-      apikey: supabaseServiceKey,
-      Authorization: `Bearer ${supabaseServiceKey}`,
-      "Content-Type": "application/json",
-      Prefer: "return=minimal",
-    },
-    body: JSON.stringify({
-      listing_id,
-      buyer_id,
-      seller_id,
-      amount_paid: amount,
-      platform_fee: platformFee,
-      seller_amount: sellerAmount,
-      stripe_session_id: session.id,
-      stripe_payment_intent_id: session.payment_intent as string | null,
-      payout_transferred: payoutTransferred,
-    }),
-  });
+  // Insert the purchase record into our DB — retry up to 3 times
+  let insertSuccess = false;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    const insertRes = await fetch(`${supabaseUrl}/rest/v1/purchases`, {
+      method: "POST",
+      headers: {
+        apikey: supabaseServiceKey,
+        Authorization: `Bearer ${supabaseServiceKey}`,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal",
+      },
+      body: JSON.stringify({
+        listing_id,
+        buyer_id,
+        seller_id,
+        amount_paid: amount,
+        platform_fee: platformFee,
+        seller_amount: sellerAmount,
+        stripe_session_id: session.id,
+        stripe_payment_intent_id: session.payment_intent as string | null,
+        payout_transferred: payoutTransferred,
+      }),
+    });
 
-  if (!insertRes.ok) {
+    if (insertRes.ok) {
+      insertSuccess = true;
+      console.log(`Purchase record inserted successfully for session ${session.id} (attempt ${attempt})`);
+      break;
+    }
+
     const err = await insertRes.text();
-    console.error(`CRITICAL: Purchase insert FAILED for session ${session.id}. Status: ${insertRes.status}. Error: ${err}`);
-    console.error(`Lost purchase data: listing=${listing_id}, buyer=${buyer_id}, seller=${seller_id}, amount=${amount}`);
-    throw new Error(`Failed to insert purchase: ${err}`);
+    console.error(`Purchase insert attempt ${attempt}/3 FAILED for session ${session.id}. Status: ${insertRes.status}. Error: ${err}`);
+
+    if (attempt < 3) {
+      // Wait before retrying (exponential backoff: 500ms, 1500ms)
+      await new Promise(r => setTimeout(r, attempt * 500));
+    }
   }
-  console.log(`Purchase record inserted successfully for session ${session.id}`);
+
+  if (!insertSuccess) {
+    console.error(`CRITICAL: All 3 purchase insert attempts FAILED for session ${session.id}`);
+    console.error(`Lost purchase data: listing=${listing_id}, buyer=${buyer_id}, seller=${seller_id}, amount=${amount}`);
+    throw new Error(`Failed to insert purchase after 3 attempts for session ${session.id}`);
+  }
 
   // Increment sales counters
   await Promise.all([

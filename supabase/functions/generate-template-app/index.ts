@@ -478,32 +478,43 @@ serve(async (req) => {
     if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY)
       throw new Error("Database not configured");
 
-    /* ── Auth ──────────────────────────────────────────────────── */
+    /* ── Auth — support both user session & service-role (cron) ── */
     const authHeader = req.headers.get("Authorization");
-    const supabaseAnon = createClient(
-      SUPABASE_URL,
-      Deno.env.get("SUPABASE_ANON_KEY") || ""
-    );
+    const token = authHeader?.replace("Bearer ", "") || "";
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
     let sellerId: string | null = null;
 
-    if (authHeader) {
-      const token = authHeader.replace("Bearer ", "");
+    // Check if this is a service-role call (cron job)
+    if (token === SUPABASE_SERVICE_ROLE_KEY) {
+      // Cron/service-role bypass — use the first admin as the seller
+      const { data: adminUser } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "admin")
+        .limit(1)
+        .maybeSingle();
+      if (adminUser) sellerId = adminUser.user_id;
+    } else if (token) {
+      const supabaseAnon = createClient(
+        SUPABASE_URL,
+        Deno.env.get("SUPABASE_ANON_KEY") || ""
+      );
       const {
         data: { user },
       } = await supabaseAnon.auth.getUser(token);
-      if (user) sellerId = user.id;
+      if (user) {
+        sellerId = user.id;
+        // Verify admin role
+        const { data: roleData } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", sellerId)
+          .eq("role", "admin")
+          .maybeSingle();
+        if (!roleData) throw new Error("Unauthorized — admin only");
+      }
     }
     if (!sellerId) throw new Error("Authentication required");
-
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-
-    const { data: roleData } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", sellerId)
-      .eq("role", "admin")
-      .maybeSingle();
-    if (!roleData) throw new Error("Unauthorized — admin only");
 
     const body = await req.json().catch(() => ({}));
     const count = Math.min(Math.max(body.count || 1, 1), 5);

@@ -148,12 +148,67 @@ const THEME_POOL = [
   "Blog and CMS admin panel",
 ];
 
+/* ── Deep market research: gather demand signals ────────────────── */
+async function gatherDemandSignals(
+  supabase: ReturnType<typeof createClient>
+): Promise<{ topSearches: string[]; unfilledBounties: string[]; highViewGaps: string[]; existingTitles: string[] }> {
+  // 1. Top search queries — what people are looking for
+  const { data: searchLogs } = await supabase
+    .from("activity_log")
+    .select("event_data")
+    .in("event_type", ["search", "ai_search", "magic_import"])
+    .order("created_at", { ascending: false })
+    .limit(100);
+
+  const queryMap = new Map<string, number>();
+  for (const log of searchLogs || []) {
+    const d = log.event_data as Record<string, unknown> | null;
+    const q = String(d?.query || d?.prompt || "").trim().toLowerCase();
+    if (q && q.length > 3) queryMap.set(q, (queryMap.get(q) || 0) + 1);
+  }
+  const topSearches = [...queryMap.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 15)
+    .map(([q]) => q);
+
+  // 2. Open bounties with low submissions — explicit unmet demand
+  const { data: bounties } = await supabase
+    .from("bounties")
+    .select("title, description, category")
+    .eq("status", "open")
+    .order("budget", { ascending: false })
+    .limit(10);
+  const unfilledBounties = (bounties || []).map(b => `${b.title} (${b.category})`);
+
+  // 3. High-view, low-sale listings — interest but no conversion (price/quality gap)
+  const { data: gapListings } = await supabase
+    .from("listings")
+    .select("title, category, view_count, sales_count")
+    .eq("status", "live")
+    .order("view_count", { ascending: false })
+    .limit(50);
+  const highViewGaps = (gapListings || [])
+    .filter(l => (l.view_count || 0) > 5 && (l.sales_count || 0) <= 1)
+    .slice(0, 10)
+    .map(l => `${l.title} (${l.view_count} views, ${l.sales_count} sales)`);
+
+  // 4. Existing titles — avoid duplication
+  const { data: existing } = await supabase
+    .from("listings")
+    .select("title")
+    .limit(200);
+  const existingTitles = (existing || []).map(l => l.title);
+
+  return { topSearches, unfilledBounties, highViewGaps, existingTitles };
+}
+
 /* ── Generate a single template app ─────────────────────────────── */
 async function generateSingleTemplate(
   supabase: ReturnType<typeof createClient>,
   sellerId: string,
   theme: string,
-  LOVABLE_API_KEY: string
+  LOVABLE_API_KEY: string,
+  demandContext?: string
 ): Promise<{
   success: boolean;
   listing_id?: string;
@@ -179,7 +234,9 @@ async function generateSingleTemplate(
         messages: [
           {
             role: "system",
-            content: `You are an expert React developer who generates complete, production-quality React + Tailwind template apps. Generate a self-contained React template project. The code should be clean, modern, well-commented, and immediately usable. Use only React 18, Tailwind CSS, lucide-react for icons, and framer-motion for animations — no other dependencies. Generate ONLY the src/ files (App.tsx and any component files). Use relative imports within src/. Every component file should be in src/components/. The app should look polished with a cohesive color scheme and responsive layout.`,
+            content: `You are an expert React developer who generates complete, production-quality React + Tailwind template apps. Generate a self-contained React template project. The code should be clean, modern, well-commented, and immediately usable. Use only React 18, Tailwind CSS, lucide-react for icons, and framer-motion for animations — no other dependencies. Generate ONLY the src/ files (App.tsx and any component files). Use relative imports within src/. Every component file should be in src/components/. The app should look polished with a cohesive color scheme and responsive layout.
+
+IMPORTANT: You must build products people actually want. Use the market research data below to inform your design decisions — prioritize features and UX patterns that align with proven demand signals.${demandContext ? `\n\n--- MARKET RESEARCH ---\n${demandContext}` : ""}`,
           },
           {
             role: "user",
@@ -521,6 +578,26 @@ serve(async (req) => {
     const count = Math.min(Math.max(body.count || 1, 1), maxCount);
     const themes: string[] = body.themes || [];
 
+    /* ── Deep research: gather demand signals ────────────────── */
+    console.log("Gathering market demand signals...");
+    const signals = await gatherDemandSignals(supabase);
+
+    // Build demand context string for AI
+    const demandParts: string[] = [];
+    if (signals.topSearches.length > 0) {
+      demandParts.push(`TOP USER SEARCHES (what people are actively looking for):\n${signals.topSearches.map(s => `- "${s}"`).join("\n")}`);
+    }
+    if (signals.unfilledBounties.length > 0) {
+      demandParts.push(`OPEN BOUNTIES (explicit paid demand):\n${signals.unfilledBounties.map(b => `- ${b}`).join("\n")}`);
+    }
+    if (signals.highViewGaps.length > 0) {
+      demandParts.push(`HIGH-VIEW LOW-SALE GAPS (interest but no conversion — opportunity to build better versions):\n${signals.highViewGaps.map(g => `- ${g}`).join("\n")}`);
+    }
+    if (signals.existingTitles.length > 0) {
+      demandParts.push(`EXISTING LISTINGS (avoid duplicating these):\n${signals.existingTitles.slice(0, 30).join(", ")}`);
+    }
+    const demandContext = demandParts.length > 0 ? demandParts.join("\n\n") : undefined;
+
     /* ── Pick themes (use provided or random from pool) ──────── */
     const selectedThemes: string[] = [];
     const usedIndices = new Set<number>();
@@ -548,12 +625,13 @@ serve(async (req) => {
     }> = [];
 
     for (const theme of selectedThemes) {
-      console.log(`Generating template: "${theme}"...`);
+      console.log(`Generating template: "${theme}" (with ${signals.topSearches.length} demand signals)...`);
       const result = await generateSingleTemplate(
         supabase,
         sellerId,
         theme,
-        LOVABLE_API_KEY
+        LOVABLE_API_KEY,
+        demandContext
       );
       results.push(result);
 

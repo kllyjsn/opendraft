@@ -227,7 +227,15 @@ export function BuildSearch() {
                     if (!data?.success) throw new Error(data?.error || "Generation failed");
                     const result = data.results?.[0];
                     if (result?.success && result.listing_id) {
-                      toast({ title: "Template generated! 🎉", description: "Redirecting to your new listing…" });
+                      // Create a notification for the user
+                      await supabase.from("notifications").insert({
+                        user_id: user.id,
+                        type: "template_generated",
+                        title: "Your template is ready! 🎉",
+                        message: `"${result.title || prompt.trim()}" has been generated and is pending review.`,
+                        link: `/listing/${result.listing_id}/edit`,
+                      });
+                      toast({ title: "Template generated! 🎉", description: "Redirecting to edit your new listing…" });
                       navigate(`/listing/${result.listing_id}/edit`);
                     } else {
                       throw new Error(result?.error || "Generation failed");

@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { Link, useNavigate } from "react-router-dom";
 import { CompletenessBadge } from "@/components/CompletenessBadge";
-import { ArrowRight, Sparkles, Loader2, ShoppingCart, X, Wand2 } from "lucide-react";
+import { ArrowRight, Sparkles, Loader2, ShoppingCart, X, Wand2, CheckCircle } from "lucide-react";
 import { logActivity } from "@/lib/activity-logger";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -38,6 +38,7 @@ export function BuildSearch() {
   const [prompt, setPrompt] = useState("");
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [generated, setGenerated] = useState(false);
   const [results, setResults] = useState<MatchedListing[] | null>(null);
   const [noMatch, setNoMatch] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -59,6 +60,7 @@ export function BuildSearch() {
     setResults(null);
     setNoMatch(false);
     setError(null);
+    setGenerated(false);
 
     try {
       const { data, error: fnError } = await supabase.functions.invoke("match-listings", {
@@ -68,7 +70,6 @@ export function BuildSearch() {
       if (fnError) throw new Error(fnError.message);
       if (data?.error) throw new Error(data.error);
 
-      // Log search query
       logActivity({ event_type: "search", event_data: { query: prompt.trim(), has_results: !!data?.hasResults, result_count: data?.matches?.length ?? 0 } });
 
       if (data?.hasResults) {
@@ -97,8 +98,92 @@ export function BuildSearch() {
     setResults(null);
     setNoMatch(false);
     setError(null);
+    setGenerated(false);
     inputRef.current?.focus();
   }
+
+  async function handleGenerate() {
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+    setGenerating(true);
+    try {
+      const { data, error: fnErr } = await supabase.functions.invoke("generate-template-app", {
+        body: { count: 1, themes: [prompt.trim()] },
+      });
+      if (fnErr) throw new Error(fnErr.message);
+      if (!data?.success) throw new Error(data?.error || "Generation failed");
+      const result = data.results?.[0];
+      if (result?.success && result.listing_id) {
+        await supabase.from("notifications").insert({
+          user_id: user.id,
+          type: "template_generated",
+          title: "Your template is ready! 🎉",
+          message: `"${result.title || prompt.trim()}" has been generated and is pending review.`,
+          link: `/listing/${result.listing_id}/edit`,
+        });
+        setGenerated(true);
+      } else {
+        throw new Error(result?.error || "Generation failed");
+      }
+    } catch (err) {
+      toast({ title: "Generation failed", description: err instanceof Error ? err.message : "Unknown error", variant: "destructive" });
+    } finally {
+      setGenerating(false);
+    }
+  }
+
+  const generateCta = generating ? (
+    <div className="flex flex-col items-center gap-3 py-2">
+      <div className="flex items-center gap-3">
+        <div className="relative h-8 w-8">
+          <div className="absolute inset-0 rounded-full gradient-hero animate-spin" style={{ animationDuration: "2s" }} />
+          <div className="absolute inset-[2px] rounded-full bg-card" />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Wand2 className="h-3.5 w-3.5 text-primary" />
+          </div>
+        </div>
+        <div className="text-left">
+          <p className="text-sm font-bold">Building your app…</p>
+          <p className="text-xs text-muted-foreground">AI is writing code, generating screenshots & packaging it up</p>
+        </div>
+      </div>
+      <div className="w-full max-w-xs h-1.5 rounded-full bg-muted overflow-hidden">
+        <div className="h-full rounded-full gradient-hero animate-pulse" style={{ width: "60%", animationDuration: "1.5s" }} />
+      </div>
+    </div>
+  ) : generated ? (
+    <div className="rounded-xl border border-primary/30 bg-primary/5 p-5 text-center space-y-3">
+      <div className="inline-flex items-center justify-center h-12 w-12 rounded-full bg-primary/10 mx-auto">
+        <CheckCircle className="h-6 w-6 text-primary" />
+      </div>
+      <div>
+        <h4 className="font-bold text-foreground">Your app is being prepared!</h4>
+        <p className="text-sm text-muted-foreground mt-1">
+          We'll <span className="text-foreground font-medium">notify you</span> the moment it's ready to customize.
+          Check your <span className="text-foreground font-medium">notifications</span> or dashboard.
+        </p>
+      </div>
+      <div className="flex gap-2 justify-center">
+        <Button size="sm" onClick={() => navigate("/dashboard?tab=listings")} className="gradient-hero text-white border-0 shadow-glow hover:opacity-90 gap-2">
+          Go to Dashboard
+        </Button>
+        <Button size="sm" variant="outline" onClick={reset}>
+          Build another
+        </Button>
+      </div>
+    </div>
+  ) : (
+    <Button
+      size="sm"
+      variant="outline"
+      className="gap-2 border-primary/30 text-primary hover:bg-primary/5 hover:border-primary/50"
+      onClick={handleGenerate}
+    >
+      <Wand2 className="h-3.5 w-3.5" /> Build my own version instead
+    </Button>
+  );
 
   return (
     <div className="w-full max-w-2xl mx-auto">
@@ -198,69 +283,47 @@ export function BuildSearch() {
                 </div>
               </div>
             ))}
+
+            {/* Build your own CTA — after results */}
+            <div className="rounded-xl border border-dashed border-border bg-card/50 p-4 text-center space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Want something more tailored? <span className="text-foreground font-medium">We'll build it for you.</span>
+              </p>
+              {generateCta}
+            </div>
           </div>
         )}
 
         {noMatch && (
-          <div className="mt-6 rounded-xl border border-dashed border-border bg-card/50 p-6 text-center">
-            <div className="text-3xl mb-3">🔮</div>
-            <h3 className="font-bold mb-1">No exact match found</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              We can <span className="text-foreground font-medium">auto-generate</span> a template for <span className="text-foreground font-medium">"{prompt}"</span> — or list your own.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-2 justify-center">
-              <Button
-                size="sm"
-                className="gradient-hero text-white border-0 shadow-glow hover:opacity-90 gap-2"
-                disabled={generating}
-                onClick={async () => {
-                  if (!user) {
-                    navigate("/login");
-                    return;
-                  }
-                  setGenerating(true);
-                  try {
-                    const { data, error: fnErr } = await supabase.functions.invoke("generate-template-app", {
-                      body: { count: 1, themes: [prompt.trim()] },
-                    });
-                    if (fnErr) throw new Error(fnErr.message);
-                    if (!data?.success) throw new Error(data?.error || "Generation failed");
-                    const result = data.results?.[0];
-                    if (result?.success && result.listing_id) {
-                      // Create a notification for the user
-                      await supabase.from("notifications").insert({
-                        user_id: user.id,
-                        type: "template_generated",
-                        title: "Your template is ready! 🎉",
-                        message: `"${result.title || prompt.trim()}" has been generated and is pending review.`,
-                        link: `/listing/${result.listing_id}/edit`,
-                      });
-                      toast({ title: "Template generated! 🎉", description: "Redirecting to edit your new listing…" });
-                      navigate(`/listing/${result.listing_id}/edit`);
-                    } else {
-                      throw new Error(result?.error || "Generation failed");
-                    }
-                  } catch (err) {
-                    toast({ title: "Generation failed", description: err instanceof Error ? err.message : "Unknown error", variant: "destructive" });
-                  } finally {
-                    setGenerating(false);
-                  }
-                }}
-              >
-                {generating ? (
-                  <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Generating…</>
-                ) : (
-                  <><Wand2 className="h-3.5 w-3.5" /> Generate it for me</>
-                )}
-              </Button>
-              <Link to={user ? "/sell" : "/login"}>
-                <Button size="sm" variant="outline">
-                  List it myself
-                </Button>
-              </Link>
-              <Button size="sm" variant="ghost" onClick={reset}>
-                Try a different idea
-              </Button>
+          <div className="mt-6 space-y-4">
+            <div className="rounded-xl border border-primary/20 bg-gradient-to-b from-primary/5 to-transparent p-6 text-center space-y-4">
+              <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl gradient-hero shadow-glow mx-auto">
+                <Wand2 className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h3 className="font-bold text-lg mb-1">We'll build it for you</h3>
+                <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+                  No exact match — but our AI can generate a complete 
+                  <span className="text-foreground font-medium"> "{prompt}" </span>
+                  template with source code, screenshots & everything you need to launch.
+                </p>
+              </div>
+              <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1.5"><CheckCircle className="h-3.5 w-3.5 text-primary" /> Full source code</span>
+                <span className="flex items-center gap-1.5"><CheckCircle className="h-3.5 w-3.5 text-primary" /> AI screenshots</span>
+                <span className="flex items-center gap-1.5"><CheckCircle className="h-3.5 w-3.5 text-primary" /> Fully editable</span>
+              </div>
+              {generateCta}
+            </div>
+
+            <div className="text-center">
+              <p className="text-xs text-muted-foreground mb-2">Or start from scratch</p>
+              <div className="flex gap-2 justify-center">
+                <Link to={user ? "/sell" : "/login"}>
+                  <Button size="sm" variant="outline">List it myself</Button>
+                </Link>
+                <Button size="sm" variant="ghost" onClick={reset}>Try a different idea</Button>
+              </div>
             </div>
           </div>
         )}

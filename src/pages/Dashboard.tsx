@@ -76,6 +76,7 @@ export default function Dashboard() {
     }
 
     async function fetchSales() {
+      // Fetch actual purchase records for sales history
       const { data } = await supabase
         .from("purchases")
         .select("id,created_at,amount_paid,seller_amount,platform_fee,listing_id,buyer_id,listings(title)")
@@ -84,9 +85,25 @@ export default function Dashboard() {
         .limit(50);
       const salesData = (data as unknown as Sale[]) ?? [];
       setSales(salesData);
+
+      // Use profile-level counters as the source of truth for summary stats
+      // (purchase records may be missing due to webhook edge cases)
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("total_sales")
+        .eq("user_id", user!.id)
+        .single();
+
+      const profileTotalSales = profile?.total_sales ?? 0;
+      const purchaseBasedSales = salesData.length;
+      const purchaseBasedEarnings = salesData.reduce((s, p) => s + (p.seller_amount ?? 0), 0);
+
+      // Use whichever is higher — profile counter or purchase records
+      const actualSales = Math.max(profileTotalSales, purchaseBasedSales);
+
       setSummary({
-        total_earned: salesData.reduce((s, p) => s + (p.seller_amount ?? 0), 0),
-        total_sales: salesData.length,
+        total_earned: purchaseBasedEarnings,
+        total_sales: actualSales,
       });
     }
 

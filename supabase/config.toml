@@ -57,3 +57,7 @@ verify_jwt = false
 # og-image generates dynamic social share images — public access
 [functions.og-image]
 verify_jwt = false
+
+# generate-listing-concept — admin-only, auth checked in code
+[functions.generate-listing-concept]
+verify_jwt = false

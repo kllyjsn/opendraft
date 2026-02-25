@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { CheckCircle, XCircle, Eye, Loader2, ShieldCheck, Clock, BarChart3, Flag } from "lucide-react";
 import { AdminDiscountCodes } from "@/components/AdminDiscountCodes";
 import { AdminFlagReview } from "@/components/AdminFlagReview";
+import { AdminConceptGenerator } from "@/components/AdminConceptGenerator";
 
 interface PendingListing {
   id: string;
@@ -274,6 +275,11 @@ export default function Admin() {
             <h2 className="text-lg font-bold">Community Flags</h2>
           </div>
           <AdminFlagReview />
+        </div>
+
+        {/* AI Concept Generator */}
+        <div className="mt-12 pt-8 border-t border-border">
+          <AdminConceptGenerator />
         </div>
 
         {/* Discount Codes Section */}

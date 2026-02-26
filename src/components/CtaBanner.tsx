@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Rocket } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { BrandMascot } from "@/components/BrandMascot";
 
 export function CtaBanner() {
   const { user } = useAuth();
@@ -14,8 +14,8 @@ export function CtaBanner() {
         <div className="absolute -bottom-32 -left-32 h-[350px] w-[350px] rounded-full bg-accent/15 blur-[90px] pointer-events-none" />
 
         <div className="relative z-10 max-w-xl mx-auto">
-          <div className="inline-flex items-center justify-center h-12 w-12 rounded-2xl gradient-hero shadow-glow mb-6">
-            <Rocket className="h-5 w-5 text-white" />
+          <div className="flex justify-center mb-4">
+            <BrandMascot size={80} variant="happy" />
           </div>
           <h2 className="text-3xl md:text-4xl font-black tracking-tight mb-4">
             Built something cool?

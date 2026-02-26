@@ -4,61 +4,99 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 // ── Supabase helpers ──────────────────────────────────────────────
 
-function getSupabaseAdmin() {
-  return createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-  );
+function getAdmin() {
+  return createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 }
 
-function getSupabaseAnon(authHeader?: string) {
+function getAnon(authHeader?: string) {
   const opts: any = {};
-  if (authHeader) {
-    opts.global = { headers: { Authorization: authHeader } };
+  if (authHeader) opts.global = { headers: { Authorization: authHeader } };
+  return createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, opts);
+}
+
+// ── API Key auth helper ───────────────────────────────────────────
+
+async function resolveAuth(authHeader?: string): Promise<{ userId: string | null; source: "bearer" | "apikey" | "none" }> {
+  if (!authHeader) return { userId: null, source: "none" };
+
+  // Check for API key (prefixed with "od_")
+  if (authHeader.startsWith("Bearer od_")) {
+    const apiKey = authHeader.replace("Bearer ", "");
+    const keyHash = await hashKey(apiKey);
+    const sb = getAdmin();
+    const { data } = await sb
+      .from("agent_api_keys")
+      .select("user_id")
+      .eq("key_hash", keyHash)
+      .is("revoked_at", null)
+      .single();
+
+    if (data) {
+      // Update last_used_at
+      await sb.from("agent_api_keys").update({ last_used_at: new Date().toISOString() }).eq("key_hash", keyHash);
+      return { userId: data.user_id, source: "apikey" };
+    }
+    return { userId: null, source: "none" };
   }
-  return createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_ANON_KEY")!,
-    opts
-  );
+
+  // Standard Bearer token
+  const sb = getAnon(authHeader);
+  const { data, error } = await sb.auth.getUser();
+  if (error || !data?.user) return { userId: null, source: "none" };
+  return { userId: data.user.id, source: "bearer" };
+}
+
+async function hashKey(key: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(key);
+  const hash = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+function generateApiKey(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(32));
+  return "od_" + Array.from(bytes).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+// ── Demand signal capture ─────────────────────────────────────────
+
+async function captureDemandSignal(query: string, category?: string, techStack?: string[], maxPrice?: number, agentId?: string) {
+  try {
+    const sb = getAdmin();
+    await sb.from("agent_demand_signals").insert({
+      query: query?.slice(0, 500) || "browsing",
+      category: category || null,
+      tech_stack: techStack || null,
+      max_price: maxPrice || null,
+      source: "mcp",
+      agent_id: agentId || null,
+    });
+  } catch { /* non-fatal */ }
 }
 
 // ── MCP Server ────────────────────────────────────────────────────
 
-const mcpServer = new McpServer({
-  name: "opendraft-marketplace",
-  version: "2.0.0",
-});
+const mcpServer = new McpServer({ name: "opendraft-marketplace", version: "2.1.0" });
 
-// ── Tool: search_listings ─────────────────────────────────────────
+// ── search_listings (with demand capture) ─────────────────────────
 
 mcpServer.tool({
   name: "search_listings",
-  description:
-    "Search the OpenDraft marketplace for AI-built apps. Filter by keyword, category, tech stack, price range, and completeness level.",
+  description: "Search the OpenDraft marketplace for AI-built apps. Filter by keyword, category, tech stack, price range, and completeness. If no results match, your search is logged as a demand signal to inform builders what to create next.",
   inputSchema: {
     type: "object",
     properties: {
       query: { type: "string", description: "Search keyword" },
-      category: {
-        type: "string",
-        enum: ["saas_tool", "ai_app", "landing_page", "utility", "game", "other"],
-        description: "Filter by category",
-      },
+      category: { type: "string", enum: ["saas_tool","ai_app","landing_page","utility","game","other"] },
       max_price: { type: "number", description: "Max price in cents" },
       tech_stack: { type: "array", items: { type: "string" }, description: "Filter by technologies" },
-      completeness: {
-        type: "string",
-        enum: ["prototype", "mvp", "production_ready"],
-        description: "Filter by completeness level",
-      },
+      completeness: { type: "string", enum: ["prototype","mvp","production_ready"] },
       limit: { type: "number", description: "Max results (default 20, max 50)" },
     },
   },
   handler: async (args: any) => {
-    const sb = getSupabaseAnon();
-    let q = sb
-      .from("listings")
+    const sb = getAnon();
+    let q = sb.from("listings")
       .select("id,title,description,price,pricing_type,category,completeness_badge,tech_stack,screenshots,sales_count,view_count,built_with,demo_url")
       .eq("status", "live")
       .order("sales_count", { ascending: false })
@@ -75,199 +113,138 @@ mcpServer.tool({
     let results = data || [];
     if (args.tech_stack?.length) {
       const wanted = args.tech_stack.map((t: string) => t.toLowerCase());
-      results = results.filter((l: any) =>
-        l.tech_stack?.some((t: string) => wanted.includes(t.toLowerCase()))
-      );
+      results = results.filter((l: any) => l.tech_stack?.some((t: string) => wanted.includes(t.toLowerCase())));
+    }
+
+    // Capture demand signal if no results
+    if (results.length === 0 && (args.query || args.category || args.tech_stack?.length)) {
+      await captureDemandSignal(args.query || "", args.category, args.tech_stack, args.max_price);
     }
 
     const mapped = results.map((l: any) => ({
-      id: l.id,
-      title: l.title,
-      description: l.description?.slice(0, 200),
-      price_cents: l.price,
-      pricing_type: l.pricing_type,
-      category: l.category,
-      completeness: l.completeness_badge,
-      tech_stack: l.tech_stack,
-      sales: l.sales_count,
-      views: l.view_count,
-      demo_url: l.demo_url,
+      id: l.id, title: l.title, description: l.description?.slice(0, 200),
+      price_cents: l.price, pricing_type: l.pricing_type, category: l.category,
+      completeness: l.completeness_badge, tech_stack: l.tech_stack,
+      sales: l.sales_count, views: l.view_count, demo_url: l.demo_url,
       url: `https://opendraft.lovable.app/listing/${l.id}`,
     }));
 
-    return { content: [{ type: "text", text: JSON.stringify(mapped, null, 2) }] };
+    const response: any = { listings: mapped, total: mapped.length };
+    if (results.length === 0) {
+      response.demand_captured = true;
+      response.message = "No results found. Your search has been logged as a demand signal — builders will see what agents are looking for.";
+    }
+
+    return { content: [{ type: "text", text: JSON.stringify(response, null, 2) }] };
   },
 });
 
-// ── Tool: get_listing ─────────────────────────────────────────────
+// ── get_listing ───────────────────────────────────────────────────
 
 mcpServer.tool({
   name: "get_listing",
-  description: "Get full details for a specific listing by ID, including seller profile and reviews.",
+  description: "Get full details for a specific listing by ID, including seller profile, reviews, and purchase decision data.",
   inputSchema: {
     type: "object",
-    properties: {
-      listing_id: { type: "string", description: "UUID of the listing" },
-    },
+    properties: { listing_id: { type: "string", description: "UUID of the listing" } },
     required: ["listing_id"],
   },
   handler: async (args: any) => {
-    const sb = getSupabaseAnon();
-    const { data, error } = await sb
-      .from("listings")
-      .select("*")
-      .eq("id", args.listing_id)
-      .eq("status", "live")
-      .single();
+    const sb = getAnon();
+    const { data, error } = await sb.from("listings").select("*").eq("id", args.listing_id).eq("status", "live").single();
     if (error) throw new Error("Listing not found");
 
-    const { data: profile } = await sb
-      .from("public_profiles")
-      .select("username,avatar_url,verified,total_sales")
-      .eq("user_id", data.seller_id)
-      .single();
+    const { data: profile } = await sb.from("public_profiles").select("username,avatar_url,verified,total_sales").eq("user_id", data.seller_id).single();
+    const { data: reviews } = await sb.from("reviews").select("rating,review_text,created_at").eq("listing_id", args.listing_id).order("created_at", { ascending: false }).limit(5);
 
-    const { data: reviews } = await sb
-      .from("reviews")
-      .select("rating,review_text,created_at")
-      .eq("listing_id", args.listing_id)
-      .order("created_at", { ascending: false })
-      .limit(5);
+    const ratings = (reviews || []).map((r: any) => r.rating);
+    const avgRating = ratings.length ? (ratings.reduce((a: number, b: number) => a + b, 0) / ratings.length).toFixed(1) : null;
 
-    const result = {
-      ...data,
-      seller: profile,
-      reviews: reviews || [],
+    return { content: [{ type: "text", text: JSON.stringify({
+      ...data, seller: profile, reviews: reviews || [],
+      average_rating: avgRating, review_count: ratings.length,
       url: `https://opendraft.lovable.app/listing/${data.id}`,
-    };
-
-    return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+      decision_factors: {
+        has_demo: !!data.demo_url, has_source_code: !!data.file_path,
+        has_screenshots: (data.screenshots?.length || 0) > 0,
+        seller_verified: profile?.verified || false,
+        seller_total_sales: profile?.total_sales || 0,
+      },
+    }, null, 2) }] };
   },
 });
 
-// ── Tool: list_categories ─────────────────────────────────────────
+// ── list_categories ───────────────────────────────────────────────
 
 mcpServer.tool({
   name: "list_categories",
-  description: "Get all available listing categories with counts of live listings.",
+  description: "Get all available listing categories with counts.",
   inputSchema: { type: "object", properties: {} },
   handler: async () => {
-    const sb = getSupabaseAnon();
-    const categories = ["saas_tool", "ai_app", "landing_page", "utility", "game", "other"];
+    const sb = getAnon();
+    const cats = ["saas_tool","ai_app","landing_page","utility","game","other"];
     const results = [];
-    for (const cat of categories) {
-      const { count } = await sb
-        .from("listings")
-        .select("id", { count: "exact", head: true })
-        .eq("status", "live")
-        .eq("category", cat);
+    for (const cat of cats) {
+      const { count } = await sb.from("listings").select("id", { count: "exact", head: true }).eq("status", "live").eq("category", cat);
       results.push({ category: cat, count: count || 0 });
     }
     return { content: [{ type: "text", text: JSON.stringify(results, null, 2) }] };
   },
 });
 
-// ── Tool: get_trending ────────────────────────────────────────────
+// ── get_trending ──────────────────────────────────────────────────
 
 mcpServer.tool({
   name: "get_trending",
-  description: "Get trending listings and categories on OpenDraft right now. Shows what's hot based on recent views, sales, and momentum.",
-  inputSchema: {
-    type: "object",
-    properties: {
-      limit: { type: "number", description: "Max results (default 10)" },
-    },
-  },
+  description: "Get trending listings, hot bounties, and market intelligence. Includes what agents are searching for (demand signals).",
+  inputSchema: { type: "object", properties: { limit: { type: "number", description: "Max results (default 10)" } } },
   handler: async (args: any) => {
-    const sb = getSupabaseAnon();
+    const sb = getAnon();
+    const admin = getAdmin();
     const limit = Math.min(args.limit || 10, 30);
 
-    // Top by recent sales
-    const { data: topSales } = await sb
-      .from("listings")
+    const { data: topSales } = await sb.from("listings")
       .select("id,title,category,completeness_badge,price,pricing_type,sales_count,view_count,tech_stack,demo_url")
-      .eq("status", "live")
-      .order("sales_count", { ascending: false })
-      .limit(limit);
+      .eq("status", "live").order("sales_count", { ascending: false }).limit(limit);
 
-    // Top by views (demand signal)
-    const { data: topViews } = await sb
-      .from("listings")
-      .select("id,title,category,view_count,sales_count")
-      .eq("status", "live")
-      .order("view_count", { ascending: false })
-      .limit(limit);
+    const { data: hotBounties } = await sb.from("bounties")
+      .select("id,title,category,budget,submissions_count")
+      .eq("status", "open").order("budget", { ascending: false }).limit(5);
 
-    // Recent bounties (what buyers want)
-    const { data: hotBounties } = await sb
-      .from("bounties")
-      .select("title,category,budget,submissions_count")
-      .eq("status", "open")
-      .order("budget", { ascending: false })
-      .limit(5);
+    // Recent demand signals — what agents are looking for
+    const { data: demandSignals } = await admin.from("agent_demand_signals")
+      .select("query,category,tech_stack,created_at")
+      .order("created_at", { ascending: false }).limit(10);
 
-    // Category breakdown
-    const categories = ["saas_tool", "ai_app", "landing_page", "utility", "game", "other"];
-    const catCounts: Record<string, number> = {};
-    for (const cat of categories) {
-      const { count } = await sb
-        .from("listings")
-        .select("id", { count: "exact", head: true })
-        .eq("status", "live")
-        .eq("category", cat);
-      catCounts[cat] = count || 0;
-    }
-
-    const result = {
-      trending_by_sales: (topSales || []).map((l: any) => ({
-        id: l.id,
-        title: l.title,
-        category: l.category,
-        price_cents: l.price,
-        sales: l.sales_count,
-        views: l.view_count,
+    return { content: [{ type: "text", text: JSON.stringify({
+      trending_listings: (topSales || []).map((l: any) => ({
+        id: l.id, title: l.title, category: l.category,
+        price_cents: l.price, sales: l.sales_count, views: l.view_count,
         url: `https://opendraft.lovable.app/listing/${l.id}`,
       })),
-      trending_by_views: (topViews || []).map((l: any) => ({
-        id: l.id,
-        title: l.title,
-        category: l.category,
-        views: l.view_count,
-        sales: l.sales_count,
-      })),
       hot_bounties: hotBounties || [],
-      category_distribution: catCounts,
+      agent_demand_signals: demandSignals || [],
       marketplace_url: "https://opendraft.lovable.app",
-    };
-
-    return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+    }, null, 2) }] };
   },
 });
 
-// ── Tool: list_bounties ───────────────────────────────────────────
+// ── list_bounties ─────────────────────────────────────────────────
 
 mcpServer.tool({
   name: "list_bounties",
-  description: "Browse open bounties — project requests from buyers seeking custom builds. Great for finding paid work.",
+  description: "Browse open bounties — paid project requests from buyers. Great for finding work to fulfill.",
   inputSchema: {
     type: "object",
     properties: {
-      category: {
-        type: "string",
-        enum: ["saas_tool", "ai_app", "landing_page", "utility", "game", "other"],
-      },
-      limit: { type: "number", description: "Max results (default 20)" },
+      category: { type: "string", enum: ["saas_tool","ai_app","landing_page","utility","game","other"] },
+      limit: { type: "number" },
     },
   },
   handler: async (args: any) => {
-    const sb = getSupabaseAnon();
-    let q = sb
-      .from("bounties")
-      .select("id,title,description,budget,category,tech_stack,submissions_count,created_at")
-      .eq("status", "open")
-      .order("created_at", { ascending: false })
-      .limit(Math.min(args.limit || 20, 50));
-
+    const sb = getAnon();
+    let q = sb.from("bounties").select("id,title,description,budget,category,tech_stack,submissions_count,created_at")
+      .eq("status", "open").order("created_at", { ascending: false }).limit(Math.min(args.limit || 20, 50));
     if (args.category) q = q.eq("category", args.category);
     const { data, error } = await q;
     if (error) throw new Error(error.message);
@@ -275,426 +252,396 @@ mcpServer.tool({
   },
 });
 
-// ── Tool: get_bounty ──────────────────────────────────────────────
+// ── get_bounty ────────────────────────────────────────────────────
 
 mcpServer.tool({
   name: "get_bounty",
-  description: "Get full details for a specific bounty including requirements and submission count.",
-  inputSchema: {
-    type: "object",
-    properties: {
-      bounty_id: { type: "string", description: "UUID of the bounty" },
-    },
-    required: ["bounty_id"],
-  },
+  description: "Get full details for a specific bounty.",
+  inputSchema: { type: "object", properties: { bounty_id: { type: "string" } }, required: ["bounty_id"] },
   handler: async (args: any) => {
-    const sb = getSupabaseAnon();
+    const sb = getAnon();
     const { data, error } = await sb.from("bounties").select("*").eq("id", args.bounty_id).single();
     if (error) throw new Error("Bounty not found");
     return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
   },
 });
 
-// ── Tool: search_builders ─────────────────────────────────────────
+// ── search_builders ───────────────────────────────────────────────
 
 mcpServer.tool({
   name: "search_builders",
-  description: "Search for builders on OpenDraft by username or browse top builders by sales.",
-  inputSchema: {
-    type: "object",
-    properties: {
-      query: { type: "string", description: "Search by username (optional)" },
-      limit: { type: "number", description: "Max results (default 20)" },
-    },
-  },
+  description: "Search for builders by username or browse top builders.",
+  inputSchema: { type: "object", properties: { query: { type: "string" }, limit: { type: "number" } } },
   handler: async (args: any) => {
-    const sb = getSupabaseAnon();
-    let q = sb
-      .from("public_profiles")
-      .select("user_id,username,avatar_url,bio,verified,total_sales,followers_count")
-      .order("total_sales", { ascending: false })
-      .limit(Math.min(args.limit || 20, 50));
-
+    const sb = getAnon();
+    let q = sb.from("public_profiles").select("user_id,username,avatar_url,bio,verified,total_sales,followers_count")
+      .order("total_sales", { ascending: false }).limit(Math.min(args.limit || 20, 50));
     if (args.query) q = q.ilike("username", `%${args.query}%`);
-
     const { data, error } = await q;
     if (error) throw new Error(error.message);
-
-    const results = (data || []).map((p: any) => ({
-      ...p,
-      profile_url: `https://opendraft.lovable.app/builder/${p.user_id}`,
-    }));
-
-    return { content: [{ type: "text", text: JSON.stringify(results, null, 2) }] };
+    return { content: [{ type: "text", text: JSON.stringify((data || []).map((p: any) => ({ ...p, profile_url: `https://opendraft.lovable.app/builder/${p.user_id}` })), null, 2) }] };
   },
 });
 
-// ── Tool: get_builder_profile ─────────────────────────────────────
+// ── get_builder_profile ───────────────────────────────────────────
 
 mcpServer.tool({
   name: "get_builder_profile",
-  description: "View a builder's full public profile, stats, and their listings.",
-  inputSchema: {
-    type: "object",
-    properties: {
-      username: { type: "string", description: "Builder's username" },
-    },
-    required: ["username"],
-  },
+  description: "View a builder's full profile and listings.",
+  inputSchema: { type: "object", properties: { username: { type: "string" } }, required: ["username"] },
   handler: async (args: any) => {
-    const sb = getSupabaseAnon();
-    const { data: profile, error } = await sb
-      .from("public_profiles")
-      .select("*")
-      .eq("username", args.username)
-      .single();
+    const sb = getAnon();
+    const { data: profile, error } = await sb.from("public_profiles").select("*").eq("username", args.username).single();
     if (error) throw new Error("Builder not found");
-
-    const { data: listings } = await sb
-      .from("listings")
-      .select("id,title,price,pricing_type,category,completeness_badge,sales_count")
-      .eq("seller_id", profile.user_id)
-      .eq("status", "live")
-      .order("sales_count", { ascending: false })
-      .limit(20);
-
-    const result = {
-      ...profile,
-      listings: listings || [],
-      url: `https://opendraft.lovable.app/builder/${profile.user_id}`,
-    };
-
-    return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+    const { data: listings } = await sb.from("listings").select("id,title,price,pricing_type,category,completeness_badge,sales_count")
+      .eq("seller_id", profile.user_id).eq("status", "live").order("sales_count", { ascending: false }).limit(20);
+    return { content: [{ type: "text", text: JSON.stringify({ ...profile, listings: listings || [], url: `https://opendraft.lovable.app/builder/${profile.user_id}` }, null, 2) }] };
   },
 });
 
-// ── Tool: get_reviews ─────────────────────────────────────────────
+// ── get_reviews ───────────────────────────────────────────────────
 
 mcpServer.tool({
   name: "get_reviews",
-  description: "Get reviews and ratings for a specific listing.",
-  inputSchema: {
-    type: "object",
-    properties: {
-      listing_id: { type: "string", description: "UUID of the listing" },
-      limit: { type: "number", description: "Max results (default 20)" },
-    },
-    required: ["listing_id"],
-  },
+  description: "Get reviews and ratings for a listing.",
+  inputSchema: { type: "object", properties: { listing_id: { type: "string" }, limit: { type: "number" } }, required: ["listing_id"] },
   handler: async (args: any) => {
-    const sb = getSupabaseAnon();
-    const { data, error } = await sb
-      .from("reviews")
-      .select("rating,review_text,created_at,buyer_id")
-      .eq("listing_id", args.listing_id)
-      .order("created_at", { ascending: false })
-      .limit(Math.min(args.limit || 20, 50));
+    const sb = getAnon();
+    const { data, error } = await sb.from("reviews").select("rating,review_text,created_at,buyer_id")
+      .eq("listing_id", args.listing_id).order("created_at", { ascending: false }).limit(Math.min(args.limit || 20, 50));
     if (error) throw new Error(error.message);
-
-    // Get average rating
     const ratings = (data || []).map((r: any) => r.rating);
     const avg = ratings.length ? (ratings.reduce((a: number, b: number) => a + b, 0) / ratings.length).toFixed(1) : null;
-
-    return {
-      content: [{
-        type: "text",
-        text: JSON.stringify({ average_rating: avg, total_reviews: ratings.length, reviews: data }, null, 2),
-      }],
-    };
+    return { content: [{ type: "text", text: JSON.stringify({ average_rating: avg, total_reviews: ratings.length, reviews: data }, null, 2) }] };
   },
 });
 
-// ── Tool: create_account ──────────────────────────────────────────
+// ── create_account ────────────────────────────────────────────────
 
 mcpServer.tool({
   name: "create_account",
-  description:
-    "Register a new user account on OpenDraft. Returns user ID. Use sign_in to get an auth token for write operations.",
+  description: "Register a new user account. Use sign_in to get a token, or generate_api_key for persistent agent auth.",
   inputSchema: {
     type: "object",
-    properties: {
-      email: { type: "string", description: "Email address" },
-      password: { type: "string", description: "Password (min 8 chars)" },
-      username: { type: "string", description: "Display name" },
-    },
+    properties: { email: { type: "string" }, password: { type: "string" }, username: { type: "string" } },
     required: ["email", "password", "username"],
   },
   handler: async (args: any) => {
     if (!args.email || !args.password || !args.username) throw new Error("email, password, and username required");
     if (args.password.length < 8) throw new Error("Password must be at least 8 characters");
     if (args.username.length > 50) throw new Error("Username must be under 50 characters");
-
-    const sb = getSupabaseAdmin();
+    const sb = getAdmin();
     const { data, error } = await sb.auth.admin.createUser({
-      email: args.email,
-      password: args.password,
-      email_confirm: true,
+      email: args.email, password: args.password, email_confirm: true,
       user_metadata: { name: args.username },
     });
     if (error) throw new Error(error.message);
-
-    return {
-      content: [{
-        type: "text",
-        text: JSON.stringify({
-          user_id: data.user.id,
-          email: data.user.email,
-          message: "Account created. Use sign_in tool to get an auth token.",
-        }, null, 2),
-      }],
-    };
+    return { content: [{ type: "text", text: JSON.stringify({
+      user_id: data.user.id, email: data.user.email,
+      message: "Account created. Use sign_in to get a session token, or generate_api_key for persistent agent auth.",
+    }, null, 2) }] };
   },
 });
 
-// ── Tool: sign_in ─────────────────────────────────────────────────
+// ── sign_in ───────────────────────────────────────────────────────
 
 mcpServer.tool({
   name: "sign_in",
-  description:
-    "Sign in to an existing OpenDraft account. Returns an access token for authenticated operations like create_listing and initiate_purchase.",
+  description: "Sign in and get an access token. For persistent auth, use generate_api_key after signing in.",
   inputSchema: {
     type: "object",
-    properties: {
-      email: { type: "string", description: "Email address" },
-      password: { type: "string", description: "Password" },
-    },
+    properties: { email: { type: "string" }, password: { type: "string" } },
     required: ["email", "password"],
   },
   handler: async (args: any) => {
     if (!args.email || !args.password) throw new Error("email and password required");
-
-    const sb = getSupabaseAnon();
-    const { data, error } = await sb.auth.signInWithPassword({
-      email: args.email,
-      password: args.password,
-    });
+    const sb = getAnon();
+    const { data, error } = await sb.auth.signInWithPassword({ email: args.email, password: args.password });
     if (error) throw new Error(error.message);
-
-    return {
-      content: [{
-        type: "text",
-        text: JSON.stringify({
-          access_token: data.session.access_token,
-          refresh_token: data.session.refresh_token,
-          expires_in: data.session.expires_in,
-          user_id: data.user.id,
-          message: "Use this access_token as Bearer token in Authorization header for authenticated tools.",
-        }, null, 2),
-      }],
-    };
+    return { content: [{ type: "text", text: JSON.stringify({
+      access_token: data.session.access_token, refresh_token: data.session.refresh_token,
+      expires_in: data.session.expires_in, user_id: data.user.id,
+      message: "Use this token as Bearer auth. For persistent agent auth, call generate_api_key.",
+    }, null, 2) }] };
   },
 });
 
-// ── Tool: create_listing ──────────────────────────────────────────
+// ── generate_api_key (NEW) ────────────────────────────────────────
+
+mcpServer.tool({
+  name: "generate_api_key",
+  description: "Generate a persistent API key for agent authentication. API keys don't expire (until revoked) and start with 'od_'. Requires sign_in first.",
+  inputSchema: {
+    type: "object",
+    properties: {
+      name: { type: "string", description: "Label for this key (e.g., 'my-agent')" },
+      scopes: { type: "array", items: { type: "string", enum: ["read", "write", "purchase"] }, description: "Permissions: read (search/browse), write (create listings), purchase (buy)" },
+    },
+    required: ["name"],
+  },
+  handler: async () => {
+    throw new Error("Authentication required. Sign in first with sign_in tool, then include the Bearer token.");
+  },
+});
+
+// ── register_webhook (NEW) ────────────────────────────────────────
+
+mcpServer.tool({
+  name: "register_webhook",
+  description: "Subscribe to real-time events via webhook. Get notified when new listings match your criteria. Requires auth.",
+  inputSchema: {
+    type: "object",
+    properties: {
+      url: { type: "string", description: "Webhook URL to receive POST notifications" },
+      events: { type: "array", items: { type: "string", enum: ["new_listing", "price_drop", "new_bounty"] }, description: "Events to subscribe to" },
+      filters: {
+        type: "object",
+        description: "Optional filters",
+        properties: {
+          categories: { type: "array", items: { type: "string" } },
+          tech_stack: { type: "array", items: { type: "string" } },
+          max_price: { type: "number" },
+        },
+      },
+    },
+    required: ["url", "events"],
+  },
+  handler: async () => {
+    throw new Error("Authentication required. Sign in or use an API key.");
+  },
+});
+
+// ── get_demand_signals (NEW) ──────────────────────────────────────
+
+mcpServer.tool({
+  name: "get_demand_signals",
+  description: "See what other agents and users are searching for but can't find. Great for discovering unmet market needs and deciding what to build.",
+  inputSchema: { type: "object", properties: { limit: { type: "number", description: "Max results (default 20)" } } },
+  handler: async (args: any) => {
+    const sb = getAdmin();
+    const { data, error } = await sb.from("agent_demand_signals")
+      .select("query,category,tech_stack,max_price,created_at")
+      .order("created_at", { ascending: false })
+      .limit(Math.min(args.limit || 20, 50));
+    if (error) throw new Error(error.message);
+
+    // Aggregate top queries
+    const queryMap = new Map<string, number>();
+    (data || []).forEach((d: any) => {
+      const q = d.query.toLowerCase().trim();
+      if (q) queryMap.set(q, (queryMap.get(q) || 0) + 1);
+    });
+    const topQueries = [...queryMap.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10);
+
+    return { content: [{ type: "text", text: JSON.stringify({
+      recent_signals: data || [],
+      top_unmet_queries: topQueries.map(([q, count]) => ({ query: q, search_count: count })),
+      message: "These are searches that returned zero results. Building apps that match these signals has high demand.",
+    }, null, 2) }] };
+  },
+});
+
+// ── Authenticated tool placeholders ───────────────────────────────
 
 mcpServer.tool({
   name: "create_listing",
-  description: "List a new app for sale on the marketplace. Requires authentication (pass Bearer token in Authorization header).",
+  description: "List a new app for sale. Requires auth (Bearer token or API key with 'write' scope).",
   inputSchema: {
     type: "object",
     properties: {
-      title: { type: "string", description: "App name (max 100 chars)" },
-      description: { type: "string", description: "App description (max 5000 chars)" },
-      price: { type: "number", description: "Price in cents (0 = free)" },
+      title: { type: "string" }, description: { type: "string" }, price: { type: "number" },
       pricing_type: { type: "string", enum: ["one_time", "monthly"] },
-      category: {
-        type: "string",
-        enum: ["saas_tool", "ai_app", "landing_page", "utility", "game", "other"],
-      },
-      tech_stack: { type: "array", items: { type: "string" }, description: "Technologies used" },
-      demo_url: { type: "string", description: "Live demo URL (optional)" },
-      github_url: { type: "string", description: "GitHub repo URL (optional)" },
-      screenshots: { type: "array", items: { type: "string" }, description: "Screenshot URLs" },
-      completeness_badge: { type: "string", enum: ["prototype", "mvp", "production_ready"] },
+      category: { type: "string", enum: ["saas_tool","ai_app","landing_page","utility","game","other"] },
+      tech_stack: { type: "array", items: { type: "string" } },
+      demo_url: { type: "string" }, github_url: { type: "string" },
+      screenshots: { type: "array", items: { type: "string" } },
+      completeness_badge: { type: "string", enum: ["prototype","mvp","production_ready"] },
     },
     required: ["title", "description", "price", "category"],
   },
-  handler: async (args: any, _extra: any) => {
-    // Auth is handled via the request header — we need to get it from context
-    // For mcp-lite, auth is passed through the transport layer
-    throw new Error("Authentication required. Include Authorization: Bearer <token> header. Get a token via sign_in tool.");
-  },
+  handler: async () => { throw new Error("Auth required. Use sign_in or API key."); },
 });
-
-// ── Tool: submit_to_bounty ────────────────────────────────────────
 
 mcpServer.tool({
   name: "submit_to_bounty",
-  description: "Submit an existing listing as a solution to an open bounty. Requires authentication.",
+  description: "Submit a listing as a bounty solution. Requires auth.",
   inputSchema: {
     type: "object",
-    properties: {
-      bounty_id: { type: "string", description: "UUID of the bounty" },
-      listing_id: { type: "string", description: "UUID of your listing to submit" },
-      message: { type: "string", description: "Cover message explaining why your listing fits (optional)" },
-    },
+    properties: { bounty_id: { type: "string" }, listing_id: { type: "string" }, message: { type: "string" } },
     required: ["bounty_id", "listing_id"],
   },
-  handler: async (args: any) => {
-    throw new Error("Authentication required. Include Authorization: Bearer <token> header. Get a token via sign_in tool.");
-  },
+  handler: async () => { throw new Error("Auth required. Use sign_in or API key."); },
 });
-
-// ── Tool: initiate_purchase ───────────────────────────────────────
 
 mcpServer.tool({
   name: "initiate_purchase",
-  description:
-    "Start a Stripe checkout session for a listing. Returns a URL for the buyer to complete payment. Requires authentication.",
-  inputSchema: {
-    type: "object",
-    properties: {
-      listing_id: { type: "string", description: "UUID of the listing to purchase" },
-    },
-    required: ["listing_id"],
-  },
-  handler: async (args: any) => {
-    throw new Error("Authentication required. Include Authorization: Bearer <token> header. Get a token via sign_in tool.");
-  },
+  description: "Start Stripe checkout for a listing. Requires auth.",
+  inputSchema: { type: "object", properties: { listing_id: { type: "string" } }, required: ["listing_id"] },
+  handler: async () => { throw new Error("Auth required. Use sign_in or API key."); },
 });
 
-// ── Hono app with Streamable HTTP transport ───────────────────────
+// ── Hono app ──────────────────────────────────────────────────────
 
 const app = new Hono();
 const transport = new StreamableHttpTransport();
 
-// CORS preflight
-app.options("/*", (c) => {
-  return new Response(null, {
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    },
-  });
-});
+const CORS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+};
 
-// GET — discovery endpoint
+app.options("/*", (c) => new Response(null, { headers: CORS }));
+
+// GET — discovery
 app.get("/*", (c) => {
-  const toolSummary = [
-    "search_listings", "get_listing", "list_categories", "get_trending",
-    "list_bounties", "get_bounty", "search_builders", "get_builder_profile",
-    "get_reviews", "create_account", "sign_in", "create_listing",
-    "submit_to_bounty", "initiate_purchase",
-  ];
-
   return c.json({
     name: "opendraft-marketplace",
-    version: "2.0.0",
+    version: "2.1.0",
     protocol: "MCP (Model Context Protocol)",
     transport: "Streamable HTTP",
-    description: "OpenDraft MCP Server — Browse, list, and purchase AI-built apps programmatically. 14 tools available.",
-    tools: toolSummary,
+    description: "OpenDraft — the marketplace for AI agents. Browse, list, and purchase AI-built apps. 17 tools. Supports persistent API keys for agent auth.",
+    tools: [
+      "search_listings", "get_listing", "list_categories", "get_trending",
+      "list_bounties", "get_bounty", "search_builders", "get_builder_profile",
+      "get_reviews", "get_demand_signals", "create_account", "sign_in",
+      "generate_api_key", "register_webhook", "create_listing",
+      "submit_to_bounty", "initiate_purchase",
+    ],
+    auth_methods: ["Bearer token (from sign_in)", "API key (od_xxx from generate_api_key)"],
     documentation: "https://opendraft.lovable.app/developers",
     llms_txt: "https://opendraft.lovable.app/llms.txt",
     mcp_discovery: "https://opendraft.lovable.app/.well-known/mcp.json",
-    openapi: "https://opendraft.lovable.app/.well-known/openapi.json",
   });
 });
 
-// POST — MCP protocol handler via mcp-lite StreamableHttpTransport
+// POST — handle authenticated tools manually, delegate rest to mcp-lite
 app.post("/*", async (c) => {
-  // For authenticated tools, we handle auth at the tool level
-  // The auth header is available in the request context
   const authHeader = c.req.header("Authorization");
-
-  // If it's an authenticated tool call, we need to inject auth
-  // We do this by intercepting the request before mcp-lite handles it
   const body = await c.req.json();
 
-  // Check if this is a tools/call for an auth-requiring tool
   if (body.method === "tools/call") {
     const toolName = body.params?.name;
-    const authTools = ["create_listing", "initiate_purchase", "submit_to_bounty"];
+    const args = body.params?.arguments || {};
+    const authTools = ["create_listing", "initiate_purchase", "submit_to_bounty", "generate_api_key", "register_webhook"];
 
-    if (authTools.includes(toolName) && authHeader) {
-      const sb = getSupabaseAnon(authHeader);
-      const { data: userData, error: authError } = await sb.auth.getUser();
+    if (authTools.includes(toolName)) {
+      const auth = await resolveAuth(authHeader);
 
-      if (!authError && userData?.user) {
-        const args = body.params?.arguments || {};
+      if (!auth.userId) {
+        return c.json({
+          jsonrpc: "2.0", id: body.id,
+          result: { content: [{ type: "text", text: "Error: Authentication required. Use sign_in to get a Bearer token, or use an API key (od_xxx)." }], isError: true },
+        }, 200, { "Access-Control-Allow-Origin": "*" });
+      }
+
+      try {
         let result: any;
 
-        try {
-          if (toolName === "create_listing") {
-            if (!args.title || args.title.length > 100) throw new Error("Title required (max 100 chars)");
-            if (!args.description || args.description.length > 5000) throw new Error("Description required (max 5000 chars)");
+        if (toolName === "generate_api_key") {
+          const rawKey = generateApiKey();
+          const keyHash = await hashKey(rawKey);
+          const sb = getAdmin();
+          const { data, error } = await sb.from("agent_api_keys").insert({
+            user_id: auth.userId,
+            key_hash: keyHash,
+            key_prefix: rawKey.slice(0, 10),
+            name: args.name || "Default",
+            scopes: args.scopes || ["read"],
+          }).select("id,key_prefix,name,scopes,created_at").single();
+          if (error) throw new Error(error.message);
 
-            const { data, error } = await sb.from("listings").insert({
-              seller_id: userData.user.id,
-              title: args.title.trim(),
-              description: args.description.trim(),
-              price: args.price || 0,
-              pricing_type: args.pricing_type || "one_time",
-              category: args.category || "other",
-              completeness_badge: args.completeness_badge || "prototype",
-              tech_stack: args.tech_stack || [],
-              screenshots: args.screenshots || [],
-              demo_url: args.demo_url || null,
-              github_url: args.github_url || null,
-            }).select("id").single();
-            if (error) throw new Error(error.message);
+          result = {
+            api_key: rawKey,
+            key_id: data.id,
+            name: data.name,
+            scopes: data.scopes,
+            message: "⚠️ Save this key now — it won't be shown again. Use as: Authorization: Bearer od_xxx",
+          };
+        } else if (toolName === "register_webhook") {
+          if (!args.url) throw new Error("url is required");
+          const secret = generateApiKey().slice(0, 32);
+          const sb = getAnon(`Bearer ${authHeader?.replace("Bearer ", "")}`);
+          // Use admin to insert since we validated auth
+          const admin = getAdmin();
+          const { data, error } = await admin.from("agent_webhooks").insert({
+            user_id: auth.userId,
+            url: args.url,
+            events: args.events || ["new_listing"],
+            filters: args.filters || {},
+            secret,
+          }).select("id,url,events,filters,created_at").single();
+          if (error) throw new Error(error.message);
 
-            result = {
-              listing_id: data.id,
-              status: "pending",
-              message: "Listing created. It will be visible after admin approval.",
-              url: `https://opendraft.lovable.app/listing/${data.id}`,
-            };
-          } else if (toolName === "initiate_purchase") {
-            const { data, error } = await sb.functions.invoke("create-checkout-session", {
-              body: { listingId: args.listing_id },
-            });
-            if (error) throw new Error(error.message);
-            if (data?.error) throw new Error(data.error);
-            result = { checkout_url: data.url, message: "Redirect user to this URL to complete payment." };
-          } else if (toolName === "submit_to_bounty") {
-            const { data, error } = await sb.from("bounty_submissions").insert({
-              bounty_id: args.bounty_id,
-              listing_id: args.listing_id,
-              seller_id: userData.user.id,
-              message: args.message || null,
-            }).select("id").single();
-            if (error) throw new Error(error.message);
-            result = { submission_id: data.id, message: "Submission sent to bounty poster." };
+          result = {
+            webhook_id: data.id,
+            url: data.url,
+            events: data.events,
+            filters: data.filters,
+            signing_secret: secret,
+            message: "Webhook registered. Events will be POSTed with an X-Webhook-Signature header.",
+          };
+        } else if (toolName === "create_listing") {
+          if (!args.title || args.title.length > 100) throw new Error("Title required (max 100 chars)");
+          if (!args.description || args.description.length > 5000) throw new Error("Description required (max 5000 chars)");
+
+          const sb = auth.source === "apikey" ? getAdmin() : getAnon(authHeader);
+          const insertData: any = {
+            seller_id: auth.userId,
+            title: args.title.trim(), description: args.description.trim(),
+            price: args.price || 0, pricing_type: args.pricing_type || "one_time",
+            category: args.category || "other", completeness_badge: args.completeness_badge || "prototype",
+            tech_stack: args.tech_stack || [], screenshots: args.screenshots || [],
+            demo_url: args.demo_url || null, github_url: args.github_url || null,
+          };
+
+          // For API key auth, use admin client to bypass RLS
+          let data, error;
+          if (auth.source === "apikey") {
+            ({ data, error } = await getAdmin().from("listings").insert(insertData).select("id").single());
+          } else {
+            ({ data, error } = await getAnon(authHeader).from("listings").insert(insertData).select("id").single());
           }
+          if (error) throw new Error(error.message);
 
-          return c.json({
-            jsonrpc: "2.0",
-            id: body.id,
-            result: { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] },
-          }, 200, {
-            "Access-Control-Allow-Origin": "*",
-          });
-        } catch (err: any) {
-          return c.json({
-            jsonrpc: "2.0",
-            id: body.id,
-            result: { content: [{ type: "text", text: `Error: ${err.message}` }], isError: true },
-          }, 200, { "Access-Control-Allow-Origin": "*" });
+          result = { listing_id: data.id, status: "pending", url: `https://opendraft.lovable.app/listing/${data.id}`, message: "Listing created. Visible after admin approval." };
+        } else if (toolName === "submit_to_bounty") {
+          const admin = getAdmin();
+          const { data, error } = await admin.from("bounty_submissions").insert({
+            bounty_id: args.bounty_id, listing_id: args.listing_id,
+            seller_id: auth.userId, message: args.message || null,
+          }).select("id").single();
+          if (error) throw new Error(error.message);
+          result = { submission_id: data.id, message: "Submission sent to bounty poster." };
+        } else if (toolName === "initiate_purchase") {
+          const sb = getAnon(authHeader);
+          const { data, error } = await sb.functions.invoke("create-checkout-session", { body: { listingId: args.listing_id } });
+          if (error) throw new Error(error.message);
+          if (data?.error) throw new Error(data.error);
+          result = { checkout_url: data.url, message: "Redirect user to this URL to complete payment." };
         }
+
+        return c.json({
+          jsonrpc: "2.0", id: body.id,
+          result: { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] },
+        }, 200, { "Access-Control-Allow-Origin": "*" });
+      } catch (err: any) {
+        return c.json({
+          jsonrpc: "2.0", id: body.id,
+          result: { content: [{ type: "text", text: `Error: ${err.message}` }], isError: true },
+        }, 200, { "Access-Control-Allow-Origin": "*" });
       }
     }
   }
 
-  // For non-auth tools, let mcp-lite handle it natively
+  // Delegate to mcp-lite
   const response = await transport.handleRequest(
-    new Request(c.req.url, {
-      method: "POST",
-      headers: c.req.raw.headers,
-      body: JSON.stringify(body),
-    }),
+    new Request(c.req.url, { method: "POST", headers: c.req.raw.headers, body: JSON.stringify(body) }),
     mcpServer
   );
-
-  // Add CORS headers to mcp-lite's response
   const newHeaders = new Headers(response.headers);
   newHeaders.set("Access-Control-Allow-Origin", "*");
-
-  return new Response(response.body, {
-    status: response.status,
-    headers: newHeaders,
-  });
+  return new Response(response.body, { status: response.status, headers: newHeaders });
 });
 
 Deno.serve(app.fetch);

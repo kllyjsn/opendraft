@@ -17,6 +17,7 @@ import { HowItWorks } from "@/components/HowItWorks";
 import { TrendingBuilders } from "@/components/TrendingBuilders";
 import { CategoryShowcase } from "@/components/CategoryShowcase";
 import { CtaBanner } from "@/components/CtaBanner";
+import { AgentHero } from "@/components/AgentHero";
 
 const CATEGORIES = ["All", "SaaS Tool", "AI App", "Landing Page", "Utility", "Game", "Other"];
 const COMPLETENESS = ["All", "Prototype", "MVP", "Production Ready"];
@@ -263,6 +264,9 @@ export default function Index() {
       >
         <CategoryShowcase />
       </motion.div>
+
+      {/* ── AGENT HERO ── */}
+      <AgentHero />
 
       {/* ── BROWSE ── */}
       <section id="browse" className="container mx-auto px-4 pb-24">

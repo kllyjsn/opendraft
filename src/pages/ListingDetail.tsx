@@ -512,17 +512,13 @@ export default function ListingDetail() {
                         <span className="truncate">{isMonthly ? `Subscribe` : `Buy Now`}</span>
                       </Button>
                     </Link>
-                    {(!user || listing.seller_id !== user.id) ? (
-                      <div className="col-span-1">
-                        <MakeOfferDialog
-                          listingId={listing.id}
-                          listingTitle={listing.title}
-                          askingPrice={listing.price}
-                        />
-                      </div>
-                    ) : (
-                      <div className="col-span-1" />
-                    )}
+                    <div className="col-span-1">
+                      <MakeOfferDialog
+                        listingId={listing.id}
+                        listingTitle={listing.title}
+                        askingPrice={listing.price}
+                      />
+                    </div>
                   </div>
                   <p className="text-center text-xs text-muted-foreground font-medium">{priceLabel}</p>
                   {/* Active offer status */}

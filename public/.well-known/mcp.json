@@ -1,0 +1,30 @@
+{
+  "name": "opendraft-marketplace",
+  "version": "2.0.0",
+  "description": "OpenDraft MCP Server — Browse, list, and purchase AI-built apps. 14 tools for marketplace interaction.",
+  "transport": "streamable-http",
+  "url": "https://xwumrdcagsuwqeelyxih.supabase.co/functions/v1/mcp-server",
+  "documentation": "https://opendraft.lovable.app/developers",
+  "tools": [
+    "search_listings",
+    "get_listing",
+    "list_categories",
+    "get_trending",
+    "list_bounties",
+    "get_bounty",
+    "search_builders",
+    "get_builder_profile",
+    "get_reviews",
+    "create_account",
+    "sign_in",
+    "create_listing",
+    "submit_to_bounty",
+    "initiate_purchase"
+  ],
+  "auth": {
+    "public_tools": ["search_listings", "get_listing", "list_categories", "get_trending", "list_bounties", "get_bounty", "search_builders", "get_builder_profile", "get_reviews", "create_account", "sign_in"],
+    "authenticated_tools": ["create_listing", "submit_to_bounty", "initiate_purchase"],
+    "method": "bearer_token",
+    "token_via": "sign_in tool"
+  }
+}

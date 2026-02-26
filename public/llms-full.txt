@@ -13,22 +13,30 @@ OpenDraft connects app builders with buyers. Sellers list their projects (SaaS t
 - Sell an App: https://opendraft.lovable.app/sell
 - Bounties: https://opendraft.lovable.app/bounties
 - Builders Directory: https://opendraft.lovable.app/builders
+- Developer Docs: https://opendraft.lovable.app/developers
 - FAQ: https://opendraft.lovable.app/faq
 - Terms: https://opendraft.lovable.app/terms
 - Privacy: https://opendraft.lovable.app/privacy
+
+## Agent Integration Points
+
 - MCP Server: https://xwumrdcagsuwqeelyxih.supabase.co/functions/v1/mcp-server
+- REST API: https://xwumrdcagsuwqeelyxih.supabase.co/functions/v1/api
+- MCP Discovery: https://opendraft.lovable.app/.well-known/mcp.json
+- OpenAPI Spec: https://opendraft.lovable.app/.well-known/openapi.json
+- AI Plugin: https://opendraft.lovable.app/.well-known/ai-plugin.json
 
 ## Data Model
 
 ### Listings
-Each listing represents an app for sale with the following attributes:
+Each listing represents an app for sale:
 - **title**: Name of the app
 - **description**: Detailed description
 - **price**: Price in cents (0 = free)
 - **pricing_type**: "one_time" or "monthly"
 - **category**: saas_tool | ai_app | landing_page | utility | game | other
 - **completeness_badge**: prototype | mvp | production_ready
-- **tech_stack**: Array of technologies used (e.g., ["React", "Tailwind CSS", "OpenAI"])
+- **tech_stack**: Array of technologies (e.g., ["React", "Tailwind CSS", "OpenAI"])
 - **screenshots**: Array of image URLs
 - **demo_url**: Live demo link (optional)
 - **github_url**: Source repository (optional)
@@ -45,7 +53,7 @@ Each listing represents an app for sale with the following attributes:
 - **followers_count** / **following_count**: Social metrics
 
 ### Bounties
-Bounties are project requests from buyers seeking custom builds:
+Project requests from buyers seeking custom builds:
 - **title**: What they want built
 - **description**: Detailed requirements
 - **budget**: Amount in cents
@@ -54,90 +62,104 @@ Bounties are project requests from buyers seeking custom builds:
 - **status**: open | in_progress | completed | cancelled
 - **submissions_count**: Number of builder submissions
 
-## Marketplace Features
+## MCP Server — 14 Tools
 
-### Search & Discovery
-- Full-text search across listing titles and descriptions
-- Filter by category, tech stack, pricing type, and build tool
-- Sort by newest, most popular, price
-- Featured listings on homepage
+### Public Tools (no auth required)
 
-### Purchasing Flow
-1. Browse/search → Listing detail page
-2. Click "Buy Now" or "Make an Offer"
-3. Apply discount codes (optional)
-4. Stripe checkout (one-time or subscription)
-5. Instant delivery: download ZIP or access GitHub repo
+1. **search_listings** — Search marketplace listings
+   - Input: query, category, max_price, tech_stack, completeness, limit
+   - Returns: Array of listing summaries with URLs
 
-### Selling Flow
-1. Sign in with Google
-2. Connect Stripe account (for payouts)
-3. Create listing with title, description, screenshots
-4. Upload source code (ZIP) or link GitHub repo
-5. Set pricing (one-time or monthly subscription)
-6. Listing goes live after admin approval
+2. **get_listing** — Get full listing details
+   - Input: listing_id (UUID)
+   - Returns: Complete listing with seller profile and reviews
 
-### Offers & Negotiation
-Buyers can make offers below asking price. Sellers can accept, counter, or decline. Accepted offers generate a custom checkout link.
+3. **list_categories** — Get all categories with counts
+   - Returns: Category names and live listing counts
 
-### Reviews & Ratings
-Buyers can leave ratings (1-5 stars) and reviews after purchase.
+4. **get_trending** — Get trending listings and market intelligence
+   - Input: limit (optional)
+   - Returns: Top by sales, top by views, hot bounties, category distribution
 
-### Remixing
-Buyers can "remix" (fork) purchased listings to create derivative works, creating a remix chain that credits the original.
-
-## For AI Agents — MCP Server
-
-OpenDraft provides a Model Context Protocol (MCP) server for programmatic agent access.
-
-### Available Tools
-
-1. **search_listings** — Search marketplace listings with filters
-   - Input: query (string), category (string), max_price (number), tech_stack (string[])
-   - Returns: Array of listing summaries
-
-2. **get_listing** — Get full details for a specific listing
-   - Input: listing_id (string)
-   - Returns: Complete listing object with seller info
-
-3. **list_categories** — Get all available categories
-   - Returns: Category names and counts
-
-4. **list_bounties** — Browse open bounties
-   - Input: category (string, optional)
+5. **list_bounties** — Browse open bounties
+   - Input: category, limit
    - Returns: Array of bounty summaries
 
-5. **get_bounty** — Get full bounty details
-   - Input: bounty_id (string)
-   - Returns: Complete bounty with submission count
+6. **get_bounty** — Get full bounty details
+   - Input: bounty_id (UUID)
+   - Returns: Complete bounty with requirements
 
-6. **create_account** — Register a new user account
-   - Input: email (string), password (string), username (string)
-   - Returns: User ID and session token
+7. **search_builders** — Search builder profiles
+   - Input: query, limit
+   - Returns: Array of builder profiles with URLs
 
-7. **create_listing** — List a new app for sale (requires auth)
-   - Input: title, description, price, pricing_type, category, tech_stack, screenshots, demo_url
-   - Returns: Created listing ID
-
-8. **initiate_purchase** — Start a checkout session (requires auth)
-   - Input: listing_id (string)
-   - Returns: Stripe checkout URL
-
-9. **get_builder_profile** — View a builder's public profile
-   - Input: username (string)
+8. **get_builder_profile** — View a builder's full profile
+   - Input: username
    - Returns: Profile with listings
 
-### Authentication
-Most read operations are public. Write operations (create_account, create_listing, initiate_purchase) require authentication. Use the create_account tool to obtain a session, then pass the token in subsequent requests.
+9. **get_reviews** — Get reviews for a listing
+   - Input: listing_id (UUID), limit
+   - Returns: Average rating, total count, review list
 
-### Rate Limits
-- Public endpoints: 60 requests/minute
-- Authenticated endpoints: 120 requests/minute
+10. **create_account** — Register a new user
+    - Input: email, password (min 8 chars), username
+    - Returns: user_id, email
 
-## Recommended Use Cases for AI Agents
+11. **sign_in** — Authenticate and get access token
+    - Input: email, password
+    - Returns: access_token, refresh_token, expires_in
 
-1. **App Discovery**: Help users find the right app by searching listings with natural language
+### Authenticated Tools (Bearer token required)
+
+12. **create_listing** — List a new app for sale
+    - Input: title, description, price, category, pricing_type, tech_stack, demo_url, github_url, screenshots, completeness_badge
+    - Returns: listing_id, status, URL
+
+13. **submit_to_bounty** — Submit a listing as bounty solution
+    - Input: bounty_id, listing_id, message
+    - Returns: submission_id
+
+14. **initiate_purchase** — Start Stripe checkout
+    - Input: listing_id
+    - Returns: checkout_url
+
+### Authentication Flow
+1. Call `create_account` to register (or use existing credentials)
+2. Call `sign_in` with email/password to get an access_token
+3. Include `Authorization: Bearer <access_token>` header for authenticated tools
+
+## REST API Endpoints
+
+All endpoints are GET requests. Base URL: https://xwumrdcagsuwqeelyxih.supabase.co/functions/v1/api
+
+- `GET /listings` — Search listings (params: q, category, completeness, max_price, sort, limit)
+- `GET /listings/:id` — Get listing details
+- `GET /trending` — Trending listings and stats
+- `GET /bounties` — Browse open bounties (params: category, limit)
+- `GET /builders` — Search builders (params: q, limit)
+- `GET /builders/:username` — Get builder profile
+- `GET /categories` — Category breakdown
+- `GET /openapi.json` — OpenAPI 3.1 specification
+
+## Recommended Agent Use Cases
+
+1. **App Discovery**: Help users find the right app by searching with natural language
 2. **Market Research**: Analyze trending categories, popular tech stacks, and pricing patterns
 3. **Automated Listing**: Builders can programmatically list apps they've created
 4. **Bounty Matching**: Match builder capabilities with open bounties
-5. **Portfolio Building**: Create builder profiles and manage listings programmatically
+5. **Portfolio Building**: Create builder profiles and manage listings
+6. **Price Comparison**: Compare similar apps across categories
+7. **Tech Stack Analysis**: Find apps built with specific technologies
+8. **Competitive Intelligence**: Track new listings and trending categories
+
+## Claude Desktop Configuration
+
+```json
+{
+  "mcpServers": {
+    "opendraft": {
+      "url": "https://xwumrdcagsuwqeelyxih.supabase.co/functions/v1/mcp-server"
+    }
+  }
+}
+```

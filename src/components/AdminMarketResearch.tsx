@@ -2,8 +2,9 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, TrendingUp, Search, Target, Lightbulb, DollarSign, Zap, BarChart3 } from "lucide-react";
+import { Loader2, TrendingUp, Search, Target, Lightbulb, DollarSign, Zap, BarChart3, Globe, Flame, Clock, Eye, Sparkles } from "lucide-react";
 
 interface UnmetDemand {
   need: string;
@@ -24,6 +25,21 @@ interface RecommendedBuild {
   estimated_demand: string;
   suggested_price_cents: number;
   tech_stack: string[];
+  trend_source?: string;
+  buyer_persona?: string;
+}
+
+interface TrendingNow {
+  trend: string;
+  source: string;
+  template_opportunity: string;
+  urgency: string;
+}
+
+interface EmergingNiche {
+  niche: string;
+  signal: string;
+  timeframe: string;
 }
 
 interface RawSignals {
@@ -32,14 +48,17 @@ interface RawSignals {
   total_listings: number;
   category_distribution: Record<string, number>;
   high_demand_low_conversion: { title: string; views: number; sales: number }[];
+  external_sources_scanned?: string[];
 }
 
 interface Analysis {
   summary: string;
+  trending_now?: TrendingNow[];
   unmet_demands: UnmetDemand[];
   market_gaps: MarketGap[];
   recommended_builds: RecommendedBuild[];
   pricing_insights: string[];
+  emerging_niches?: EmergingNiche[];
 }
 
 interface ResearchResult {
@@ -48,10 +67,16 @@ interface ResearchResult {
 }
 
 const DEMAND_COLORS: Record<string, string> = {
-  very_high: "bg-red-500/15 text-red-600 border-red-500/30",
-  high: "bg-orange-500/15 text-orange-600 border-orange-500/30",
-  medium: "bg-accent/10 text-accent border-accent/20",
+  very_high: "bg-destructive/15 text-destructive border-destructive/30",
+  high: "bg-accent/15 text-accent border-accent/30",
+  medium: "bg-secondary/10 text-secondary border-secondary/20",
   low: "bg-muted text-muted-foreground border-border",
+};
+
+const URGENCY_STYLES: Record<string, string> = {
+  build_now: "bg-destructive/15 text-destructive border-destructive/30",
+  build_soon: "bg-accent/15 text-accent border-accent/30",
+  watch: "bg-muted text-muted-foreground border-border",
 };
 
 export function AdminMarketResearch() {
@@ -68,7 +93,7 @@ export function AdminMarketResearch() {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       setResult(data);
-      toast({ title: "Research complete ✓" });
+      toast({ title: "Research complete ✓", description: `Scanned ${data.raw_signals?.external_sources_scanned?.length || 0} external sources` });
     } catch (e: any) {
       toast({ title: "Research failed", description: e.message, variant: "destructive" });
     } finally {
@@ -97,11 +122,14 @@ export function AdminMarketResearch() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <TrendingUp className="h-5 w-5 text-primary" />
-          <h2 className="text-lg font-bold">Deep Market Research</h2>
+          <div>
+            <h2 className="text-lg font-bold">Trend-Powered Market Research</h2>
+            <p className="text-xs text-muted-foreground">Scans Product Hunt, HN, GitHub Trending, Indie Hackers + internal signals</p>
+          </div>
         </div>
         <Button onClick={runResearch} disabled={loading} size="sm">
-          {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Search className="h-4 w-4 mr-2" />}
-          {loading ? "Analyzing…" : "Run Research"}
+          {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Globe className="h-4 w-4 mr-2" />}
+          {loading ? "Scanning internet…" : "Run Deep Research"}
         </Button>
       </div>
 
@@ -109,8 +137,13 @@ export function AdminMarketResearch() {
         <Card className="border-primary/20">
           <CardContent className="p-6 text-center space-y-3">
             <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
-            <p className="text-sm font-semibold">Analyzing search queries, bounties, listings & conversion data…</p>
-            <p className="text-xs text-muted-foreground">AI is cross-referencing demand signals with current supply</p>
+            <p className="text-sm font-semibold">Scanning the internet for trends…</p>
+            <div className="flex flex-wrap justify-center gap-2">
+              {["Product Hunt", "Hacker News", "GitHub Trending", "Indie Hackers", "Google Trends"].map(s => (
+                <span key={s} className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-[10px] animate-pulse">{s}</span>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground">Cross-referencing external trends with internal demand signals</p>
           </CardContent>
         </Card>
       )}
@@ -126,7 +159,7 @@ export function AdminMarketResearch() {
           </Card>
 
           {/* Raw Signals */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
             <div className="rounded-xl border border-border bg-card p-4">
               <p className="text-xs text-muted-foreground mb-1">Search Queries</p>
               <p className="text-2xl font-black">{result.raw_signals.top_searches.length}</p>
@@ -143,7 +176,53 @@ export function AdminMarketResearch() {
               <p className="text-xs text-muted-foreground mb-1">High-View Low-Sale</p>
               <p className="text-2xl font-black">{result.raw_signals.high_demand_low_conversion.length}</p>
             </div>
+            <div className="rounded-xl border border-border bg-card p-4">
+              <p className="text-xs text-muted-foreground mb-1">External Sources</p>
+              <p className="text-2xl font-black">{result.raw_signals.external_sources_scanned?.length || 0}</p>
+            </div>
           </div>
+
+          {/* External Sources Scanned */}
+          {result.raw_signals.external_sources_scanned && result.raw_signals.external_sources_scanned.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              <span className="text-xs font-semibold text-muted-foreground mr-1">Sources:</span>
+              {result.raw_signals.external_sources_scanned.map((s, i) => (
+                <Badge key={i} variant="outline" className="text-[10px] gap-1">
+                  <Globe className="h-2.5 w-2.5" /> {s}
+                </Badge>
+              ))}
+            </div>
+          )}
+
+          {/* Trending NOW */}
+          {result.analysis.trending_now && result.analysis.trending_now.length > 0 && (
+            <Card className="border-accent/30">
+              <CardContent className="p-5 space-y-3">
+                <div className="flex items-center gap-2 mb-1">
+                  <Flame className="h-4 w-4 text-accent" />
+                  <p className="text-sm font-bold">Trending NOW</p>
+                </div>
+                <div className="space-y-3">
+                  {result.analysis.trending_now.map((t, i) => (
+                    <div key={i} className="rounded-lg border border-border p-3 space-y-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold">{t.trend}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">{t.template_opportunity}</p>
+                        </div>
+                        <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold flex-shrink-0 ${URGENCY_STYLES[t.urgency] || URGENCY_STYLES.watch}`}>
+                          {t.urgency.replace("_", " ")}
+                        </span>
+                      </div>
+                      <span className="inline-flex items-center gap-1 rounded-md bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                        <Globe className="h-2.5 w-2.5" /> {t.source}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Top Searches */}
           {result.raw_signals.top_searches.length > 0 && (
@@ -213,21 +292,51 @@ export function AdminMarketResearch() {
             </Card>
           )}
 
+          {/* Emerging Niches */}
+          {result.analysis.emerging_niches && result.analysis.emerging_niches.length > 0 && (
+            <Card className="border-secondary/30">
+              <CardContent className="p-5 space-y-3">
+                <div className="flex items-center gap-2 mb-1">
+                  <Eye className="h-4 w-4 text-secondary" />
+                  <p className="text-sm font-bold">Emerging Niches to Watch</p>
+                </div>
+                <div className="space-y-2">
+                  {result.analysis.emerging_niches.map((n, i) => (
+                    <div key={i} className="rounded-lg border border-border p-3 flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold">{n.niche}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{n.signal}</p>
+                      </div>
+                      <span className="inline-flex items-center gap-1 rounded-full border border-border px-2 py-0.5 text-[10px] text-muted-foreground flex-shrink-0">
+                        <Clock className="h-2.5 w-2.5" /> {n.timeframe}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Recommended Builds */}
           {result.analysis.recommended_builds.length > 0 && (
             <Card>
               <CardContent className="p-5 space-y-3">
                 <div className="flex items-center gap-2 mb-1">
                   <Lightbulb className="h-4 w-4 text-accent" />
-                  <p className="text-sm font-bold">Recommended Builds</p>
+                  <p className="text-sm font-bold">Recommended Builds ({result.analysis.recommended_builds.length})</p>
                 </div>
                 <div className="space-y-3">
                   {result.analysis.recommended_builds.map((r, i) => (
                     <div key={i} className="rounded-xl border border-border p-4 space-y-2">
                       <div className="flex items-start justify-between gap-2">
-                        <div>
+                        <div className="min-w-0">
                           <h4 className="text-sm font-bold">{r.title}</h4>
                           <p className="text-xs text-muted-foreground mt-0.5">{r.description}</p>
+                          {r.buyer_persona && (
+                            <p className="text-xs text-secondary mt-1 flex items-center gap-1">
+                              <Sparkles className="h-3 w-3" /> {r.buyer_persona}
+                            </p>
+                          )}
                         </div>
                         <Button
                           size="sm"
@@ -247,6 +356,11 @@ export function AdminMarketResearch() {
                         <span className="text-[10px] font-bold text-foreground">
                           ${(r.suggested_price_cents / 100).toFixed(0)}
                         </span>
+                        {r.trend_source && (
+                          <span className="inline-flex items-center gap-1 rounded-md bg-primary/5 border border-primary/10 px-1.5 py-0.5 text-[10px] text-primary">
+                            <Globe className="h-2.5 w-2.5" /> {r.trend_source}
+                          </span>
+                        )}
                         {r.tech_stack.slice(0, 4).map(t => (
                           <span key={t} className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">{t}</span>
                         ))}

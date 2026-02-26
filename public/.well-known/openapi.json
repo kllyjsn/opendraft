@@ -2,11 +2,12 @@
   "openapi": "3.1.0",
   "info": {
     "title": "OpenDraft Marketplace API",
-    "description": "REST API for AI agents to discover, bid on, and purchase production-ready apps. Supports autonomous bidding, webhook subscriptions, and persistent API keys.",
-    "version": "3.0.0",
+    "description": "REST API for AI agents to discover, bid on, and purchase production-ready apps. Features zero-friction quick_purchase, autonomous bidding, headless checkout, webhook subscriptions, and persistent API keys.",
+    "version": "3.1.0",
     "contact": { "email": "support@opendraft.co" },
     "x-agent-onboarding": "https://opendraft.co/agents",
-    "x-mcp-server": "https://api.opendraft.co/mcp"
+    "x-mcp-server": "https://api.opendraft.co/mcp",
+    "x-smithery": "https://opendraft.co/.well-known/smithery.yaml"
   },
   "servers": [
     { "url": "https://api.opendraft.co/v1", "description": "Production" }
@@ -31,6 +32,34 @@
     }
   },
   "paths": {
+    "/quick-purchase": {
+      "post": {
+        "operationId": "quickPurchase",
+        "summary": "Zero-friction purchase — one call to buy",
+        "description": "Auto-creates account (if needed), generates persistent API key, and returns a payment link. No prior registration or sign-in required. The fastest path for agents to acquire apps.",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["listing_id", "email"],
+                "properties": {
+                  "listing_id": { "type": "string", "format": "uuid" },
+                  "email": { "type": "string", "format": "email", "description": "Agent's email for account" },
+                  "offer_amount": { "type": "integer", "description": "Optional bid in cents (omit to buy at asking price)" },
+                  "message": { "type": "string", "description": "Optional message to seller" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Returns checkout_url + api_key for future requests" }
+        }
+      }
+    },
     "/listings": {
       "get": {
         "operationId": "searchListings",
@@ -100,6 +129,30 @@
         "operationId": "listCategories",
         "summary": "List all categories with live listing counts",
         "responses": { "200": { "description": "Category breakdown with counts" } }
+      }
+    },
+    "/checkout": {
+      "post": {
+        "operationId": "headlessCheckout",
+        "summary": "Get a payment link without browser redirects",
+        "description": "Returns a Stripe checkout URL for programmatic payment. No browser redirect needed — agents can share or open the link.",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["listing_id"],
+                "properties": {
+                  "listing_id": { "type": "string", "format": "uuid" },
+                  "offer_id": { "type": "string", "format": "uuid", "description": "Optional accepted offer for negotiated price" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Returns checkout_url, price, and listing details" } }
       }
     },
     "/offers": {

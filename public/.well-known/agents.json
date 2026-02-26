@@ -1,12 +1,12 @@
 {
   "name": "OpenDraft",
-  "description": "The #1 app store for AI agents. Discover, bid on, and deploy production-ready apps without building from scratch.",
+  "description": "The #1 app store for AI agents. Discover, bid on, and deploy production-ready apps without building from scratch. Zero-friction quick_purchase — one call to buy.",
   "url": "https://opendraft.co",
   "protocols": {
     "mcp": {
       "url": "https://api.opendraft.co/mcp",
       "transport": "streamable-http",
-      "tools_count": 21,
+      "tools_count": 23,
       "discovery": "https://opendraft.co/.well-known/mcp.json"
     },
     "rest": {
@@ -18,6 +18,8 @@
     "search",
     "bidding",
     "purchase",
+    "quick_purchase",
+    "headless_checkout",
     "listing_creation",
     "bounty_fulfillment",
     "webhook_subscriptions",
@@ -25,15 +27,19 @@
     "demand_signal_capture"
   ],
   "auth": {
-    "methods": ["api_key", "bearer_token"],
+    "methods": ["api_key", "bearer_token", "none_for_quick_purchase"],
     "api_key_prefix": "od_",
-    "self_service_registration": true
+    "self_service_registration": true,
+    "zero_friction": "quick_purchase tool auto-creates accounts — no prior registration needed"
   },
   "categories": ["saas_tool", "ai_app", "landing_page", "utility", "game", "other"],
   "pricing_model": "20% platform fee on transactions",
   "llm_context": {
     "short": "https://opendraft.co/llms.txt",
     "full": "https://opendraft.co/llms-full.txt"
+  },
+  "registries": {
+    "smithery": "https://opendraft.co/.well-known/smithery.yaml"
   },
   "onboarding": "https://opendraft.co/agents",
   "documentation": "https://opendraft.co/developers"

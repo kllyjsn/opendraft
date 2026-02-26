@@ -545,6 +545,40 @@ mcpServer.tool({
   handler: async () => { throw new Error("Auth required. Use sign_in or API key."); },
 });
 
+// ── quick_purchase (ZERO-FRICTION) ────────────────────────────────
+
+mcpServer.tool({
+  name: "quick_purchase",
+  description: "One-call frictionless purchase: auto-creates an account (if needed), places a bid or buys at asking price, and returns a headless payment link. No multi-step onboarding required. Perfect for autonomous agents.",
+  inputSchema: {
+    type: "object",
+    properties: {
+      listing_id: { type: "string", description: "UUID of the listing to purchase" },
+      email: { type: "string", description: "Agent's email (used for account creation if needed)" },
+      offer_amount: { type: "number", description: "Optional: bid amount in cents. Omit to buy at asking price." },
+      message: { type: "string", description: "Optional message to seller (for bids)" },
+    },
+    required: ["listing_id", "email"],
+  },
+  handler: async () => { throw new Error("This tool is handled by the authenticated route handler."); },
+});
+
+// ── headless_checkout ─────────────────────────────────────────────
+
+mcpServer.tool({
+  name: "headless_checkout",
+  description: "Get a payment link for a listing without browser redirects. Returns a Stripe checkout URL that can be opened programmatically or shared. Requires auth.",
+  inputSchema: {
+    type: "object",
+    properties: {
+      listing_id: { type: "string", description: "UUID of the listing to purchase" },
+      offer_id: { type: "string", description: "Optional: offer ID if purchasing at a negotiated price" },
+    },
+    required: ["listing_id"],
+  },
+  handler: async () => { throw new Error("Auth required. Use sign_in or API key."); },
+});
+
 // ── Hono app ──────────────────────────────────────────────────────
 
 const app = new Hono();
@@ -562,10 +596,10 @@ app.options("/*", (c) => new Response(null, { headers: CORS }));
 app.get("/*", (c) => {
   return c.json({
     name: "opendraft-marketplace",
-    version: "3.0.0",
+    version: "3.1.0",
     protocol: "MCP (Model Context Protocol)",
     transport: "Streamable HTTP",
-    description: "OpenDraft — the #1 app store for AI agents. Discover, bid on, negotiate, and purchase AI-built apps autonomously. 21 tools with full bidding support.",
+    description: "OpenDraft — the #1 app store for AI agents. 23 tools including zero-friction quick_purchase (one-call account creation + payment). Full autonomous bidding loop.",
     tools: [
       "search_listings", "get_listing", "list_categories", "get_trending",
       "list_bounties", "get_bounty", "search_builders", "get_builder_profile",
@@ -573,13 +607,16 @@ app.get("/*", (c) => {
       "generate_api_key", "register_webhook", "create_listing",
       "submit_to_bounty", "initiate_purchase",
       "place_offer", "get_my_offers", "respond_to_counter", "withdraw_offer",
+      "quick_purchase", "headless_checkout",
     ],
-    auth_methods: ["Bearer token (from sign_in)", "API key (od_xxx from generate_api_key)"],
-    bidding_flow: "place_offer → (seller counters) → respond_to_counter → (accept/reject/counter) → initiate_purchase",
-    documentation: "https://opendraft.lovable.app/developers",
-    agents_page: "https://opendraft.lovable.app/agents",
-    llms_txt: "https://opendraft.lovable.app/llms.txt",
-    mcp_discovery: "https://opendraft.lovable.app/.well-known/mcp.json",
+    auth_methods: ["Bearer token (from sign_in)", "API key (od_xxx from generate_api_key)", "None (for quick_purchase)"],
+    zero_friction: "quick_purchase — single call creates account + pays. No onboarding steps.",
+    bidding_flow: "place_offer → (seller counters) → respond_to_counter → (accept/reject/counter) → headless_checkout",
+    documentation: "https://opendraft.co/developers",
+    agents_page: "https://opendraft.co/agents",
+    llms_txt: "https://opendraft.co/llms.txt",
+    mcp_discovery: "https://opendraft.co/.well-known/mcp.json",
+    smithery: "https://opendraft.co/.well-known/smithery.yaml",
   });
 });
 
@@ -591,9 +628,154 @@ app.post("/*", async (c) => {
   if (body.method === "tools/call") {
     const toolName = body.params?.name;
     const args = body.params?.arguments || {};
-    const authTools = ["create_listing", "initiate_purchase", "submit_to_bounty", "generate_api_key", "register_webhook", "place_offer", "get_my_offers", "respond_to_counter", "withdraw_offer"];
+    const authTools = ["create_listing", "initiate_purchase", "submit_to_bounty", "generate_api_key", "register_webhook", "place_offer", "get_my_offers", "respond_to_counter", "withdraw_offer", "quick_purchase", "headless_checkout"];
 
     if (authTools.includes(toolName)) {
+      // quick_purchase has special auth handling — it auto-creates accounts
+      if (toolName === "quick_purchase") {
+        try {
+          const admin = getAdmin();
+          if (!args.listing_id || !args.email) throw new Error("listing_id and email are required");
+
+          // Get listing
+          const { data: listing, error: listErr } = await admin.from("listings")
+            .select("id,price,pricing_type,seller_id,title").eq("id", args.listing_id).eq("status", "live").single();
+          if (listErr || !listing) throw new Error("Listing not found or not live");
+
+          // Try to resolve existing auth, or auto-create account
+          let userId: string;
+          const auth = await resolveAuth(authHeader);
+          if (auth.userId) {
+            userId = auth.userId;
+          } else {
+            // Auto-create account with random password
+            const password = generateApiKey().slice(0, 24);
+            const username = args.email.split("@")[0].slice(0, 30) + "_agent";
+            const { data: newUser, error: createErr } = await admin.auth.admin.createUser({
+              email: args.email, password, email_confirm: true,
+              user_metadata: { name: username },
+            });
+            if (createErr) {
+              // Might already exist — try sign in
+              const sb = getAnon();
+              const { data: signInData, error: signErr } = await sb.auth.signInWithPassword({
+                email: args.email, password,
+              });
+              if (signErr) throw new Error(`Account exists but couldn't auto-sign-in. Use sign_in tool with your password, then call headless_checkout.`);
+              userId = signInData.user.id;
+            } else {
+              userId = newUser.user.id;
+            }
+          }
+
+          // If offer_amount provided, place a bid instead of buying outright
+          if (args.offer_amount) {
+            if (listing.seller_id === userId) throw new Error("Cannot bid on your own listing");
+            const minOffer = Math.ceil(listing.price * 0.25);
+            if (args.offer_amount < minOffer) throw new Error(`Minimum offer is $${(minOffer / 100).toFixed(2)}`);
+
+            const { data: offer, error: offerErr } = await admin.from("offers").insert({
+              listing_id: args.listing_id, buyer_id: userId, seller_id: listing.seller_id,
+              offer_amount: args.offer_amount, original_price: listing.price,
+              message: args.message?.slice(0, 500) || "Placed via quick_purchase",
+            }).select("id,offer_amount,status").single();
+            if (offerErr) throw new Error(offerErr.message);
+
+            // Generate API key for ongoing interaction
+            const rawKey = generateApiKey();
+            const keyHash = await hashKey(rawKey);
+            await admin.from("agent_api_keys").insert({
+              user_id: userId, key_hash: keyHash, key_prefix: rawKey.slice(0, 10),
+              name: "quick_purchase_auto", scopes: ["read", "write", "purchase"],
+            });
+
+            return c.json({
+              jsonrpc: "2.0", id: body.id,
+              result: { content: [{ type: "text", text: JSON.stringify({
+                action: "bid_placed",
+                offer_id: offer.id,
+                your_offer: `$${(args.offer_amount / 100).toFixed(2)}`,
+                listing_price: `$${(listing.price / 100).toFixed(2)}`,
+                api_key: rawKey,
+                message: "Bid placed and API key generated in one call. Save the api_key — use it for all future requests. Use get_my_offers to track status.",
+              }, null, 2) }] },
+            }, 200, { "Access-Control-Allow-Origin": "*" });
+          }
+
+          // Buy at asking price — create checkout session
+          const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+          const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+          // Check duplicate purchase
+          const { data: existingPurchase } = await admin.from("purchases")
+            .select("id").eq("listing_id", args.listing_id).eq("buyer_id", userId).maybeSingle();
+          if (existingPurchase) throw new Error("Already purchased this listing");
+
+          // Get seller stripe info
+          const { data: sellerProfile } = await admin.from("profiles")
+            .select("stripe_account_id,stripe_onboarded").eq("user_id", listing.seller_id).single();
+
+          const stripeKey = (await import("../_shared/sanitize-stripe-key.ts")).sanitizeStripeKey(Deno.env.get("STRIPE_SECRET_KEY")!);
+          const Stripe = (await import("npm:stripe@17.7.0")).default;
+          const stripe = new Stripe(stripeKey);
+
+          const isSubscription = listing.pricing_type === "monthly";
+          const feePercent = 0.2;
+          const sessionParams: any = {
+            payment_method_types: ["card"],
+            line_items: [{
+              price_data: {
+                currency: "usd",
+                product_data: { name: listing.title },
+                unit_amount: listing.price,
+                ...(isSubscription ? { recurring: { interval: "month" } } : {}),
+              },
+              quantity: 1,
+            }],
+            mode: isSubscription ? "subscription" : "payment",
+            success_url: `https://opendraft.co/success?session_id={CHECKOUT_SESSION_ID}`,
+            cancel_url: `https://opendraft.co/listing/${listing.id}`,
+            metadata: { listing_id: listing.id, buyer_id: userId, seller_id: listing.seller_id, price: String(listing.price) },
+          };
+
+          const sellerAccount = sellerProfile?.stripe_account_id && sellerProfile?.stripe_onboarded ? sellerProfile.stripe_account_id : null;
+          if (sellerAccount) {
+            if (isSubscription) {
+              sessionParams.subscription_data = { application_fee_percent: feePercent * 100, transfer_data: { destination: sellerAccount }, metadata: sessionParams.metadata };
+            } else {
+              sessionParams.payment_intent_data = { application_fee_amount: Math.round(listing.price * feePercent), transfer_data: { destination: sellerAccount } };
+            }
+          }
+
+          const session = await stripe.checkout.sessions.create(sessionParams);
+
+          // Generate API key
+          const rawKey = generateApiKey();
+          const keyHash = await hashKey(rawKey);
+          await admin.from("agent_api_keys").insert({
+            user_id: userId, key_hash: keyHash, key_prefix: rawKey.slice(0, 10),
+            name: "quick_purchase_auto", scopes: ["read", "write", "purchase"],
+          });
+
+          return c.json({
+            jsonrpc: "2.0", id: body.id,
+            result: { content: [{ type: "text", text: JSON.stringify({
+              action: "checkout_ready",
+              checkout_url: session.url,
+              listing_title: listing.title,
+              price: `$${(listing.price / 100).toFixed(2)}`,
+              api_key: rawKey,
+              message: "Payment link ready. Save the api_key for future requests. Open checkout_url to complete payment.",
+            }, null, 2) }] },
+          }, 200, { "Access-Control-Allow-Origin": "*" });
+        } catch (err: any) {
+          return c.json({
+            jsonrpc: "2.0", id: body.id,
+            result: { content: [{ type: "text", text: `Error: ${err.message}` }], isError: true },
+          }, 200, { "Access-Control-Allow-Origin": "*" });
+        }
+      }
+
       const auth = await resolveAuth(authHeader);
 
       if (!auth.userId) {
@@ -889,6 +1071,68 @@ app.post("/*", async (c) => {
             offer_id: offer.id,
             action: "withdrawn",
             message: "Offer withdrawn successfully.",
+          };
+        } else if (toolName === "headless_checkout") {
+          if (!args.listing_id) throw new Error("listing_id is required");
+
+          const admin = getAdmin();
+          const { data: listing, error: listErr } = await admin.from("listings")
+            .select("id,price,pricing_type,seller_id,title").eq("id", args.listing_id).eq("status", "live").single();
+          if (listErr || !listing) throw new Error("Listing not found");
+
+          let unitAmount = listing.price;
+
+          // Check for accepted offer pricing
+          if (args.offer_id) {
+            const { data: offer } = await admin.from("offers")
+              .select("offer_amount,counter_amount,status")
+              .eq("id", args.offer_id).eq("buyer_id", auth.userId).eq("status", "accepted").single();
+            if (offer) unitAmount = offer.counter_amount || offer.offer_amount;
+          }
+
+          const { data: sellerProfile } = await admin.from("profiles")
+            .select("stripe_account_id,stripe_onboarded").eq("user_id", listing.seller_id).single();
+
+          const stripeKey = (await import("../_shared/sanitize-stripe-key.ts")).sanitizeStripeKey(Deno.env.get("STRIPE_SECRET_KEY")!);
+          const Stripe = (await import("npm:stripe@17.7.0")).default;
+          const stripe = new Stripe(stripeKey);
+
+          const isSubscription = listing.pricing_type === "monthly";
+          const feePercent = 0.2;
+          const sessionParams: any = {
+            payment_method_types: ["card"],
+            line_items: [{
+              price_data: {
+                currency: "usd",
+                product_data: { name: listing.title },
+                unit_amount: unitAmount,
+                ...(isSubscription ? { recurring: { interval: "month" } } : {}),
+              },
+              quantity: 1,
+            }],
+            mode: isSubscription ? "subscription" : "payment",
+            success_url: `https://opendraft.co/success?session_id={CHECKOUT_SESSION_ID}`,
+            cancel_url: `https://opendraft.co/listing/${listing.id}`,
+            metadata: { listing_id: listing.id, buyer_id: auth.userId, seller_id: listing.seller_id, price: String(unitAmount) },
+          };
+
+          const sellerAccount = sellerProfile?.stripe_account_id && sellerProfile?.stripe_onboarded ? sellerProfile.stripe_account_id : null;
+          if (sellerAccount) {
+            if (isSubscription) {
+              sessionParams.subscription_data = { application_fee_percent: feePercent * 100, transfer_data: { destination: sellerAccount }, metadata: sessionParams.metadata };
+            } else {
+              sessionParams.payment_intent_data = { application_fee_amount: Math.round(unitAmount * feePercent), transfer_data: { destination: sellerAccount } };
+            }
+          }
+
+          const session = await stripe.checkout.sessions.create(sessionParams);
+
+          result = {
+            checkout_url: session.url,
+            listing_title: listing.title,
+            price: `$${(unitAmount / 100).toFixed(2)}`,
+            pricing_type: listing.pricing_type,
+            message: "Payment link ready. No browser redirect needed — open this URL or share it to complete payment.",
           };
         }
 

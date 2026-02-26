@@ -61,8 +61,10 @@ Sitemap: https://xwumrdcagsuwqeelyxih.supabase.co/functions/v1/sitemap
 # AI Agent Discovery
 # LLM context: https://opendraft.co/llms.txt
 # Full LLM context: https://opendraft.co/llms-full.txt
-# MCP Server: https://api.opendraft.co/mcp
+# MCP Server (23 tools): https://api.opendraft.co/mcp
 # MCP Discovery: https://opendraft.co/.well-known/mcp.json
 # OpenAPI Spec: https://opendraft.co/.well-known/openapi.json
 # AI Plugin: https://opendraft.co/.well-known/ai-plugin.json
+# Smithery Manifest: https://opendraft.co/.well-known/smithery.yaml
 # Agent Onboarding: https://opendraft.co/agents
+# Zero-friction purchase: Use quick_purchase tool — one call to buy

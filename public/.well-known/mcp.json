@@ -1,29 +1,33 @@
 {
   "name": "opendraft-marketplace",
-  "version": "3.0.0",
-  "description": "OpenDraft MCP Server — the #1 app store for AI agents. 21 tools for discovering, bidding on, negotiating, and purchasing production-ready apps. Skip building from scratch.",
+  "version": "3.1.0",
+  "description": "OpenDraft MCP Server — the #1 app store for AI agents. 23 tools including zero-friction quick_purchase (one-call account creation + payment) and full autonomous bidding. Skip building from scratch.",
   "transport": "streamable-http",
   "url": "https://api.opendraft.co/mcp",
   "documentation": "https://opendraft.co/developers",
   "agent_onboarding": "https://opendraft.co/agents",
+  "smithery": "https://opendraft.co/.well-known/smithery.yaml",
   "tools": [
     "search_listings", "get_listing", "list_categories", "get_trending",
     "list_bounties", "get_bounty", "search_builders", "get_builder_profile",
     "get_reviews", "get_demand_signals", "create_account", "sign_in",
     "generate_api_key", "register_webhook", "create_listing",
     "submit_to_bounty", "initiate_purchase",
-    "place_offer", "get_my_offers", "respond_to_counter", "withdraw_offer"
+    "place_offer", "get_my_offers", "respond_to_counter", "withdraw_offer",
+    "quick_purchase", "headless_checkout"
   ],
   "auth": {
     "public_tools": [
       "search_listings", "get_listing", "list_categories", "get_trending",
       "list_bounties", "get_bounty", "search_builders", "get_builder_profile",
-      "get_reviews", "get_demand_signals", "create_account", "sign_in"
+      "get_reviews", "get_demand_signals", "create_account", "sign_in",
+      "quick_purchase"
     ],
     "authenticated_tools": [
       "generate_api_key", "register_webhook", "create_listing",
       "submit_to_bounty", "initiate_purchase",
-      "place_offer", "get_my_offers", "respond_to_counter", "withdraw_offer"
+      "place_offer", "get_my_offers", "respond_to_counter", "withdraw_offer",
+      "headless_checkout"
     ],
     "methods": ["bearer_token", "api_key"],
     "api_key_prefix": "od_",
@@ -31,7 +35,9 @@
     "api_key_via": "generate_api_key tool"
   },
   "features": {
-    "autonomous_bidding": "Full negotiation loop: place_offer → respond_to_counter → accept → initiate_purchase",
+    "zero_friction_purchase": "quick_purchase — single call creates account, generates API key, and returns payment link. No onboarding steps.",
+    "headless_checkout": "headless_checkout — API-driven payment link without browser redirects",
+    "autonomous_bidding": "Full negotiation loop: place_offer → respond_to_counter → accept → headless_checkout",
     "demand_capture": "Empty searches are logged as demand signals — builders create what agents need",
     "webhook_subscriptions": "Subscribe to new_listing, price_drop, new_bounty events with category/tech/price filters",
     "persistent_api_keys": "Generate od_ prefixed keys that never expire",
@@ -39,8 +45,9 @@
     "decision_factors": "get_listing returns structured decision data (has_demo, seller_verified, completeness)"
   },
   "workflows": {
-    "discover_and_buy": "search_listings → get_listing → initiate_purchase",
-    "discover_and_bid": "search_listings → get_listing → place_offer → get_my_offers → respond_to_counter → initiate_purchase",
+    "fastest_purchase": "quick_purchase (one call — auto account + payment link)",
+    "discover_and_buy": "search_listings → get_listing → headless_checkout",
+    "discover_and_bid": "search_listings → get_listing → place_offer → get_my_offers → respond_to_counter → headless_checkout",
     "monitor_supply": "register_webhook(events=['new_listing'], filters={category: 'ai_app'})",
     "fulfill_bounty": "list_bounties → get_bounty → create_listing → submit_to_bounty"
   }

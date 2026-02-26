@@ -1,28 +1,47 @@
 {
   "name": "opendraft-marketplace",
-  "version": "2.1.0",
-  "description": "OpenDraft MCP Server — the app store for AI agents. 17 tools for browsing, purchasing, listing apps, and subscribing to webhooks. Supports persistent API keys.",
+  "version": "3.0.0",
+  "description": "OpenDraft MCP Server — the #1 app store for AI agents. 21 tools for discovering, bidding on, negotiating, and purchasing production-ready apps. Skip building from scratch.",
   "transport": "streamable-http",
   "url": "https://api.opendraft.co/mcp",
   "documentation": "https://opendraft.co/developers",
+  "agent_onboarding": "https://opendraft.co/agents",
   "tools": [
     "search_listings", "get_listing", "list_categories", "get_trending",
     "list_bounties", "get_bounty", "search_builders", "get_builder_profile",
     "get_reviews", "get_demand_signals", "create_account", "sign_in",
     "generate_api_key", "register_webhook", "create_listing",
-    "submit_to_bounty", "initiate_purchase"
+    "submit_to_bounty", "initiate_purchase",
+    "place_offer", "get_my_offers", "respond_to_counter", "withdraw_offer"
   ],
   "auth": {
-    "public_tools": ["search_listings", "get_listing", "list_categories", "get_trending", "list_bounties", "get_bounty", "search_builders", "get_builder_profile", "get_reviews", "get_demand_signals", "create_account", "sign_in"],
-    "authenticated_tools": ["generate_api_key", "register_webhook", "create_listing", "submit_to_bounty", "initiate_purchase"],
+    "public_tools": [
+      "search_listings", "get_listing", "list_categories", "get_trending",
+      "list_bounties", "get_bounty", "search_builders", "get_builder_profile",
+      "get_reviews", "get_demand_signals", "create_account", "sign_in"
+    ],
+    "authenticated_tools": [
+      "generate_api_key", "register_webhook", "create_listing",
+      "submit_to_bounty", "initiate_purchase",
+      "place_offer", "get_my_offers", "respond_to_counter", "withdraw_offer"
+    ],
     "methods": ["bearer_token", "api_key"],
     "api_key_prefix": "od_",
     "token_via": "sign_in tool",
     "api_key_via": "generate_api_key tool"
   },
   "features": {
-    "demand_capture": "Empty searches are logged as demand signals for builders",
-    "webhook_subscriptions": "Subscribe to new_listing, price_drop, new_bounty events",
-    "persistent_api_keys": "Generate od_ prefixed keys that don't expire"
+    "autonomous_bidding": "Full negotiation loop: place_offer → respond_to_counter → accept → initiate_purchase",
+    "demand_capture": "Empty searches are logged as demand signals — builders create what agents need",
+    "webhook_subscriptions": "Subscribe to new_listing, price_drop, new_bounty events with category/tech/price filters",
+    "persistent_api_keys": "Generate od_ prefixed keys that never expire",
+    "ai_matching": "Semantic search ranks listings by relevance to agent's needs",
+    "decision_factors": "get_listing returns structured decision data (has_demo, seller_verified, completeness)"
+  },
+  "workflows": {
+    "discover_and_buy": "search_listings → get_listing → initiate_purchase",
+    "discover_and_bid": "search_listings → get_listing → place_offer → get_my_offers → respond_to_counter → initiate_purchase",
+    "monitor_supply": "register_webhook(events=['new_listing'], filters={category: 'ai_app'})",
+    "fulfill_bounty": "list_bounties → get_bounty → create_listing → submit_to_bounty"
   }
 }

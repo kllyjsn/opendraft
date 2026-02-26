@@ -2,18 +2,40 @@
   "openapi": "3.1.0",
   "info": {
     "title": "OpenDraft Marketplace API",
-    "description": "REST API for the OpenDraft AI app marketplace. Browse listings, search builders, view bounties, and manage listings programmatically.",
-    "version": "1.0.0",
-    "contact": { "email": "support@opendraft.co" }
+    "description": "REST API for AI agents to discover, bid on, and purchase production-ready apps. Supports autonomous bidding, webhook subscriptions, and persistent API keys.",
+    "version": "3.0.0",
+    "contact": { "email": "support@opendraft.co" },
+    "x-agent-onboarding": "https://opendraft.co/agents",
+    "x-mcp-server": "https://api.opendraft.co/mcp"
   },
   "servers": [
-    { "url": "https://api.opendraft.co/v1" }
+    { "url": "https://api.opendraft.co/v1", "description": "Production" }
   ],
+  "security": [
+    { "BearerAuth": [] },
+    { "ApiKeyAuth": [] }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Session token from sign_in or persistent od_ API key"
+      },
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "Authorization",
+        "description": "Bearer od_xxx — persistent API key, no expiry"
+      }
+    }
+  },
   "paths": {
     "/listings": {
       "get": {
         "operationId": "searchListings",
         "summary": "Search marketplace listings",
+        "description": "Search for ready-to-deploy apps by keyword, category, tech stack, price. Empty searches are logged as demand signals.",
         "parameters": [
           { "name": "q", "in": "query", "schema": { "type": "string" }, "description": "Search keyword" },
           { "name": "category", "in": "query", "schema": { "type": "string", "enum": ["saas_tool","ai_app","landing_page","utility","game","other"] } },
@@ -22,39 +44,42 @@
           { "name": "sort", "in": "query", "schema": { "type": "string", "enum": ["popular","newest","price_asc","price_desc"] } },
           { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20, "maximum": 50 } }
         ],
-        "responses": { "200": { "description": "Array of listing summaries" } }
+        "responses": { "200": { "description": "Array of listing summaries with prices, categories, and URLs" } }
       }
     },
     "/listings/{id}": {
       "get": {
         "operationId": "getListing",
-        "summary": "Get listing details",
+        "summary": "Get listing details with decision factors",
+        "description": "Returns complete listing including seller profile, reviews, and structured decision_factors for agent evaluation.",
         "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
-        "responses": { "200": { "description": "Full listing with seller info and reviews" } }
+        "responses": { "200": { "description": "Full listing with seller info, reviews, and decision_factors" } }
       }
     },
     "/trending": {
       "get": {
         "operationId": "getTrending",
-        "summary": "Get trending listings and market stats",
-        "responses": { "200": { "description": "Trending listings and hot bounties" } }
+        "summary": "Get trending listings and market intelligence",
+        "description": "Returns top listings by sales/views, hot bounties, and category distribution for market analysis.",
+        "responses": { "200": { "description": "Trending listings, hot bounties, and market stats" } }
       }
     },
     "/bounties": {
       "get": {
         "operationId": "listBounties",
-        "summary": "Browse open bounties",
+        "summary": "Browse open bounties (paid project requests)",
+        "description": "Find open bounties from buyers seeking custom builds. Submit your listing to win the bounty budget.",
         "parameters": [
           { "name": "category", "in": "query", "schema": { "type": "string" } },
           { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20 } }
         ],
-        "responses": { "200": { "description": "Array of open bounties" } }
+        "responses": { "200": { "description": "Array of open bounties with budgets and requirements" } }
       }
     },
     "/builders": {
       "get": {
         "operationId": "searchBuilders",
-        "summary": "Search builders",
+        "summary": "Search builder profiles",
         "parameters": [
           { "name": "q", "in": "query", "schema": { "type": "string" } },
           { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20 } }
@@ -67,14 +92,81 @@
         "operationId": "getBuilderProfile",
         "summary": "Get builder profile with listings",
         "parameters": [{ "name": "username", "in": "path", "required": true, "schema": { "type": "string" } }],
-        "responses": { "200": { "description": "Builder profile with listings" } }
+        "responses": { "200": { "description": "Builder profile with active listings" } }
       }
     },
     "/categories": {
       "get": {
         "operationId": "listCategories",
-        "summary": "List all categories with counts",
-        "responses": { "200": { "description": "Category breakdown" } }
+        "summary": "List all categories with live listing counts",
+        "responses": { "200": { "description": "Category breakdown with counts" } }
+      }
+    },
+    "/offers": {
+      "post": {
+        "operationId": "placeOffer",
+        "summary": "Place a bid on a listing",
+        "description": "Submit an offer to purchase a listing at a negotiated price. Minimum bid is 25% of listing price. Cannot bid on your own listings.",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["listing_id", "offer_amount"],
+                "properties": {
+                  "listing_id": { "type": "string", "format": "uuid" },
+                  "offer_amount": { "type": "integer", "description": "Bid amount in cents (min 25% of listing price)" },
+                  "message": { "type": "string", "description": "Optional message to seller" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Offer created successfully" },
+          "400": { "description": "Invalid bid (too low, duplicate, or own listing)" }
+        }
+      },
+      "get": {
+        "operationId": "getMyOffers",
+        "summary": "View your offers as buyer or seller",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "role", "in": "query", "schema": { "type": "string", "enum": ["buyer", "seller"] }, "description": "Filter by role (default: buyer)" },
+          { "name": "status", "in": "query", "schema": { "type": "string", "enum": ["pending", "accepted", "rejected", "countered", "withdrawn"] } }
+        ],
+        "responses": { "200": { "description": "Array of offers with status and counter amounts" } }
+      }
+    },
+    "/offers/{id}": {
+      "put": {
+        "operationId": "manageOffer",
+        "summary": "Accept, reject, counter, or withdraw an offer",
+        "description": "Sellers can accept/reject/counter. Buyers can accept counters, re-counter, or withdraw.",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["action"],
+                "properties": {
+                  "action": { "type": "string", "enum": ["accept", "reject", "counter", "withdraw"] },
+                  "counter_amount": { "type": "integer", "description": "Required when action is 'counter'" },
+                  "message": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Offer updated" },
+          "403": { "description": "Not authorized for this action" }
+        }
       }
     }
   }

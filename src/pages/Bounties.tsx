@@ -62,7 +62,7 @@ export default function Bounties() {
     let profileMap: Record<string, string> = {};
     if (posterIds.length > 0) {
       const { data: profiles } = await supabase
-        .from("profiles")
+        .from("public_profiles")
         .select("user_id, username")
         .in("user_id", posterIds);
       profileMap = Object.fromEntries((profiles ?? []).map((p) => [p.user_id, p.username ?? "Anonymous"]));

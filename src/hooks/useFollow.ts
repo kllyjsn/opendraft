@@ -16,7 +16,7 @@ export function useFollow(targetUserId: string | undefined) {
 
     // Fetch follower/following counts from profile
     supabase
-      .from("profiles")
+      .from("public_profiles")
       .select("followers_count, following_count")
       .eq("user_id", targetUserId)
       .single()

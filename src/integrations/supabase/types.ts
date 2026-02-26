@@ -807,31 +807,40 @@ export type Database = {
           avatar_url: string | null
           bio: string | null
           created_at: string | null
+          followers_count: number | null
+          following_count: number | null
           id: string | null
           total_sales: number | null
           updated_at: string | null
           user_id: string | null
           username: string | null
+          verified: boolean | null
         }
         Insert: {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string | null
+          followers_count?: number | null
+          following_count?: number | null
           id?: string | null
           total_sales?: number | null
           updated_at?: string | null
           user_id?: string | null
           username?: string | null
+          verified?: boolean | null
         }
         Update: {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string | null
+          followers_count?: number | null
+          following_count?: number | null
           id?: string | null
           total_sales?: number | null
           updated_at?: string | null
           user_id?: string | null
           username?: string | null
+          verified?: boolean | null
         }
         Relationships: []
       }

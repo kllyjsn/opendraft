@@ -32,7 +32,7 @@ export default function Builders() {
     async function load() {
       setLoading(true);
       let query = supabase
-        .from("profiles")
+        .from("public_profiles")
         .select("user_id, username, avatar_url, bio, total_sales, followers_count")
         .order("total_sales", { ascending: false })
         .limit(50);

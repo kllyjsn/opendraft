@@ -61,7 +61,7 @@ export function ActivityFeed() {
       // Fetch seller profiles
       const sellerIds = [...new Set(listings.map((l) => l.seller_id))];
       const { data: profiles } = await supabase
-        .from("profiles")
+        .from("public_profiles")
         .select("user_id, username, avatar_url")
         .in("user_id", sellerIds);
 

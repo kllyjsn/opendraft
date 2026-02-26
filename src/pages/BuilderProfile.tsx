@@ -53,7 +53,7 @@ export default function BuilderProfile() {
       setLoading(true);
       const [profileRes, listingsRes] = await Promise.all([
         supabase
-          .from("profiles")
+          .from("public_profiles")
           .select("user_id, username, avatar_url, bio, total_sales, created_at")
           .eq("user_id", userId)
           .single(),

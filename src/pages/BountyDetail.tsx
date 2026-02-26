@@ -54,7 +54,7 @@ export default function BountyDetail() {
     setBounty(data as any);
 
     // Fetch poster profile
-    const { data: profile } = await supabase.from("profiles").select("username").eq("user_id", data.poster_id).single();
+    const { data: profile } = await supabase.from("public_profiles").select("username").eq("user_id", data.poster_id).single();
     setPoster(profile);
 
     // Fetch submissions if poster or submitter
@@ -72,7 +72,7 @@ export default function BountyDetail() {
 
         const [{ data: listings }, { data: profiles }] = await Promise.all([
           supabase.from("listings").select("id, title").in("id", listingIds),
-          supabase.from("profiles").select("user_id, username").in("user_id", sellerIds),
+          supabase.from("public_profiles").select("user_id, username").in("user_id", sellerIds),
         ]);
 
         const listingMap = Object.fromEntries((listings ?? []).map((l) => [l.id, l.title]));

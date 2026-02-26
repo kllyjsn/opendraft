@@ -605,6 +605,79 @@ async function handleCheckoutSessionCompleted(
     }
   }
 
+  // ------------------------------------------------------------------
+  // Auto-create a conversation between buyer and seller so they can
+  // start chatting immediately after purchase
+  // ------------------------------------------------------------------
+  try {
+    // Check if a conversation already exists for this buyer/seller/listing combo
+    const existingConvoRes = await fetch(
+      `${supabaseUrl}/rest/v1/conversations?buyer_id=eq.${buyer_id}&seller_id=eq.${seller_id}&listing_id=eq.${listing_id}&select=id`,
+      { headers: { apikey: supabaseServiceKey, Authorization: `Bearer ${supabaseServiceKey}` } }
+    );
+    const existingConvos = await existingConvoRes.json();
+
+    let conversationId: string;
+
+    if (Array.isArray(existingConvos) && existingConvos.length > 0) {
+      conversationId = existingConvos[0].id;
+      console.log(`Existing conversation found: ${conversationId}`);
+    } else {
+      // Create a new conversation
+      const convoRes = await fetch(`${supabaseUrl}/rest/v1/conversations`, {
+        method: "POST",
+        headers: {
+          apikey: supabaseServiceKey,
+          Authorization: `Bearer ${supabaseServiceKey}`,
+          "Content-Type": "application/json",
+          Prefer: "return=representation",
+        },
+        body: JSON.stringify({
+          buyer_id,
+          seller_id,
+          listing_id,
+        }),
+      });
+
+      if (!convoRes.ok) {
+        throw new Error(`Failed to create conversation: ${await convoRes.text()}`);
+      }
+
+      const convoData = await convoRes.json();
+      conversationId = convoData[0]?.id;
+      console.log(`Auto-created conversation: ${conversationId}`);
+    }
+
+    // Fetch listing title for the welcome message
+    const titleRes = await fetch(
+      `${supabaseUrl}/rest/v1/listings?id=eq.${listing_id}&select=title`,
+      { headers: { apikey: supabaseServiceKey, Authorization: `Bearer ${supabaseServiceKey}` } }
+    );
+    const titleData = await titleRes.json();
+    const listingTitle = titleData?.[0]?.title ?? "your project";
+
+    // Send an automated welcome message from the seller
+    await fetch(`${supabaseUrl}/rest/v1/messages`, {
+      method: "POST",
+      headers: {
+        apikey: supabaseServiceKey,
+        Authorization: `Bearer ${supabaseServiceKey}`,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal",
+      },
+      body: JSON.stringify({
+        conversation_id: conversationId,
+        sender_id: seller_id,
+        content: `Thanks for purchasing ${listingTitle}! 🎉 I'm your builder — feel free to ask me anything, request features, or share feedback. I'm here to help you get the most out of it.`,
+      }),
+    });
+
+    console.log(`Welcome message sent in conversation ${conversationId}`);
+  } catch (chatErr) {
+    // Don't fail the whole purchase flow if chat creation fails
+    console.error("Failed to auto-create chat:", chatErr);
+  }
+
   console.log(`Purchase recorded: listing=${listing_id}, buyer=${buyer_id}, amount=${amount}`);
 }
 

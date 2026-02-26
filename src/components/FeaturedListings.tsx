@@ -45,7 +45,7 @@ export function FeaturedListings() {
 
       const sellerIds = [...new Set(data.map((l) => l.seller_id))];
       const { data: profiles } = await supabase
-        .from("profiles")
+        .from("public_profiles")
         .select("user_id, username")
         .in("user_id", sellerIds);
       const map = Object.fromEntries((profiles ?? []).map((p) => [p.user_id, p.username ?? "Anonymous"]));

@@ -116,7 +116,7 @@ export default function ListingDetail() {
     if (data) {
       setListing(data as Listing);
       await supabase.from("listings").update({ view_count: (data.view_count ?? 0) + 1 }).eq("id", id);
-      const { data: profile } = await supabase.from("profiles").select("username,avatar_url,total_sales,verified").eq("user_id", data.seller_id).single();
+      const { data: profile } = await supabase.from("public_profiles").select("username,avatar_url,total_sales,verified").eq("user_id", data.seller_id).single();
       setSeller(profile);
     }
     setLoading(false);

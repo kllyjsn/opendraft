@@ -509,10 +509,10 @@ export default function ListingDetail() {
                     <Link to={user ? `/checkout/${listing.id}` : "/login"} className="flex-1">
                       <Button className="w-full gradient-hero text-white border-0 shadow-glow hover:opacity-90 h-12 text-base font-bold transition-opacity">
                         <ShoppingCart className="h-4 w-4 mr-2" />
-                        {isMonthly ? `Subscribe` : `Buy Now`}
+                        {isMonthly ? `Subscribe — ${priceLabel}` : `Buy Now — ${priceLabel}`}
                       </Button>
                     </Link>
-                    {user && listing.seller_id !== user.id && (
+                    {(!user || listing.seller_id !== user.id) && (
                       <MakeOfferDialog
                         listingId={listing.id}
                         listingTitle={listing.title}

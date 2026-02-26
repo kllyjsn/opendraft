@@ -101,6 +101,45 @@ const OPENAPI_SPEC = {
         responses: { "200": { description: "Category counts" } },
       },
     },
+    "/offers": {
+      post: {
+        summary: "Place an offer on a listing (auth required)",
+        parameters: [],
+        requestBody: {
+          required: true,
+          content: { "application/json": { schema: { type: "object", required: ["listing_id", "offer_amount"], properties: {
+            listing_id: { type: "string", format: "uuid" },
+            offer_amount: { type: "integer", description: "Bid amount in cents (min 25% of price)" },
+            message: { type: "string", maxLength: 500 },
+          }}}},
+        },
+        responses: { "201": { description: "Created offer" }, "401": { description: "Auth required" } },
+      },
+      get: {
+        summary: "Get your offers (auth required)",
+        parameters: [
+          { name: "role", in: "query", schema: { type: "string", enum: ["buyer", "seller"], default: "buyer" } },
+          { name: "status", in: "query", schema: { type: "string", enum: ["pending", "countered", "accepted", "rejected", "withdrawn"] } },
+          { name: "limit", in: "query", schema: { type: "integer", default: 20, maximum: 50 } },
+        ],
+        responses: { "200": { description: "Array of offers" } },
+      },
+    },
+    "/offers/{id}": {
+      put: {
+        summary: "Respond to an offer (accept/reject/counter/withdraw, auth required)",
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } }],
+        requestBody: {
+          required: true,
+          content: { "application/json": { schema: { type: "object", required: ["action"], properties: {
+            action: { type: "string", enum: ["accept", "reject", "counter", "withdraw"] },
+            counter_amount: { type: "integer", description: "Counter amount in cents (required for counter action)" },
+            message: { type: "string", maxLength: 500 },
+          }}}},
+        },
+        responses: { "200": { description: "Updated offer status" } },
+      },
+    },
   },
 };
 
@@ -291,13 +330,181 @@ Deno.serve(async (req) => {
       return json(results);
     }
 
+    // ── Offers / Bidding ───────────────────────────────────────────
+
+    // Helper: extract user from Authorization header
+    async function authUser() {
+      const authHeader = req.headers.get("Authorization");
+      if (!authHeader?.startsWith("Bearer ")) return null;
+      const client = sb(authHeader);
+      const token = authHeader.replace("Bearer ", "");
+      const { data, error: authErr } = await client.auth.getUser(token);
+      if (authErr || !data?.user) return null;
+      return { id: data.user.id, client };
+    }
+
+    // POST /offers — place a new offer
+    if (path === "/offers" && req.method === "POST") {
+      const user = await authUser();
+      if (!user) return err("Authentication required. Pass a Bearer token.", 401);
+
+      const body = await req.json().catch(() => null);
+      if (!body) return err("Invalid JSON body", 400);
+
+      const { listing_id, offer_amount, message } = body;
+      if (!listing_id || !offer_amount) return err("listing_id and offer_amount are required", 400);
+      if (typeof offer_amount !== "number" || offer_amount < 1) return err("offer_amount must be a positive integer (cents)", 400);
+
+      // Fetch listing
+      const admin = adminSb();
+      const { data: listing, error: lErr } = await admin.from("listings").select("id,price,seller_id,status").eq("id", listing_id).single();
+      if (lErr || !listing) return err("Listing not found", 404);
+      if (listing.status !== "live") return err("Listing is not available", 400);
+      if (listing.seller_id === user.id) return err("Cannot bid on your own listing", 400);
+
+      const minBid = Math.ceil(listing.price * 0.25);
+      if (offer_amount < minBid) return err(`Minimum bid is ${minBid} cents (25% of price)`, 400);
+
+      // Check for existing pending offer
+      const { data: existing } = await admin.from("offers")
+        .select("id").eq("listing_id", listing_id).eq("buyer_id", user.id)
+        .in("status", ["pending", "countered"]).limit(1);
+      if (existing && existing.length > 0) return err("You already have an active offer on this listing. Withdraw it first.", 409);
+
+      const { data: offer, error: insertErr } = await admin.from("offers").insert({
+        listing_id, buyer_id: user.id, seller_id: listing.seller_id,
+        offer_amount, original_price: listing.price,
+        message: (message || "").slice(0, 500) || null,
+        status: "pending",
+      }).select().single();
+      if (insertErr) return err(insertErr.message, 500);
+
+      // Notify seller (fire-and-forget)
+      admin.from("notifications").insert({
+        user_id: listing.seller_id, type: "offer",
+        title: "New offer received",
+        message: `An agent offered $${(offer_amount / 100).toFixed(2)} on your listing`,
+        link: `/listing/${listing_id}`,
+      }).then(() => {});
+
+      // Log demand signal
+      admin.from("agent_listing_views").insert({ listing_id, source: "api", action: "bid" }).then(() => {});
+
+      return json(offer, 201);
+    }
+
+    // GET /offers — get authenticated user's offers
+    if (path === "/offers" && req.method === "GET") {
+      const user = await authUser();
+      if (!user) return err("Authentication required", 401);
+
+      const role = params.get("role") || "buyer"; // buyer or seller
+      const status = params.get("status"); // optional filter
+      const limit = Math.min(parseInt(params.get("limit") || "20"), 50);
+
+      let q = user.client.from("offers")
+        .select("id,listing_id,buyer_id,seller_id,offer_amount,original_price,counter_amount,status,message,seller_message,created_at,updated_at")
+        .order("created_at", { ascending: false }).limit(limit);
+
+      if (role === "seller") q = q.eq("seller_id", user.id);
+      else q = q.eq("buyer_id", user.id);
+
+      if (status) q = q.eq("status", status);
+
+      const { data, error: qErr } = await q;
+      if (qErr) return err(qErr.message, 500);
+      return json(data || []);
+    }
+
+    // PUT /offers/:id — respond to / update an offer
+    const offerMatch = path.match(/^\/offers\/([a-f0-9-]{36})$/);
+    if (offerMatch && req.method === "PUT") {
+      const user = await authUser();
+      if (!user) return err("Authentication required", 401);
+
+      const body = await req.json().catch(() => null);
+      if (!body) return err("Invalid JSON body", 400);
+
+      const offerId = offerMatch[1];
+      const admin = adminSb();
+      const { data: offer, error: oErr } = await admin.from("offers").select("*").eq("id", offerId).single();
+      if (oErr || !offer) return err("Offer not found", 404);
+
+      const { action, counter_amount, message: msg } = body;
+      if (!action) return err("action is required (accept, reject, counter, withdraw)", 400);
+
+      // Buyer actions
+      if (user.id === offer.buyer_id) {
+        if (action === "withdraw" && ["pending", "countered"].includes(offer.status)) {
+          await admin.from("offers").update({ status: "withdrawn", updated_at: new Date().toISOString() }).eq("id", offerId);
+          return json({ id: offerId, status: "withdrawn" });
+        }
+        if (action === "accept" && offer.status === "countered" && offer.counter_amount) {
+          await admin.from("offers").update({ status: "accepted", offer_amount: offer.counter_amount, updated_at: new Date().toISOString() }).eq("id", offerId);
+          admin.from("notifications").insert({
+            user_id: offer.seller_id, type: "offer",
+            title: "Offer accepted",
+            message: `Buyer accepted your counter of $${(offer.counter_amount / 100).toFixed(2)}`,
+            link: `/listing/${offer.listing_id}`,
+          }).then(() => {});
+          return json({ id: offerId, status: "accepted", final_amount: offer.counter_amount });
+        }
+        if (action === "counter" && offer.status === "countered" && counter_amount) {
+          if (typeof counter_amount !== "number" || counter_amount < 1) return err("counter_amount must be positive", 400);
+          await admin.from("offers").update({
+            status: "pending", offer_amount: counter_amount, counter_amount: null,
+            message: (msg || "").slice(0, 500) || offer.message, updated_at: new Date().toISOString(),
+          }).eq("id", offerId);
+          return json({ id: offerId, status: "pending", offer_amount: counter_amount });
+        }
+        if (action === "reject" && offer.status === "countered") {
+          await admin.from("offers").update({ status: "rejected", updated_at: new Date().toISOString() }).eq("id", offerId);
+          return json({ id: offerId, status: "rejected" });
+        }
+      }
+
+      // Seller actions
+      if (user.id === offer.seller_id) {
+        if (action === "accept" && offer.status === "pending") {
+          await admin.from("offers").update({ status: "accepted", updated_at: new Date().toISOString() }).eq("id", offerId);
+          admin.from("notifications").insert({
+            user_id: offer.buyer_id, type: "offer",
+            title: "Offer accepted!",
+            message: `Your offer of $${(offer.offer_amount / 100).toFixed(2)} was accepted`,
+            link: `/listing/${offer.listing_id}`,
+          }).then(() => {});
+          return json({ id: offerId, status: "accepted", final_amount: offer.offer_amount });
+        }
+        if (action === "reject" && offer.status === "pending") {
+          await admin.from("offers").update({ status: "rejected", seller_message: (msg || "").slice(0, 500) || null, updated_at: new Date().toISOString() }).eq("id", offerId);
+          return json({ id: offerId, status: "rejected" });
+        }
+        if (action === "counter" && offer.status === "pending" && counter_amount) {
+          if (typeof counter_amount !== "number" || counter_amount < 1) return err("counter_amount must be positive", 400);
+          await admin.from("offers").update({
+            status: "countered", counter_amount,
+            seller_message: (msg || "").slice(0, 500) || null, updated_at: new Date().toISOString(),
+          }).eq("id", offerId);
+          admin.from("notifications").insert({
+            user_id: offer.buyer_id, type: "offer",
+            title: "Counter offer received",
+            message: `Seller countered with $${(counter_amount / 100).toFixed(2)}`,
+            link: `/listing/${offer.listing_id}`,
+          }).then(() => {});
+          return json({ id: offerId, status: "countered", counter_amount });
+        }
+      }
+
+      return err("Invalid action for current offer state or unauthorized", 400);
+    }
+
     // Root
     if (path === "/" || path === "") {
       return json({
         name: "OpenDraft API",
         version: "1.0.0",
         docs: `${Deno.env.get("SUPABASE_URL")}/functions/v1/api/openapi.json`,
-        endpoints: ["/listings", "/listings/:id", "/trending", "/bounties", "/builders", "/builders/:username", "/categories"],
+        endpoints: ["/listings", "/listings/:id", "/trending", "/bounties", "/builders", "/builders/:username", "/categories", "/offers"],
         mcp_server: `${Deno.env.get("SUPABASE_URL")}/functions/v1/mcp-server`,
         website: BASE_URL,
       });

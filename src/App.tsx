@@ -29,6 +29,7 @@ import { BlogIndex, BlogPost } from "./pages/Blog";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import Developers from "./pages/Developers";
+import Agents from "./pages/Agents";
 
 const queryClient = new QueryClient();
 
@@ -65,6 +66,7 @@ const App = () => (
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/developers" element={<Developers />} />
+          <Route path="/agents" element={<Agents />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

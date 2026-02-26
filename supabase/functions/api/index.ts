@@ -14,6 +14,10 @@ function sb(auth?: string) {
   return createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, opts);
 }
 
+function adminSb() {
+  return createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+}
+
 function json(data: any, status = 200) {
   return new Response(JSON.stringify(data, null, 2), {
     status,
@@ -147,12 +151,31 @@ Deno.serve(async (req) => {
       const { data, error: dbErr } = await q;
       if (dbErr) return err(dbErr.message, 500);
 
+      // Log agent search demand signal if searching (fire-and-forget)
+      if (search) {
+        const admin = adminSb();
+        admin.from("agent_demand_signals").insert({
+          query: search.slice(0, 200),
+          category: category || null,
+          source: "api",
+        }).then(() => {});
+      }
+
+      // Get agent popularity for all returned listings
+      const admin = adminSb();
+      const listingIds = (data || []).map((l: any) => l.id);
+      const { data: agentPops } = listingIds.length > 0
+        ? await admin.from("agent_popular_listings").select("listing_id,agent_view_count").in("listing_id", listingIds)
+        : { data: [] };
+      const popMap = new Map((agentPops || []).map((p: any) => [p.listing_id, p.agent_view_count]));
+
       return json((data || []).map((l: any) => ({
         id: l.id, title: l.title, description: l.description?.slice(0, 200),
         price_cents: l.price, pricing_type: l.pricing_type, category: l.category,
         completeness: l.completeness_badge, tech_stack: l.tech_stack,
         sales: l.sales_count, views: l.view_count, demo_url: l.demo_url,
         url: `${BASE_URL}/listing/${l.id}`,
+        agent_views: popMap.get(l.id) || 0,
       })));
     }
 
@@ -171,7 +194,17 @@ Deno.serve(async (req) => {
         .from("reviews").select("rating,review_text,created_at").eq("listing_id", data.id)
         .order("created_at", { ascending: false }).limit(10);
 
-      return json({ ...data, seller, reviews: reviews || [], url: `${BASE_URL}/listing/${data.id}` });
+      // Log agent view (fire-and-forget)
+      const admin = adminSb();
+      admin.from("agent_listing_views").insert({ listing_id: data.id, source: "api", action: "view" }).then(() => {});
+
+      // Get agent popularity
+      const { data: agentPop } = await admin.from("agent_popular_listings").select("agent_view_count,unique_agents").eq("listing_id", data.id).maybeSingle();
+
+      return json({
+        ...data, seller, reviews: reviews || [], url: `${BASE_URL}/listing/${data.id}`,
+        agent_popularity: agentPop ? { views: agentPop.agent_view_count, unique_agents: agentPop.unique_agents } : null,
+      });
     }
 
     // GET /trending

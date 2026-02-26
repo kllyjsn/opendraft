@@ -5,10 +5,12 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { ChatDrawer } from "@/components/ChatDrawer";
 import { usePresence } from "@/hooks/usePubNub";
-import { MessageSquare, Loader2, Search, Plus, Circle, X } from "lucide-react";
-import { Link } from "react-router-dom";
+import { MessageSquare, Loader2, Search, Plus, Circle, X, Bell } from "lucide-react";
+import { Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { NotificationsList } from "@/components/NotificationsList";
 import { cn } from "@/lib/utils";
 
 interface Conversation {
@@ -33,10 +35,12 @@ interface UserResult {
 export default function Messages() {
   const { user, loading: authLoading } = useAuth();
   const { isOnline } = usePresence();
+  const [searchParams] = useSearchParams();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeConvo, setActiveConvo] = useState<Conversation | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState(searchParams.get("tab") === "notifications" ? "notifications" : "conversations");
 
   // New conversation state
   const [showNewChat, setShowNewChat] = useState(false);
@@ -183,133 +187,152 @@ export default function Messages() {
       <main className="flex-1 container mx-auto px-4 py-10 max-w-2xl">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-black">Messages</h1>
-          <Button
-            onClick={() => setShowNewChat(!showNewChat)}
-            variant={showNewChat ? "outline" : "default"}
-            size="sm"
-            className={cn(!showNewChat && "gradient-hero text-white border-0 shadow-glow")}
-          >
-            {showNewChat ? <X className="h-4 w-4 mr-1" /> : <Plus className="h-4 w-4 mr-1" />}
-            {showNewChat ? "Cancel" : "New message"}
-          </Button>
+          {activeTab === "conversations" && (
+            <Button
+              onClick={() => setShowNewChat(!showNewChat)}
+              variant={showNewChat ? "outline" : "default"}
+              size="sm"
+              className={cn(!showNewChat && "gradient-hero text-white border-0 shadow-glow")}
+            >
+              {showNewChat ? <X className="h-4 w-4 mr-1" /> : <Plus className="h-4 w-4 mr-1" />}
+              {showNewChat ? "Cancel" : "New message"}
+            </Button>
+          )}
         </div>
 
-        {/* New chat - user search */}
-        {showNewChat && (
-          <div className="mb-6 rounded-2xl border border-primary/30 bg-card p-5 shadow-card">
-            <p className="text-sm font-bold mb-3">Start a conversation</p>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                value={searchQuery}
-                onChange={(e) => searchUsers(e.target.value)}
-                placeholder="Search users by name…"
-                className="pl-9"
-                autoFocus
-              />
-            </div>
-            {searching && (
-              <div className="flex items-center gap-2 mt-3 text-sm text-muted-foreground">
-                <Loader2 className="h-3 w-3 animate-spin" /> Searching…
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
+          <TabsList className="w-full">
+            <TabsTrigger value="conversations" className="flex-1 gap-1.5">
+              <MessageSquare className="h-4 w-4" /> Conversations
+            </TabsTrigger>
+            <TabsTrigger value="notifications" className="flex-1 gap-1.5">
+              <Bell className="h-4 w-4" /> Notifications
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="conversations" className="mt-4">
+            {/* New chat - user search */}
+            {showNewChat && (
+              <div className="mb-6 rounded-2xl border border-primary/30 bg-card p-5 shadow-card">
+                <p className="text-sm font-bold mb-3">Start a conversation</p>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    value={searchQuery}
+                    onChange={(e) => searchUsers(e.target.value)}
+                    placeholder="Search users by name…"
+                    className="pl-9"
+                    autoFocus
+                  />
+                </div>
+                {searching && (
+                  <div className="flex items-center gap-2 mt-3 text-sm text-muted-foreground">
+                    <Loader2 className="h-3 w-3 animate-spin" /> Searching…
+                  </div>
+                )}
+                {searchResults.length > 0 && (
+                  <div className="mt-3 space-y-1">
+                    {searchResults.map((u) => (
+                      <button
+                        key={u.user_id}
+                        onClick={() => startDM(u)}
+                        className="w-full text-left flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-muted/60 transition-colors"
+                      >
+                        <div className="h-8 w-8 rounded-full gradient-hero flex items-center justify-center text-white text-xs font-bold shrink-0">
+                          {u.username?.[0]?.toUpperCase() ?? "?"}
+                        </div>
+                        <span className="text-sm font-medium flex-1 truncate">{u.username}</span>
+                        <Circle
+                          className={cn(
+                            "h-2.5 w-2.5 shrink-0",
+                            isOnline(u.user_id)
+                              ? "fill-emerald-500 text-emerald-500"
+                              : "fill-muted-foreground/30 text-muted-foreground/30"
+                          )}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {searchQuery.trim().length >= 2 && !searching && searchResults.length === 0 && (
+                  <p className="text-sm text-muted-foreground mt-3">No users found</p>
+                )}
               </div>
             )}
-            {searchResults.length > 0 && (
-              <div className="mt-3 space-y-1">
-                {searchResults.map((u) => (
+
+            {loading ? (
+              <div className="flex items-center justify-center py-20">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : conversations.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-border bg-muted/30 p-12 text-center">
+                <MessageSquare className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
+                <h2 className="text-lg font-bold mb-2">No conversations yet</h2>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Start a new conversation using the button above, or chat with a seller on any listing.
+                </p>
+                <Link to="/">
+                  <Button variant="outline">Browse listings</Button>
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {conversations.map((convo) => (
                   <button
-                    key={u.user_id}
-                    onClick={() => startDM(u)}
-                    className="w-full text-left flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-muted/60 transition-colors"
+                    key={convo.id}
+                    onClick={() => openChat(convo)}
+                    className="w-full text-left rounded-2xl border border-border/60 bg-card p-4 hover:border-primary/40 transition-all shadow-card group"
                   >
-                    <div className="h-8 w-8 rounded-full gradient-hero flex items-center justify-center text-white text-xs font-bold shrink-0">
-                      {u.username?.[0]?.toUpperCase() ?? "?"}
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-bold text-sm truncate">
+                            {convo.other_username}
+                          </span>
+                          <Circle
+                            className={cn(
+                              "h-2 w-2 shrink-0",
+                              convo.other_user_id && isOnline(convo.other_user_id)
+                                ? "fill-emerald-500 text-emerald-500"
+                                : "fill-muted-foreground/30 text-muted-foreground/30"
+                            )}
+                          />
+                          {(convo.unread_count ?? 0) > 0 && (
+                            <span className="flex-shrink-0 h-5 min-w-[20px] px-1.5 rounded-full gradient-hero text-white text-[10px] font-bold flex items-center justify-center">
+                              {convo.unread_count}
+                            </span>
+                          )}
+                        </div>
+                        {convo.listing_title && (
+                          <p className="text-xs text-muted-foreground truncate mb-1">
+                            Re: {convo.listing_title}
+                          </p>
+                        )}
+                        {!convo.listing_id && (
+                          <p className="text-xs text-muted-foreground truncate mb-1">
+                            Direct message
+                          </p>
+                        )}
+                        {convo.last_message && (
+                          <p className="text-sm text-muted-foreground truncate">
+                            {convo.last_message}
+                          </p>
+                        )}
+                      </div>
+                      <span className="text-[10px] text-muted-foreground shrink-0 mt-1">
+                        {new Date(convo.updated_at).toLocaleDateString()}
+                      </span>
                     </div>
-                    <span className="text-sm font-medium flex-1 truncate">{u.username}</span>
-                    <Circle
-                      className={cn(
-                        "h-2.5 w-2.5 shrink-0",
-                        isOnline(u.user_id)
-                          ? "fill-emerald-500 text-emerald-500"
-                          : "fill-muted-foreground/30 text-muted-foreground/30"
-                      )}
-                    />
                   </button>
                 ))}
               </div>
             )}
-            {searchQuery.trim().length >= 2 && !searching && searchResults.length === 0 && (
-              <p className="text-sm text-muted-foreground mt-3">No users found</p>
-            )}
-          </div>
-        )}
+          </TabsContent>
 
-        {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-          </div>
-        ) : conversations.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border bg-muted/30 p-12 text-center">
-            <MessageSquare className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
-            <h2 className="text-lg font-bold mb-2">No conversations yet</h2>
-            <p className="text-sm text-muted-foreground mb-4">
-              Start a new conversation using the button above, or chat with a seller on any listing.
-            </p>
-            <Link to="/">
-              <Button variant="outline">Browse listings</Button>
-            </Link>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {conversations.map((convo) => (
-              <button
-                key={convo.id}
-                onClick={() => openChat(convo)}
-                className="w-full text-left rounded-2xl border border-border/60 bg-card p-4 hover:border-primary/40 transition-all shadow-card group"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-bold text-sm truncate">
-                        {convo.other_username}
-                      </span>
-                      <Circle
-                        className={cn(
-                          "h-2 w-2 shrink-0",
-                          convo.other_user_id && isOnline(convo.other_user_id)
-                            ? "fill-emerald-500 text-emerald-500"
-                            : "fill-muted-foreground/30 text-muted-foreground/30"
-                        )}
-                      />
-                      {(convo.unread_count ?? 0) > 0 && (
-                        <span className="flex-shrink-0 h-5 min-w-[20px] px-1.5 rounded-full gradient-hero text-white text-[10px] font-bold flex items-center justify-center">
-                          {convo.unread_count}
-                        </span>
-                      )}
-                    </div>
-                    {convo.listing_title && (
-                      <p className="text-xs text-muted-foreground truncate mb-1">
-                        Re: {convo.listing_title}
-                      </p>
-                    )}
-                    {!convo.listing_id && (
-                      <p className="text-xs text-muted-foreground truncate mb-1">
-                        Direct message
-                      </p>
-                    )}
-                    {convo.last_message && (
-                      <p className="text-sm text-muted-foreground truncate">
-                        {convo.last_message}
-                      </p>
-                    )}
-                  </div>
-                  <span className="text-[10px] text-muted-foreground shrink-0 mt-1">
-                    {new Date(convo.updated_at).toLocaleDateString()}
-                  </span>
-                </div>
-              </button>
-            ))}
-          </div>
-        )}
+          <TabsContent value="notifications" className="mt-4">
+            <NotificationsList userId={user.id} />
+          </TabsContent>
+        </Tabs>
       </main>
       <Footer />
 

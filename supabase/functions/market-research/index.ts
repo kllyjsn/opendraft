@@ -13,6 +13,8 @@ const TREND_SOURCES = [
   { url: "https://github.com/trending", label: "GitHub Trending" },
   { url: "https://www.indiehackers.com", label: "Indie Hackers" },
   { url: "https://trends.google.com/trending?geo=US", label: "Google Trends" },
+  { url: "https://moltbook.com", label: "Moltbook (Agent Demand)" },
+  { url: "https://moltbook.com/explore", label: "Moltbook Explore" },
 ];
 
 async function scrapeWithFirecrawl(url: string, apiKey: string): Promise<string | null> {
@@ -154,6 +156,9 @@ Deno.serve(async (req) => {
         "viral micro-SaaS ideas indie hackers",
         "best selling app templates marketplace",
         "trending web app ideas vibe coding AI",
+        "moltbook AI agent tools trending",
+        "MCP server tools agents need 2026",
+        "AI agent marketplace demand autonomous workflows",
       ];
 
       const searchPromises = trendSearches.map(async (q) => {
@@ -188,11 +193,13 @@ Deno.serve(async (req) => {
             content: `You are a market analyst and tastemaker for OpenDraft, a marketplace where developers buy and sell vibe-coded apps & templates. You have access to both internal marketplace data AND real-time internet trends.
 
 Your job is to:
-1. Cross-reference EXTERNAL trends (Product Hunt, HN, GitHub, indie hackers) with INTERNAL demand
+1. Cross-reference EXTERNAL trends (Product Hunt, HN, GitHub, Indie Hackers, Moltbook) with INTERNAL demand
 2. Identify emerging niches BEFORE they become saturated
 3. Spot patterns in what's going viral and translate them into buildable template products
 4. Be a tastemaker — recommend products that are slightly ahead of the curve, not just copying what exists
 5. Think about breadth (covering many categories) AND depth (specific, well-scoped apps)
+6. Pay SPECIAL ATTENTION to Moltbook data — it reveals what AI agents and their operators actually need. Agent-facing tools (MCP servers, API-first apps, autonomous workflow templates) are a high-growth category.
+7. At least 30% of recommended builds MUST be agent-first: tools designed for AI agent consumption (MCP-compatible, API-first, webhook-driven).
 
 Focus on what's MARKETABLE — apps that solve real pain points, leverage trending tech, and have clear buyer personas. Price recommendations should reflect the current market willingness to pay.`,
           },

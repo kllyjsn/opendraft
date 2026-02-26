@@ -505,21 +505,26 @@ export default function ListingDetail() {
                 )
               ) : (
                 <div className="space-y-3">
-                  <div className="flex gap-2">
-                    <Link to={user ? `/checkout/${listing.id}` : "/login"} className="flex-1">
-                      <Button className="w-full gradient-hero text-white border-0 shadow-glow hover:opacity-90 h-12 text-base font-bold transition-opacity">
-                        <ShoppingCart className="h-4 w-4 mr-2" />
-                        {isMonthly ? `Subscribe — ${priceLabel}` : `Buy Now — ${priceLabel}`}
+                  <div className="grid grid-cols-2 gap-2">
+                    <Link to={user ? `/checkout/${listing.id}` : "/login"} className="col-span-1">
+                      <Button className="w-full gradient-hero text-white border-0 shadow-glow hover:opacity-90 h-12 text-sm sm:text-base font-bold transition-opacity">
+                        <ShoppingCart className="h-4 w-4 mr-1.5 shrink-0" />
+                        <span className="truncate">{isMonthly ? `Subscribe` : `Buy Now`}</span>
                       </Button>
                     </Link>
-                    {(!user || listing.seller_id !== user.id) && (
-                      <MakeOfferDialog
-                        listingId={listing.id}
-                        listingTitle={listing.title}
-                        askingPrice={listing.price}
-                      />
+                    {(!user || listing.seller_id !== user.id) ? (
+                      <div className="col-span-1">
+                        <MakeOfferDialog
+                          listingId={listing.id}
+                          listingTitle={listing.title}
+                          askingPrice={listing.price}
+                        />
+                      </div>
+                    ) : (
+                      <div className="col-span-1" />
                     )}
                   </div>
+                  <p className="text-center text-xs text-muted-foreground font-medium">{priceLabel}</p>
                   {/* Active offer status */}
                   {user && listing.seller_id !== user.id && (
                     <ActiveOfferBanner listingId={listing.id} askingPrice={listing.price} />

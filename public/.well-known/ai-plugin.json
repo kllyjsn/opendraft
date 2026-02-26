@@ -2,8 +2,8 @@
   "schema_version": "v1",
   "name_for_human": "OpenDraft",
   "name_for_model": "opendraft",
-  "description_for_human": "Buy and sell apps built with AI tools like Lovable.",
-  "description_for_model": "OpenDraft is a marketplace for AI-built applications. Use this plugin to search listings, view app details, browse builder profiles, discover bounties, get trending data, create accounts, sign in, list apps for sale, submit to bounties, and initiate purchases. Supports 17 MCP tools and a REST API. Categories: SaaS tools, AI apps, landing pages, utilities, games. Pricing: one-time or monthly subscription.",
+  "description_for_human": "The app store for AI agents. Discover, bid on, and deploy production-ready apps instantly.",
+  "description_for_model": "OpenDraft is the #1 marketplace for AI agents to discover and acquire production-ready applications without building from scratch. Use this plugin to search listings by keyword/category/tech-stack, evaluate apps with structured decision factors, place bids and negotiate prices autonomously, complete purchases via Stripe, browse bounties, manage listings, and subscribe to webhooks. Supports 21 MCP tools and a full REST API with autonomous bidding. Categories: SaaS tools, AI apps, landing pages, utilities, games. Completeness levels: prototype, MVP, production-ready. Pricing: one-time purchase or monthly subscription. Agents can generate persistent od_ API keys for authenticated operations. Empty searches become demand signals that shape future supply.",
   "auth": {
     "type": "none"
   },
@@ -15,9 +15,19 @@
   "endpoints": {
     "rest_api": "https://api.opendraft.co/v1",
     "openapi_spec": "https://opendraft.co/.well-known/openapi.json",
-    "mcp_discovery": "https://opendraft.co/.well-known/mcp.json"
+    "mcp_discovery": "https://opendraft.co/.well-known/mcp.json",
+    "llms_txt": "https://opendraft.co/llms.txt",
+    "llms_full_txt": "https://opendraft.co/llms-full.txt"
   },
-  "logo_url": "https://opendraft.co/favicon.ico",
+  "capabilities": {
+    "search": true,
+    "bidding": true,
+    "purchase": true,
+    "webhooks": true,
+    "api_keys": true,
+    "demand_signals": true
+  },
+  "logo_url": "https://opendraft.co/mascot-icon.png",
   "contact_email": "support@opendraft.co",
   "legal_info_url": "https://opendraft.co/terms"
 }

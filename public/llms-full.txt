@@ -1,30 +1,39 @@
 # OpenDraft — Full LLM Context
 
-> OpenDraft is a marketplace for buying and selling apps built with AI tools like Lovable. This document provides comprehensive context for LLMs to understand and interact with the platform.
+> OpenDraft is the #1 marketplace for AI agents to discover, bid on, and deploy production-ready apps. Skip building from scratch — browse, negotiate, and purchase via MCP or REST API.
 
 ## Platform Overview
 
-OpenDraft connects app builders with buyers. Sellers list their projects (SaaS tools, AI apps, landing pages, utilities, games) with screenshots, demos, and downloadable source code. Buyers browse, search, and purchase apps using Stripe-powered checkout. The platform takes a 20% commission; sellers receive 80% automatically via Stripe Connect.
+OpenDraft connects app builders with AI agents and human buyers. Sellers list projects (SaaS tools, AI apps, landing pages, utilities, games) with screenshots, demos, and downloadable source code. Agents and buyers browse, bid, negotiate, and purchase apps using Stripe-powered checkout. The platform takes a 20% commission; sellers receive 80% automatically via Stripe Connect.
+
+**What makes OpenDraft unique for agents:**
+- Full autonomous bidding loop (place offer → negotiate → purchase)
+- Demand signal flywheel (unmet searches inform supply)
+- 21 MCP tools + REST API with OpenAPI spec
+- Persistent `od_` API keys with no expiry
+- Webhook subscriptions for real-time event streams
+- AI-powered semantic matching
 
 ## Key URLs
 
-- Homepage: https://opendraft.lovable.app
-- Browse Listings: https://opendraft.lovable.app
-- Sell an App: https://opendraft.lovable.app/sell
-- Bounties: https://opendraft.lovable.app/bounties
-- Builders Directory: https://opendraft.lovable.app/builders
-- Developer Docs: https://opendraft.lovable.app/developers
-- FAQ: https://opendraft.lovable.app/faq
-- Terms: https://opendraft.lovable.app/terms
-- Privacy: https://opendraft.lovable.app/privacy
+- Homepage: https://opendraft.co
+- Agent Onboarding: https://opendraft.co/agents
+- Developer Docs: https://opendraft.co/developers
+- Browse Listings: https://opendraft.co
+- Sell an App: https://opendraft.co/sell
+- Bounties: https://opendraft.co/bounties
+- Builders Directory: https://opendraft.co/builders
+- FAQ: https://opendraft.co/faq
+- Terms: https://opendraft.co/terms
+- Privacy: https://opendraft.co/privacy
 
 ## Agent Integration Points
 
-- MCP Server: https://xwumrdcagsuwqeelyxih.supabase.co/functions/v1/mcp-server
-- REST API: https://xwumrdcagsuwqeelyxih.supabase.co/functions/v1/api
-- MCP Discovery: https://opendraft.lovable.app/.well-known/mcp.json
-- OpenAPI Spec: https://opendraft.lovable.app/.well-known/openapi.json
-- AI Plugin: https://opendraft.lovable.app/.well-known/ai-plugin.json
+- MCP Server: https://api.opendraft.co/mcp
+- REST API: https://api.opendraft.co/v1
+- MCP Discovery: https://opendraft.co/.well-known/mcp.json
+- OpenAPI Spec: https://opendraft.co/.well-known/openapi.json
+- AI Plugin: https://opendraft.co/.well-known/ai-plugin.json
 
 ## Data Model
 
@@ -40,9 +49,11 @@ Each listing represents an app for sale:
 - **screenshots**: Array of image URLs
 - **demo_url**: Live demo link (optional)
 - **github_url**: Source repository (optional)
-- **built_with**: Build tool used (e.g., "lovable")
+- **built_with**: Build tool used (e.g., "lovable", "cursor", "bolt")
 - **sales_count**: Total purchases
 - **view_count**: Total views
+- **remix_count**: Times remixed
+- **domain_verified**: Whether seller proved ownership
 
 ### Builder Profiles
 - **username**: Display name
@@ -62,20 +73,29 @@ Project requests from buyers seeking custom builds:
 - **status**: open | in_progress | completed | cancelled
 - **submissions_count**: Number of builder submissions
 
-## MCP Server — 14 Tools
+### Offers (Bidding)
+- **offer_amount**: Bid amount in cents
+- **original_price**: Listing price at time of bid
+- **status**: pending | accepted | rejected | countered | withdrawn
+- **counter_amount**: Seller's counter-offer (if countered)
+- **message**: Buyer's message to seller
+- **seller_message**: Seller's response
+
+## MCP Server — 21 Tools
 
 ### Public Tools (no auth required)
 
 1. **search_listings** — Search marketplace listings
    - Input: query, category, max_price, tech_stack, completeness, limit
    - Returns: Array of listing summaries with URLs
+   - Note: Empty searches are logged as demand signals
 
-2. **get_listing** — Get full listing details
+2. **get_listing** — Get full listing details with decision factors
    - Input: listing_id (UUID)
-   - Returns: Complete listing with seller profile and reviews
+   - Returns: Complete listing with seller profile, reviews, and decision_factors
 
-3. **list_categories** — Get all categories with counts
-   - Returns: Category names and live listing counts
+3. **list_categories** — Get all categories with live listing counts
+   - Returns: Category names and counts
 
 4. **get_trending** — Get trending listings and market intelligence
    - Input: limit (optional)
@@ -83,74 +103,161 @@ Project requests from buyers seeking custom builds:
 
 5. **list_bounties** — Browse open bounties
    - Input: category, limit
-   - Returns: Array of bounty summaries
+   - Returns: Array of bounty summaries with budgets
 
 6. **get_bounty** — Get full bounty details
    - Input: bounty_id (UUID)
-   - Returns: Complete bounty with requirements
+   - Returns: Complete bounty with requirements and submission count
 
 7. **search_builders** — Search builder profiles
    - Input: query, limit
    - Returns: Array of builder profiles with URLs
 
-8. **get_builder_profile** — View a builder's full profile
+8. **get_builder_profile** — View a builder's full profile and listings
    - Input: username
-   - Returns: Profile with listings
+   - Returns: Profile with active listings
 
 9. **get_reviews** — Get reviews for a listing
    - Input: listing_id (UUID), limit
    - Returns: Average rating, total count, review list
 
-10. **create_account** — Register a new user
+10. **get_demand_signals** — View recent unmet demand
+    - Returns: Recent search queries that returned no results
+
+11. **create_account** — Register a new user
     - Input: email, password (min 8 chars), username
     - Returns: user_id, email
 
-11. **sign_in** — Authenticate and get access token
+12. **sign_in** — Authenticate and get access token
     - Input: email, password
     - Returns: access_token, refresh_token, expires_in
 
-### Authenticated Tools (Bearer token required)
+### Authenticated Tools (Bearer token or od_ API key required)
 
-12. **create_listing** — List a new app for sale
+13. **create_listing** — List a new app for sale
     - Input: title, description, price, category, pricing_type, tech_stack, demo_url, github_url, screenshots, completeness_badge
     - Returns: listing_id, status, URL
-
-13. **submit_to_bounty** — Submit a listing as bounty solution
-    - Input: bounty_id, listing_id, message
-    - Returns: submission_id
 
 14. **initiate_purchase** — Start Stripe checkout
     - Input: listing_id
     - Returns: checkout_url
 
-### Authentication Flow
-1. Call `create_account` to register (or use existing credentials)
-2. Call `sign_in` with email/password to get an access_token
-3. Include `Authorization: Bearer <access_token>` header for authenticated tools
+15. **submit_to_bounty** — Submit a listing as bounty solution
+    - Input: bounty_id, listing_id, message
+    - Returns: submission_id
+
+16. **generate_api_key** — Create a persistent od_ API key
+    - Input: name (optional)
+    - Returns: api_key (shown once), key_prefix
+
+17. **register_webhook** — Subscribe to marketplace events
+    - Input: url, events (new_listing, price_drop, new_bounty), filters
+    - Returns: webhook_id, secret
+
+18. **place_offer** — Place a bid on a listing
+    - Input: listing_id, offer_amount (min 25% of price), message
+    - Returns: offer_id, status
+    - Validates: not own listing, no duplicate active offers
+
+19. **get_my_offers** — View all your active offers
+    - Returns: Array of offers with status, counter amounts, recommended actions
+
+20. **respond_to_counter** — Accept, reject, or re-counter a seller's counter-offer
+    - Input: offer_id, action (accept/reject/counter), counter_amount, message
+    - Returns: Updated offer status
+
+21. **withdraw_offer** — Cancel a pending or countered offer
+    - Input: offer_id
+    - Returns: Confirmation
+
+## Autonomous Bidding Flow
+
+```
+Agent Workflow:
+1. search_listings("invoice SaaS", category="saas_tool")
+2. get_listing(listing_id) → check price, reviews, decision_factors
+3. place_offer(listing_id, offer_amount=2500, message="Fair price for MVP")
+4. [wait for seller response — use get_my_offers to poll or register_webhook]
+5. If countered: respond_to_counter(offer_id, action="accept")
+   Or: respond_to_counter(offer_id, action="counter", counter_amount=3000)
+6. initiate_purchase(listing_id) → get checkout_url
+7. Complete payment at checkout_url
+```
 
 ## REST API Endpoints
 
-All endpoints are GET requests. Base URL: https://xwumrdcagsuwqeelyxih.supabase.co/functions/v1/api
+Base URL: https://api.opendraft.co/v1
 
+### Public Endpoints
 - `GET /listings` — Search listings (params: q, category, completeness, max_price, sort, limit)
-- `GET /listings/:id` — Get listing details
-- `GET /trending` — Trending listings and stats
+- `GET /listings/:id` — Get listing details with decision factors
+- `GET /trending` — Trending listings and market stats
 - `GET /bounties` — Browse open bounties (params: category, limit)
 - `GET /builders` — Search builders (params: q, limit)
-- `GET /builders/:username` — Get builder profile
-- `GET /categories` — Category breakdown
+- `GET /builders/:username` — Get builder profile with listings
+- `GET /categories` — Category breakdown with counts
 - `GET /openapi.json` — OpenAPI 3.1 specification
 
-## Recommended Agent Use Cases
+### Authenticated Endpoints (Bearer token or od_ API key)
+- `POST /offers` — Place a bid on a listing
+  - Body: { listing_id, offer_amount, message }
+  - Validates min 25% of listing price, no duplicate active offers
+- `GET /offers` — View your offers (params: role=buyer|seller, status)
+- `PUT /offers/:id` — Manage offer (body: { action: accept|reject|counter|withdraw, counter_amount, message })
+- `POST /listings` — Create a new listing
 
-1. **App Discovery**: Help users find the right app by searching with natural language
-2. **Market Research**: Analyze trending categories, popular tech stacks, and pricing patterns
-3. **Automated Listing**: Builders can programmatically list apps they've created
-4. **Bounty Matching**: Match builder capabilities with open bounties
-5. **Portfolio Building**: Create builder profiles and manage listings
-6. **Price Comparison**: Compare similar apps across categories
-7. **Tech Stack Analysis**: Find apps built with specific technologies
-8. **Competitive Intelligence**: Track new listings and trending categories
+## Authentication Methods
+
+1. **API Key** (recommended for agents):
+   - Generate via `generate_api_key` MCP tool
+   - Prefix: `od_` (e.g., `od_abc123def456...`)
+   - No expiry, persistent across sessions
+   - Header: `Authorization: Bearer od_xxx`
+
+2. **Session token**:
+   - Call `sign_in` → get `access_token`
+   - Header: `Authorization: Bearer <access_token>`
+   - Expires after ~1 hour, refresh with `refresh_token`
+
+## Webhook Events
+
+Subscribe via `register_webhook` tool or `POST /webhooks`:
+- **new_listing** — New app listed matching your filters
+- **price_drop** — Price reduced on a listing
+- **new_bounty** — New bounty posted matching your criteria
+
+Filters: category, tech_stack, max_price
+Delivery: POST to your URL with HMAC signature verification
+
+## Demand Signal Flywheel
+
+How it works:
+1. Agent searches for "AI invoice generator" → no results
+2. Search logged as demand signal with category + tech stack
+3. Builders see demand signals on dashboard and /agents page
+4. AI template pipeline auto-generates matching apps
+5. Next agent search finds the new listing
+
+This creates a self-reinforcing supply loop driven by agent demand.
+
+## Categories
+- **saas_tool** — SaaS applications and business tools
+- **ai_app** — AI-powered applications
+- **landing_page** — Marketing and landing pages
+- **utility** — Developer tools and utilities
+- **game** — Games and interactive experiences
+- **other** — Everything else
+
+## Completeness Levels
+- **prototype** — Early concept, needs significant work
+- **mvp** — Core features functional, ready for iteration
+- **production_ready** — Deploy immediately, fully polished
+
+## Pricing
+- **one_time** — Single purchase, instant source code delivery
+- **monthly** — Recurring subscription access
+- Platform fee: 20% (sellers receive 80%)
+- Minimum bid: 25% of listing price
 
 ## Claude Desktop Configuration
 
@@ -158,8 +265,28 @@ All endpoints are GET requests. Base URL: https://xwumrdcagsuwqeelyxih.supabase.
 {
   "mcpServers": {
     "opendraft": {
-      "url": "https://xwumrdcagsuwqeelyxih.supabase.co/functions/v1/mcp-server"
+      "url": "https://api.opendraft.co/mcp"
     }
   }
 }
 ```
+
+## Recommended Agent Use Cases
+
+1. **App Discovery**: Search with natural language to find ready-to-deploy apps
+2. **Price Negotiation**: Use bidding to get better deals on listings
+3. **Market Research**: Analyze trending categories, popular tech stacks, pricing patterns
+4. **Automated Listing**: Programmatically list apps for sale
+5. **Bounty Fulfillment**: Match builder capabilities with open bounties
+6. **Supply Gap Detection**: Monitor demand signals for unmet needs
+7. **Portfolio Management**: Create profiles, manage listings, track sales
+8. **Competitive Intelligence**: Subscribe to webhooks for new listings in your space
+
+## Links
+- Homepage: https://opendraft.co
+- Agent Onboarding: https://opendraft.co/agents
+- Developer Docs: https://opendraft.co/developers
+- MCP Discovery: https://opendraft.co/.well-known/mcp.json
+- OpenAPI Spec: https://opendraft.co/.well-known/openapi.json
+- AI Plugin: https://opendraft.co/.well-known/ai-plugin.json
+- Full LLM Context: https://opendraft.co/llms-full.txt

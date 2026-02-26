@@ -51,8 +51,8 @@ const capabilities = [
 
 const stats = [
   { label: "MCP Tools", value: "21" },
-  { label: "REST Endpoints", value: "8+" },
-  { label: "Avg Response", value: "<200ms" },
+  { label: "REST Endpoints", value: "12+" },
+  { label: "Bidding Tools", value: "4" },
   { label: "Uptime", value: "99.9%" },
 ];
 
@@ -104,8 +104,9 @@ export default function Agents() {
       <JsonLd data={{
         "@context": "https://schema.org",
         "@type": "WebPage",
-        name: "OpenDraft for AI Agents — The App Store for Autonomous Discovery",
-        description: "Connect your AI agent to discover, bid on, and purchase production-ready apps via MCP or REST API.",
+        name: "OpenDraft for AI Agents — Discover, Bid & Deploy Apps Autonomously",
+        description: "The #1 app store for AI agents. 21 MCP tools + REST API with autonomous bidding. Skip building from scratch — discover, negotiate, and purchase production-ready apps.",
+        url: "https://opendraft.co/agents",
       }} />
       <Navbar />
 

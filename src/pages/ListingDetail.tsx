@@ -441,37 +441,6 @@ export default function ListingDetail() {
               </div>
             )}
 
-            {/* Reviews */}
-            <div>
-              <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-                Reviews
-                {reviews.length > 0 && (
-                  <span className="rounded-full bg-muted px-2 py-0.5 text-sm text-muted-foreground font-normal">{reviews.length}</span>
-                )}
-              </h3>
-              {reviews.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-border bg-muted/30 p-8 text-center">
-                  <Star className="h-8 w-8 text-muted-foreground/30 mx-auto mb-3" />
-                  <p className="text-sm text-muted-foreground">No reviews yet. Be the first to buy and review!</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {reviews.map((r) => (
-                    <div key={r.id} className="rounded-2xl border border-border/60 bg-card p-4 shadow-card">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-0.5">
-                          {Array.from({ length: 5 }).map((_, i) => (
-                            <Star key={i} className={`h-3.5 w-3.5 ${i < r.rating ? "fill-accent text-accent" : "text-muted-foreground/30"}`} />
-                          ))}
-                        </div>
-                        <span className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</span>
-                      </div>
-                      {r.review_text && <p className="text-sm text-muted-foreground leading-relaxed">{r.review_text}</p>}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
           </div>
 
           {/* Right: buy card */}
@@ -705,6 +674,38 @@ export default function ListingDetail() {
           </div>
             )}
           </div>
+        </div>
+
+        {/* Reviews — full width below the grid */}
+        <div className="mt-12">
+          <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+            Reviews
+            {reviews.length > 0 && (
+              <span className="rounded-full bg-muted px-2 py-0.5 text-sm text-muted-foreground font-normal">{reviews.length}</span>
+            )}
+          </h3>
+          {reviews.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-border bg-muted/30 p-8 text-center">
+              <Star className="h-8 w-8 text-muted-foreground/30 mx-auto mb-3" />
+              <p className="text-sm text-muted-foreground">No reviews yet. Be the first to buy and review!</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {reviews.map((r) => (
+                <div key={r.id} className="rounded-2xl border border-border/60 bg-card p-4 shadow-card">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-0.5">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Star key={i} className={`h-3.5 w-3.5 ${i < r.rating ? "fill-accent text-accent" : "text-muted-foreground/30"}`} />
+                      ))}
+                    </div>
+                    <span className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</span>
+                  </div>
+                  {r.review_text && <p className="text-sm text-muted-foreground leading-relaxed">{r.review_text}</p>}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </main>
       <Footer />

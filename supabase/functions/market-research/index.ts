@@ -15,6 +15,8 @@ const TREND_SOURCES = [
   { url: "https://trends.google.com/trending?geo=US", label: "Google Trends" },
   { url: "https://moltbook.com", label: "Moltbook (Agent Demand)" },
   { url: "https://moltbook.com/explore", label: "Moltbook Explore" },
+  { url: "https://openclaw.com", label: "OpenClaw (Agent Tools)" },
+  { url: "https://openclaw.com/explore", label: "OpenClaw Explore" },
 ];
 
 async function scrapeWithFirecrawl(url: string, apiKey: string): Promise<string | null> {
@@ -157,6 +159,7 @@ Deno.serve(async (req) => {
         "best selling app templates marketplace",
         "trending web app ideas vibe coding AI",
         "moltbook AI agent tools trending",
+        "openclaw AI agent tools marketplace",
         "MCP server tools agents need 2026",
         "AI agent marketplace demand autonomous workflows",
       ];
@@ -193,7 +196,7 @@ Deno.serve(async (req) => {
             content: `You are a market analyst and tastemaker for OpenDraft, a marketplace where developers buy and sell vibe-coded apps & templates. You have access to both internal marketplace data AND real-time internet trends.
 
 Your job is to:
-1. Cross-reference EXTERNAL trends (Product Hunt, HN, GitHub, Indie Hackers, Moltbook) with INTERNAL demand
+1. Cross-reference EXTERNAL trends (Product Hunt, HN, GitHub, Indie Hackers, Moltbook, OpenClaw) with INTERNAL demand
 2. Identify emerging niches BEFORE they become saturated
 3. Spot patterns in what's going viral and translate them into buildable template products
 4. Be a tastemaker — recommend products that are slightly ahead of the curve, not just copying what exists

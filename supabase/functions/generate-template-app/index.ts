@@ -348,67 +348,72 @@ IMPORTANT: You must build products people actually want. Use the market research
   if (!template.files?.length)
     return { success: false, error: "AI generated no files" };
 
-  /* ── Step 2: Generate preview screenshot via AI ───────────── */
-  let screenshotPath: string | null = null;
-  try {
-    const imgResponse = await fetch(
-      "https://ai.gateway.lovable.dev/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash-image",
-          messages: [
-            {
-              role: "user",
-              content: `Generate a clean, professional UI screenshot/mockup for a web application called "${template.title}". Description: "${template.description}". Show a realistic browser view of the app with a modern design, nice typography, and a polished layout. The screenshot should look like an actual working web app. Use a clean white/light background with accent colors. Make it 1280x720 resolution style.`,
-            },
-          ],
-          modalities: ["image", "text"],
-        }),
-      }
-    );
+  /* ── Step 2: Generate TWO preview screenshots via AI ────── */
+  const screenshotPaths: string[] = [];
+  const slug = (template.title || "template")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .slice(0, 40);
 
-    if (imgResponse.ok) {
+  const screenshotPrompts = [
+    // 1. Marketing / landing page hero view
+    `Generate a stunning, high-fidelity marketing landing page screenshot for a web application called "${template.title}". Description: "${template.description}". Show a hero section with a bold headline, subheadline, a prominent CTA button, feature highlights, and social proof elements. Use a modern gradient background, professional typography, and vibrant accent colors. The design should look like a polished Product Hunt-ready landing page. 1280x720 resolution, browser chrome NOT visible — just the page content.`,
+    // 2. App dashboard / interface view
+    `Generate a realistic, detailed app interface screenshot for a web application called "${template.title}". Description: "${template.description}". Show the main functional dashboard/workspace view with navigation sidebar or top nav, data cards, tables or content areas, and interactive UI elements populated with realistic sample data. Use a clean light theme with subtle shadows and a cohesive color palette. It should look like a real working application, NOT a landing page. 1280x720 resolution, browser chrome NOT visible — just the app UI.`,
+  ];
+
+  // Generate both screenshots in parallel for speed
+  const imgResults = await Promise.allSettled(
+    screenshotPrompts.map(async (prompt, idx) => {
+      const imgResponse = await fetch(
+        "https://ai.gateway.lovable.dev/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${LOVABLE_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "google/gemini-2.5-flash-image",
+            messages: [{ role: "user", content: prompt }],
+            modalities: ["image", "text"],
+          }),
+        }
+      );
+
+      if (!imgResponse.ok) return null;
       const imgData = await imgResponse.json();
-      const imageUrl =
-        imgData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+      const imageUrl = imgData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+      if (!imageUrl?.startsWith("data:image")) return null;
 
-      if (imageUrl && imageUrl.startsWith("data:image")) {
-        // Extract base64 data
-        const base64Data = imageUrl.split(",")[1];
-        const binaryStr = atob(base64Data);
-        const bytes = new Uint8Array(binaryStr.length);
-        for (let i = 0; i < binaryStr.length; i++) {
-          bytes[i] = binaryStr.charCodeAt(i);
-        }
-
-        const slug = (template.title || "template")
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, "-")
-          .slice(0, 40);
-        screenshotPath = `ai-generated/${slug}-${Date.now()}.png`;
-
-        const { error: imgUploadErr } = await supabase.storage
-          .from("listing-screenshots")
-          .upload(screenshotPath, bytes, {
-            contentType: "image/png",
-            upsert: false,
-          });
-
-        if (imgUploadErr) {
-          console.error("Screenshot upload error:", imgUploadErr);
-          screenshotPath = null;
-        }
+      const base64Data = imageUrl.split(",")[1];
+      const binaryStr = atob(base64Data);
+      const bytes = new Uint8Array(binaryStr.length);
+      for (let i = 0; i < binaryStr.length; i++) {
+        bytes[i] = binaryStr.charCodeAt(i);
       }
+
+      const label = idx === 0 ? "marketing" : "app";
+      const path = `ai-generated/${slug}-${label}-${Date.now()}.png`;
+
+      const { error: uploadErr } = await supabase.storage
+        .from("listing-screenshots")
+        .upload(path, bytes, { contentType: "image/png", upsert: false });
+
+      if (uploadErr) {
+        console.error(`Screenshot ${label} upload error:`, uploadErr);
+        return null;
+      }
+      return path;
+    })
+  );
+
+  for (const r of imgResults) {
+    if (r.status === "fulfilled" && r.value) {
+      screenshotPaths.push(r.value);
     }
-  } catch (imgErr) {
-    console.error("Screenshot generation error:", imgErr);
-    // Non-fatal — continue without screenshot
   }
+  console.log(`Generated ${screenshotPaths.length}/2 screenshots for "${template.title}"`);
 
   /* ── Step 3: Build ZIP ────────────────────────────────────── */
   const zip = new JSZip();
@@ -442,10 +447,6 @@ IMPORTANT: You must build products people actually want. Use the market research
   const zipBlob = await zip.generateAsync({ type: "uint8array" });
 
   /* ── Step 4: Upload ZIP to storage ─────────────────────────── */
-  const slug = (template.title || "template")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .slice(0, 40);
   const filePath = `ai-generated/${slug}-${Date.now()}.zip`;
 
   const { error: uploadError } = await supabase.storage
@@ -460,12 +461,12 @@ IMPORTANT: You must build products people actually want. Use the market research
     return { success: false, error: "Failed to upload ZIP: " + uploadError.message };
   }
 
-  /* ── Step 5: Build screenshots array with public URL ─────── */
+  /* ── Step 5: Build screenshots array with public URLs ─────── */
   const screenshots: string[] = [];
-  if (screenshotPath) {
+  for (const sp of screenshotPaths) {
     const { data: publicUrlData } = supabase.storage
       .from("listing-screenshots")
-      .getPublicUrl(screenshotPath);
+      .getPublicUrl(sp);
     if (publicUrlData?.publicUrl) {
       screenshots.push(publicUrlData.publicUrl);
     }
@@ -505,7 +506,8 @@ IMPORTANT: You must build products people actually want. Use the market research
       title: template.title,
       file_count: template.files.length,
       zip_size_kb: Math.round(zipBlob.length / 1024),
-      has_screenshot: !!screenshotPath,
+      has_screenshot: screenshotPaths.length > 0,
+      screenshot_count: screenshotPaths.length,
     },
   });
 

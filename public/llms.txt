@@ -1,0 +1,50 @@
+# OpenDraft
+
+> OpenDraft is a marketplace for buying and selling apps built with AI tools like Lovable. Builders list their projects, buyers discover and purchase them instantly.
+
+## Key Links
+
+- Homepage: https://opendraft.lovable.app
+- Browse Listings: https://opendraft.lovable.app
+- Sell an App: https://opendraft.lovable.app/sell
+- Bounties: https://opendraft.lovable.app/bounties
+- Builders Directory: https://opendraft.lovable.app/builders
+- FAQ: https://opendraft.lovable.app/faq
+- Full LLM Context: https://opendraft.lovable.app/llms-full.txt
+- MCP Server: https://xwumrdcagsuwqeelyxih.supabase.co/functions/v1/mcp-server
+- API Plugin Manifest: https://opendraft.lovable.app/.well-known/ai-plugin.json
+
+## What You Can Do
+
+- **Browse**: Search and filter marketplace listings by category, tech stack, and price
+- **Buy**: Purchase apps with one-time or subscription pricing via Stripe
+- **Sell**: List your AI-built apps with screenshots, demos, and source code
+- **Bounties**: Post or fulfill project bounties for custom builds
+- **Chat**: Message builders directly about their listings
+- **Remix**: Fork and build on top of existing listings
+
+## Categories
+
+- SaaS Tools
+- AI Apps
+- Landing Pages
+- Utilities
+- Games
+- Other
+
+## Pricing Models
+
+- One-time purchase
+- Monthly subscription
+- Free (open source)
+
+## For AI Agents
+
+OpenDraft exposes an MCP (Model Context Protocol) server that allows agents to:
+1. Search and browse listings programmatically
+2. View listing details, pricing, and tech stacks
+3. Create user accounts and builder profiles
+4. List and sell new apps on the marketplace
+5. Initiate purchases on behalf of users
+
+Connect to the MCP server at: https://xwumrdcagsuwqeelyxih.supabase.co/functions/v1/mcp-server

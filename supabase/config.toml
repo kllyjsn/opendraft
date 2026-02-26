@@ -65,3 +65,7 @@ verify_jwt = false
 # generate-template-app — admin-only, generates full source code ZIP
 [functions.generate-template-app]
 verify_jwt = false
+
+# MCP server — public access for AI agents
+[functions.mcp-server]
+verify_jwt = false

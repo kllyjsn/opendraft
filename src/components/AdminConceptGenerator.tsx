@@ -9,6 +9,9 @@ interface GeneratedConcept {
   title: string;
   category: string;
   price: number;
+  trend_inspiration?: string;
+  buyer_persona?: string;
+  key_differentiator?: string;
 }
 
 interface TemplateResultItem {
@@ -188,12 +191,22 @@ export function AdminConceptGenerator() {
               Created as pending drafts
             </p>
             {conceptResults.map((c, i) => (
-              <div key={i} className="flex items-center justify-between rounded-lg border border-border bg-muted/50 px-3 py-2">
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="text-sm font-semibold truncate">{c.title}</span>
-                  <span className="rounded-md bg-muted px-1.5 py-0.5 text-xs text-muted-foreground capitalize flex-shrink-0">{c.category?.replace("_", " ")}</span>
+              <div key={i} className="rounded-lg border border-border bg-muted/50 px-3 py-2 space-y-1">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-sm font-semibold truncate">{c.title}</span>
+                    <span className="rounded-md bg-muted px-1.5 py-0.5 text-xs text-muted-foreground capitalize flex-shrink-0">{c.category?.replace("_", " ")}</span>
+                  </div>
+                  <span className="text-sm font-black flex-shrink-0 ml-2">${((c.price || 0) / 100).toFixed(0)}</span>
                 </div>
-                <span className="text-sm font-black flex-shrink-0 ml-2">${((c.price || 0) / 100).toFixed(0)}</span>
+                {c.trend_inspiration && (
+                  <p className="text-[10px] text-primary flex items-center gap-1">
+                    <Sparkles className="h-2.5 w-2.5" /> {c.trend_inspiration}
+                  </p>
+                )}
+                {c.buyer_persona && (
+                  <p className="text-[10px] text-muted-foreground">Target: {c.buyer_persona}</p>
+                )}
               </div>
             ))}
           </div>

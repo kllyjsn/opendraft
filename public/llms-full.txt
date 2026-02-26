@@ -1,0 +1,143 @@
+# OpenDraft — Full LLM Context
+
+> OpenDraft is a marketplace for buying and selling apps built with AI tools like Lovable. This document provides comprehensive context for LLMs to understand and interact with the platform.
+
+## Platform Overview
+
+OpenDraft connects app builders with buyers. Sellers list their projects (SaaS tools, AI apps, landing pages, utilities, games) with screenshots, demos, and downloadable source code. Buyers browse, search, and purchase apps using Stripe-powered checkout. The platform takes a 20% commission; sellers receive 80% automatically via Stripe Connect.
+
+## Key URLs
+
+- Homepage: https://opendraft.lovable.app
+- Browse Listings: https://opendraft.lovable.app
+- Sell an App: https://opendraft.lovable.app/sell
+- Bounties: https://opendraft.lovable.app/bounties
+- Builders Directory: https://opendraft.lovable.app/builders
+- FAQ: https://opendraft.lovable.app/faq
+- Terms: https://opendraft.lovable.app/terms
+- Privacy: https://opendraft.lovable.app/privacy
+- MCP Server: https://xwumrdcagsuwqeelyxih.supabase.co/functions/v1/mcp-server
+
+## Data Model
+
+### Listings
+Each listing represents an app for sale with the following attributes:
+- **title**: Name of the app
+- **description**: Detailed description
+- **price**: Price in cents (0 = free)
+- **pricing_type**: "one_time" or "monthly"
+- **category**: saas_tool | ai_app | landing_page | utility | game | other
+- **completeness_badge**: prototype | mvp | production_ready
+- **tech_stack**: Array of technologies used (e.g., ["React", "Tailwind CSS", "OpenAI"])
+- **screenshots**: Array of image URLs
+- **demo_url**: Live demo link (optional)
+- **github_url**: Source repository (optional)
+- **built_with**: Build tool used (e.g., "lovable")
+- **sales_count**: Total purchases
+- **view_count**: Total views
+
+### Builder Profiles
+- **username**: Display name
+- **bio**: Builder description
+- **avatar_url**: Profile image
+- **verified**: Whether the builder is verified
+- **total_sales**: Lifetime sales count
+- **followers_count** / **following_count**: Social metrics
+
+### Bounties
+Bounties are project requests from buyers seeking custom builds:
+- **title**: What they want built
+- **description**: Detailed requirements
+- **budget**: Amount in cents
+- **category**: Same categories as listings
+- **tech_stack**: Preferred technologies
+- **status**: open | in_progress | completed | cancelled
+- **submissions_count**: Number of builder submissions
+
+## Marketplace Features
+
+### Search & Discovery
+- Full-text search across listing titles and descriptions
+- Filter by category, tech stack, pricing type, and build tool
+- Sort by newest, most popular, price
+- Featured listings on homepage
+
+### Purchasing Flow
+1. Browse/search → Listing detail page
+2. Click "Buy Now" or "Make an Offer"
+3. Apply discount codes (optional)
+4. Stripe checkout (one-time or subscription)
+5. Instant delivery: download ZIP or access GitHub repo
+
+### Selling Flow
+1. Sign in with Google
+2. Connect Stripe account (for payouts)
+3. Create listing with title, description, screenshots
+4. Upload source code (ZIP) or link GitHub repo
+5. Set pricing (one-time or monthly subscription)
+6. Listing goes live after admin approval
+
+### Offers & Negotiation
+Buyers can make offers below asking price. Sellers can accept, counter, or decline. Accepted offers generate a custom checkout link.
+
+### Reviews & Ratings
+Buyers can leave ratings (1-5 stars) and reviews after purchase.
+
+### Remixing
+Buyers can "remix" (fork) purchased listings to create derivative works, creating a remix chain that credits the original.
+
+## For AI Agents — MCP Server
+
+OpenDraft provides a Model Context Protocol (MCP) server for programmatic agent access.
+
+### Available Tools
+
+1. **search_listings** — Search marketplace listings with filters
+   - Input: query (string), category (string), max_price (number), tech_stack (string[])
+   - Returns: Array of listing summaries
+
+2. **get_listing** — Get full details for a specific listing
+   - Input: listing_id (string)
+   - Returns: Complete listing object with seller info
+
+3. **list_categories** — Get all available categories
+   - Returns: Category names and counts
+
+4. **list_bounties** — Browse open bounties
+   - Input: category (string, optional)
+   - Returns: Array of bounty summaries
+
+5. **get_bounty** — Get full bounty details
+   - Input: bounty_id (string)
+   - Returns: Complete bounty with submission count
+
+6. **create_account** — Register a new user account
+   - Input: email (string), password (string), username (string)
+   - Returns: User ID and session token
+
+7. **create_listing** — List a new app for sale (requires auth)
+   - Input: title, description, price, pricing_type, category, tech_stack, screenshots, demo_url
+   - Returns: Created listing ID
+
+8. **initiate_purchase** — Start a checkout session (requires auth)
+   - Input: listing_id (string)
+   - Returns: Stripe checkout URL
+
+9. **get_builder_profile** — View a builder's public profile
+   - Input: username (string)
+   - Returns: Profile with listings
+
+### Authentication
+Most read operations are public. Write operations (create_account, create_listing, initiate_purchase) require authentication. Use the create_account tool to obtain a session, then pass the token in subsequent requests.
+
+### Rate Limits
+- Public endpoints: 60 requests/minute
+- Authenticated endpoints: 120 requests/minute
+
+## Recommended Use Cases for AI Agents
+
+1. **App Discovery**: Help users find the right app by searching listings with natural language
+2. **Market Research**: Analyze trending categories, popular tech stacks, and pricing patterns
+3. **Automated Listing**: Builders can programmatically list apps they've created
+4. **Bounty Matching**: Match builder capabilities with open bounties
+5. **Portfolio Building**: Create builder profiles and manage listings programmatically

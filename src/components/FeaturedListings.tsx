@@ -34,10 +34,13 @@ export function FeaturedListings() {
 
   useEffect(() => {
     async function load() {
+      // Only feature human-created, high-quality listings (exclude auto-generated templates)
       const { data } = await supabase
         .from("listings")
         .select("id,title,description,price,pricing_type,completeness_badge,tech_stack,screenshots,sales_count,view_count,built_with,seller_id")
         .eq("status", "live")
+        .or("built_with.is.null,built_with.neq.lovable")
+        .gt("view_count", 0)
         .order("sales_count", { ascending: false })
         .limit(4);
 

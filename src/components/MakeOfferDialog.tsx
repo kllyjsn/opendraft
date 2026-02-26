@@ -7,8 +7,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogFooter,
-  DialogClose,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -200,18 +198,17 @@ export function MakeOfferDialog({ listingId, listingTitle, askingPrice, onOfferS
             💡 Sellers accept ~40% of reasonable bids. Being polite helps!
           </p>
         </div>
-        <DialogFooter>
-          <DialogClose asChild>
-            <Button variant="outline">Cancel</Button>
-          </DialogClose>
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-2">
+          <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
           <Button
+            type="button"
             onClick={handleSubmit}
             disabled={submitting || !amount}
             className="gradient-hero text-white border-0 shadow-glow hover:opacity-90"
           >
             {submitting ? "Sending…" : "Submit Bid"}
           </Button>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );

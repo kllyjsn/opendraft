@@ -498,12 +498,21 @@ export default function ListingDetail() {
                     {downloading ? "Preparing download…" : "Download Project"}
                   </Button>
                   {listing.seller_id !== user?.id && (
-                    <Link to={`/sell?remix=${listing.id}`}>
-                      <Button variant="outline" className="w-full border-border/60 hover:border-primary/40 transition-colors">
-                        <GitFork className="h-4 w-4 mr-2" />
-                        Remix this project
+                    <>
+                      <Button
+                        onClick={() => setChatOpen(true)}
+                        className="w-full h-11 text-sm font-bold border-2 border-primary bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                      >
+                        <MessageSquare className="h-4 w-4 mr-2" />
+                        Chat with your builder
                       </Button>
-                    </Link>
+                      <Link to={`/sell?remix=${listing.id}`}>
+                        <Button variant="outline" className="w-full border-border/60 hover:border-primary/40 transition-colors">
+                          <GitFork className="h-4 w-4 mr-2" />
+                          Remix this project
+                        </Button>
+                      </Link>
+                    </>
                   )}
                 </div>
               ) : isFree ? (

@@ -15,11 +15,13 @@
  */
 
 import { useEffect, useState } from "react";
-import { useSearchParams, Link } from "react-router-dom";
+import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { ChatDrawer } from "@/components/ChatDrawer";
 import { CheckCircle, ShoppingBag, ArrowRight, Loader2, AlertCircle, Package, MessageSquare, RefreshCw, Wrench, Shield, Infinity, Lightbulb } from "lucide-react";
 
 interface SessionDetails {
@@ -35,20 +37,45 @@ interface SessionDetails {
 export default function Success() {
   const [searchParams] = useSearchParams();
   const sessionId = searchParams.get("session_id");
+  const { user } = useAuth();
 
   const [session, setSession] = useState<SessionDetails | null>(null);
   const [loading, setLoading] = useState(!!sessionId);
   const [error, setError] = useState<string | null>(null);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [sellerInfo, setSellerInfo] = useState<{ sellerId: string; listingId: string; listingTitle: string; sellerUsername: string } | null>(null);
 
   useEffect(() => {
     if (!sessionId) return;
     verifySession(sessionId);
   }, [sessionId]);
 
-  /**
-   * Verifies the Stripe session via our get-checkout-session edge function.
-   * This confirms the payment actually completed before showing the success UI.
-   */
+  // After session is verified, fetch seller info for the chat shortcut
+  useEffect(() => {
+    if (!session || !session.metadata?.listing_id) return;
+    const listingId = session.metadata.listing_id;
+    async function fetchSellerInfo() {
+      const { data: listing } = await supabase
+        .from("listings")
+        .select("seller_id, title")
+        .eq("id", listingId)
+        .single();
+      if (!listing) return;
+      const { data: profile } = await supabase
+        .from("public_profiles")
+        .select("username")
+        .eq("user_id", listing.seller_id)
+        .single();
+      setSellerInfo({
+        sellerId: listing.seller_id,
+        listingId,
+        listingTitle: listing.title,
+        sellerUsername: (profile as any)?.username ?? "Builder",
+      });
+    }
+    fetchSellerInfo();
+  }, [session]);
+
   async function verifySession(sid: string) {
     setLoading(true);
     try {
@@ -239,8 +266,17 @@ export default function Success() {
 
           {/* Actions */}
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            {sellerInfo && (
+              <Button
+                onClick={() => setChatOpen(true)}
+                className="gradient-hero text-white border-0 shadow-glow hover:opacity-90 h-12 text-base font-bold"
+              >
+                <MessageSquare className="h-4 w-4 mr-2" />
+                Chat with {sellerInfo.sellerUsername}
+              </Button>
+            )}
             <Link to="/profile">
-              <Button className="gradient-hero text-white border-0 shadow-glow hover:opacity-90">
+              <Button variant={sellerInfo ? "outline" : "default"} className={sellerInfo ? "" : "gradient-hero text-white border-0 shadow-glow hover:opacity-90"}>
                 <ShoppingBag className="h-4 w-4 mr-2" />
                 View my purchases
               </Button>
@@ -254,6 +290,19 @@ export default function Success() {
         </div>
       </main>
       <Footer />
+
+      {user && sellerInfo && (
+        <ChatDrawer
+          open={chatOpen}
+          onOpenChange={setChatOpen}
+          conversationId={null}
+          listingId={sellerInfo.listingId}
+          sellerId={sellerInfo.sellerId}
+          listingTitle={sellerInfo.listingTitle}
+          otherUsername={sellerInfo.sellerUsername}
+          otherUserId={sellerInfo.sellerId}
+        />
+      )}
     </div>
   );
 }

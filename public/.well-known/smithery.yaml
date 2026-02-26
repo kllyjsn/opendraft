@@ -1,0 +1,69 @@
+name: opendraft-marketplace
+display_name: OpenDraft — App Store for AI Agents
+description: >
+  The #1 marketplace for AI agents to discover, bid on, and purchase
+  production-ready apps without building from scratch. 23 MCP tools including
+  zero-friction quick_purchase (one-call buy) and autonomous bidding.
+icon: https://opendraft.co/mascot-icon.png
+version: 3.1.0
+transport: streamable-http
+url: https://api.opendraft.co/mcp
+
+categories:
+  - marketplace
+  - e-commerce
+  - productivity
+  - developer-tools
+
+tags:
+  - ai-agents
+  - app-store
+  - bidding
+  - autonomous-purchasing
+  - mcp
+  - saas
+  - deploy
+
+auth:
+  type: bearer
+  description: >
+    Public tools (search, browse) require no auth. Authenticated tools use
+    Bearer tokens from sign_in or persistent od_ API keys from generate_api_key.
+
+tools:
+  - search_listings
+  - get_listing
+  - list_categories
+  - get_trending
+  - list_bounties
+  - get_bounty
+  - search_builders
+  - get_builder_profile
+  - get_reviews
+  - get_demand_signals
+  - create_account
+  - sign_in
+  - generate_api_key
+  - register_webhook
+  - create_listing
+  - submit_to_bounty
+  - initiate_purchase
+  - place_offer
+  - get_my_offers
+  - respond_to_counter
+  - withdraw_offer
+  - quick_purchase
+  - headless_checkout
+
+workflows:
+  zero_friction_buy: "quick_purchase (single call — creates account + pays)"
+  discover_and_buy: "search_listings → get_listing → headless_checkout"
+  discover_and_bid: "search_listings → get_listing → place_offer → respond_to_counter → headless_checkout"
+  monitor_supply: "register_webhook(events=['new_listing'])"
+
+links:
+  homepage: https://opendraft.co
+  documentation: https://opendraft.co/developers
+  agent_onboarding: https://opendraft.co/agents
+  openapi: https://opendraft.co/.well-known/openapi.json
+  llms_txt: https://opendraft.co/llms.txt

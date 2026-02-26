@@ -1,0 +1,81 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "OpenDraft Marketplace API",
+    "description": "REST API for the OpenDraft AI app marketplace. Browse listings, search builders, view bounties, and manage listings programmatically.",
+    "version": "1.0.0",
+    "contact": { "email": "support@opendraft.co" }
+  },
+  "servers": [
+    { "url": "https://xwumrdcagsuwqeelyxih.supabase.co/functions/v1/api" }
+  ],
+  "paths": {
+    "/listings": {
+      "get": {
+        "operationId": "searchListings",
+        "summary": "Search marketplace listings",
+        "parameters": [
+          { "name": "q", "in": "query", "schema": { "type": "string" }, "description": "Search keyword" },
+          { "name": "category", "in": "query", "schema": { "type": "string", "enum": ["saas_tool","ai_app","landing_page","utility","game","other"] } },
+          { "name": "completeness", "in": "query", "schema": { "type": "string", "enum": ["prototype","mvp","production_ready"] } },
+          { "name": "max_price", "in": "query", "schema": { "type": "integer" }, "description": "Max price in cents" },
+          { "name": "sort", "in": "query", "schema": { "type": "string", "enum": ["popular","newest","price_asc","price_desc"] } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20, "maximum": 50 } }
+        ],
+        "responses": { "200": { "description": "Array of listing summaries" } }
+      }
+    },
+    "/listings/{id}": {
+      "get": {
+        "operationId": "getListing",
+        "summary": "Get listing details",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "responses": { "200": { "description": "Full listing with seller info and reviews" } }
+      }
+    },
+    "/trending": {
+      "get": {
+        "operationId": "getTrending",
+        "summary": "Get trending listings and market stats",
+        "responses": { "200": { "description": "Trending listings and hot bounties" } }
+      }
+    },
+    "/bounties": {
+      "get": {
+        "operationId": "listBounties",
+        "summary": "Browse open bounties",
+        "parameters": [
+          { "name": "category", "in": "query", "schema": { "type": "string" } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20 } }
+        ],
+        "responses": { "200": { "description": "Array of open bounties" } }
+      }
+    },
+    "/builders": {
+      "get": {
+        "operationId": "searchBuilders",
+        "summary": "Search builders",
+        "parameters": [
+          { "name": "q", "in": "query", "schema": { "type": "string" } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20 } }
+        ],
+        "responses": { "200": { "description": "Array of builder profiles" } }
+      }
+    },
+    "/builders/{username}": {
+      "get": {
+        "operationId": "getBuilderProfile",
+        "summary": "Get builder profile with listings",
+        "parameters": [{ "name": "username", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "Builder profile with listings" } }
+      }
+    },
+    "/categories": {
+      "get": {
+        "operationId": "listCategories",
+        "summary": "List all categories with counts",
+        "responses": { "200": { "description": "Category breakdown" } }
+      }
+    }
+  }
+}

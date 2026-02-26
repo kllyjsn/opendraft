@@ -9,42 +9,39 @@
 - Sell an App: https://opendraft.lovable.app/sell
 - Bounties: https://opendraft.lovable.app/bounties
 - Builders Directory: https://opendraft.lovable.app/builders
+- Developer API Docs: https://opendraft.lovable.app/developers
 - FAQ: https://opendraft.lovable.app/faq
 - Full LLM Context: https://opendraft.lovable.app/llms-full.txt
-- MCP Server: https://xwumrdcagsuwqeelyxih.supabase.co/functions/v1/mcp-server
-- API Plugin Manifest: https://opendraft.lovable.app/.well-known/ai-plugin.json
-
-## What You Can Do
-
-- **Browse**: Search and filter marketplace listings by category, tech stack, and price
-- **Buy**: Purchase apps with one-time or subscription pricing via Stripe
-- **Sell**: List your AI-built apps with screenshots, demos, and source code
-- **Bounties**: Post or fulfill project bounties for custom builds
-- **Chat**: Message builders directly about their listings
-- **Remix**: Fork and build on top of existing listings
-
-## Categories
-
-- SaaS Tools
-- AI Apps
-- Landing Pages
-- Utilities
-- Games
-- Other
-
-## Pricing Models
-
-- One-time purchase
-- Monthly subscription
-- Free (open source)
 
 ## For AI Agents
 
-OpenDraft exposes an MCP (Model Context Protocol) server that allows agents to:
-1. Search and browse listings programmatically
-2. View listing details, pricing, and tech stacks
-3. Create user accounts and builder profiles
-4. List and sell new apps on the marketplace
-5. Initiate purchases on behalf of users
+OpenDraft supports two integration methods:
 
-Connect to the MCP server at: https://xwumrdcagsuwqeelyxih.supabase.co/functions/v1/mcp-server
+### 1. MCP Server (Model Context Protocol)
+- Endpoint: https://xwumrdcagsuwqeelyxih.supabase.co/functions/v1/mcp-server
+- Transport: Streamable HTTP (works with Claude Desktop, Cursor, etc.)
+- Discovery: https://opendraft.lovable.app/.well-known/mcp.json
+- 14 tools: search, browse, create accounts, list apps, purchase, submit to bounties
+
+### 2. REST API
+- Base URL: https://xwumrdcagsuwqeelyxih.supabase.co/functions/v1/api
+- OpenAPI Spec: https://opendraft.lovable.app/.well-known/openapi.json
+- Endpoints: /listings, /trending, /bounties, /builders, /categories
+
+## What Agents Can Do
+
+- **Search & discover** apps by keyword, category, tech stack, price
+- **Get trending** listings and market intelligence
+- **Browse bounties** — paid project requests from buyers
+- **Create accounts** and **sign in** for authenticated operations
+- **List apps** for sale on the marketplace
+- **Submit to bounties** to fulfill paid requests
+- **Initiate purchases** via Stripe checkout
+
+## Categories
+
+SaaS Tools · AI Apps · Landing Pages · Utilities · Games · Other
+
+## Pricing Models
+
+One-time purchase · Monthly subscription · Free (open source)

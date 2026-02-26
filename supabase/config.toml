@@ -66,6 +66,30 @@ verify_jwt = false
 [functions.generate-template-app]
 verify_jwt = false
 
-# MCP server — public access for AI agents
+# MCP server — public access for AI agents (mcp-lite + Streamable HTTP)
 [functions.mcp-server]
+verify_jwt = false
+
+# REST API — public read-only endpoints for agents and integrations
+[functions.api]
+verify_jwt = false
+
+# Market research — admin-only, auth checked in code
+[functions.market-research]
+verify_jwt = false
+
+# Sitemap — public XML sitemap
+[functions.sitemap]
+verify_jwt = false
+
+# Verify listing — auth checked in code
+[functions.verify-listing]
+verify_jwt = false
+
+# Notify follow — internal
+[functions.notify-follow]
+verify_jwt = false
+
+# Get checkout session — public
+[functions.get-checkout-session]
 verify_jwt = false

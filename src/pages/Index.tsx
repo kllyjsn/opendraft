@@ -18,6 +18,7 @@ import { TrendingBuilders } from "@/components/TrendingBuilders";
 import { CategoryShowcase } from "@/components/CategoryShowcase";
 import { CtaBanner } from "@/components/CtaBanner";
 import { AgentHero } from "@/components/AgentHero";
+import { BrandMascot } from "@/components/BrandMascot";
 
 const CATEGORIES = ["All", "SaaS Tool", "AI App", "Landing Page", "Utility", "Game", "Other"];
 const COMPLETENESS = ["All", "Prototype", "MVP", "Production Ready"];
@@ -191,9 +192,13 @@ export default function Index() {
               </span>
             </motion.h1>
 
+            <motion.div variants={fadeUp} custom={2} className="flex justify-center mb-4">
+              <BrandMascot size={100} variant="wave" />
+            </motion.div>
+
             <motion.p
               variants={fadeUp}
-              custom={2}
+              custom={3}
               className="text-sm md:text-lg text-muted-foreground max-w-lg mx-auto mb-10 md:mb-12 leading-relaxed"
             >
               Pick an app. Launch today.

@@ -59,11 +59,18 @@ export function MakeOfferDialog({ listingId, listingTitle, askingPrice, onOfferS
     setSubmitting(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        toast({ title: "Not authenticated", description: "Please log in to place a bid.", variant: "destructive" });
+        setSubmitting(false);
+        return;
+      }
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 15000);
       const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/handle-offer`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${session?.access_token}`,
+          Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
           action: "create",
@@ -71,7 +78,9 @@ export function MakeOfferDialog({ listingId, listingTitle, askingPrice, onOfferS
           offerAmount: offerCents,
           message: message || null,
         }),
+        signal: controller.signal,
       });
+      clearTimeout(timeout);
       const result = await res.json();
       if (!res.ok) throw new Error(result.error ?? "Failed to submit bid");
 

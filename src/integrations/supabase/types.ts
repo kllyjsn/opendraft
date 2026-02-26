@@ -41,6 +41,114 @@ export type Database = {
         }
         Relationships: []
       }
+      agent_api_keys: {
+        Row: {
+          created_at: string
+          id: string
+          key_hash: string
+          key_prefix: string
+          last_used_at: string | null
+          name: string
+          revoked_at: string | null
+          scopes: string[]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          key_hash: string
+          key_prefix: string
+          last_used_at?: string | null
+          name?: string
+          revoked_at?: string | null
+          scopes?: string[]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          key_hash?: string
+          key_prefix?: string
+          last_used_at?: string | null
+          name?: string
+          revoked_at?: string | null
+          scopes?: string[]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      agent_demand_signals: {
+        Row: {
+          agent_id: string | null
+          category: string | null
+          created_at: string
+          id: string
+          max_price: number | null
+          query: string
+          source: string
+          tech_stack: string[] | null
+        }
+        Insert: {
+          agent_id?: string | null
+          category?: string | null
+          created_at?: string
+          id?: string
+          max_price?: number | null
+          query: string
+          source?: string
+          tech_stack?: string[] | null
+        }
+        Update: {
+          agent_id?: string | null
+          category?: string | null
+          created_at?: string
+          id?: string
+          max_price?: number | null
+          query?: string
+          source?: string
+          tech_stack?: string[] | null
+        }
+        Relationships: []
+      }
+      agent_webhooks: {
+        Row: {
+          active: boolean
+          created_at: string
+          events: string[]
+          failure_count: number
+          filters: Json
+          id: string
+          last_triggered_at: string | null
+          secret: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          events?: string[]
+          failure_count?: number
+          filters?: Json
+          id?: string
+          last_triggered_at?: string | null
+          secret: string
+          url: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          events?: string[]
+          failure_count?: number
+          filters?: Json
+          id?: string
+          last_triggered_at?: string | null
+          secret?: string
+          url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       bounties: {
         Row: {
           budget: number

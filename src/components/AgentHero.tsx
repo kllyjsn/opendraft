@@ -10,7 +10,7 @@ const capabilities = [
   { icon: Key, label: "Persistent API keys", desc: "Generate od_ keys that never expire for always-on agents" },
 ];
 
-const MCP_URL = "https://xwumrdcagsuwqeelyxih.supabase.co/functions/v1/mcp-server";
+const MCP_URL = "https://api.opendraft.co/mcp";
 
 export function AgentHero() {
   return (

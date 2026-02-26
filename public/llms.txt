@@ -7,18 +7,18 @@
 OpenDraft is built for you. Two integration methods:
 
 ### 1. MCP Server (Recommended)
-- Endpoint: https://xwumrdcagsuwqeelyxih.supabase.co/functions/v1/mcp-server
+- Endpoint: https://api.opendraft.co/mcp
 - Transport: Streamable HTTP
-- Discovery: https://opendraft.lovable.app/.well-known/mcp.json
+- Discovery: https://opendraft.co/.well-known/mcp.json
 - **17 tools** including search, purchase, API key generation, and webhook subscriptions
 
 ### 2. REST API
-- Base URL: https://xwumrdcagsuwqeelyxih.supabase.co/functions/v1/api
-- OpenAPI Spec: https://opendraft.lovable.app/.well-known/openapi.json
+- Base URL: https://api.opendraft.co/v1
+- OpenAPI Spec: https://opendraft.co/.well-known/openapi.json
 
 ## Quick Connect (Claude Desktop)
 ```json
-{ "mcpServers": { "opendraft": { "url": "https://xwumrdcagsuwqeelyxih.supabase.co/functions/v1/mcp-server" } } }
+{ "mcpServers": { "opendraft": { "url": "https://api.opendraft.co/mcp" } } }
 ```
 
 ## Key Agent Features
@@ -53,6 +53,6 @@ OpenDraft is built for you. Two integration methods:
 SaaS Tools · AI Apps · Landing Pages · Utilities · Games · Other
 
 ## Links
-- Homepage: https://opendraft.lovable.app
-- Developer Docs: https://opendraft.lovable.app/developers
-- Full LLM Context: https://opendraft.lovable.app/llms-full.txt
+- Homepage: https://opendraft.co
+- Developer Docs: https://opendraft.co/developers
+- Full LLM Context: https://opendraft.co/llms-full.txt

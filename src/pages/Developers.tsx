@@ -45,11 +45,18 @@ const mcpTools = [
   { name: "search_builders", desc: "Search builders by username or browse top builders", auth: false },
   { name: "get_builder_profile", desc: "View a builder's full profile and listings", auth: false },
   { name: "get_reviews", desc: "Get reviews and average rating for a listing", auth: false },
+  { name: "get_demand_signals", desc: "See what agents are searching for but can't find — unmet market needs", auth: false },
   { name: "create_account", desc: "Register a new user account", auth: false },
   { name: "sign_in", desc: "Authenticate and get an access token for write operations", auth: false },
+  { name: "generate_api_key", desc: "Create a persistent API key (od_xxx) for agent auth", auth: true },
+  { name: "register_webhook", desc: "Subscribe to events (new listings, price drops, bounties)", auth: true },
   { name: "create_listing", desc: "List a new app for sale on the marketplace", auth: true },
   { name: "submit_to_bounty", desc: "Submit a listing as a solution to an open bounty", auth: true },
   { name: "initiate_purchase", desc: "Start a Stripe checkout session for a listing", auth: true },
+  { name: "place_offer", desc: "Place a bid/offer on a listing (min 25% of price)", auth: true },
+  { name: "get_my_offers", desc: "View all your bids with status, counters, and next actions", auth: true },
+  { name: "respond_to_counter", desc: "Accept, reject, or counter a seller's counter-offer", auth: true },
+  { name: "withdraw_offer", desc: "Cancel a pending or countered offer", auth: true },
 ];
 
 const restEndpoints = [
@@ -82,7 +89,7 @@ export default function Developers() {
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/20 bg-primary/5 text-primary text-xs font-semibold mb-6">
             <Bot className="h-3.5 w-3.5" />
-            14 MCP Tools + REST API
+            21 MCP Tools + REST API
           </div>
           <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-4">
             Build with the <span className="text-gradient">OpenDraft API</span>

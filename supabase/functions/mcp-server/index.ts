@@ -76,7 +76,7 @@ async function captureDemandSignal(query: string, category?: string, techStack?:
 
 // ── MCP Server ────────────────────────────────────────────────────
 
-const mcpServer = new McpServer({ name: "opendraft-marketplace", version: "2.1.0" });
+const mcpServer = new McpServer({ name: "opendraft-marketplace", version: "3.0.0" });
 
 // ── search_listings (with demand capture) ─────────────────────────
 
@@ -480,6 +480,71 @@ mcpServer.tool({
   handler: async () => { throw new Error("Auth required. Use sign_in or API key."); },
 });
 
+// ── place_offer ───────────────────────────────────────────────────
+
+mcpServer.tool({
+  name: "place_offer",
+  description: "Place a bid/offer on a listing. Minimum offer is 25% of listing price. Requires auth. The seller will be notified and can accept, reject, or counter your offer.",
+  inputSchema: {
+    type: "object",
+    properties: {
+      listing_id: { type: "string", description: "UUID of the listing to bid on" },
+      offer_amount: { type: "number", description: "Your offer amount in cents (e.g., 1999 = $19.99)" },
+      message: { type: "string", description: "Optional message to the seller explaining your offer" },
+    },
+    required: ["listing_id", "offer_amount"],
+  },
+  handler: async () => { throw new Error("Auth required. Use sign_in or API key."); },
+});
+
+// ── get_my_offers ─────────────────────────────────────────────────
+
+mcpServer.tool({
+  name: "get_my_offers",
+  description: "View all your active offers/bids. Shows status (pending, accepted, rejected, countered), counter amounts, and seller messages. Requires auth.",
+  inputSchema: {
+    type: "object",
+    properties: {
+      status: { type: "string", enum: ["pending", "accepted", "rejected", "countered", "all"], description: "Filter by offer status (default: all)" },
+      limit: { type: "number", description: "Max results (default 20)" },
+    },
+  },
+  handler: async () => { throw new Error("Auth required. Use sign_in or API key."); },
+});
+
+// ── respond_to_counter ────────────────────────────────────────────
+
+mcpServer.tool({
+  name: "respond_to_counter",
+  description: "Accept or reject a seller's counter-offer, or place a new counter-bid. When a seller counters your offer, use this to continue negotiation. Requires auth.",
+  inputSchema: {
+    type: "object",
+    properties: {
+      offer_id: { type: "string", description: "UUID of the offer to respond to" },
+      action: { type: "string", enum: ["accept", "reject", "counter"], description: "Your response to the counter-offer" },
+      new_amount: { type: "number", description: "New offer amount in cents (required if action is 'counter')" },
+      message: { type: "string", description: "Optional message to the seller" },
+    },
+    required: ["offer_id", "action"],
+  },
+  handler: async () => { throw new Error("Auth required. Use sign_in or API key."); },
+});
+
+// ── withdraw_offer ────────────────────────────────────────────────
+
+mcpServer.tool({
+  name: "withdraw_offer",
+  description: "Withdraw/cancel a pending or countered offer. Requires auth.",
+  inputSchema: {
+    type: "object",
+    properties: {
+      offer_id: { type: "string", description: "UUID of the offer to withdraw" },
+    },
+    required: ["offer_id"],
+  },
+  handler: async () => { throw new Error("Auth required. Use sign_in or API key."); },
+});
+
 // ── Hono app ──────────────────────────────────────────────────────
 
 const app = new Hono();
@@ -497,19 +562,22 @@ app.options("/*", (c) => new Response(null, { headers: CORS }));
 app.get("/*", (c) => {
   return c.json({
     name: "opendraft-marketplace",
-    version: "2.1.0",
+    version: "3.0.0",
     protocol: "MCP (Model Context Protocol)",
     transport: "Streamable HTTP",
-    description: "OpenDraft — the marketplace for AI agents. Browse, list, and purchase AI-built apps. 17 tools. Supports persistent API keys for agent auth.",
+    description: "OpenDraft — the #1 app store for AI agents. Discover, bid on, negotiate, and purchase AI-built apps autonomously. 21 tools with full bidding support.",
     tools: [
       "search_listings", "get_listing", "list_categories", "get_trending",
       "list_bounties", "get_bounty", "search_builders", "get_builder_profile",
       "get_reviews", "get_demand_signals", "create_account", "sign_in",
       "generate_api_key", "register_webhook", "create_listing",
       "submit_to_bounty", "initiate_purchase",
+      "place_offer", "get_my_offers", "respond_to_counter", "withdraw_offer",
     ],
     auth_methods: ["Bearer token (from sign_in)", "API key (od_xxx from generate_api_key)"],
+    bidding_flow: "place_offer → (seller counters) → respond_to_counter → (accept/reject/counter) → initiate_purchase",
     documentation: "https://opendraft.lovable.app/developers",
+    agents_page: "https://opendraft.lovable.app/agents",
     llms_txt: "https://opendraft.lovable.app/llms.txt",
     mcp_discovery: "https://opendraft.lovable.app/.well-known/mcp.json",
   });
@@ -523,7 +591,7 @@ app.post("/*", async (c) => {
   if (body.method === "tools/call") {
     const toolName = body.params?.name;
     const args = body.params?.arguments || {};
-    const authTools = ["create_listing", "initiate_purchase", "submit_to_bounty", "generate_api_key", "register_webhook"];
+    const authTools = ["create_listing", "initiate_purchase", "submit_to_bounty", "generate_api_key", "register_webhook", "place_offer", "get_my_offers", "respond_to_counter", "withdraw_offer"];
 
     if (authTools.includes(toolName)) {
       const auth = await resolveAuth(authHeader);
@@ -619,6 +687,209 @@ app.post("/*", async (c) => {
           if (error) throw new Error(error.message);
           if (data?.error) throw new Error(data.error);
           result = { checkout_url: data.url, message: "Redirect user to this URL to complete payment." };
+
+        } else if (toolName === "place_offer") {
+          if (!args.listing_id) throw new Error("listing_id is required");
+          if (!args.offer_amount || args.offer_amount < 1) throw new Error("offer_amount must be positive (in cents)");
+
+          const admin = getAdmin();
+          // Get listing details
+          const { data: listing, error: listErr } = await admin.from("listings")
+            .select("id,price,seller_id,title").eq("id", args.listing_id).eq("status", "live").single();
+          if (listErr || !listing) throw new Error("Listing not found or not live");
+          if (listing.seller_id === auth.userId) throw new Error("Cannot bid on your own listing");
+
+          // Enforce 25% minimum
+          const minOffer = Math.ceil(listing.price * 0.25);
+          if (args.offer_amount < minOffer) throw new Error(`Minimum offer is $${(minOffer / 100).toFixed(2)} (25% of listing price)`);
+
+          // Check for existing pending offer
+          const { data: existing } = await admin.from("offers")
+            .select("id,status")
+            .eq("listing_id", args.listing_id)
+            .eq("buyer_id", auth.userId)
+            .in("status", ["pending", "countered"])
+            .maybeSingle();
+          if (existing) throw new Error(`You already have an active offer (${existing.status}) on this listing. Use respond_to_counter or withdraw_offer first.`);
+
+          const { data: offer, error: offerErr } = await admin.from("offers").insert({
+            listing_id: args.listing_id,
+            buyer_id: auth.userId,
+            seller_id: listing.seller_id,
+            offer_amount: args.offer_amount,
+            original_price: listing.price,
+            message: args.message?.slice(0, 500) || null,
+          }).select("id,offer_amount,original_price,status,created_at").single();
+          if (offerErr) throw new Error(offerErr.message);
+
+          // Notify seller
+          await admin.from("notifications").insert({
+            user_id: listing.seller_id,
+            type: "offer",
+            title: "New offer received",
+            message: `An agent offered $${(args.offer_amount / 100).toFixed(2)} for "${listing.title}"`,
+            link: `/dashboard?tab=offers`,
+          });
+
+          result = {
+            offer_id: offer.id,
+            listing_title: listing.title,
+            your_offer: `$${(offer.offer_amount / 100).toFixed(2)}`,
+            listing_price: `$${(offer.original_price / 100).toFixed(2)}`,
+            status: offer.status,
+            message: "Offer placed. The seller will be notified. Use get_my_offers to check status, or respond_to_counter if the seller makes a counter-offer.",
+          };
+
+        } else if (toolName === "get_my_offers") {
+          const admin = getAdmin();
+          let q = admin.from("offers")
+            .select("id,listing_id,offer_amount,original_price,counter_amount,status,message,seller_message,created_at,updated_at")
+            .eq("buyer_id", auth.userId)
+            .order("updated_at", { ascending: false })
+            .limit(Math.min(args.limit || 20, 50));
+
+          if (args.status && args.status !== "all") q = q.eq("status", args.status);
+
+          const { data: offers, error: offErr } = await q;
+          if (offErr) throw new Error(offErr.message);
+
+          // Get listing titles
+          const listingIds = [...new Set((offers || []).map((o: any) => o.listing_id))];
+          let titleMap: Record<string, string> = {};
+          if (listingIds.length > 0) {
+            const { data: listings } = await admin.from("listings").select("id,title").in("id", listingIds);
+            titleMap = Object.fromEntries((listings || []).map((l: any) => [l.id, l.title]));
+          }
+
+          result = {
+            offers: (offers || []).map((o: any) => ({
+              offer_id: o.id,
+              listing_title: titleMap[o.listing_id] || "Unknown",
+              your_offer: `$${(o.offer_amount / 100).toFixed(2)}`,
+              listing_price: `$${(o.original_price / 100).toFixed(2)}`,
+              counter_offer: o.counter_amount ? `$${(o.counter_amount / 100).toFixed(2)}` : null,
+              status: o.status,
+              your_message: o.message,
+              seller_message: o.seller_message,
+              created_at: o.created_at,
+              updated_at: o.updated_at,
+              actions: o.status === "countered"
+                ? "Use respond_to_counter with this offer_id to accept, reject, or counter-bid"
+                : o.status === "pending"
+                ? "Waiting for seller. Use withdraw_offer to cancel."
+                : o.status === "accepted"
+                ? "Offer accepted! Use initiate_purchase to complete the transaction."
+                : "No action needed.",
+            })),
+            total: (offers || []).length,
+          };
+
+        } else if (toolName === "respond_to_counter") {
+          if (!args.offer_id) throw new Error("offer_id is required");
+          if (!args.action) throw new Error("action is required (accept, reject, or counter)");
+
+          const admin = getAdmin();
+          const { data: offer, error: getErr } = await admin.from("offers")
+            .select("id,listing_id,buyer_id,seller_id,offer_amount,original_price,counter_amount,status")
+            .eq("id", args.offer_id).single();
+          if (getErr || !offer) throw new Error("Offer not found");
+          if (offer.buyer_id !== auth.userId) throw new Error("This is not your offer");
+          if (offer.status !== "countered") throw new Error(`Offer status is '${offer.status}' — can only respond to countered offers`);
+
+          if (args.action === "accept") {
+            // Accept the counter-offer
+            const { error: upErr } = await admin.from("offers")
+              .update({ status: "accepted", updated_at: new Date().toISOString() })
+              .eq("id", args.offer_id);
+            if (upErr) throw new Error(upErr.message);
+
+            // Notify seller
+            await admin.from("notifications").insert({
+              user_id: offer.seller_id,
+              type: "offer_accepted",
+              title: "Counter-offer accepted",
+              message: `Your counter-offer of $${((offer.counter_amount || offer.offer_amount) / 100).toFixed(2)} was accepted`,
+              link: `/dashboard?tab=offers`,
+            });
+
+            result = {
+              offer_id: offer.id,
+              action: "accepted",
+              accepted_price: `$${((offer.counter_amount || offer.offer_amount) / 100).toFixed(2)}`,
+              message: "Counter-offer accepted! Use initiate_purchase to complete the transaction.",
+              next_step: "Call initiate_purchase with the listing_id to pay.",
+            };
+
+          } else if (args.action === "reject") {
+            const { error: upErr } = await admin.from("offers")
+              .update({ status: "rejected", updated_at: new Date().toISOString() })
+              .eq("id", args.offer_id);
+            if (upErr) throw new Error(upErr.message);
+
+            result = {
+              offer_id: offer.id,
+              action: "rejected",
+              message: "Counter-offer rejected. You can place a new offer on this listing.",
+            };
+
+          } else if (args.action === "counter") {
+            if (!args.new_amount || args.new_amount < 1) throw new Error("new_amount required for counter-bid (in cents)");
+            const minOffer = Math.ceil(offer.original_price * 0.25);
+            if (args.new_amount < minOffer) throw new Error(`Minimum offer is $${(minOffer / 100).toFixed(2)} (25% of listing price)`);
+
+            // Update the offer with new amount, reset status to pending
+            const { error: upErr } = await admin.from("offers")
+              .update({
+                offer_amount: args.new_amount,
+                counter_amount: null,
+                status: "pending",
+                message: args.message?.slice(0, 500) || null,
+                seller_message: null,
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", args.offer_id);
+            if (upErr) throw new Error(upErr.message);
+
+            // Notify seller
+            await admin.from("notifications").insert({
+              user_id: offer.seller_id,
+              type: "offer",
+              title: "New counter-bid received",
+              message: `Agent counter-bid: $${(args.new_amount / 100).toFixed(2)}`,
+              link: `/dashboard?tab=offers`,
+            });
+
+            result = {
+              offer_id: offer.id,
+              action: "counter",
+              new_offer: `$${(args.new_amount / 100).toFixed(2)}`,
+              message: "Counter-bid placed. Seller will be notified.",
+            };
+          } else {
+            throw new Error("action must be 'accept', 'reject', or 'counter'");
+          }
+
+        } else if (toolName === "withdraw_offer") {
+          if (!args.offer_id) throw new Error("offer_id is required");
+
+          const admin = getAdmin();
+          const { data: offer, error: getErr } = await admin.from("offers")
+            .select("id,buyer_id,status")
+            .eq("id", args.offer_id).single();
+          if (getErr || !offer) throw new Error("Offer not found");
+          if (offer.buyer_id !== auth.userId) throw new Error("This is not your offer");
+          if (!["pending", "countered"].includes(offer.status)) throw new Error(`Cannot withdraw an offer with status '${offer.status}'`);
+
+          const { error: upErr } = await admin.from("offers")
+            .update({ status: "rejected", updated_at: new Date().toISOString() })
+            .eq("id", args.offer_id);
+          if (upErr) throw new Error(upErr.message);
+
+          result = {
+            offer_id: offer.id,
+            action: "withdrawn",
+            message: "Offer withdrawn successfully.",
+          };
         }
 
         return c.json({

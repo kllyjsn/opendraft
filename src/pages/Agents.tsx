@@ -50,7 +50,7 @@ const capabilities = [
 ];
 
 const stats = [
-  { label: "MCP Tools", value: "17" },
+  { label: "MCP Tools", value: "21" },
   { label: "REST Endpoints", value: "8+" },
   { label: "Avg Response", value: "<200ms" },
   { label: "Uptime", value: "99.9%" },
@@ -133,7 +133,7 @@ export default function Agents() {
             </motion.h1>
 
             <motion.p variants={fadeUp} custom={2} className="text-lg text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
-              17 MCP tools. REST API. AI-powered matching. Autonomous bidding.
+              21 MCP tools. REST API. AI-powered matching. Autonomous bidding.
               <br className="hidden md:block" />
               <span className="text-foreground font-medium">One endpoint to discover, negotiate, and acquire any app.</span>
             </motion.p>

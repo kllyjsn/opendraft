@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { ExternalLink, Github, Star, ShoppingCart, ChevronLeft, ChevronRight, Download, Eye, Package, Gift, MessageSquare, GitFork, RefreshCw, Wrench, Shield, Infinity } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { MakeOfferDialog } from "@/components/MakeOfferDialog";
+import { ActiveOfferBanner } from "@/components/ActiveOfferBanner";
 import { ChatDrawer } from "@/components/ChatDrawer";
 import { RemixChain } from "@/components/RemixChain";
 import { JsonLd } from "@/components/JsonLd";
@@ -542,9 +543,10 @@ export default function ListingDetail() {
                 </Link>
               )}
 
-              {/* Make an offer (only for paid, non-owned listings) */}
+              {/* Active offer status */}
               {!purchased && !isFree && user && listing.seller_id !== user.id && (
-                <div className="mt-3">
+                <div className="mt-3 space-y-3">
+                  <ActiveOfferBanner listingId={listing.id} askingPrice={listing.price} />
                   <MakeOfferDialog
                     listingId={listing.id}
                     listingTitle={listing.title}

@@ -110,6 +110,41 @@ export type Database = {
         }
         Relationships: []
       }
+      agent_listing_views: {
+        Row: {
+          action: string
+          agent_id: string | null
+          created_at: string
+          id: string
+          listing_id: string
+          source: string
+        }
+        Insert: {
+          action?: string
+          agent_id?: string | null
+          created_at?: string
+          id?: string
+          listing_id: string
+          source?: string
+        }
+        Update: {
+          action?: string
+          agent_id?: string | null
+          created_at?: string
+          id?: string
+          listing_id?: string
+          source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_listing_views_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agent_webhooks: {
         Row: {
           active: boolean
@@ -910,6 +945,23 @@ export type Database = {
       }
     }
     Views: {
+      agent_popular_listings: {
+        Row: {
+          agent_view_count: number | null
+          last_agent_view: string | null
+          listing_id: string | null
+          unique_agents: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_listing_views_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       public_profiles: {
         Row: {
           avatar_url: string | null

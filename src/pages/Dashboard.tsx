@@ -15,6 +15,7 @@ import { SellerAnalytics } from "@/components/SellerAnalytics";
 import { ActivityFeed } from "@/components/ActivityFeed";
 import { VerifyListingPanel } from "@/components/VerifyListingPanel";
 import { BuyerOffersPanel } from "@/components/BuyerOffersPanel";
+import { AgentDemandFeed } from "@/components/AgentDemandFeed";
 
 interface Sale {
   id: string;
@@ -206,7 +207,16 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {activeTab === "feed" && <ActivityFeed />}
+        {activeTab === "feed" && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              <ActivityFeed />
+            </div>
+            <div>
+              <AgentDemandFeed />
+            </div>
+          </div>
+        )}
 
         {activeTab === "offers" && <OffersManager />}
 

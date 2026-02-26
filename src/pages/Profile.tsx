@@ -6,7 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { CompletenessBadge } from "@/components/CompletenessBadge";
 import { Button } from "@/components/ui/button";
-import { Download, Github, Star, Loader2 } from "lucide-react";
+import { ChatDrawer } from "@/components/ChatDrawer";
+import { Download, Github, Star, Loader2, MessageSquare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface Purchase {
@@ -14,6 +15,7 @@ interface Purchase {
   created_at: string;
   amount_paid: number;
   listing_id: string;
+  seller_id: string;
   listings: {
     id: string;
     title: string;
@@ -39,6 +41,8 @@ export default function Profile() {
   const [reviewForm, setReviewForm] = useState<{ purchaseId: string; rating: number; text: string } | null>(null);
   const [submittingReview, setSubmittingReview] = useState(false);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [chatTarget, setChatTarget] = useState<{ listingId: string; sellerId: string; listingTitle: string; sellerUsername: string } | null>(null);
+  const [sellerNames, setSellerNames] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!user) return;
@@ -46,11 +50,24 @@ export default function Profile() {
     async function fetchPurchases() {
       const { data } = await supabase
         .from("purchases")
-        .select("id,created_at,amount_paid,listing_id,listings(id,title,completeness_badge,github_url,screenshots)")
+        .select("id,created_at,amount_paid,listing_id,seller_id,listings(id,title,completeness_badge,github_url,screenshots)")
         .eq("buyer_id", user!.id)
         .order("created_at", { ascending: false });
-      setPurchases((data as unknown as Purchase[]) ?? []);
+      const purchases = (data as unknown as Purchase[]) ?? [];
+      setPurchases(purchases);
       setDataLoading(false);
+
+      // Fetch seller usernames
+      const sellerIds = [...new Set(purchases.map(p => p.seller_id))];
+      if (sellerIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from("public_profiles")
+          .select("user_id, username")
+          .in("user_id", sellerIds);
+        const map: Record<string, string> = {};
+        profiles?.forEach((p: any) => { map[p.user_id] = p.username ?? "Builder"; });
+        setSellerNames(map);
+      }
     }
 
     async function fetchReviews() {
@@ -213,6 +230,19 @@ export default function Profile() {
                             <Star className="h-3 w-3 mr-1" /> Leave review
                           </Button>
                         )}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs border-primary/30 text-primary hover:bg-primary/10"
+                          onClick={() => setChatTarget({
+                            listingId: purchase.listing_id,
+                            sellerId: purchase.seller_id,
+                            listingTitle: listing?.title ?? "Project",
+                            sellerUsername: sellerNames[purchase.seller_id] ?? "Builder",
+                          })}
+                        >
+                          <MessageSquare className="h-3 w-3 mr-1" /> Chat with builder
+                        </Button>
                         {alreadyReviewed && (
                           <span className="text-xs text-muted-foreground flex items-center gap-1">
                             <Star className="h-3 w-3 fill-accent text-accent" /> Reviewed
@@ -257,6 +287,19 @@ export default function Profile() {
         )}
       </main>
       <Footer />
+
+      {user && chatTarget && (
+        <ChatDrawer
+          open={!!chatTarget}
+          onOpenChange={(open) => { if (!open) setChatTarget(null); }}
+          conversationId={null}
+          listingId={chatTarget.listingId}
+          sellerId={chatTarget.sellerId}
+          listingTitle={chatTarget.listingTitle}
+          otherUsername={chatTarget.sellerUsername}
+          otherUserId={chatTarget.sellerId}
+        />
+      )}
     </div>
   );
 }

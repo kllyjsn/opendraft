@@ -103,7 +103,11 @@ export default function Index() {
       .eq("status", "live");
 
     if (search) {
+      // When searching, include all listings (including auto-generated)
       query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`);
+    } else {
+      // Default browse: exclude auto-generated templates to surface quality
+      query = query.or("built_with.is.null,built_with.neq.lovable");
     }
     if (category !== "All" && categoryMap[category]) {
       query = query.eq("category", categoryMap[category] as "saas_tool" | "ai_app" | "landing_page" | "utility" | "game" | "other");

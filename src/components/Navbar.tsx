@@ -7,6 +7,7 @@ import { Zap, Menu, X, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { NotificationBell } from "@/components/NotificationBell";
+import { MessageAlert } from "@/components/MessageAlert";
 
 function NavItem({ to, children, onClick }: { to: string; children: React.ReactNode; onClick?: () => void }) {
   const { pathname } = useLocation();
@@ -42,6 +43,7 @@ export function Navbar() {
   const initial = user?.email?.[0]?.toUpperCase() ?? "U";
 
   return (
+    <>
     <nav className="sticky top-0 z-50 border-b border-border/40 bg-background/80 backdrop-blur-2xl supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         {/* Logo */}
@@ -176,5 +178,7 @@ export function Navbar() {
         </div>
       </div>
     </nav>
+    <MessageAlert />
+    </>
   );
 }

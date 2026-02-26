@@ -8,8 +8,8 @@ import { JsonLd } from "@/components/JsonLd";
 import { Code, Terminal, Zap, Key, BookOpen, ExternalLink, Copy, Check, Globe, Bot, ArrowRight } from "lucide-react";
 import { useState } from "react";
 
-const MCP_URL = "https://xwumrdcagsuwqeelyxih.supabase.co/functions/v1/mcp-server";
-const API_URL = "https://xwumrdcagsuwqeelyxih.supabase.co/functions/v1/api";
+const MCP_URL = "https://api.opendraft.co/mcp";
+const API_URL = "https://api.opendraft.co/v1";
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
@@ -357,11 +357,11 @@ data = requests.post("${MCP_URL}", json={
             <CardContent className="pt-6">
               <div className="space-y-4">
                 {[
-                  { label: "mcp.json", url: "https://opendraft.lovable.app/.well-known/mcp.json", desc: "MCP server discovery manifest" },
-                  { label: "openapi.json", url: "https://opendraft.lovable.app/.well-known/openapi.json", desc: "OpenAPI 3.1 specification for REST API" },
-                  { label: "ai-plugin.json", url: "https://opendraft.lovable.app/.well-known/ai-plugin.json", desc: "AI plugin manifest (ChatGPT/GPT Actions)" },
-                  { label: "llms.txt", url: "https://opendraft.lovable.app/llms.txt", desc: "Concise platform overview for LLMs" },
-                  { label: "llms-full.txt", url: "https://opendraft.lovable.app/llms-full.txt", desc: "Full context with all tool schemas" },
+                  { label: "mcp.json", url: "https://opendraft.co/.well-known/mcp.json", desc: "MCP server discovery manifest" },
+                  { label: "openapi.json", url: "https://opendraft.co/.well-known/openapi.json", desc: "OpenAPI 3.1 specification for REST API" },
+                  { label: "ai-plugin.json", url: "https://opendraft.co/.well-known/ai-plugin.json", desc: "AI plugin manifest (ChatGPT/GPT Actions)" },
+                  { label: "llms.txt", url: "https://opendraft.co/llms.txt", desc: "Concise platform overview for LLMs" },
+                  { label: "llms-full.txt", url: "https://opendraft.co/llms-full.txt", desc: "Full context with all tool schemas" },
                 ].map((file) => (
                   <div key={file.label} className="flex items-center justify-between p-3 rounded-lg border border-border/60 hover:border-border transition-colors">
                     <div>
@@ -427,7 +427,7 @@ data = requests.post("${MCP_URL}", json={
                 <Globe className="h-4 w-4" /> OpenAPI Spec
               </Button>
             </a>
-            <a href="https://opendraft.lovable.app/llms-full.txt" target="_blank" rel="noopener noreferrer">
+            <a href="https://opendraft.co/llms-full.txt" target="_blank" rel="noopener noreferrer">
               <Button variant="ghost" className="gap-2">
                 Full Spec <ArrowRight className="h-3.5 w-3.5" />
               </Button>

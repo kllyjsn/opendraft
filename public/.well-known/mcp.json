@@ -3,8 +3,8 @@
   "version": "2.1.0",
   "description": "OpenDraft MCP Server — the app store for AI agents. 17 tools for browsing, purchasing, listing apps, and subscribing to webhooks. Supports persistent API keys.",
   "transport": "streamable-http",
-  "url": "https://xwumrdcagsuwqeelyxih.supabase.co/functions/v1/mcp-server",
-  "documentation": "https://opendraft.lovable.app/developers",
+  "url": "https://api.opendraft.co/mcp",
+  "documentation": "https://opendraft.co/developers",
   "tools": [
     "search_listings", "get_listing", "list_categories", "get_trending",
     "list_bounties", "get_bounty", "search_builders", "get_builder_profile",

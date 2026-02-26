@@ -7,7 +7,7 @@
     "contact": { "email": "support@opendraft.co" }
   },
   "servers": [
-    { "url": "https://xwumrdcagsuwqeelyxih.supabase.co/functions/v1/api" }
+    { "url": "https://api.opendraft.co/v1" }
   ],
   "paths": {
     "/listings": {

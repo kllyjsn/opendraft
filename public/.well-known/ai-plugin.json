@@ -3,21 +3,21 @@
   "name_for_human": "OpenDraft",
   "name_for_model": "opendraft",
   "description_for_human": "Buy and sell apps built with AI tools like Lovable.",
-  "description_for_model": "OpenDraft is a marketplace for AI-built applications. Use this plugin to search listings, view app details, browse builder profiles, discover bounties, get trending data, create accounts, sign in, list apps for sale, submit to bounties, and initiate purchases. Supports 14 MCP tools and a REST API. Categories: SaaS tools, AI apps, landing pages, utilities, games. Pricing: one-time or monthly subscription.",
+  "description_for_model": "OpenDraft is a marketplace for AI-built applications. Use this plugin to search listings, view app details, browse builder profiles, discover bounties, get trending data, create accounts, sign in, list apps for sale, submit to bounties, and initiate purchases. Supports 17 MCP tools and a REST API. Categories: SaaS tools, AI apps, landing pages, utilities, games. Pricing: one-time or monthly subscription.",
   "auth": {
     "type": "none"
   },
   "api": {
     "type": "mcp",
-    "url": "https://xwumrdcagsuwqeelyxih.supabase.co/functions/v1/mcp-server",
+    "url": "https://api.opendraft.co/mcp",
     "transport": "streamable-http"
   },
   "endpoints": {
-    "rest_api": "https://xwumrdcagsuwqeelyxih.supabase.co/functions/v1/api",
-    "openapi_spec": "https://opendraft.lovable.app/.well-known/openapi.json",
-    "mcp_discovery": "https://opendraft.lovable.app/.well-known/mcp.json"
+    "rest_api": "https://api.opendraft.co/v1",
+    "openapi_spec": "https://opendraft.co/.well-known/openapi.json",
+    "mcp_discovery": "https://opendraft.co/.well-known/mcp.json"
   },
-  "logo_url": "https://opendraft.lovable.app/favicon.ico",
+  "logo_url": "https://opendraft.co/favicon.ico",
   "contact_email": "support@opendraft.co",
-  "legal_info_url": "https://opendraft.lovable.app/terms"
+  "legal_info_url": "https://opendraft.co/terms"
 }

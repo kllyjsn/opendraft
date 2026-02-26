@@ -48,9 +48,7 @@ export function Navbar() {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2.5 font-black text-xl tracking-tight shrink-0 group">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg gradient-hero shadow-glow group-hover:shadow-[0_0_40px_hsl(265_85%_58%_/_0.35)] transition-shadow duration-300">
-            <Zap className="h-4 w-4 text-white" />
-          </div>
+          <img src="/mascot-icon.png" alt="OpenDraft mascot" className="h-8 w-8 rounded-lg group-hover:scale-110 transition-transform duration-300" />
           <span className="text-gradient">OpenDraft</span>
         </Link>
 

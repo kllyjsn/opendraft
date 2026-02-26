@@ -22,7 +22,7 @@ function Slide({ title, children, icon: Icon, index }: { title: string; children
       whileInView="visible"
       viewport={{ once: true, margin: "-50px" }}
       variants={fadeUp}
-      className="rounded-2xl border border-border/60 bg-card p-8 md:p-12 shadow-card"
+      className="rounded-2xl border border-border/60 bg-card p-5 sm:p-8 md:p-12 shadow-card"
     >
       <div className="flex items-center gap-3 mb-6">
         <div className="h-10 w-10 rounded-xl gradient-hero flex items-center justify-center">
@@ -37,10 +37,10 @@ function Slide({ title, children, icon: Icon, index }: { title: string; children
 
 function MetricCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
-    <div className="rounded-xl border border-border/40 bg-muted/30 p-5 text-center">
-      <p className="text-3xl md:text-4xl font-black text-gradient">{value}</p>
-      <p className="text-sm font-semibold text-foreground mt-1">{label}</p>
-      {sub && <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>}
+    <div className="rounded-xl border border-border/40 bg-muted/30 p-3 md:p-5 text-center overflow-hidden">
+      <p className="text-xl sm:text-2xl md:text-4xl font-black text-gradient truncate">{value}</p>
+      <p className="text-xs sm:text-sm font-semibold text-foreground mt-1">{label}</p>
+      {sub && <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">{sub}</p>}
     </div>
   );
 }
@@ -50,7 +50,7 @@ function TableRow({ cells, header }: { cells: string[]; header?: boolean }) {
   return (
     <tr className={header ? "border-b border-border" : "border-b border-border/30"}>
       {cells.map((c, i) => (
-        <Tag key={i} className={`py-2.5 px-3 text-left text-sm ${header ? "font-bold text-foreground" : i === 0 ? "font-medium text-foreground" : "text-muted-foreground"}`}>
+        <Tag key={i} className={`py-2 px-1.5 sm:px-3 text-left text-xs sm:text-sm whitespace-nowrap ${header ? "font-bold text-foreground" : i === 0 ? "font-medium text-foreground" : "text-muted-foreground"}`}>
           {c}
         </Tag>
       ))}
@@ -146,7 +146,7 @@ export default function Pitch() {
           <p className="text-muted-foreground mb-4">
             A two-sided marketplace with full programmatic access — MCP server, REST API, webhooks — so both humans <strong className="text-foreground">and AI agents</strong> can browse, negotiate, and purchase autonomously.
           </p>
-          <div className="grid grid-cols-3 gap-3 mt-6">
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 mt-6">
             <MetricCard label="MCP Tools" value="21" sub="Full agent toolkit" />
             <MetricCard label="REST Endpoints" value="12+" sub="Including bidding" />
             <MetricCard label="Webhook Events" value="Real-time" sub="Agent subscriptions" />
@@ -155,7 +155,7 @@ export default function Pitch() {
 
         {/* Market */}
         <Slide title="Market Opportunity" icon={Globe} index={2}>
-          <div className="grid grid-cols-3 gap-3 mb-6">
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-6">
             <MetricCard label="TAM" value="$40B+" sub="AI agent software (2028)" />
             <MetricCard label="SAM" value="$3B" sub="Indie/SMB AI tools" />
             <MetricCard label="SOM Y1" value="$2M" sub="Ambitious GMV target" />
@@ -198,7 +198,7 @@ export default function Pitch() {
               </tbody>
             </table>
           </div>
-          <div className="grid grid-cols-3 gap-3 mt-6">
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 mt-6">
             <MetricCard label="Year 1 GMV" value="$1.9M" />
             <MetricCard label="Year 1 Revenue" value="$376K" />
             <MetricCard label="LTV:CAC" value="18:1" />
@@ -265,23 +265,23 @@ export default function Pitch() {
           whileInView="visible"
           viewport={{ once: true }}
           variants={fadeUp}
-          className="rounded-2xl gradient-hero p-10 md:p-14 text-center"
+          className="rounded-2xl gradient-hero p-6 sm:p-10 md:p-14 text-center"
         >
-          <h2 className="text-3xl md:text-4xl font-black text-primary-foreground mb-3">The Ask</h2>
-          <p className="text-6xl md:text-7xl font-black text-primary-foreground/90 mb-2">$1M</p>
-          <p className="text-lg text-primary-foreground/80 mb-6">Seed round at $4.5M pre-money valuation</p>
-          <div className="grid grid-cols-3 gap-4 max-w-md mx-auto">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-primary-foreground mb-3">The Ask</h2>
+          <p className="text-4xl sm:text-6xl md:text-7xl font-black text-primary-foreground/90 mb-2">$1M</p>
+          <p className="text-base sm:text-lg text-primary-foreground/80 mb-6">Seed round at $4.5M pre-money valuation</p>
+          <div className="grid grid-cols-3 gap-3 sm:gap-4 max-w-md mx-auto">
             <div className="text-center">
-              <p className="text-2xl font-black text-primary-foreground">18mo</p>
-              <p className="text-xs text-primary-foreground/70">Runway</p>
+              <p className="text-lg sm:text-2xl font-black text-primary-foreground">18mo</p>
+              <p className="text-[10px] sm:text-xs text-primary-foreground/70">Runway</p>
             </div>
             <div className="text-center">
-              <p className="text-2xl font-black text-primary-foreground">~18%</p>
-              <p className="text-xs text-primary-foreground/70">Dilution</p>
+              <p className="text-lg sm:text-2xl font-black text-primary-foreground">~18%</p>
+              <p className="text-[10px] sm:text-xs text-primary-foreground/70">Dilution</p>
             </div>
             <div className="text-center">
-              <p className="text-2xl font-black text-primary-foreground">90%</p>
-              <p className="text-xs text-primary-foreground/70">Gross Margin</p>
+              <p className="text-lg sm:text-2xl font-black text-primary-foreground">90%</p>
+              <p className="text-[10px] sm:text-xs text-primary-foreground/70">Gross Margin</p>
             </div>
           </div>
         </motion.section>

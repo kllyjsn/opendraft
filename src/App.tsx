@@ -30,6 +30,7 @@ import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import Developers from "./pages/Developers";
 import Agents from "./pages/Agents";
+import Pitch from "./pages/Pitch";
 
 const queryClient = new QueryClient();
 
@@ -67,6 +68,7 @@ const App = () => (
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/developers" element={<Developers />} />
           <Route path="/agents" element={<Agents />} />
+          <Route path="/pitch" element={<Pitch />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

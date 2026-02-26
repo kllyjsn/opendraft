@@ -49,7 +49,7 @@ export function RemixChain({ listingId }: RemixChainProps) {
 
         if (parent) {
           const { data: profile } = await supabase
-            .from("profiles")
+            .from("public_profiles")
             .select("username")
             .eq("user_id", parent.seller_id)
             .single();
@@ -84,7 +84,7 @@ export function RemixChain({ listingId }: RemixChainProps) {
       if (childListings) {
         const sellerIds = [...new Set(childListings.map((l) => l.seller_id))];
         const { data: profiles } = await supabase
-          .from("profiles")
+          .from("public_profiles")
           .select("user_id, username")
           .in("user_id", sellerIds);
         const profileMap = Object.fromEntries(

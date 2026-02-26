@@ -27,7 +27,7 @@ export function TrendingBuilders() {
   useEffect(() => {
     async function load() {
       const { data: profiles } = await supabase
-        .from("profiles")
+        .from("public_profiles")
         .select("user_id, username, avatar_url, total_sales")
         .order("total_sales", { ascending: false })
         .limit(8);

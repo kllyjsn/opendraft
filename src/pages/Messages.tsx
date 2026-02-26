@@ -71,7 +71,7 @@ export default function Messages() {
     const otherUserIds = [...new Set(convos.map((c) => (c.buyer_id === user.id ? c.seller_id : c.buyer_id)))];
 
     const [profilesRes, messagesRes, listingsRes] = await Promise.all([
-      supabase.from("profiles").select("user_id, username").in("user_id", otherUserIds),
+      supabase.from("public_profiles").select("user_id, username").in("user_id", otherUserIds),
       supabase
         .from("messages")
         .select("conversation_id, content, created_at, read, sender_id")
@@ -130,7 +130,7 @@ export default function Messages() {
     }
     setSearching(true);
     const { data } = await supabase
-      .from("profiles")
+      .from("public_profiles")
       .select("user_id, username, avatar_url")
       .ilike("username", `%${query.trim()}%`)
       .neq("user_id", user?.id ?? "")

@@ -127,7 +127,7 @@ export default function Index() {
     let profileMap: Record<string, string> = {};
     if (sellerIds.length > 0) {
       const { data: profiles } = await supabase
-        .from("profiles")
+        .from("public_profiles")
         .select("user_id, username")
         .in("user_id", sellerIds);
       profileMap = Object.fromEntries((profiles ?? []).map((p) => [p.user_id, p.username ?? "Anonymous"]));

@@ -1,0 +1,139 @@
+{
+  "serverInfo": {
+    "name": "opendraft-marketplace",
+    "version": "3.1.0"
+  },
+  "authentication": {
+    "required": false,
+    "schemes": ["bearer"]
+  },
+  "tools": [
+    {
+      "name": "search_listings",
+      "description": "Search the OpenDraft marketplace for AI-built apps. If no results match, your search is logged as a demand signal.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string" },
+          "category": { "type": "string", "enum": ["saas_tool","ai_app","landing_page","utility","game","other"] },
+          "max_price": { "type": "number" },
+          "tech_stack": { "type": "array", "items": { "type": "string" } },
+          "completeness": { "type": "string", "enum": ["prototype","mvp","production_ready"] },
+          "limit": { "type": "number" }
+        }
+      }
+    },
+    {
+      "name": "get_listing",
+      "description": "Get full details for a listing including seller profile, reviews, and decision factors.",
+      "inputSchema": { "type": "object", "properties": { "listing_id": { "type": "string" } }, "required": ["listing_id"] }
+    },
+    {
+      "name": "list_categories",
+      "description": "Get all listing categories with counts.",
+      "inputSchema": { "type": "object", "properties": {} }
+    },
+    {
+      "name": "get_trending",
+      "description": "Get trending listings, hot bounties, and market intelligence.",
+      "inputSchema": { "type": "object", "properties": { "limit": { "type": "number" } } }
+    },
+    {
+      "name": "list_bounties",
+      "description": "Browse open bounties — paid project requests from buyers.",
+      "inputSchema": { "type": "object", "properties": { "category": { "type": "string", "enum": ["saas_tool","ai_app","landing_page","utility","game","other"] }, "limit": { "type": "number" } } }
+    },
+    {
+      "name": "get_bounty",
+      "description": "Get full details for a specific bounty.",
+      "inputSchema": { "type": "object", "properties": { "bounty_id": { "type": "string" } }, "required": ["bounty_id"] }
+    },
+    {
+      "name": "search_builders",
+      "description": "Search for builders by username or browse top builders.",
+      "inputSchema": { "type": "object", "properties": { "query": { "type": "string" }, "limit": { "type": "number" } } }
+    },
+    {
+      "name": "get_builder_profile",
+      "description": "View a builder's full profile and listings.",
+      "inputSchema": { "type": "object", "properties": { "username": { "type": "string" } }, "required": ["username"] }
+    },
+    {
+      "name": "get_reviews",
+      "description": "Get reviews and ratings for a listing.",
+      "inputSchema": { "type": "object", "properties": { "listing_id": { "type": "string" }, "limit": { "type": "number" } }, "required": ["listing_id"] }
+    },
+    {
+      "name": "get_demand_signals",
+      "description": "See what agents are searching for but can't find. Great for discovering unmet market needs.",
+      "inputSchema": { "type": "object", "properties": { "limit": { "type": "number" } } }
+    },
+    {
+      "name": "create_account",
+      "description": "Register a new user account.",
+      "inputSchema": { "type": "object", "properties": { "email": { "type": "string" }, "password": { "type": "string" }, "username": { "type": "string" } }, "required": ["email","password","username"] }
+    },
+    {
+      "name": "sign_in",
+      "description": "Sign in and get an access token.",
+      "inputSchema": { "type": "object", "properties": { "email": { "type": "string" }, "password": { "type": "string" } }, "required": ["email","password"] }
+    },
+    {
+      "name": "generate_api_key",
+      "description": "Generate a persistent API key (od_ prefix). Requires auth.",
+      "inputSchema": { "type": "object", "properties": { "name": { "type": "string" }, "scopes": { "type": "array", "items": { "type": "string", "enum": ["read","write","purchase"] } } }, "required": ["name"] }
+    },
+    {
+      "name": "register_webhook",
+      "description": "Subscribe to real-time events via webhook. Requires auth.",
+      "inputSchema": { "type": "object", "properties": { "url": { "type": "string" }, "events": { "type": "array", "items": { "type": "string", "enum": ["new_listing","price_drop","new_bounty"] } }, "filters": { "type": "object" } }, "required": ["url","events"] }
+    },
+    {
+      "name": "create_listing",
+      "description": "List a new app for sale. Requires auth.",
+      "inputSchema": { "type": "object", "properties": { "title": { "type": "string" }, "description": { "type": "string" }, "price": { "type": "number" }, "pricing_type": { "type": "string", "enum": ["one_time","monthly"] }, "category": { "type": "string", "enum": ["saas_tool","ai_app","landing_page","utility","game","other"] }, "tech_stack": { "type": "array", "items": { "type": "string" } }, "demo_url": { "type": "string" }, "completeness_badge": { "type": "string", "enum": ["prototype","mvp","production_ready"] } }, "required": ["title","description","price","category"] }
+    },
+    {
+      "name": "submit_to_bounty",
+      "description": "Submit a listing as a bounty solution. Requires auth.",
+      "inputSchema": { "type": "object", "properties": { "bounty_id": { "type": "string" }, "listing_id": { "type": "string" }, "message": { "type": "string" } }, "required": ["bounty_id","listing_id"] }
+    },
+    {
+      "name": "initiate_purchase",
+      "description": "Start Stripe checkout for a listing. Requires auth.",
+      "inputSchema": { "type": "object", "properties": { "listing_id": { "type": "string" } }, "required": ["listing_id"] }
+    },
+    {
+      "name": "place_offer",
+      "description": "Place a bid/offer on a listing. Min 25% of listing price. Requires auth.",
+      "inputSchema": { "type": "object", "properties": { "listing_id": { "type": "string" }, "offer_amount": { "type": "number" }, "message": { "type": "string" } }, "required": ["listing_id","offer_amount"] }
+    },
+    {
+      "name": "get_my_offers",
+      "description": "View your active offers/bids. Requires auth.",
+      "inputSchema": { "type": "object", "properties": { "status": { "type": "string", "enum": ["pending","accepted","rejected","countered","all"] }, "limit": { "type": "number" } } }
+    },
+    {
+      "name": "respond_to_counter",
+      "description": "Accept, reject, or counter a seller's counter-offer. Requires auth.",
+      "inputSchema": { "type": "object", "properties": { "offer_id": { "type": "string" }, "action": { "type": "string", "enum": ["accept","reject","counter"] }, "new_amount": { "type": "number" }, "message": { "type": "string" } }, "required": ["offer_id","action"] }
+    },
+    {
+      "name": "withdraw_offer",
+      "description": "Withdraw a pending or countered offer. Requires auth.",
+      "inputSchema": { "type": "object", "properties": { "offer_id": { "type": "string" } }, "required": ["offer_id"] }
+    },
+    {
+      "name": "quick_purchase",
+      "description": "One-call frictionless purchase: auto-creates account, generates API key, returns payment link. No onboarding required.",
+      "inputSchema": { "type": "object", "properties": { "listing_id": { "type": "string" }, "email": { "type": "string" }, "offer_amount": { "type": "number" }, "message": { "type": "string" } }, "required": ["listing_id","email"] }
+    },
+    {
+      "name": "headless_checkout",
+      "description": "Get a payment link without browser redirects. Requires auth.",
+      "inputSchema": { "type": "object", "properties": { "listing_id": { "type": "string" }, "offer_id": { "type": "string" } }, "required": ["listing_id"] }
+    }
+  ],
+  "resources": [],
+  "prompts": []
+}

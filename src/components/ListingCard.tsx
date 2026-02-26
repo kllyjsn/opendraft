@@ -1,7 +1,7 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { CompletenessBadge } from "./CompletenessBadge";
-import { Star, Eye, CheckCircle, HandCoins } from "lucide-react";
+import { Star, Eye, CheckCircle } from "lucide-react";
 
 interface ListingCardProps {
   id: string;
@@ -122,19 +122,9 @@ export function ListingCard({
             </div>
           )}
 
-          {/* Actions row */}
-          <div className="flex items-center gap-2 pt-2 border-t border-border/50">
-            {!owned && price > 0 && (
-              <Link
-                to={`/listing/${id}#bid`}
-                onClick={(e) => e.stopPropagation()}
-                className="inline-flex items-center gap-1 rounded-md border border-primary/30 bg-primary/5 px-2 py-1 text-[11px] font-semibold text-primary hover:bg-primary/10 transition-colors"
-              >
-                <HandCoins className="h-3 w-3" />
-                Place Bid
-              </Link>
-            )}
-            <div className="flex items-center gap-2.5 text-xs text-muted-foreground ml-auto">
+          {/* Stats */}
+          <div className="flex items-center justify-between text-xs text-muted-foreground pt-2 border-t border-border/50">
+            <div className="flex items-center gap-2.5">
               {avg_rating !== undefined && (
                 <span className="flex items-center gap-0.5">
                   <Star className="h-3 w-3 fill-accent text-accent" />
@@ -146,6 +136,17 @@ export function ListingCard({
                 {view_count}
               </span>
             </div>
+            {seller_id && seller_username ? (
+              <Link
+                to={`/builder/${seller_id}`}
+                onClick={(e) => e.stopPropagation()}
+                className="font-medium truncate max-w-[100px] hover:text-primary transition-colors duration-200"
+              >
+                by {seller_username}
+              </Link>
+            ) : (
+              <span className="font-medium capitalize">{completeness_badge === "production_ready" ? "Full App" : completeness_badge === "mvp" ? "MVP" : "Prototype"}</span>
+            )}
           </div>
         </CardContent>
       </Card>

@@ -504,23 +504,26 @@ export default function ListingDetail() {
                   </Link>
                 )
               ) : (
-              <Link to={user ? `/checkout/${listing.id}` : "/login"}>
-                  <Button className="w-full gradient-hero text-white border-0 shadow-glow hover:opacity-90 h-12 text-base font-bold transition-opacity">
-                    <ShoppingCart className="h-4 w-4 mr-2" />
-                    {isMonthly ? `Subscribe — ${priceLabel}` : `Buy Now — ${priceLabel}`}
-                  </Button>
-                </Link>
-              )}
-
-              {/* Active offer status */}
-              {!purchased && !isFree && user && listing.seller_id !== user.id && (
-                <div className="mt-3 space-y-3">
-                  <ActiveOfferBanner listingId={listing.id} askingPrice={listing.price} />
-                  <MakeOfferDialog
-                    listingId={listing.id}
-                    listingTitle={listing.title}
-                    askingPrice={listing.price}
-                  />
+                <div className="space-y-3">
+                  <div className="flex gap-2">
+                    <Link to={user ? `/checkout/${listing.id}` : "/login"} className="flex-1">
+                      <Button className="w-full gradient-hero text-white border-0 shadow-glow hover:opacity-90 h-12 text-base font-bold transition-opacity">
+                        <ShoppingCart className="h-4 w-4 mr-2" />
+                        {isMonthly ? `Subscribe` : `Buy Now`}
+                      </Button>
+                    </Link>
+                    {user && listing.seller_id !== user.id && (
+                      <MakeOfferDialog
+                        listingId={listing.id}
+                        listingTitle={listing.title}
+                        askingPrice={listing.price}
+                      />
+                    )}
+                  </div>
+                  {/* Active offer status */}
+                  {user && listing.seller_id !== user.id && (
+                    <ActiveOfferBanner listingId={listing.id} askingPrice={listing.price} />
+                  )}
                 </div>
               )}
 

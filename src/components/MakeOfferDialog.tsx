@@ -94,9 +94,9 @@ export function MakeOfferDialog({ listingId, listingTitle, askingPrice, onOfferS
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="w-full border-border/60 hover:border-primary/40 transition-colors">
+        <Button variant="outline" className="h-12 px-4 border-border/60 hover:border-primary/40 transition-colors whitespace-nowrap">
           <HandCoins className="h-4 w-4 mr-2" />
-          Suggest a Price
+          Place Bid
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">

@@ -55,9 +55,9 @@ export function Navbar() {
         {/* Desktop Nav */}
         <div className="hidden md:flex items-center gap-7">
           <NavItem to="/">Browse</NavItem>
-          <NavItem to="/bounties">Bounties</NavItem>
           <NavItem to="/builders">Builders</NavItem>
           <NavItem to="/cloud">Cloud</NavItem>
+          <NavItem to="/bounties">Bounties</NavItem>
           <NavItem to="/developers">Developers</NavItem>
           {user && (
             <>
@@ -138,9 +138,9 @@ export function Navbar() {
       >
         <div className="flex flex-col gap-4">
           <NavItem to="/" onClick={() => setMenuOpen(false)}>Browse</NavItem>
-          <NavItem to="/bounties" onClick={() => setMenuOpen(false)}>Bounties</NavItem>
           <NavItem to="/builders" onClick={() => setMenuOpen(false)}>Builders</NavItem>
           <NavItem to="/cloud" onClick={() => setMenuOpen(false)}>Cloud</NavItem>
+          <NavItem to="/bounties" onClick={() => setMenuOpen(false)}>Bounties</NavItem>
           <NavItem to="/developers" onClick={() => setMenuOpen(false)}>Developers</NavItem>
           {user ? (
             <>

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Zap } from "lucide-react";
+import { MascotHammock } from "@/components/MascotHammock";
 
 export function Footer() {
   return (
@@ -12,9 +12,7 @@ export function Footer() {
           {/* Brand */}
           <div className="md:col-span-1">
             <div className="flex items-center gap-2 font-black text-lg mb-4">
-              <div className="h-7 w-7 rounded-lg gradient-hero flex items-center justify-center shadow-glow">
-                <Zap className="h-3.5 w-3.5 text-white" />
-              </div>
+              <img src="/mascot-icon.png" alt="OpenDraft mascot" className="h-7 w-7 rounded-lg" />
               <span className="text-gradient">OpenDraft</span>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
@@ -65,6 +63,11 @@ export function Footer() {
               <li><Link to="/developers" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Developers</Link></li>
             </ul>
           </div>
+        </div>
+
+        {/* Hammock mascot */}
+        <div className="flex justify-center mb-8 -mt-2">
+          <MascotHammock size={100} />
         </div>
 
         {/* Bottom bar */}

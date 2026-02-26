@@ -41,7 +41,12 @@ export function MakeOfferDialog({ listingId, listingTitle, askingPrice, onOfferS
   ].filter(s => s.amount >= minOffer);
 
   async function handleSubmit() {
-    if (!user) return;
+    if (!user) {
+      toast({ title: "Sign in required", description: "Please sign in to submit a bid.", variant: "destructive" });
+      setOpen(false);
+      window.location.assign("/login");
+      return;
+    }
     const amountFloat = parseFloat(amount);
     if (isNaN(amountFloat) || amountFloat < parseFloat(minOfferDollars)) {
       toast({ title: "Invalid amount", description: `Minimum bid is $${minOfferDollars}/mo`, variant: "destructive" });

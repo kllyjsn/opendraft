@@ -132,24 +132,30 @@ serve(async (req) => {
             content: `You are a tastemaker product strategist for OpenDraft, a marketplace where developers buy and sell vibe-coded apps, templates, and SaaS tools.
 
 Your goal is to generate HIGHLY MARKETABLE app concepts that are:
-1. TREND-AWARE: Inspired by what's trending on Product Hunt, Hacker News, and among indie hackers
-2. DIVERSE: Spread across ALL categories (saas_tool, ai_app, landing_page, utility, game, other) — don't just default to AI tools
-3. SPECIFIC: Not generic "dashboard" or "CRM" — each should have a unique angle and clear value prop
-4. BUYER-FOCUSED: Think about who would pay money for this and why
-5. AHEAD OF THE CURVE: Slightly ahead of trends, not copying last month's viral product
+1. TREND-DRIVEN: **External internet trends are your PRIMARY inspiration** — what's blowing up on Product Hunt, Hacker News, GitHub, X/Twitter, and indie hacker communities RIGHT NOW. Internal search data is secondary context.
+2. AGENT-INCLUSIVE: At least 30% of concepts MUST be designed for AI agent consumption — MCP servers, agent toolkits, API-first apps, autonomous workflow tools, agent dashboards. Agents are our primary ICP.
+3. DIVERSE: Spread across ALL categories (saas_tool, ai_app, landing_page, utility, game, other) — don't cluster
+4. SPECIFIC: Not generic "dashboard" or "CRM" — each should have a unique angle. Think OpenClaw, Moltbook, Granola, Cal.com-style specificity.
+5. AHEAD OF THE CURVE: Anticipate what developers will need in 3-6 months, not what went viral last month
+6. BUYER-FOCUSED: Think about who would pay money for this and why — both human developers AND autonomous agents
+
+TWO BUYER PERSONAS to serve:
+A) HUMAN DEVELOPERS: Want ready-to-deploy apps, templates, starter kits they can customize
+B) AI AGENTS: Want API-first tools, MCP-compatible services, data connectors, autonomous workflow components
 
 Think about breadth:
 - SaaS tools: Niche vertical solutions, workflow automation, team collaboration
-- AI apps: Creative tools, analysis tools, personalized experiences
+- AI apps: Agent orchestrators, MCP tool servers, RAG pipelines, AI-native workflows
 - Landing pages: Specific industry templates, high-converting designs
-- Utilities: Developer tools, productivity apps, browser extensions
+- Utilities: Developer tools, CLI companions, agent toolkits, browser extensions
 - Games: Casual web games, puzzle games, multiplayer experiences
-- Other: Marketplaces, directories, communities, content platforms
+- Other: Marketplaces, directories, agent registries, data connectors
 
 And depth:
 - Each concept should feel like a COMPLETE product idea with a clear user journey
+- Agent-facing concepts should specify what MCP tools or API endpoints they'd expose
 - Include innovative features that differentiate from competitors
-- Consider monetization angles (freemium, subscription, one-time)`,
+- Consider monetization angles (freemium, subscription, one-time, usage-based for agents)`,
           },
           {
             role: "user",
@@ -157,18 +163,23 @@ And depth:
 
 ${themes.length > 0 ? `REQUESTED THEMES: ${themes.join(", ")}\n` : ""}
 
-INTERNAL DEMAND SIGNALS (what our users are searching for):
-${searchTerms.length > 0 ? searchTerms.map(t => `- ${t}`).join("\n") : "General interest — generate diverse concepts across all categories"}
+${externalContext ? `
+═══ PRIMARY: LIVE INTERNET TRENDS (these are your MAIN inspiration — build concepts around these) ═══
+${externalContext}
+` : ""}
+
+SECONDARY — Internal demand signals (useful context but NOT your primary driver):
+${searchTerms.length > 0 ? searchTerms.map(t => `- ${t}`).join("\n") : "No recent searches"}
 
 EXISTING LISTINGS (AVOID DUPLICATES):
 ${existingTitles || "None yet — fill the marketplace with diverse, compelling options"}
 
-${externalContext ? `
-═══ LIVE INTERNET TRENDS (use these as inspiration) ═══
-${externalContext}
-` : ""}
-
-IMPORTANT: Generate ${count} concepts spread across DIFFERENT categories. At least half should be inspired by current internet trends. Each should feel fresh, specific, and immediately valuable to a buyer.`,
+IMPORTANT REQUIREMENTS:
+1. Generate ${count} concepts spread across DIFFERENT categories
+2. At least ${Math.max(1, Math.ceil(count * 0.3))} concepts MUST be agent-first (MCP servers, API toolkits, agent workflows, autonomous tools)
+3. Internet trends should drive AT LEAST 60% of your concepts — internal search data is supplementary
+4. Each agent-facing concept should describe what tools/endpoints it exposes
+5. Name concepts with memorable, brandable names (like "OpenClaw", "Moltbook", "Granola") — not generic descriptions`,
           },
         ],
         tools: [
@@ -195,8 +206,10 @@ IMPORTANT: Generate ${count} concepts spread across DIFFERENT categories. At lea
                         trend_inspiration: { type: "string", description: "What internet trend or market signal inspired this concept" },
                         buyer_persona: { type: "string", description: "Who would buy this (e.g. 'freelance designers needing client portals')" },
                         key_differentiator: { type: "string", description: "What makes this different from existing solutions" },
+                        agent_ready: { type: "boolean", description: "True if this concept is designed for AI agent consumption (MCP tools, API-first, agent workflows)" },
+                        exposed_tools: { type: "string", description: "For agent-ready concepts: what MCP tools or API endpoints this would expose. Empty string for human-only concepts." },
                       },
-                      required: ["title", "description", "category", "completeness_badge", "tech_stack", "price_cents", "built_with", "trend_inspiration", "buyer_persona", "key_differentiator"],
+                      required: ["title", "description", "category", "completeness_badge", "tech_stack", "price_cents", "built_with", "trend_inspiration", "buyer_persona", "key_differentiator", "agent_ready", "exposed_tools"],
                       additionalProperties: false,
                     },
                   },

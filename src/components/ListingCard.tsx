@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { CompletenessBadge } from "./CompletenessBadge";
 import { Star, Eye, CheckCircle } from "lucide-react";
@@ -37,12 +37,18 @@ export function ListingCard({
   tech_stack, screenshots, sales_count, view_count, avg_rating, owned, built_with,
   seller_id, seller_username,
 }: ListingCardProps) {
+  const navigate = useNavigate();
   const thumbnail = screenshots?.[0];
   const isMonthly = pricing_type === "monthly";
-  const priceLabel = price === 0 ? "Free" : `$${(price / 100).toFixed(2)}${isMonthly ? "/mo" : ""}`;
 
   return (
-    <Link to={`/listing/${id}`} className="group block">
+    <div
+      role="link"
+      tabIndex={0}
+      onClick={() => navigate(`/listing/${id}`)}
+      onKeyDown={(e) => e.key === "Enter" && navigate(`/listing/${id}`)}
+      className="group block cursor-pointer"
+    >
       <Card className="overflow-hidden border-border/50 shadow-card hover:shadow-card-hover transition-all duration-500 hover:-translate-y-2 h-full bg-card">
         {/* Thumbnail */}
         <div className="relative h-32 md:h-44 bg-muted overflow-hidden">
@@ -58,10 +64,8 @@ export function ListingCard({
               <span className="text-4xl">⚡</span>
             </div>
           )}
-          {/* Gradient scrim */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent pointer-events-none" />
 
-          {/* Owned badge */}
           {owned && (
             <div className="absolute top-2.5 right-2.5 flex items-center gap-1 rounded-full bg-primary px-2.5 py-1 text-xs font-bold text-primary-foreground shadow-glow animate-scale-up">
               <CheckCircle className="h-3 w-3" />
@@ -69,7 +73,6 @@ export function ListingCard({
             </div>
           )}
 
-          {/* Badge + Price row */}
           <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-end justify-between gap-1">
             <CompletenessBadge level={completeness_badge} showTooltip={false} />
             {!owned && (
@@ -93,7 +96,6 @@ export function ListingCard({
             )}
           </div>
 
-          {/* Tech stack */}
           {tech_stack.length > 0 && (
             <div className="flex flex-wrap gap-1">
               {tech_stack.slice(0, 4).map((tag) => (
@@ -112,7 +114,6 @@ export function ListingCard({
             </div>
           )}
 
-          {/* Early adopter badge */}
           {sales_count <= 3 && !owned && (
             <div className="flex items-center gap-1.5 rounded-md bg-accent/10 border border-accent/20 px-2 py-1">
               <span className="text-[10px]">🚀</span>
@@ -122,7 +123,6 @@ export function ListingCard({
             </div>
           )}
 
-          {/* Stats */}
           <div className="flex items-center justify-between text-xs text-muted-foreground pt-2 border-t border-border/50">
             <div className="flex items-center gap-2.5">
               {avg_rating !== undefined && (
@@ -137,19 +137,21 @@ export function ListingCard({
               </span>
             </div>
             {seller_id && seller_username ? (
-              <Link
-                to={`/builder/${seller_id}`}
-                onClick={(e) => e.stopPropagation()}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(`/builder/${seller_id}`);
+                }}
                 className="font-medium truncate max-w-[100px] hover:text-primary transition-colors duration-200"
               >
                 by {seller_username}
-              </Link>
+              </button>
             ) : (
               <span className="font-medium capitalize">{completeness_badge === "production_ready" ? "Full App" : completeness_badge === "mvp" ? "MVP" : "Prototype"}</span>
             )}
           </div>
         </CardContent>
       </Card>
-    </Link>
+    </div>
   );
 }

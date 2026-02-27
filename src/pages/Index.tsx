@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -6,7 +6,7 @@ import { ListingCard } from "@/components/ListingCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, TrendingUp, SlidersHorizontal, X } from "lucide-react";
+import { Search, TrendingUp, SlidersHorizontal, X, Loader2, ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { BuildSearch } from "@/components/BuildSearch";
@@ -23,6 +23,7 @@ import { BrandMascot } from "@/components/BrandMascot";
 const CATEGORIES = ["All", "SaaS Tool", "AI App", "Landing Page", "Utility", "Game", "Other"];
 const COMPLETENESS = ["All", "Prototype", "MVP", "Production Ready"];
 const SORT_OPTIONS = ["Newest", "Popular"];
+const PAGE_SIZE = 24;
 
 const categoryMap: Record<string, string> = {
   "SaaS Tool": "saas_tool",
@@ -73,6 +74,7 @@ export default function Index() {
   const { user } = useAuth();
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
   const [completeness, setCompleteness] = useState("All");
@@ -81,9 +83,13 @@ export default function Index() {
   const [totalCount, setTotalCount] = useState(0);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [ownedIds, setOwnedIds] = useState<Set<string>>(new Set());
+  const [page, setPage] = useState(0);
 
+  // Reset page when filters change
   useEffect(() => {
-    fetchListings();
+    setPage(0);
+    setListings([]);
+    fetchListings(0, true);
   }, [search, category, completeness, sort, freeOnly]);
 
   useEffect(() => {
@@ -97,25 +103,22 @@ export default function Index() {
       });
   }, [user]);
 
-  async function fetchListings() {
-    setLoading(true);
+  const buildQuery = useCallback(() => {
     let query = supabase
       .from("listings")
       .select("id,title,description,price,pricing_type,completeness_badge,tech_stack,screenshots,sales_count,view_count,built_with,seller_id", { count: "exact" })
       .eq("status", "live");
 
     if (search) {
-      // When searching, include all listings (including auto-generated)
       query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`);
     } else {
-      // Default browse: exclude auto-generated templates to surface quality
       query = query.or("built_with.is.null,built_with.neq.lovable");
     }
     if (category !== "All" && categoryMap[category]) {
-      query = query.eq("category", categoryMap[category] as "saas_tool" | "ai_app" | "landing_page" | "utility" | "game" | "other");
+      query = query.eq("category", categoryMap[category] as any);
     }
     if (completeness !== "All" && completenessMap[completeness]) {
-      query = query.eq("completeness_badge", completenessMap[completeness] as "prototype" | "mvp" | "production_ready");
+      query = query.eq("completeness_badge", completenessMap[completeness] as any);
     }
     if (freeOnly) {
       query = query.eq("price", 0);
@@ -125,10 +128,20 @@ export default function Index() {
     } else {
       query = query.order("sales_count", { ascending: false });
     }
+    return query;
+  }, [search, category, completeness, sort, freeOnly]);
 
-    const { data, count } = await query.limit(48);
+  async function fetchListings(pageNum: number, reset: boolean = false) {
+    if (reset) setLoading(true);
+    else setLoadingMore(true);
+
+    const from = pageNum * PAGE_SIZE;
+    const to = from + PAGE_SIZE - 1;
+
+    const { data, count } = await buildQuery().range(from, to);
     const listingsData = (data as Listing[]) ?? [];
 
+    // Fetch seller usernames
     const sellerIds = [...new Set(listingsData.map((l) => l.seller_id))];
     let profileMap: Record<string, string> = {};
     if (sellerIds.length > 0) {
@@ -139,11 +152,25 @@ export default function Index() {
       profileMap = Object.fromEntries((profiles ?? []).map((p) => [p.user_id, p.username ?? "Anonymous"]));
     }
 
-    setListings(listingsData.map((l) => ({ ...l, seller_username: profileMap[l.seller_id] })));
+    const enriched = listingsData.map((l) => ({ ...l, seller_username: profileMap[l.seller_id] }));
+
+    if (reset) {
+      setListings(enriched);
+    } else {
+      setListings((prev) => [...prev, ...enriched]);
+    }
     setTotalCount(count ?? 0);
     setLoading(false);
+    setLoadingMore(false);
   }
 
+  function loadMore() {
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchListings(nextPage, false);
+  }
+
+  const hasMore = listings.length < totalCount;
   const hasFilters = search || category !== "All" || completeness !== "All" || freeOnly;
 
   return (
@@ -152,12 +179,10 @@ export default function Index() {
 
       {/* ── HERO ── */}
       <section className="relative overflow-hidden py-20 md:py-36 grain-overlay">
-        {/* Animated gradient orbs */}
         <div className="absolute -top-60 -right-60 h-[700px] w-[700px] rounded-full bg-primary/20 blur-[140px] animate-pulse-glow pointer-events-none" />
         <div className="absolute -bottom-60 -left-60 h-[600px] w-[600px] rounded-full bg-accent/20 blur-[120px] animate-pulse-glow pointer-events-none" style={{ animationDelay: "2s" }} />
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 h-[500px] w-[500px] rounded-full bg-secondary/10 blur-[100px] animate-float pointer-events-none" />
 
-        {/* Grid lines */}
         <div className="absolute inset-0 pointer-events-none opacity-[0.03]"
           style={{
             backgroundImage: `linear-gradient(hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)`,
@@ -166,11 +191,7 @@ export default function Index() {
         />
 
         <div className="container mx-auto px-4 text-center relative z-10">
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={staggerContainer}
-          >
+          <motion.div initial="hidden" animate="visible" variants={staggerContainer}>
             <motion.div variants={fadeUp} custom={0}>
               <span className="inline-flex items-center gap-2 rounded-full glass px-4 py-1.5 text-xs font-semibold text-primary mb-6">
                 <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
@@ -178,11 +199,7 @@ export default function Index() {
               </span>
             </motion.div>
 
-            <motion.h1
-              variants={fadeUp}
-              custom={1}
-              className="text-5xl md:text-8xl font-black tracking-tighter mb-5 md:mb-6 leading-[0.95]"
-            >
+            <motion.h1 variants={fadeUp} custom={1} className="text-5xl md:text-8xl font-black tracking-tighter mb-5 md:mb-6 leading-[0.95]">
               What do you want
               <br />
               <span className="text-gradient animate-gradient-shift inline-block"
@@ -196,11 +213,7 @@ export default function Index() {
               <BrandMascot size={100} variant="wave" />
             </motion.div>
 
-            <motion.p
-              variants={fadeUp}
-              custom={3}
-              className="text-sm md:text-lg text-muted-foreground max-w-lg mx-auto mb-10 md:mb-12 leading-relaxed"
-            >
+            <motion.p variants={fadeUp} custom={3} className="text-sm md:text-lg text-muted-foreground max-w-lg mx-auto mb-10 md:mb-12 leading-relaxed">
               Pick an app. Launch today.
               <span className="text-foreground font-medium"> We keep building it for you.</span>
             </motion.p>
@@ -209,11 +222,7 @@ export default function Index() {
               <BuildSearch />
             </motion.div>
 
-            <motion.div
-              variants={fadeUp}
-              custom={4}
-              className="mt-8 flex items-center justify-center gap-3 text-xs text-muted-foreground"
-            >
+            <motion.div variants={fadeUp} custom={4} className="mt-8 flex items-center justify-center gap-3 text-xs text-muted-foreground">
               <span>or</span>
               <a href="#browse" className="underline underline-offset-4 hover:text-foreground transition-colors">browse all projects</a>
               <span>·</span>
@@ -231,33 +240,17 @@ export default function Index() {
       </section>
 
       {/* ── HOW IT WORKS ── */}
-      <motion.div
-        initial={{ opacity: 0, y: 40 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-100px" }}
-        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-      >
+      <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}>
         <HowItWorks />
       </motion.div>
 
       {/* ── FEATURED ── */}
-      <motion.div
-        initial={{ opacity: 0, y: 40 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-100px" }}
-        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-      >
+      <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}>
         <FeaturedListings />
       </motion.div>
 
-
       {/* ── CATEGORY SHOWCASE ── */}
-      <motion.div
-        initial={{ opacity: 0, y: 40 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-100px" }}
-        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-      >
+      <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}>
         <CategoryShowcase />
       </motion.div>
 
@@ -272,11 +265,15 @@ export default function Index() {
           viewport={{ once: true, margin: "-50px" }}
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
         >
-          {/* Section label */}
           <div className="flex items-baseline justify-between mb-5">
             <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
               {totalCount > 0 && !loading ? `${totalCount} projects` : "All projects"}
             </h2>
+            {totalCount > PAGE_SIZE && (
+              <span className="text-xs text-muted-foreground">
+                Showing {Math.min(listings.length, totalCount)} of {totalCount}
+              </span>
+            )}
           </div>
 
           {/* Search + filters bar */}
@@ -399,19 +396,40 @@ export default function Index() {
             </Link>
           </motion.div>
         ) : (
-          <motion.div
-            variants={staggerContainer}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-50px" }}
-            className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-5"
-          >
-            {listings.map((listing, i) => (
-              <motion.div key={listing.id} variants={fadeUp} custom={i % 8}>
-                <ListingCard {...listing} owned={ownedIds.has(listing.id)} />
-              </motion.div>
-            ))}
-          </motion.div>
+          <>
+            <motion.div
+              variants={staggerContainer}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-50px" }}
+              className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-5"
+            >
+              {listings.map((listing, i) => (
+                <motion.div key={listing.id} variants={fadeUp} custom={i % 8}>
+                  <ListingCard {...listing} owned={ownedIds.has(listing.id)} />
+                </motion.div>
+              ))}
+            </motion.div>
+
+            {/* Load More */}
+            {hasMore && (
+              <div className="flex justify-center mt-10">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={loadMore}
+                  disabled={loadingMore}
+                  className="gap-2 border-border/40 hover:border-primary/50 hover:bg-primary/5 transition-all"
+                >
+                  {loadingMore ? (
+                    <><Loader2 className="h-4 w-4 animate-spin" /> Loading…</>
+                  ) : (
+                    <><ChevronDown className="h-4 w-4" /> Load more ({totalCount - listings.length} remaining)</>
+                  )}
+                </Button>
+              </div>
+            )}
+          </>
         )}
       </section>
 

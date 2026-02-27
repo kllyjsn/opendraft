@@ -41,7 +41,17 @@ export function DeployToNetlify({ listingId, listingTitle, hasFile, githubUrl }:
   const [showConfetti, setShowConfetti] = useState(false);
 
   if (!user) return null;
-  if (!hasFile && !githubUrl) return null;
+
+  // Show a disabled teaser when no deployable file exists
+  if (!hasFile && !githubUrl) {
+    return (
+      <Button variant="outline" disabled className="w-full border-border/60 gap-2 opacity-60 cursor-not-allowed">
+        <Rocket className="h-4 w-4" />
+        Deploy to Netlify
+        <span className="text-[10px] text-muted-foreground ml-1">(no file uploaded yet)</span>
+      </Button>
+    );
+  }
 
   // For GitHub-only listings, just link to Netlify's deploy button
   if (!hasFile && githubUrl) {

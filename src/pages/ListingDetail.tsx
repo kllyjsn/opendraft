@@ -131,7 +131,13 @@ export default function ListingDetail() {
   }
 
   async function checkPurchase() {
-    if (!user) return;
+    if (!user || !id) return;
+    // Sellers are treated as owners too
+    const { data: listingData } = await supabase.from("listings").select("seller_id").eq("id", id).single();
+    if (listingData?.seller_id === user.id) {
+      setPurchased(true);
+      return;
+    }
     const { data } = await supabase.from("purchases").select("id").eq("listing_id", id).eq("buyer_id", user.id).maybeSingle();
     setPurchased(!!data);
   }

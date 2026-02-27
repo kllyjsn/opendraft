@@ -6,7 +6,7 @@ import { Footer } from "@/components/Footer";
 import { CompletenessBadge } from "@/components/CompletenessBadge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { ExternalLink, Github, Star, ShoppingCart, ChevronLeft, ChevronRight, Download, Eye, Package, Gift, MessageSquare, GitFork, RefreshCw, Wrench, Shield, Infinity } from "lucide-react";
+import { ExternalLink, Github, Star, ShoppingCart, ChevronLeft, ChevronRight, Download, Eye, Package, Gift, MessageSquare, GitFork, RefreshCw, Wrench, Shield, Infinity, Rocket } from "lucide-react";
 import { DeployToNetlify } from "@/components/DeployToNetlify";
 import { useToast } from "@/hooks/use-toast";
 import { MakeOfferDialog } from "@/components/MakeOfferDialog";
@@ -535,6 +535,14 @@ export default function ListingDetail() {
                     </div>
                   </div>
                   <p className="text-center text-xs text-muted-foreground font-medium">{priceLabel}</p>
+                  <Button
+                    variant="outline"
+                    disabled
+                    className="w-full border-border/60 text-muted-foreground gap-2 cursor-not-allowed"
+                  >
+                    <Rocket className="h-4 w-4" />
+                    Deploy to Netlify after purchase
+                  </Button>
                   {/* Active offer status */}
                   {user && listing.seller_id !== user.id && (
                     <ActiveOfferBanner listingId={listing.id} askingPrice={listing.price} />

@@ -131,7 +131,6 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 @tailwind utilities;
 
 @layer base {
-  * { @apply border-border; }
   body {
     @apply antialiased;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;

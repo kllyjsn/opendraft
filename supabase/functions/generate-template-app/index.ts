@@ -71,12 +71,26 @@ import path from 'path';
 export default defineConfig({
   plugins: [react()],
   resolve: { alias: { '@': path.resolve(__dirname, './src') } },
+  build: { outDir: 'dist' },
 });
 `,
   "tailwind.config.js": `/** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
-  theme: { extend: {} },
+  theme: {
+    extend: {
+      animation: {
+        'fade-in': 'fadeIn 0.5s ease-out',
+        'slide-up': 'slideUp 0.6s ease-out',
+        'float': 'float 6s ease-in-out infinite',
+      },
+      keyframes: {
+        fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+        slideUp: { '0%': { opacity: '0', transform: 'translateY(20px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
+        float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-10px)' } },
+      },
+    },
+  },
   plugins: [],
 };
 `,
@@ -89,6 +103,9 @@ export default {
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
     <title>Template App</title>
   </head>
   <body>
@@ -111,40 +128,75 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   "src/index.css": `@tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  * { @apply border-border; }
+  body {
+    @apply antialiased;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+}
+`,
+  /* ── Deploy-ready configs ───────────────────────────────── */
+  "netlify.toml": `[build]
+  command = "npm run build"
+  publish = "dist"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+`,
+  "vercel.json": JSON.stringify(
+    {
+      buildCommand: "npm run build",
+      outputDirectory: "dist",
+      framework: "vite",
+      rewrites: [{ source: "/(.*)", destination: "/index.html" }],
+    },
+    null,
+    2
+  ),
+  "_redirects": `/*    /index.html   200
 `,
 };
 
 const THEME_POOL = [
-  "AI-powered writing assistant",
-  "SaaS analytics dashboard",
-  "Project management kanban board",
-  "Personal finance tracker",
-  "Recipe discovery platform",
-  "Fitness workout planner",
-  "Social media scheduler",
-  "Customer support ticketing system",
-  "E-learning course platform",
-  "Real estate listing browser",
-  "Podcast player and discovery app",
-  "Job board and applicant tracker",
-  "Habit tracker with streaks",
-  "Team collaboration whiteboard",
-  "Invoice and billing manager",
-  "Weather dashboard with forecasts",
-  "Travel itinerary planner",
-  "Cryptocurrency portfolio tracker",
-  "Restaurant reservation system",
-  "Event management platform",
-  "AI chatbot builder interface",
-  "Email newsletter manager",
-  "Inventory management system",
-  "Code snippet library",
-  "Video conferencing landing page",
-  "Music streaming player UI",
-  "Online marketplace storefront",
-  "Health and wellness tracker",
-  "Task automation workflow builder",
-  "Blog and CMS admin panel",
+  "AI-powered writing assistant with grammar scoring",
+  "SaaS analytics dashboard with real-time charts",
+  "Kanban board with drag-and-drop and swimlanes",
+  "Personal finance tracker with spending heatmaps",
+  "Recipe discovery platform with dietary filters",
+  "Fitness workout planner with progress rings",
+  "Social media content calendar with preview cards",
+  "Customer support ticketing system with priority queues",
+  "Interactive e-learning course platform with quizzes",
+  "Real estate listing browser with map view",
+  "Podcast player with waveform visualization",
+  "Job board with applicant pipeline tracker",
+  "Habit tracker with streak flames and gamification",
+  "Team collaboration whiteboard with sticky notes",
+  "Invoice generator with PDF export preview",
+  "Weather dashboard with animated forecast cards",
+  "Travel itinerary planner with timeline view",
+  "Crypto portfolio tracker with sparkline charts",
+  "Restaurant reservation system with table layout",
+  "Event management platform with ticket tiers",
+  "AI chatbot builder with conversation flow designer",
+  "Email newsletter editor with drag-and-drop blocks",
+  "Inventory management with barcode scanner UI",
+  "Code snippet library with syntax highlighting",
+  "Video conferencing landing page with pricing tiers",
+  "Music streaming player with equalizer animation",
+  "Online marketplace storefront with cart drawer",
+  "Health and wellness dashboard with mood tracker",
+  "Workflow automation builder with node graph",
+  "Blog CMS admin panel with rich text editor",
+  "AI image prompt gallery with style filters",
+  "Startup pitch deck builder with slide editor",
+  "Developer portfolio with project showcase cards",
+  "SaaS pricing page with toggle and comparison table",
+  "AI meeting notes summarizer with action items",
 ];
 
 async function gatherDemandSignals(
@@ -238,17 +290,98 @@ async function generateSingleTemplate(
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "google/gemini-2.5-pro",
         messages: [
           {
             role: "system",
-            content: `You are an expert React developer who generates complete, production-quality React + Tailwind template apps. Generate a self-contained React template project. The code should be clean, modern, well-commented, and immediately usable. Use only React 18, Tailwind CSS, lucide-react for icons, and framer-motion for animations — no other dependencies. Generate ONLY the src/ files (App.tsx and any component files). Use relative imports within src/. Every component file should be in src/components/. The app should look polished with a cohesive color scheme and responsive layout.
+            content: `You are a WORLD-CLASS React developer and UI designer who creates STUNNING, production-grade React + Tailwind template apps that developers would happily pay for.
 
-IMPORTANT: You must build products people actually want. Use the market research data below to inform your design decisions — prioritize features and UX patterns that align with proven demand signals.${demandContext ? `\n\n--- MARKET RESEARCH ---\n${demandContext}` : ""}`,
+## YOUR QUALITY BAR
+Think Vercel's templates, Linear's UI, Stripe's dashboard — that level of craft. Every template you generate should look like it was hand-built by a top design agency. Buyers should think "I can't believe this is a template."
+
+## DESIGN PRINCIPLES (MANDATORY)
+1. **VISUAL HIERARCHY**: Bold headlines (text-4xl to text-6xl font-black), clear information architecture, strategic whitespace
+2. **COLOR MASTERY**: Use a cohesive palette — NOT random Tailwind colors. Pick 1 primary gradient + 2 accent colors. Examples:
+   - Indigo-to-purple gradient hero + emerald accents
+   - Amber-warm theme with slate + rose accents
+   - Deep blue dashboard with cyan data highlights
+3. **MOTION & DELIGHT**: Use framer-motion for EVERY major section:
+   - Hero text reveal with stagger (delay 0.1 per word/line)
+   - Cards that slide up + fade in on scroll using viewport detection
+   - Hover micro-interactions (scale, shadow elevation, color shift)
+   - Smooth page transitions
+4. **DEPTH & TEXTURE**: Layered design with:
+   - Gradient mesh backgrounds or subtle grid patterns
+   - Glass-morphism cards (backdrop-blur-xl bg-white/10 border border-white/20)
+   - Dramatic shadows (shadow-2xl on cards, shadow-glow on CTAs)
+   - Decorative blurred gradient orbs in backgrounds
+5. **TYPOGRAPHY**: Use system font stack. Mix font weights dramatically (font-black for headlines, font-normal for body). Use tracking-tight on headlines.
+6. **RESPONSIVE**: Mobile-first. Every component must look great on all screens.
+7. **DARK MODE READY**: Use Tailwind dark: variants. Design primarily for light mode but ensure dark mode works.
+
+## CODE QUALITY REQUIREMENTS
+- TypeScript strict mode — proper types for all props and state
+- Custom hooks for reusable logic
+- Component composition — break UI into small, reusable pieces (min 6-8 component files)
+- Meaningful variable names and JSDoc comments on complex components
+- Use React.useState, useEffect properly with cleanup
+- Responsive grid layouts with Tailwind (grid-cols-1 md:grid-cols-2 lg:grid-cols-3)
+- Accessible: proper aria labels, semantic HTML, keyboard navigation
+- NO placeholder "lorem ipsum" — use realistic, contextual dummy data
+- ALL sample data should be defined in a separate src/data/ file or at the top of components
+
+## FILE STRUCTURE (generate ALL of these)
+- src/App.tsx — Main app with routing/layout
+- src/components/Hero.tsx — Stunning hero section
+- src/components/Navbar.tsx — Responsive nav with mobile menu
+- src/components/Footer.tsx — Professional footer
+- src/components/ — 4-8 additional feature-specific components
+- src/data/sample-data.ts — Realistic mock data
+
+## ANIMATIONS COOKBOOK (use these patterns)
+\`\`\`tsx
+// Stagger children
+<motion.div initial="hidden" animate="visible" variants={{ visible: { transition: { staggerChildren: 0.1 } } }}>
+  {items.map(item => <motion.div key={item.id} variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} />)}
+</motion.div>
+
+// Scroll reveal
+<motion.section initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.7 }}>
+
+// Hover card lift
+<motion.div whileHover={{ y: -6, scale: 1.02 }} transition={{ type: "spring", stiffness: 300 }}>
+
+// Number counter
+const [count, setCount] = useState(0);
+useEffect(() => { const timer = setInterval(() => setCount(prev => prev < target ? prev + 1 : target), 20); return () => clearInterval(timer); }, []);
+\`\`\`
+
+## WHAT MAKES A TEMPLATE SELL
+- A jaw-dropping hero section that screenshots beautifully
+- Interactive elements (hover states, toggles, tabs) that feel alive
+- Realistic data that tells a story
+- Professional color palette that looks intentional
+- At least one "wow" moment (animated counter, particle effect, gradient shift)
+
+${demandContext ? `\n--- MARKET INTELLIGENCE ---\n${demandContext}` : ""}`,
           },
           {
             role: "user",
-            content: `Generate a complete template app with theme: "${theme}". Make it visually impressive, functional, and immediately useful as a starter template. Include at least 3-4 component files plus App.tsx.`,
+            content: `Generate an EXCEPTIONAL template app with theme: "${theme}".
+
+This template needs to be so polished that developers will pay $15/month for it. Make it visually STUNNING with rich animations, professional color palette, realistic data, and at least 8 source files including a knockout hero section.
+
+Requirements:
+1. At LEAST 8 component files + App.tsx + sample data file
+2. Every section animated with framer-motion
+3. Responsive navigation with mobile menu
+4. Professional footer
+5. Cohesive color scheme — NOT random colors
+6. Realistic mock data — names, numbers, descriptions that tell a story
+7. At least one interactive feature (tabs, filters, toggles, etc.)
+8. Gradient backgrounds and modern card designs
+9. The app should feel COMPLETE, not like a skeleton
+10. Must compile and work immediately with the base scaffold (React 18, Tailwind, lucide-react, framer-motion only)`,
           },
         ],
         tools: [
@@ -263,12 +396,16 @@ IMPORTANT: You must build products people actually want. Use the market research
                 properties: {
                   title: {
                     type: "string",
-                    description: "Product title, 3-8 words",
+                    description: "Brandable product title, 2-6 words. Think 'Linear', 'Notion', 'Raycast' level naming.",
+                  },
+                  tagline: {
+                    type: "string",
+                    description: "One-line marketing tagline, max 10 words",
                   },
                   description: {
                     type: "string",
                     description:
-                      "Compelling 2-3 sentence marketplace description",
+                      "Compelling 3-4 sentence marketplace description highlighting unique value, key features, and who it's for. Write like a Product Hunt launch.",
                   },
                   category: {
                     type: "string",
@@ -288,7 +425,11 @@ IMPORTANT: You must build products people actually want. Use the market research
                   tech_stack: {
                     type: "array",
                     items: { type: "string" },
-                    description: "3-6 technologies used",
+                    description: "4-6 technologies used",
+                  },
+                  color_palette: {
+                    type: "string",
+                    description: "The primary color scheme used, e.g. 'indigo-to-purple gradient with emerald accents'",
                   },
                   files: {
                     type: "array",
@@ -302,22 +443,24 @@ IMPORTANT: You must build products people actually want. Use the market research
                         },
                         content: {
                           type: "string",
-                          description: "Full file content",
+                          description: "Full file content — production quality TypeScript/TSX",
                         },
                       },
                       required: ["path", "content"],
                       additionalProperties: false,
                     },
                     description:
-                      "All source files to include (src/App.tsx + components)",
+                      "All source files (minimum 8 files: App.tsx, Navbar, Hero, Footer, 4+ feature components, sample data)",
                   },
                 },
                 required: [
                   "title",
+                  "tagline",
                   "description",
                   "category",
                   "completeness_badge",
                   "tech_stack",
+                  "color_palette",
                   "files",
                 ],
                 additionalProperties: false,
@@ -366,8 +509,8 @@ IMPORTANT: You must build products people actually want. Use the market research
     .slice(0, 40);
 
   const screenshotPrompts = [
-    `Generate a stunning, high-fidelity marketing landing page screenshot for a web application called "${template.title}". Description: "${template.description}". Show a hero section with a bold headline, subheadline, a prominent CTA button, feature highlights, and social proof elements. Use a modern gradient background, professional typography, and vibrant accent colors. The design should look like a polished Product Hunt-ready landing page. 1280x720 resolution, browser chrome NOT visible — just the page content.`,
-    `Generate a realistic, detailed app interface screenshot for a web application called "${template.title}". Description: "${template.description}". Show the main functional dashboard/workspace view with navigation sidebar or top nav, data cards, tables or content areas, and interactive UI elements populated with realistic sample data. Use a clean light theme with subtle shadows and a cohesive color palette. It should look like a real working application, NOT a landing page. 1280x720 resolution, browser chrome NOT visible — just the app UI.`,
+    `Generate a stunning, ultra-polished marketing landing page screenshot for a premium web app called "${template.title}" — "${template.tagline || ""}". ${template.description}. Color palette: ${template.color_palette || "modern gradient"}. Show: bold hero headline with gradient text, prominent glowing CTA button, feature cards with icons, social proof section with avatars, and a subtle grid/mesh background. Typography should be Inter-style, sharp and modern. The design should look like a $100M startup's landing page — NOT a student project. 1280x720, no browser chrome, just the page.`,
+    `Generate a realistic, detailed app dashboard/workspace screenshot for "${template.title}". ${template.description}. Color palette: ${template.color_palette || "clean modern"}. Show the main functional interface with: sidebar or top navigation, data visualizations (charts/metrics/cards), content area with realistic sample data, and interactive UI elements. Use subtle shadows, proper spacing, and a cohesive color system. It should look like a REAL production app with REAL data — not a wireframe. 1280x720, no browser chrome.`,
   ];
 
   const imgResults = await Promise.allSettled(
@@ -442,6 +585,9 @@ IMPORTANT: You must build products people actually want. Use the market research
     }
   }
 
+  // Also put _redirects in dist/ equivalent for Netlify drag-drop deploys
+  projectFolder.file("public/_redirects", "/*    /index.html   200\n");
+
   for (const file of template.files) {
     if (file.path && file.content) {
       projectFolder.file(file.path, file.content);
@@ -450,7 +596,47 @@ IMPORTANT: You must build products people actually want. Use the market research
 
   projectFolder.file(
     "README.md",
-    `# ${template.title}\n\n${template.description}\n\n## Getting Started\n\n\`\`\`bash\nnpm install\nnpm run dev\n\`\`\`\n\n## Tech Stack\n\n${(template.tech_stack || []).map((t: string) => `- ${t}`).join("\n")}\n\nBuilt with ❤️ and listed on [OpenDraft](https://opendraft.lovable.app)\n`
+    `# ${template.title}
+
+${template.tagline ? `> ${template.tagline}\n\n` : ""}${template.description}
+
+## 🚀 Quick Start
+
+\`\`\`bash
+npm install
+npm run dev
+\`\`\`
+
+## ☁️ One-Click Deploy
+
+[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start)
+[![Deploy to Vercel](https://vercel.com/button)](https://vercel.com/import)
+
+\`\`\`bash
+# Build for production
+npm run build
+# Output is in dist/ — deploy anywhere
+\`\`\`
+
+## 🛠 Tech Stack
+
+${(template.tech_stack || []).map((t: string) => `- ${t}`).join("\n")}
+
+## 📁 Project Structure
+
+\`\`\`
+├── src/
+│   ├── App.tsx          # Main application
+│   ├── components/      # UI components
+│   ├── data/            # Sample data
+│   └── index.css        # Tailwind styles
+├── netlify.toml         # Netlify deploy config
+├── vercel.json          # Vercel deploy config
+└── vite.config.ts       # Vite configuration
+\`\`\`
+
+Built with ❤️ and listed on [OpenDraft](https://opendraft.lovable.app)
+`
   );
 
   const zipBlob = await zip.generateAsync({ type: "uint8array" });
@@ -516,6 +702,8 @@ IMPORTANT: You must build products people actually want. Use the market research
     event_data: {
       listing_id: listing.id,
       title: template.title,
+      tagline: template.tagline,
+      color_palette: template.color_palette,
       file_count: template.files.length,
       zip_size_kb: Math.round(zipBlob.length / 1024),
       has_screenshot: screenshotPaths.length > 0,

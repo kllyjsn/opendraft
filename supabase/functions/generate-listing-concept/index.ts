@@ -66,7 +66,7 @@ serve(async (req) => {
       throw new Error("Authentication required");
     }
 
-    // 1. Gather market signals — recent searches and trending categories
+    // 1. Gather market signals
     const { data: recentActivity } = await supabase
       .from("activity_log")
       .select("event_type, event_data")
@@ -125,61 +125,70 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "google/gemini-2.5-pro",
         messages: [
           {
             role: "system",
-            content: `You are a tastemaker product strategist for OpenDraft, a marketplace where developers buy and sell vibe-coded apps, templates, and SaaS tools.
+            content: `You are a VISIONARY product strategist and naming genius for OpenDraft — the premium marketplace where developers buy and sell stunning vibe-coded apps, templates, and SaaS tools.
 
-Your goal is to generate HIGHLY MARKETABLE app concepts that are:
-1. TREND-DRIVEN: **External internet trends are your PRIMARY inspiration** — what's blowing up on Product Hunt, Hacker News, GitHub, X/Twitter, and indie hacker communities RIGHT NOW. Internal search data is secondary context.
-2. AGENT-INCLUSIVE: At least 30% of concepts MUST be designed for AI agent consumption — MCP servers, agent toolkits, API-first apps, autonomous workflow tools, agent dashboards. Agents are our primary ICP.
-3. DIVERSE: Spread across ALL categories (saas_tool, ai_app, landing_page, utility, game, other) — don't cluster
-4. SPECIFIC: Not generic "dashboard" or "CRM" — each should have a unique angle. Think OpenClaw, Moltbook, Granola, Cal.com-style specificity.
-5. AHEAD OF THE CURVE: Anticipate what developers will need in 3-6 months, not what went viral last month
-6. BUYER-FOCUSED: Think about who would pay money for this and why — both human developers AND autonomous agents
+## YOUR MISSION
+Generate concepts so compelling that developers immediately think "I NEED to build this" or "I NEED to buy this." Each concept should feel like a Product Hunt #1 launch waiting to happen.
 
-TWO BUYER PERSONAS to serve:
-A) HUMAN DEVELOPERS: Want ready-to-deploy apps, templates, starter kits they can customize
-B) AI AGENTS: Want API-first tools, MCP-compatible services, data connectors, autonomous workflow components
+## NAMING PHILOSOPHY
+Create MEMORABLE, BRANDABLE names — NOT generic descriptions. Study these patterns:
+- **Compound words**: Raycast, Basecamp, Figma, Linear, Notion
+- **Evocative words**: Obsidian, Mercury, Loom, Pitch, Arc
+- **Playful combos**: Cal.com, Dub.co, Resend, Clerk, Drizzle
+- **NEVER**: "AI Dashboard Manager" or "Smart Task Tracker" — those are descriptions, not brands
 
-Think about breadth:
-- SaaS tools: Niche vertical solutions, workflow automation, team collaboration
-- AI apps: Agent orchestrators, MCP tool servers, RAG pipelines, AI-native workflows
-- Landing pages: Specific industry templates, high-converting designs
-- Utilities: Developer tools, CLI companions, agent toolkits, browser extensions
-- Games: Casual web games, puzzle games, multiplayer experiences
-- Other: Marketplaces, directories, agent registries, data connectors
+## QUALITY BAR FOR DESCRIPTIONS
+Write like the best Product Hunt launches. Each description should:
+- Open with a HOOK that creates desire ("Finally, a...")
+- Highlight the UNIQUE ANGLE (not just features)
+- Name the SPECIFIC buyer and their pain point
+- End with an aspirational outcome
+- Example: "Finally, a meeting scheduler that doesn't look like it was built in 2005. Meridian brings Linear-quality design to calendar management — auto-blocks focus time, syncs with every tool, and makes your schedule actually work for you. Built for founders and indie hackers who value their time."
 
-And depth:
-- Each concept should feel like a COMPLETE product idea with a clear user journey
-- Agent-facing concepts should specify what MCP tools or API endpoints they'd expose
-- Include innovative features that differentiate from competitors
-- Consider monetization angles (freemium, subscription, one-time, usage-based for agents)`,
+## CONCEPT REQUIREMENTS
+1. **TREND-DRIVEN**: External internet trends are your PRIMARY inspiration — what's blowing up RIGHT NOW
+2. **AGENT-INCLUSIVE**: At least 30% MUST be agent-first — MCP servers, API toolkits, autonomous workflows
+3. **DIVERSE**: Spread across ALL categories — don't cluster
+4. **SPECIFIC**: Each has a unique angle. Not "CRM" but "CRM for freelance designers with project-based billing"
+5. **AHEAD OF THE CURVE**: Anticipate 3-6 months out
+6. **VISUALLY AMBITIOUS**: Each should have a clear visual identity (color, style, vibe)
+
+## PRICING STRATEGY
+- Landing pages / simple utilities: $5-$15
+- MVP tools / dashboards: $15-$49
+- Full SaaS starters / production apps: $49-$149
+- Agent tools / MCP servers: $29-$99
+- Premium / niche enterprise tools: $99-$199
+- Price should reflect VALUE TO BUYER, not effort to build`,
           },
           {
             role: "user",
-            content: `Generate ${count} new app listing concepts for our marketplace.
+            content: `Generate ${count} EXCEPTIONAL app listing concepts.
 
 ${themes.length > 0 ? `REQUESTED THEMES: ${themes.join(", ")}\n` : ""}
 
 ${externalContext ? `
-═══ PRIMARY: LIVE INTERNET TRENDS (these are your MAIN inspiration — build concepts around these) ═══
+═══ PRIMARY: LIVE INTERNET TRENDS (build concepts around these) ═══
 ${externalContext}
 ` : ""}
 
-SECONDARY — Internal demand signals (useful context but NOT your primary driver):
+SECONDARY — Internal demand signals:
 ${searchTerms.length > 0 ? searchTerms.map(t => `- ${t}`).join("\n") : "No recent searches"}
 
 EXISTING LISTINGS (AVOID DUPLICATES):
 ${existingTitles || "None yet — fill the marketplace with diverse, compelling options"}
 
-IMPORTANT REQUIREMENTS:
-1. Generate ${count} concepts spread across DIFFERENT categories
-2. At least ${Math.max(1, Math.ceil(count * 0.3))} concepts MUST be agent-first (MCP servers, API toolkits, agent workflows, autonomous tools)
-3. Internet trends should drive AT LEAST 60% of your concepts — internal search data is supplementary
-4. Each agent-facing concept should describe what tools/endpoints it exposes
-5. Name concepts with memorable, brandable names (like "OpenClaw", "Moltbook", "Granola") — not generic descriptions`,
+REQUIREMENTS:
+1. ${count} concepts across DIFFERENT categories
+2. At least ${Math.max(1, Math.ceil(count * 0.3))} MUST be agent-first
+3. Internet trends drive 60%+ of concepts
+4. BRANDABLE names only — no generic descriptions
+5. Descriptions written like Product Hunt launches
+6. Each concept should have a clear visual identity / color vibe`,
           },
         ],
         tools: [
@@ -196,18 +205,18 @@ IMPORTANT REQUIREMENTS:
                     items: {
                       type: "object",
                       properties: {
-                        title: { type: "string", description: "Catchy, specific product title (3-8 words)" },
-                        description: { type: "string", description: "Compelling 3-4 sentence product description highlighting unique angle, key features, and target buyer" },
+                        title: { type: "string", description: "Brandable product name, 1-4 words. Think Linear, Raycast, Obsidian — NOT 'AI Task Manager'" },
+                        description: { type: "string", description: "3-5 sentence Product Hunt-quality description. Hook → unique angle → specific buyer → aspirational outcome" },
                         category: { type: "string", enum: ["saas_tool", "ai_app", "landing_page", "utility", "game", "other"] },
                         completeness_badge: { type: "string", enum: ["prototype", "mvp", "production_ready"] },
-                        tech_stack: { type: "array", items: { type: "string" }, description: "3-6 relevant technologies" },
-                        price_cents: { type: "number", description: "Suggested price in cents. Range $5-$199 based on complexity and value" },
+                        tech_stack: { type: "array", items: { type: "string" }, description: "4-6 relevant technologies" },
+                        price_cents: { type: "number", description: "Price in cents based on value ($5-$199 range)" },
                         built_with: { type: "string", enum: ["lovable", "cursor", "bolt", "replit", "v0", "other"] },
-                        trend_inspiration: { type: "string", description: "What internet trend or market signal inspired this concept" },
-                        buyer_persona: { type: "string", description: "Who would buy this (e.g. 'freelance designers needing client portals')" },
-                        key_differentiator: { type: "string", description: "What makes this different from existing solutions" },
-                        agent_ready: { type: "boolean", description: "True if this concept is designed for AI agent consumption (MCP tools, API-first, agent workflows)" },
-                        exposed_tools: { type: "string", description: "For agent-ready concepts: what MCP tools or API endpoints this would expose. Empty string for human-only concepts." },
+                        trend_inspiration: { type: "string", description: "The specific trend or signal that inspired this" },
+                        buyer_persona: { type: "string", description: "Specific buyer persona, e.g. 'indie hackers launching on Product Hunt'" },
+                        key_differentiator: { type: "string", description: "The ONE thing that makes this better than alternatives" },
+                        agent_ready: { type: "boolean", description: "True if designed for AI agent consumption" },
+                        exposed_tools: { type: "string", description: "For agent-ready: MCP tools/API endpoints exposed. Empty string otherwise." },
                       },
                       required: ["title", "description", "category", "completeness_badge", "tech_stack", "price_cents", "built_with", "trend_inspiration", "buyer_persona", "key_differentiator", "agent_ready", "exposed_tools"],
                       additionalProperties: false,

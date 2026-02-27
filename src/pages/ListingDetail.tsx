@@ -6,8 +6,9 @@ import { Footer } from "@/components/Footer";
 import { CompletenessBadge } from "@/components/CompletenessBadge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { ExternalLink, Github, Star, ShoppingCart, ChevronLeft, ChevronRight, Download, Eye, Package, Gift, MessageSquare, GitFork, RefreshCw, Wrench, Shield, Infinity, Rocket } from "lucide-react";
+import { ExternalLink, Github, Star, ShoppingCart, ChevronLeft, ChevronRight, Download, Eye, Package, Gift, MessageSquare, GitFork, RefreshCw, Wrench, Shield, Infinity, Rocket, Triangle } from "lucide-react";
 import { DeployToNetlify } from "@/components/DeployToNetlify";
+import { DeployToVercel } from "@/components/DeployToVercel";
 import { useToast } from "@/hooks/use-toast";
 import { MakeOfferDialog } from "@/components/MakeOfferDialog";
 import { ActiveOfferBanner } from "@/components/ActiveOfferBanner";
@@ -481,6 +482,12 @@ export default function ListingDetail() {
                     hasFile={!!listing.file_path}
                     githubUrl={listing.github_url}
                   />
+                  <DeployToVercel
+                    listingId={listing.id}
+                    listingTitle={listing.title}
+                    hasFile={!!listing.file_path}
+                    githubUrl={listing.github_url}
+                  />
                   {listing.seller_id !== user?.id && (
                     <>
                       <Button
@@ -535,14 +542,24 @@ export default function ListingDetail() {
                     </div>
                   </div>
                   <p className="text-center text-xs text-muted-foreground font-medium">{priceLabel}</p>
-                  <Button
-                    variant="outline"
-                    disabled
-                    className="w-full border-border/60 text-muted-foreground gap-2 cursor-not-allowed"
-                  >
-                    <Rocket className="h-4 w-4" />
-                    Deploy to Netlify after purchase
-                  </Button>
+                  <div className="space-y-2">
+                    <Button
+                      variant="outline"
+                      disabled
+                      className="w-full border-border/60 text-muted-foreground gap-2 cursor-not-allowed"
+                    >
+                      <Rocket className="h-4 w-4" />
+                      Deploy to Netlify after purchase
+                    </Button>
+                    <Button
+                      variant="outline"
+                      disabled
+                      className="w-full border-border/60 text-muted-foreground gap-2 cursor-not-allowed"
+                    >
+                      <Triangle className="h-4 w-4" />
+                      Deploy to Vercel after purchase
+                    </Button>
+                  </div>
                   {/* Active offer status */}
                   {user && listing.seller_id !== user.id && (
                     <ActiveOfferBanner listingId={listing.id} askingPrice={listing.price} />

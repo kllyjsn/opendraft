@@ -36,7 +36,7 @@ export function DeployToVercel({ listingId, listingTitle, hasFile, githubUrl }: 
   const [saveToken, setSaveToken] = useState(true);
   const [deploying, setDeploying] = useState(false);
   const [currentStep, setCurrentStep] = useState<StepId>("auth");
-  const [result, setResult] = useState<{ siteUrl: string; adminUrl: string } | null>(null);
+  const [result, setResult] = useState<{ siteUrl: string; adminUrl: string; sourceDownloadUrl?: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   if (!user) return null;
@@ -115,6 +115,7 @@ export function DeployToVercel({ listingId, listingTitle, hasFile, githubUrl }: 
       setResult({
         siteUrl: data.siteUrl,
         adminUrl: data.adminUrl,
+        sourceDownloadUrl: data.sourceDownloadUrl,
       });
 
       toast({
@@ -188,6 +189,13 @@ export function DeployToVercel({ listingId, listingTitle, hasFile, githubUrl }: 
                       <ExternalLink className="h-4 w-4" /> Visit your site
                     </Button>
                   </a>
+                  {result.sourceDownloadUrl && (
+                    <a href={result.sourceDownloadUrl} download>
+                      <Button variant="outline" className="w-full gap-2">
+                        ⬇ Download Source Code
+                      </Button>
+                    </a>
+                  )}
                   <a href={result.adminUrl} target="_blank" rel="noopener noreferrer">
                     <Button variant="outline" className="w-full gap-2">
                       Vercel Dashboard <ArrowRight className="h-3.5 w-3.5" />

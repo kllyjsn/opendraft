@@ -126,21 +126,12 @@ serve(async (req) => {
       }));
 
     // Log demand signal if no good matches found (fire-and-forget)
+    // Only log from homepage search — agent demand signals are logged separately in the MCP server
     if (topMatches.length === 0) {
       supabase.from("agent_demand_signals").insert({
         query: prompt.slice(0, 200),
-        source: "match",
+        source: "homepage",
       }).then(() => {});
-    }
-
-    // Log agent views for matched listings (fire-and-forget)
-    if (topMatches.length > 0) {
-      const views = topMatches.map((m: any) => ({
-        listing_id: m.id,
-        source: "match",
-        action: "match",
-      }));
-      supabase.from("agent_listing_views").insert(views).then(() => {});
     }
 
     return new Response(JSON.stringify({ matches: topMatches, hasResults: topMatches.length > 0 }), {

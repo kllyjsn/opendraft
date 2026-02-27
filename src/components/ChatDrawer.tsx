@@ -33,7 +33,8 @@ export function ChatDrawer({
 }: ChatDrawerProps) {
   const { user } = useAuth();
   const isMobile = useIsMobile();
-  const { messages, sendMessage } = usePubNub(open ? conversationId : null);
+  const { messages, sendMessage, typingUserId, sendTypingSignal, sendStopTyping } = usePubNub(open ? conversationId : null);
+  const isOtherTyping = typingUserId != null && typingUserId !== user?.id;
   const { isOnline } = usePresence();
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
@@ -118,8 +119,8 @@ export function ChatDrawer({
               <p className="text-xs text-muted-foreground truncate">Re: {listingTitle}</p>
             )}
             {otherUserId && !listingTitle && (
-              <p className="text-[11px] text-muted-foreground">
-                {otherOnline ? "Online now" : "Offline"}
+              <p className={cn("text-[11px]", isOtherTyping ? "text-primary font-medium" : "text-muted-foreground")}>
+                {isOtherTyping ? "typing…" : otherOnline ? "Online now" : "Offline"}
               </p>
             )}
           </div>
@@ -182,6 +183,16 @@ export function ChatDrawer({
               </div>
             );
           })}
+          {/* Typing indicator */}
+          {isOtherTyping && (
+            <div className="flex justify-start mt-1">
+              <div className="bg-muted rounded-2xl rounded-bl-md px-4 py-2.5 flex items-center gap-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50 animate-bounce [animation-delay:0ms]" />
+                <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50 animate-bounce [animation-delay:150ms]" />
+                <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50 animate-bounce [animation-delay:300ms]" />
+              </div>
+            </div>
+          )}
           <div ref={bottomRef} />
         </div>
 
@@ -195,7 +206,11 @@ export function ChatDrawer({
           <Input
             ref={inputRef}
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) => {
+              setInput(e.target.value);
+              if (e.target.value.trim()) sendTypingSignal();
+              else sendStopTyping();
+            }}
             onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
             placeholder="Type a message…"
             maxLength={2000}

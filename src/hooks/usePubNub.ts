@@ -102,7 +102,10 @@ export function usePresence() {
 export function usePubNub(conversationId: string | null) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [connected, setConnected] = useState(false);
+  const [typingUserId, setTypingUserId] = useState<string | null>(null);
   const pubnubRef = useRef<PubNub | null>(null);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastSignalRef = useRef<number>(0);
 
   // Subscribe to conversation channel
   useEffect(() => {
@@ -123,6 +126,21 @@ export function usePubNub(conversationId: string | null) {
           if (prev.some((m) => m.id === msg.id)) return prev;
           return [...prev, msg];
         });
+        // Clear typing when a message arrives from the typing user
+        if (typeof msg === "object" && msg.sender_id) {
+          setTypingUserId((prev) => (prev === msg.sender_id ? null : prev));
+        }
+      },
+      signal: (event) => {
+        const data = event.message as { type?: string; userId?: string };
+        if (data.type === "typing" && data.userId !== globalConfig?.userId) {
+          setTypingUserId(data.userId ?? null);
+          // Auto-clear after 4s if no new signal
+          if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+          typingTimeoutRef.current = setTimeout(() => setTypingUserId(null), 4000);
+        } else if (data.type === "stop_typing" && data.userId !== globalConfig?.userId) {
+          setTypingUserId(null);
+        }
       },
       status: (event) => {
         if (event.category === "PNConnectedCategory") {
@@ -137,7 +155,31 @@ export function usePubNub(conversationId: string | null) {
       pn.unsubscribe({ channels: [channel] });
       pn.removeAllListeners();
       setConnected(false);
+      setTypingUserId(null);
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     };
+  }, [conversationId]);
+
+  // Send typing signal (throttled to once per 2s)
+  const sendTypingSignal = useCallback(() => {
+    if (!conversationId || !pubnubRef.current || !globalConfig) return;
+    const now = Date.now();
+    if (now - lastSignalRef.current < 2000) return;
+    lastSignalRef.current = now;
+    const channel = `chat_${conversationId}`;
+    pubnubRef.current.signal({
+      channel,
+      message: { type: "typing", userId: globalConfig.userId },
+    }).catch(() => {});
+  }, [conversationId]);
+
+  const sendStopTyping = useCallback(() => {
+    if (!conversationId || !pubnubRef.current || !globalConfig) return;
+    const channel = `chat_${conversationId}`;
+    pubnubRef.current.signal({
+      channel,
+      message: { type: "stop_typing", userId: globalConfig.userId },
+    }).catch(() => {});
   }, [conversationId]);
 
   // Load existing messages from DB
@@ -159,6 +201,8 @@ export function usePubNub(conversationId: string | null) {
     async (content: string, listingId?: string, sellerId?: string, recipientId?: string) => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Not authenticated");
+
+      sendStopTyping();
 
       const res = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-message`,
@@ -182,8 +226,8 @@ export function usePubNub(conversationId: string | null) {
       if (!res.ok) throw new Error(result.error);
       return result;
     },
-    [conversationId]
+    [conversationId, sendStopTyping]
   );
 
-  return { messages, connected, sendMessage, setMessages };
+  return { messages, connected, sendMessage, setMessages, typingUserId, sendTypingSignal, sendStopTyping };
 }

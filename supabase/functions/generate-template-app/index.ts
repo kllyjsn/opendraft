@@ -25,6 +25,7 @@ const BASE_FILES: Record<string, string> = {
         "framer-motion": "^12.0.0",
       },
       devDependencies: {
+        "@types/node": "^22.0.0",
         "@types/react": "^18.3.0",
         "@types/react-dom": "^18.3.0",
         "@vitejs/plugin-react": "^4.3.0",
@@ -53,8 +54,8 @@ const BASE_FILES: Record<string, string> = {
         noEmit: true,
         jsx: "react-jsx",
         strict: true,
-        noUnusedLocals: true,
-        noUnusedParameters: true,
+        noUnusedLocals: false,
+        noUnusedParameters: false,
         noFallthroughCasesInSwitch: true,
         baseUrl: ".",
         paths: { "@/*": ["./src/*"] },

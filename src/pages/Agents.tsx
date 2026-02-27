@@ -173,8 +173,22 @@ export default function Agents() {
               </motion.div>
             )}
 
+            {/* Registry badges */}
+            <motion.div variants={fadeUp} custom={4} className="mt-10 flex items-center justify-center">
+              <a
+                href="https://smithery.ai/server/Opendraft/Marketplace"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2.5 rounded-full glass px-5 py-2.5 text-xs font-semibold hover:border-primary/30 hover:shadow-glow transition-all"
+              >
+                <span className="text-muted-foreground">Listed on</span>
+                <span className="font-bold text-foreground">Smithery</span>
+                <ArrowRight className="h-3 w-3 text-muted-foreground" />
+              </a>
+            </motion.div>
+
             {/* Stats */}
-            <motion.div variants={fadeUp} custom={4} className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-2xl mx-auto">
+            <motion.div variants={fadeUp} custom={5} className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-2xl mx-auto">
               {stats.map((s) => (
                 <div key={s.label} className="glass rounded-xl p-4 text-center">
                   <div className="text-2xl font-black text-foreground">{s.value}</div>

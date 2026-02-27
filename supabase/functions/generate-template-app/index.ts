@@ -290,7 +290,7 @@ async function generateSingleTemplate(
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-pro",
+        model: "google/gemini-2.5-flash",
         messages: [
           {
             role: "system",
@@ -488,13 +488,24 @@ Requirements:
     return { success: false, error: "AI code generation failed" };
   }
 
-  const aiData = await aiResponse.json();
+  let aiData: any;
+  try {
+    aiData = await aiResponse.json();
+  } catch (parseErr) {
+    console.error("Failed to parse AI response JSON:", parseErr);
+    return { success: false, error: "AI response was truncated or malformed" };
+  }
+
   const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
   if (!toolCall) return { success: false, error: "No AI response generated" };
 
-  const template = JSON.parse(
-    toolCall.function.arguments || '{"files":[]}'
-  );
+  let template: any;
+  try {
+    template = JSON.parse(toolCall.function.arguments || '{"files":[]}');
+  } catch (parseErr) {
+    console.error("Failed to parse tool call arguments:", parseErr);
+    return { success: false, error: "AI generated malformed template data" };
+  }
 
   if (!template.files?.length)
     return { success: false, error: "AI generated no files" };
@@ -524,7 +535,7 @@ Requirements:
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            model: "google/gemini-2.5-flash-image",
+            model: "google/gemini-3-pro-image-preview",
             messages: [{ role: "user", content: prompt }],
             modalities: ["image", "text"],
           }),

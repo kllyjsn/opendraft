@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { ChatDrawer } from "@/components/ChatDrawer";
 import { usePresence } from "@/hooks/usePubNub";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { MessageSquare, Loader2, Search, Plus, Circle, X, Bell } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -35,6 +36,7 @@ interface UserResult {
 export default function Messages() {
   const { user, loading: authLoading } = useAuth();
   const { isOnline } = usePresence();
+  const isMobile = useIsMobile();
   const [searchParams] = useSearchParams();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -70,7 +72,6 @@ export default function Messages() {
       return;
     }
 
-    // Enrich with listing titles and other user profiles
     const listingIds = [...new Set(convos.map((c) => c.listing_id).filter(Boolean))] as string[];
     const otherUserIds = [...new Set(convos.map((c) => (c.buyer_id === user.id ? c.seller_id : c.buyer_id)))];
 
@@ -93,7 +94,6 @@ export default function Messages() {
     const listingMap = new Map(listings?.map((l: any) => [l.id, l.title]) ?? []);
     const profileMap = new Map(profiles?.map((p: any) => [p.user_id, p.username]) ?? []);
 
-    // Group last messages by conversation
     const lastMsgMap = new Map<string, { content: string; unread: number }>();
     for (const msg of lastMessages ?? []) {
       if (!lastMsgMap.has(msg.conversation_id)) {
@@ -152,6 +152,17 @@ export default function Messages() {
     setDrawerOpen(true);
   }
 
+  function formatTime(dateStr: string) {
+    const d = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - d.getTime();
+    const diffDays = Math.floor(diffMs / 86_400_000);
+    if (diffDays === 0) return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    if (diffDays === 1) return "Yesterday";
+    if (diffDays < 7) return d.toLocaleDateString([], { weekday: "short" });
+    return d.toLocaleDateString([], { month: "short", day: "numeric" });
+  }
+
   if (authLoading) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -184,9 +195,16 @@ export default function Messages() {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="flex-1 container mx-auto px-4 py-10 max-w-2xl">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-black">Messages</h1>
+      <main className={cn(
+        "flex-1 container mx-auto max-w-2xl",
+        isMobile ? "px-0 py-0" : "px-4 py-10"
+      )}>
+        {/* Header */}
+        <div className={cn(
+          "flex items-center justify-between",
+          isMobile ? "px-4 pt-4 pb-2" : "mb-8"
+        )}>
+          <h1 className={cn("font-black", isMobile ? "text-2xl" : "text-3xl")}>Messages</h1>
           {activeTab === "conversations" && (
             <Button
               onClick={() => setShowNewChat(!showNewChat)}
@@ -195,25 +213,29 @@ export default function Messages() {
               className={cn(!showNewChat && "gradient-hero text-white border-0 shadow-glow")}
             >
               {showNewChat ? <X className="h-4 w-4 mr-1" /> : <Plus className="h-4 w-4 mr-1" />}
-              {showNewChat ? "Cancel" : "New message"}
+              {isMobile ? (showNewChat ? "" : "") : (showNewChat ? "Cancel" : "New message")}
+              {!isMobile && (showNewChat ? "Cancel" : "New message")}
             </Button>
           )}
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-          <TabsList className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className={cn(isMobile ? "px-0" : "mb-6")}>
+          <TabsList className={cn("w-full", isMobile && "rounded-none border-x-0")}>
             <TabsTrigger value="conversations" className="flex-1 gap-1.5">
-              <MessageSquare className="h-4 w-4" /> Conversations
+              <MessageSquare className="h-4 w-4" /> {!isMobile && "Conversations"}
             </TabsTrigger>
             <TabsTrigger value="notifications" className="flex-1 gap-1.5">
-              <Bell className="h-4 w-4" /> Notifications
+              <Bell className="h-4 w-4" /> {!isMobile && "Notifications"}
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="conversations" className="mt-4">
+          <TabsContent value="conversations" className={cn(isMobile ? "mt-0 px-2" : "mt-4")}>
             {/* New chat - user search */}
             {showNewChat && (
-              <div className="mb-6 rounded-2xl border border-primary/30 bg-card p-5 shadow-card">
+              <div className={cn(
+                "rounded-2xl border border-primary/30 bg-card shadow-card",
+                isMobile ? "mx-2 mb-3 p-4" : "mb-6 p-5"
+              )}>
                 <p className="text-sm font-bold mb-3">Start a conversation</p>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -221,7 +243,7 @@ export default function Messages() {
                     value={searchQuery}
                     onChange={(e) => searchUsers(e.target.value)}
                     placeholder="Search users by name…"
-                    className="pl-9"
+                    className={cn("pl-9", isMobile && "h-11 text-base")}
                     autoFocus
                   />
                 </div>
@@ -231,14 +253,17 @@ export default function Messages() {
                   </div>
                 )}
                 {searchResults.length > 0 && (
-                  <div className="mt-3 space-y-1">
+                  <div className="mt-3 space-y-0.5">
                     {searchResults.map((u) => (
                       <button
                         key={u.user_id}
                         onClick={() => startDM(u)}
-                        className="w-full text-left flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-muted/60 transition-colors"
+                        className={cn(
+                          "w-full text-left flex items-center gap-3 rounded-xl hover:bg-muted/60 transition-colors",
+                          isMobile ? "px-3 py-3 active:bg-muted" : "px-3 py-2.5"
+                        )}
                       >
-                        <div className="h-8 w-8 rounded-full gradient-hero flex items-center justify-center text-white text-xs font-bold shrink-0">
+                        <div className="h-9 w-9 rounded-full gradient-hero flex items-center justify-center text-white text-xs font-bold shrink-0">
                           {u.username?.[0]?.toUpperCase() ?? "?"}
                         </div>
                         <span className="text-sm font-medium flex-1 truncate">{u.username}</span>
@@ -265,76 +290,108 @@ export default function Messages() {
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
               </div>
             ) : conversations.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-border bg-muted/30 p-12 text-center">
+              <div className={cn(
+                "rounded-2xl border border-dashed border-border bg-muted/30 text-center",
+                isMobile ? "mx-2 p-8" : "p-12"
+              )}>
                 <MessageSquare className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
                 <h2 className="text-lg font-bold mb-2">No conversations yet</h2>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Start a new conversation using the button above, or chat with a seller on any listing.
+                  Start a new conversation or chat with a seller on any listing.
                 </p>
                 <Link to="/">
                   <Button variant="outline">Browse listings</Button>
                 </Link>
               </div>
             ) : (
-              <div className="space-y-2">
-                {conversations.map((convo) => (
-                  <button
-                    key={convo.id}
-                    onClick={() => openChat(convo)}
-                    className="w-full text-left rounded-2xl border border-border/60 bg-card p-4 hover:border-primary/40 transition-all shadow-card group"
-                  >
-                    <div className="flex items-start justify-between gap-3">
+              <div className={cn(isMobile ? "space-y-0 divide-y divide-border/40" : "space-y-2")}>
+                {conversations.map((convo) => {
+                  const hasUnread = (convo.unread_count ?? 0) > 0;
+                  return (
+                    <button
+                      key={convo.id}
+                      onClick={() => openChat(convo)}
+                      className={cn(
+                        "w-full text-left transition-all group",
+                        isMobile
+                          ? "flex items-center gap-3 px-4 py-3.5 active:bg-muted/60"
+                          : "rounded-2xl border border-border/60 bg-card p-4 hover:border-primary/40 shadow-card"
+                      )}
+                    >
+                      {/* Avatar */}
+                      <div className={cn(
+                        "shrink-0 rounded-full gradient-hero flex items-center justify-center text-white font-bold relative",
+                        isMobile ? "h-12 w-12 text-sm" : "h-10 w-10 text-xs hidden"
+                      )}>
+                        {convo.other_username?.[0]?.toUpperCase() ?? "?"}
+                        {convo.other_user_id && isOnline(convo.other_user_id) && (
+                          <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-emerald-500 border-2 border-background" />
+                        )}
+                      </div>
+
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-bold text-sm truncate">
-                            {convo.other_username}
-                          </span>
-                          <Circle
-                            className={cn(
-                              "h-2 w-2 shrink-0",
-                              convo.other_user_id && isOnline(convo.other_user_id)
-                                ? "fill-emerald-500 text-emerald-500"
-                                : "fill-muted-foreground/30 text-muted-foreground/30"
-                            )}
-                          />
-                          {(convo.unread_count ?? 0) > 0 && (
-                            <span className="flex-shrink-0 h-5 min-w-[20px] px-1.5 rounded-full gradient-hero text-white text-[10px] font-bold flex items-center justify-center">
-                              {convo.unread_count}
+                        <div className="flex items-center justify-between gap-2 mb-0.5">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className={cn(
+                              "text-sm truncate",
+                              hasUnread ? "font-bold" : "font-medium"
+                            )}>
+                              {convo.other_username}
                             </span>
-                          )}
+                            {!isMobile && convo.other_user_id && (
+                              <Circle
+                                className={cn(
+                                  "h-2 w-2 shrink-0",
+                                  isOnline(convo.other_user_id)
+                                    ? "fill-emerald-500 text-emerald-500"
+                                    : "fill-muted-foreground/30 text-muted-foreground/30"
+                                )}
+                              />
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="text-[11px] text-muted-foreground">
+                              {formatTime(convo.updated_at)}
+                            </span>
+                            {hasUnread && (
+                              <span className="h-5 min-w-[20px] px-1.5 rounded-full gradient-hero text-white text-[10px] font-bold flex items-center justify-center">
+                                {convo.unread_count}
+                              </span>
+                            )}
+                          </div>
                         </div>
                         {convo.listing_title && (
-                          <p className="text-xs text-muted-foreground truncate mb-1">
+                          <p className="text-xs text-muted-foreground truncate">
                             Re: {convo.listing_title}
                           </p>
                         )}
                         {!convo.listing_id && (
-                          <p className="text-xs text-muted-foreground truncate mb-1">
+                          <p className="text-xs text-muted-foreground truncate">
                             Direct message
                           </p>
                         )}
                         {convo.last_message && (
-                          <p className="text-sm text-muted-foreground truncate">
+                          <p className={cn(
+                            "text-sm truncate mt-0.5",
+                            hasUnread ? "text-foreground font-medium" : "text-muted-foreground"
+                          )}>
                             {convo.last_message}
                           </p>
                         )}
                       </div>
-                      <span className="text-[10px] text-muted-foreground shrink-0 mt-1">
-                        {new Date(convo.updated_at).toLocaleDateString()}
-                      </span>
-                    </div>
-                  </button>
-                ))}
+                    </button>
+                  );
+                })}
               </div>
             )}
           </TabsContent>
 
-          <TabsContent value="notifications" className="mt-4">
+          <TabsContent value="notifications" className={cn(isMobile ? "mt-0 px-2" : "mt-4")}>
             <NotificationsList userId={user.id} />
           </TabsContent>
         </Tabs>
       </main>
-      <Footer />
+      {!isMobile && <Footer />}
 
       <ChatDrawer
         open={drawerOpen}

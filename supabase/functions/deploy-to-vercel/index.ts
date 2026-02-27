@@ -8,47 +8,6 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-function buildLandingHtml(title: string, description: string, sourceDownloadUrl?: string): string {
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>${title}</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
-  <style>
-    *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:'Inter',system-ui,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0f172a 0%,#1e293b 50%,#0f172a 100%);color:#f1f5f9;padding:2rem}
-    .card{max-width:560px;width:100%;background:rgba(30,41,59,.7);border:1px solid rgba(148,163,184,.15);border-radius:1.5rem;padding:3rem;backdrop-filter:blur(20px);box-shadow:0 25px 50px -12px rgba(0,0,0,.5)}
-    .badge{display:inline-block;background:linear-gradient(135deg,#6366f1,#8b5cf6);padding:.25rem .75rem;border-radius:9999px;font-size:.75rem;font-weight:600;margin-bottom:1.5rem}
-    h1{font-size:2rem;font-weight:800;letter-spacing:-.025em;margin-bottom:.75rem;background:linear-gradient(to right,#f1f5f9,#94a3b8);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-    p{color:#94a3b8;line-height:1.7;margin-bottom:2rem;font-size:.95rem}
-    .actions{display:flex;flex-direction:column;gap:.75rem}
-    a.btn{display:flex;align-items:center;justify-content:center;gap:.5rem;padding:.875rem 1.5rem;border-radius:.75rem;font-weight:600;font-size:.9rem;text-decoration:none;transition:all .2s}
-    .btn-primary{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;box-shadow:0 4px 14px rgba(99,102,241,.4)}
-    .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(99,102,241,.5)}
-    .btn-secondary{background:rgba(148,163,184,.1);color:#cbd5e1;border:1px solid rgba(148,163,184,.2)}
-    .btn-secondary:hover{background:rgba(148,163,184,.15);color:#f1f5f9}
-    .powered{text-align:center;margin-top:2rem;font-size:.75rem;color:#475569}
-    .powered a{color:#818cf8;text-decoration:none}
-  </style>
-</head>
-<body>
-  <div class="card">
-    <span class="badge">🚀 Deployed on OpenDraft</span>
-    <h1>${title}</h1>
-    <p>${description.length > 300 ? description.slice(0, 297) + "..." : description}</p>
-    <div class="actions">
-      ${sourceDownloadUrl ? `<a class="btn btn-primary" href="${sourceDownloadUrl}" download>⬇ Download Source Code</a>` : ""}
-      <a class="btn btn-secondary" href="https://opendraft.lovable.app">Browse more apps on OpenDraft →</a>
-    </div>
-    <div class="powered">Deployed with <a href="https://opendraft.lovable.app">OpenDraft</a></div>
-  </div>
-</body>
-</html>`;
-}
-
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -63,18 +22,14 @@ serve(async (req) => {
     const { data: { user } } = await supabaseAnon.auth.getUser(token);
     if (!user) {
       return new Response(JSON.stringify({ error: "Authentication required" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const body = await req.json();
-    const { listingId, vercelToken } = body;
-
+    const { listingId, vercelToken } = await req.json();
     if (!listingId || !vercelToken) {
       return new Response(JSON.stringify({ error: "Missing listingId or vercelToken" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -86,40 +41,34 @@ serve(async (req) => {
 
     if (!listing) {
       return new Response(JSON.stringify({ error: "Listing not found" }), {
-        status: 404,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
+    // Auth: must be seller or buyer
     const isSeller = listing.seller_id === user.id;
-    let isBuyer = false;
     if (!isSeller) {
       const { data: purchase } = await supabase
-        .from("purchases")
-        .select("id")
-        .eq("listing_id", listingId)
-        .eq("buyer_id", user.id)
-        .maybeSingle();
-      isBuyer = !!purchase;
-    }
-
-    if (!isSeller && !isBuyer) {
-      return new Response(JSON.stringify({ error: "You must purchase this listing before deploying" }), {
-        status: 403,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    if (!listing.file_path) {
-      if (listing.github_url) {
-        const deployUrl = `https://vercel.com/new/clone?repository-url=${encodeURIComponent(listing.github_url)}`;
-        return new Response(JSON.stringify({ success: true, deployUrl, method: "github_redirect" }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        .from("purchases").select("id")
+        .eq("listing_id", listingId).eq("buyer_id", user.id).maybeSingle();
+      if (!purchase) {
+        return new Response(JSON.stringify({ error: "You must purchase this listing before deploying" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      return new Response(JSON.stringify({ error: "No deployable file available for this listing" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+    }
+
+    // GitHub redirect shortcut
+    if (!listing.file_path) {
+      if (listing.github_url) {
+        return new Response(JSON.stringify({
+          success: true,
+          deployUrl: `https://vercel.com/new/clone?repository-url=${encodeURIComponent(listing.github_url)}`,
+          method: "github_redirect",
+        }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      return new Response(JSON.stringify({ error: "No deployable file available" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -128,63 +77,91 @@ serve(async (req) => {
       headers: { Authorization: `Bearer ${vercelToken}` },
     });
     if (!meRes.ok) {
-      return new Response(JSON.stringify({ error: "Invalid Vercel token. Please check your Access Token." }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      return new Response(JSON.stringify({ error: "Invalid Vercel token" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Create signed download URL for source
-    const { data: signedData } = await supabase.storage
+    // Download and extract ZIP
+    const { data: fileData } = await supabase.storage
       .from("listing-files")
-      .createSignedUrl(listing.file_path, 3600);
-    const sourceDownloadUrl = signedData?.signedUrl || undefined;
+      .download(listing.file_path);
 
-    // Build a deployable landing page
-    const landingHtml = buildLandingHtml(listing.title, listing.description, sourceDownloadUrl);
+    if (!fileData) {
+      return new Response(JSON.stringify({ error: "Failed to download source file" }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const zip = await JSZip.loadAsync(await fileData.arrayBuffer());
+    const entries = Object.keys(zip.files);
+
+    // Detect common root directory prefix
+    let prefix = "";
+    if (entries.length > 0) {
+      const first = entries[0];
+      if (first.includes("/")) {
+        const candidate = first.split("/")[0] + "/";
+        if (entries.every(e => e.startsWith(candidate) || e === candidate)) {
+          prefix = candidate;
+        }
+      }
+    }
+
+    // Extract all files as Vercel file objects
+    const files: Array<{ file: string; data: string; encoding: string }> = [];
+    for (const [path, entry] of Object.entries(zip.files)) {
+      if (entry.dir) continue;
+      const relativePath = prefix ? path.replace(prefix, "") : path;
+      if (!relativePath) continue;
+      const content = await entry.async("base64");
+      files.push({ file: relativePath, data: content, encoding: "base64" });
+    }
+
+    if (files.length === 0) {
+      return new Response(JSON.stringify({ error: "ZIP file is empty" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     // Create Vercel project
     const projectName = `od-${listing.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 30)}-${Date.now().toString(36)}`;
 
     const createProjectRes = await fetch("https://api.vercel.com/v13/projects", {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${vercelToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ name: projectName }),
+      headers: { Authorization: `Bearer ${vercelToken}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: projectName,
+        framework: "vite",
+        buildCommand: "npm run build",
+        outputDirectory: "dist",
+        installCommand: "npm install",
+      }),
     });
 
     if (!createProjectRes.ok) {
       const errText = await createProjectRes.text();
       console.error("Vercel create project error:", createProjectRes.status, errText);
       return new Response(JSON.stringify({ error: "Failed to create Vercel project" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const projectData = await createProjectRes.json();
 
-    // Deploy the landing page as static files
+    // Deploy source files — Vercel will install deps and build
     const deployRes = await fetch("https://api.vercel.com/v13/deployments", {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${vercelToken}`,
-        "Content-Type": "application/json",
-      },
+      headers: { Authorization: `Bearer ${vercelToken}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         name: projectName,
         project: projectData.id,
-        files: [
-          {
-            file: "index.html",
-            data: btoa(unescape(encodeURIComponent(landingHtml))),
-            encoding: "base64",
-          },
-        ],
+        files,
         projectSettings: {
-          framework: null,
+          framework: "vite",
+          installCommand: "npm install",
+          buildCommand: "npm run build",
+          outputDirectory: "dist",
         },
       }),
     });
@@ -193,8 +170,7 @@ serve(async (req) => {
       const errText = await deployRes.text();
       console.error("Vercel deploy error:", deployRes.status, errText);
       return new Response(JSON.stringify({ error: "Failed to deploy to Vercel" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -204,25 +180,14 @@ serve(async (req) => {
     await supabase.from("activity_log").insert({
       event_type: "vercel_deploy",
       user_id: user.id,
-      event_data: {
-        listing_id: listingId,
-        site_url: siteUrl,
-        project_id: projectData.id,
-        deploy_id: deployData.id,
-      },
+      event_data: { listing_id: listingId, site_url: siteUrl, project_id: projectData.id, deploy_id: deployData.id },
     });
 
     return new Response(JSON.stringify({
-      success: true,
-      siteUrl,
-      projectId: projectData.id,
-      deployId: deployData.id,
+      success: true, siteUrl, projectId: projectData.id, deployId: deployData.id,
       adminUrl: `https://vercel.com/${projectData.accountId}/${projectName}`,
-      sourceDownloadUrl,
-      method: "zip_deploy",
-    }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+      method: "source_deploy",
+    }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
     console.error("deploy-to-vercel error:", e);
     return new Response(

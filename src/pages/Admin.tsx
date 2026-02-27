@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { CompletenessBadge } from "@/components/CompletenessBadge";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle, XCircle, Eye, Loader2, ShieldCheck, Clock, BarChart3, Flag } from "lucide-react";
+import { CheckCircle, XCircle, Eye, Loader2, ShieldCheck, Clock, BarChart3, Flag, Archive } from "lucide-react";
 import { AdminDiscountCodes } from "@/components/AdminDiscountCodes";
 import { AdminFlagReview } from "@/components/AdminFlagReview";
 import { AdminConceptGenerator } from "@/components/AdminConceptGenerator";
@@ -33,6 +33,74 @@ interface Stats {
   live: number;
   hidden: number;
   total: number;
+}
+
+function BackfillZipsPanel() {
+  const { toast } = useToast();
+  const [running, setRunning] = useState(false);
+  const [result, setResult] = useState<{ message: string; results?: { id: string; title: string; status: string }[] } | null>(null);
+
+  async function runBackfill() {
+    setRunning(true);
+    setResult(null);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/backfill-template-zips`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.access_token}`,
+        },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed");
+      setResult(data);
+      toast({ title: "Backfill complete", description: data.message });
+    } catch (e) {
+      toast({ title: "Backfill failed", description: e instanceof Error ? e.message : "Unknown error", variant: "destructive" });
+    } finally {
+      setRunning(false);
+    }
+  }
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h3 className="text-lg font-bold flex items-center gap-2">
+            <Archive className="h-5 w-5 text-primary" />
+            Backfill Template ZIPs
+          </h3>
+          <p className="text-sm text-muted-foreground mt-1">
+            Generate deployable template ZIPs for all live listings that are missing a file download.
+          </p>
+        </div>
+        <Button onClick={runBackfill} disabled={running} className="gradient-hero text-white border-0 shadow-glow">
+          {running ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Running…</> : "Run Backfill"}
+        </Button>
+      </div>
+      {result && (
+        <div className="rounded-xl border border-border/60 bg-card p-4 space-y-2">
+          <p className="text-sm font-medium">{result.message}</p>
+          {result.results && result.results.length > 0 && (
+            <div className="space-y-1 max-h-48 overflow-y-auto">
+              {result.results.map((r) => (
+                <div key={r.id} className="flex items-center gap-2 text-xs">
+                  {r.status === "success" ? (
+                    <CheckCircle className="h-3 w-3 text-primary shrink-0" />
+                  ) : (
+                    <XCircle className="h-3 w-3 text-destructive shrink-0" />
+                  )}
+                  <span className="truncate">{r.title}</span>
+                  <span className="text-muted-foreground ml-auto">{r.status}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function Admin() {
@@ -286,6 +354,11 @@ export default function Admin() {
         {/* AI Concept Generator */}
         <div className="mt-12 pt-8 border-t border-border">
           <AdminConceptGenerator />
+        </div>
+
+        {/* Backfill Template ZIPs */}
+        <div className="mt-12 pt-8 border-t border-border">
+          <BackfillZipsPanel />
         </div>
 
         {/* Discount Codes Section */}

@@ -1,9 +1,9 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { Link, useNavigate } from "react-router-dom";
 import { CompletenessBadge } from "@/components/CompletenessBadge";
-import { ArrowRight, Sparkles, Loader2, ShoppingCart, X, Wand2, CheckCircle } from "lucide-react";
+import { ArrowRight, Sparkles, Loader2, ShoppingCart, X, Wand2, CheckCircle, AlertCircle, ExternalLink } from "lucide-react";
 import { logActivity } from "@/lib/activity-logger";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -15,6 +15,17 @@ const PLACEHOLDERS = [
   "a full-stack todo app with auth...",
   "a React dashboard with charts...",
   "a Twitter clone with Supabase...",
+];
+
+const BUILD_STAGES = [
+  { label: "Analyzing your idea…", pct: 10, duration: 2000 },
+  { label: "Researching market demand…", pct: 20, duration: 3000 },
+  { label: "Generating source code…", pct: 40, duration: 8000 },
+  { label: "Writing components…", pct: 55, duration: 6000 },
+  { label: "Creating screenshots…", pct: 70, duration: 8000 },
+  { label: "Packaging ZIP bundle…", pct: 85, duration: 4000 },
+  { label: "Creating your listing…", pct: 92, duration: 3000 },
+  { label: "Almost there…", pct: 96, duration: 10000 },
 ];
 
 interface MatchedListing {
@@ -38,13 +49,16 @@ export function BuildSearch() {
   const [prompt, setPrompt] = useState("");
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
-  const [generated, setGenerated] = useState(false);
+  const [generatedListing, setGeneratedListing] = useState<{ id: string; title: string } | null>(null);
+  const [genError, setGenError] = useState<string | null>(null);
+  const [genStage, setGenStage] = useState(0);
   const [results, setResults] = useState<MatchedListing[] | null>(null);
   const [noMatch, setNoMatch] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [placeholderIdx, setPlaceholderIdx] = useState(0);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
+  const stageTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -53,6 +67,29 @@ export function BuildSearch() {
     return () => clearInterval(interval);
   }, []);
 
+  // Progress stage ticker
+  const startStageTimer = useCallback(() => {
+    setGenStage(0);
+    let current = 0;
+    const tick = () => {
+      current++;
+      if (current < BUILD_STAGES.length) {
+        setGenStage(current);
+        stageTimerRef.current = setTimeout(tick, BUILD_STAGES[current].duration);
+      }
+    };
+    stageTimerRef.current = setTimeout(tick, BUILD_STAGES[0].duration);
+  }, []);
+
+  const stopStageTimer = useCallback(() => {
+    if (stageTimerRef.current) {
+      clearTimeout(stageTimerRef.current);
+      stageTimerRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => () => stopStageTimer(), [stopStageTimer]);
+
   async function handleSearch(e?: React.FormEvent) {
     e?.preventDefault();
     if (!prompt.trim() || loading) return;
@@ -60,7 +97,8 @@ export function BuildSearch() {
     setResults(null);
     setNoMatch(false);
     setError(null);
-    setGenerated(false);
+    setGeneratedListing(null);
+    setGenError(null);
 
     try {
       const { data, error: fnError } = await supabase.functions.invoke("match-listings", {
@@ -98,7 +136,10 @@ export function BuildSearch() {
     setResults(null);
     setNoMatch(false);
     setError(null);
-    setGenerated(false);
+    setGeneratedListing(null);
+    setGenError(null);
+    setGenerating(false);
+    stopStageTimer();
     inputRef.current?.focus();
   }
 
@@ -108,69 +149,121 @@ export function BuildSearch() {
       return;
     }
     setGenerating(true);
+    setGenError(null);
+    setGeneratedListing(null);
+    startStageTimer();
+
     try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 120000); // 2 min timeout
+
       const { data, error: fnErr } = await supabase.functions.invoke("generate-template-app", {
         body: { count: 1, themes: [prompt.trim()] },
       });
+
+      clearTimeout(timeout);
+
       if (fnErr) throw new Error(fnErr.message);
-      if (!data?.success) throw new Error(data?.error || "Generation failed");
+      if (!data?.success) throw new Error(data?.error || "Generation failed — please try again");
+
       const result = data.results?.[0];
       if (result?.success && result.listing_id) {
-        await supabase.from("notifications").insert({
+        // Send notification
+        supabase.from("notifications").insert({
           user_id: user.id,
           type: "template_generated",
           title: "Your template is ready! 🎉",
           message: `"${result.title || prompt.trim()}" has been generated and is pending review.`,
           link: `/listing/${result.listing_id}/edit`,
-        });
-        setGenerated(true);
+        }).then(() => {});
+
+        stopStageTimer();
+        setGeneratedListing({ id: result.listing_id, title: result.title || prompt.trim() });
       } else {
-        throw new Error(result?.error || "Generation failed");
+        throw new Error(result?.error || "Generation failed — please try again");
       }
     } catch (err) {
-      toast({ title: "Generation failed", description: err instanceof Error ? err.message : "Unknown error", variant: "destructive" });
+      stopStageTimer();
+      const message = err instanceof Error ? err.message : "Unknown error";
+      const isTimeout = message.includes("abort") || message.includes("timeout") || message.includes("Failed to fetch");
+      setGenError(isTimeout
+        ? "Generation is taking longer than expected. Your app may still be building — check your dashboard in a few minutes."
+        : message
+      );
     } finally {
       setGenerating(false);
     }
   }
 
+  const currentStage = BUILD_STAGES[Math.min(genStage, BUILD_STAGES.length - 1)];
+
   const generateCta = generating ? (
-    <div className="flex flex-col items-center gap-3 py-2">
-      <div className="flex items-center gap-3">
-        <div className="relative h-8 w-8">
+    <div className="flex flex-col items-center gap-4 py-3">
+      <div className="flex items-center gap-3 w-full max-w-sm">
+        <div className="relative h-10 w-10 shrink-0">
           <div className="absolute inset-0 rounded-full gradient-hero animate-spin" style={{ animationDuration: "2s" }} />
           <div className="absolute inset-[2px] rounded-full bg-card" />
           <div className="absolute inset-0 flex items-center justify-center">
-            <Wand2 className="h-3.5 w-3.5 text-primary" />
+            <Wand2 className="h-4 w-4 text-primary" />
           </div>
         </div>
-        <div className="text-left">
-          <p className="text-sm font-bold">Building your app…</p>
-          <p className="text-xs text-muted-foreground">AI is writing code, generating screenshots & packaging it up</p>
+        <div className="text-left flex-1">
+          <p className="text-sm font-bold">{currentStage.label}</p>
+          <p className="text-xs text-muted-foreground">This usually takes 30–60 seconds</p>
         </div>
       </div>
-      <div className="w-full max-w-xs h-1.5 rounded-full bg-muted overflow-hidden">
-        <div className="h-full rounded-full gradient-hero animate-pulse" style={{ width: "60%", animationDuration: "1.5s" }} />
+      <div className="w-full max-w-sm">
+        <div className="h-2 rounded-full bg-muted overflow-hidden">
+          <div
+            className="h-full rounded-full gradient-hero transition-all duration-1000 ease-out"
+            style={{ width: `${currentStage.pct}%` }}
+          />
+        </div>
+        <div className="flex justify-between mt-1.5">
+          <span className="text-[10px] text-muted-foreground">Building your app</span>
+          <span className="text-[10px] font-semibold text-primary">{currentStage.pct}%</span>
+        </div>
       </div>
     </div>
-  ) : generated ? (
+  ) : generatedListing ? (
     <div className="rounded-xl border border-primary/30 bg-primary/5 p-5 text-center space-y-3">
       <div className="inline-flex items-center justify-center h-12 w-12 rounded-full bg-primary/10 mx-auto">
         <CheckCircle className="h-6 w-6 text-primary" />
       </div>
       <div>
-        <h4 className="font-bold text-foreground">Your app is being prepared!</h4>
+        <h4 className="font-bold text-foreground">"{generatedListing.title}" is ready!</h4>
         <p className="text-sm text-muted-foreground mt-1">
-          We'll <span className="text-foreground font-medium">notify you</span> the moment it's ready to customize.
-          Check your <span className="text-foreground font-medium">notifications</span> or dashboard.
+          Your app has been generated with source code, screenshots, and a downloadable ZIP.
+          It's pending review and will go live shortly.
         </p>
       </div>
-      <div className="flex gap-2 justify-center">
-        <Button size="sm" onClick={() => navigate("/dashboard?tab=listings")} className="gradient-hero text-white border-0 shadow-glow hover:opacity-90 gap-2">
+      <div className="flex gap-2 justify-center flex-wrap">
+        <Button size="sm" onClick={() => navigate(`/listing/${generatedListing.id}/edit`)} className="gradient-hero text-white border-0 shadow-glow hover:opacity-90 gap-2">
+          <ExternalLink className="h-3.5 w-3.5" /> Edit your listing
+        </Button>
+        <Button size="sm" variant="outline" onClick={() => navigate("/dashboard?tab=listings")} className="gap-2">
           Go to Dashboard
         </Button>
-        <Button size="sm" variant="outline" onClick={reset}>
+        <Button size="sm" variant="ghost" onClick={reset}>
           Build another
+        </Button>
+      </div>
+    </div>
+  ) : genError ? (
+    <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-center space-y-3">
+      <div className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-destructive/10 mx-auto">
+        <AlertCircle className="h-5 w-5 text-destructive" />
+      </div>
+      <div>
+        <p className="text-sm font-semibold text-foreground">Generation failed</p>
+        <p className="text-xs text-muted-foreground mt-1">{genError}</p>
+      </div>
+      <div className="flex gap-2 justify-center">
+        <Button size="sm" variant="outline" onClick={handleGenerate} className="gap-2">
+          <Wand2 className="h-3.5 w-3.5" /> Try again
+        </Button>
+        <Button size="sm" variant="ghost" onClick={() => navigate("/dashboard?tab=listings")}>
+          Check Dashboard
         </Button>
       </div>
     </div>

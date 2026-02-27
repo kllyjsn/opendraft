@@ -174,7 +174,7 @@ export default function Agents() {
             )}
 
             {/* Registry badges */}
-            <motion.div variants={fadeUp} custom={4} className="mt-10 flex items-center justify-center">
+            <motion.div variants={fadeUp} custom={4} className="mt-10 flex items-center justify-center gap-3 flex-wrap">
               <a
                 href="https://smithery.ai/server/Opendraft/Marketplace"
                 target="_blank"
@@ -183,6 +183,16 @@ export default function Agents() {
               >
                 <span className="text-muted-foreground">Listed on</span>
                 <span className="font-bold text-foreground">Smithery</span>
+                <ArrowRight className="h-3 w-3 text-muted-foreground" />
+              </a>
+              <a
+                href="https://glama.ai/mcp/servers"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2.5 rounded-full glass px-5 py-2.5 text-xs font-semibold hover:border-primary/30 hover:shadow-glow transition-all"
+              >
+                <span className="text-muted-foreground">Listed on</span>
+                <span className="font-bold text-foreground">Glama</span>
                 <ArrowRight className="h-3 w-3 text-muted-foreground" />
               </a>
             </motion.div>

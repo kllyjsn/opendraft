@@ -114,7 +114,6 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 `,
 };
 
-/* ── Themes pool for daily auto-generation ─────────────────────── */
 const THEME_POOL = [
   "AI-powered writing assistant",
   "SaaS analytics dashboard",
@@ -148,11 +147,9 @@ const THEME_POOL = [
   "Blog and CMS admin panel",
 ];
 
-/* ── Deep market research: gather demand signals ────────────────── */
 async function gatherDemandSignals(
   supabase: ReturnType<typeof createClient>
 ): Promise<{ topSearches: string[]; unfilledBounties: string[]; highViewGaps: string[]; existingTitles: string[] }> {
-  // 1. Top search queries — what people are looking for
   const { data: searchLogs } = await supabase
     .from("activity_log")
     .select("event_data")
@@ -171,7 +168,6 @@ async function gatherDemandSignals(
     .slice(0, 15)
     .map(([q]) => q);
 
-  // 2. Open bounties with low submissions — explicit unmet demand
   const { data: bounties } = await supabase
     .from("bounties")
     .select("title, description, category")
@@ -180,7 +176,6 @@ async function gatherDemandSignals(
     .limit(10);
   const unfilledBounties = (bounties || []).map(b => `${b.title} (${b.category})`);
 
-  // 3. High-view, low-sale listings — interest but no conversion (price/quality gap)
   const { data: gapListings } = await supabase
     .from("listings")
     .select("title, category, view_count, sales_count")
@@ -192,7 +187,6 @@ async function gatherDemandSignals(
     .slice(0, 10)
     .map(l => `${l.title} (${l.view_count} views, ${l.sales_count} sales)`);
 
-  // 4. Existing titles — avoid duplication
   const { data: existing } = await supabase
     .from("listings")
     .select("title")
@@ -202,13 +196,25 @@ async function gatherDemandSignals(
   return { topSearches, unfilledBounties, highViewGaps, existingTitles };
 }
 
-/* ── Generate a single template app ─────────────────────────────── */
+/* ── Helper to update job status ─────────────────────────────────── */
+async function updateJob(
+  supabase: ReturnType<typeof createClient>,
+  jobId: string,
+  updates: { status?: string; stage?: string; listing_id?: string; listing_title?: string; error?: string }
+) {
+  await supabase
+    .from("generation_jobs")
+    .update({ ...updates, updated_at: new Date().toISOString() })
+    .eq("id", jobId);
+}
+
 async function generateSingleTemplate(
   supabase: ReturnType<typeof createClient>,
   sellerId: string,
   theme: string,
   LOVABLE_API_KEY: string,
-  demandContext?: string
+  demandContext?: string,
+  jobId?: string
 ): Promise<{
   success: boolean;
   listing_id?: string;
@@ -221,6 +227,8 @@ async function generateSingleTemplate(
   error?: string;
 }> {
   /* ── Step 1: Generate concept + source code via AI ─────────── */
+  if (jobId) await updateJob(supabase, jobId, { stage: "generating_code" });
+
   const aiResponse = await fetch(
     "https://ai.gateway.lovable.dev/v1/chat/completions",
     {
@@ -349,6 +357,8 @@ IMPORTANT: You must build products people actually want. Use the market research
     return { success: false, error: "AI generated no files" };
 
   /* ── Step 2: Generate TWO preview screenshots via AI ────── */
+  if (jobId) await updateJob(supabase, jobId, { stage: "generating_screenshots", listing_title: template.title });
+
   const screenshotPaths: string[] = [];
   const slug = (template.title || "template")
     .toLowerCase()
@@ -356,13 +366,10 @@ IMPORTANT: You must build products people actually want. Use the market research
     .slice(0, 40);
 
   const screenshotPrompts = [
-    // 1. Marketing / landing page hero view
     `Generate a stunning, high-fidelity marketing landing page screenshot for a web application called "${template.title}". Description: "${template.description}". Show a hero section with a bold headline, subheadline, a prominent CTA button, feature highlights, and social proof elements. Use a modern gradient background, professional typography, and vibrant accent colors. The design should look like a polished Product Hunt-ready landing page. 1280x720 resolution, browser chrome NOT visible — just the page content.`,
-    // 2. App dashboard / interface view
     `Generate a realistic, detailed app interface screenshot for a web application called "${template.title}". Description: "${template.description}". Show the main functional dashboard/workspace view with navigation sidebar or top nav, data cards, tables or content areas, and interactive UI elements populated with realistic sample data. Use a clean light theme with subtle shadows and a cohesive color palette. It should look like a real working application, NOT a landing page. 1280x720 resolution, browser chrome NOT visible — just the app UI.`,
   ];
 
-  // Generate both screenshots in parallel for speed
   const imgResults = await Promise.allSettled(
     screenshotPrompts.map(async (prompt, idx) => {
       const imgResponse = await fetch(
@@ -416,6 +423,8 @@ IMPORTANT: You must build products people actually want. Use the market research
   console.log(`Generated ${screenshotPaths.length}/2 screenshots for "${template.title}"`);
 
   /* ── Step 3: Build ZIP ────────────────────────────────────── */
+  if (jobId) await updateJob(supabase, jobId, { stage: "packaging" });
+
   const zip = new JSZip();
   const projectFolder = zip.folder("template")!;
 
@@ -447,6 +456,8 @@ IMPORTANT: You must build products people actually want. Use the market research
   const zipBlob = await zip.generateAsync({ type: "uint8array" });
 
   /* ── Step 4: Upload ZIP to storage ─────────────────────────── */
+  if (jobId) await updateJob(supabase, jobId, { stage: "uploading" });
+
   const filePath = `ai-generated/${slug}-${Date.now()}.zip`;
 
   const { error: uploadError } = await supabase.storage
@@ -473,6 +484,8 @@ IMPORTANT: You must build products people actually want. Use the market research
   }
 
   /* ── Step 6: Create listing — $15/mo ────────────────────── */
+  if (jobId) await updateJob(supabase, jobId, { stage: "creating_listing" });
+
   const { data: listing, error: listingError } = await supabase
     .from("listings")
     .insert({
@@ -497,7 +510,6 @@ IMPORTANT: You must build products people actually want. Use the market research
     return { success: false, error: "Failed to create listing: " + listingError.message };
   }
 
-  // Log the generation
   await supabase.from("activity_log").insert({
     event_type: "ai_template_generation",
     user_id: sellerId,
@@ -537,17 +549,14 @@ serve(async (req) => {
     if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY)
       throw new Error("Database not configured");
 
-    /* ── Auth — support both user session & service-role (cron) ── */
     const authHeader = req.headers.get("Authorization");
     const token = authHeader?.replace("Bearer ", "") || "";
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
     let sellerId: string | null = null;
 
-    // Check if this is a service-role call (cron job)
     const AUTO_GEN_EMAIL = "kllyjsn@gmail.com";
     let isAdmin = false;
     if (token === SUPABASE_SERVICE_ROLE_KEY) {
-      // Cron/service-role bypass — use Jason Kelley as the seller
       const { data: authUsers } = await supabase.auth.admin.listUsers();
       const targetUser = authUsers?.users?.find((u: any) => u.email === AUTO_GEN_EMAIL);
       if (targetUser) sellerId = targetUser.id;
@@ -562,7 +571,6 @@ serve(async (req) => {
       } = await supabaseAnon.auth.getUser(token);
       if (user) {
         sellerId = user.id;
-        // Check if admin (for higher limits)
         const { data: roleData } = await supabase
           .from("user_roles")
           .select("role")
@@ -575,16 +583,19 @@ serve(async (req) => {
     if (!sellerId) throw new Error("Authentication required");
 
     const body = await req.json().catch(() => ({}));
-    // Non-admins limited to 1 template at a time
     const maxCount = isAdmin ? 5 : 1;
     const count = Math.min(Math.max(body.count || 1, 1), maxCount);
     const themes: string[] = body.themes || [];
+    const jobId: string | undefined = body.job_id;
 
-    /* ── Deep research: gather demand signals ────────────────── */
+    /* ── Update job to processing if provided ────────────────── */
+    if (jobId) {
+      await updateJob(supabase, jobId, { status: "processing", stage: "researching" });
+    }
+
     console.log("Gathering market demand signals...");
     const signals = await gatherDemandSignals(supabase);
 
-    // Build demand context string for AI
     const demandParts: string[] = [];
     if (signals.topSearches.length > 0) {
       demandParts.push(`TOP USER SEARCHES (what people are actively looking for):\n${signals.topSearches.map(s => `- "${s}"`).join("\n")}`);
@@ -600,7 +611,6 @@ serve(async (req) => {
     }
     const demandContext = demandParts.length > 0 ? demandParts.join("\n\n") : undefined;
 
-    /* ── Pick themes (use provided or random from pool) ──────── */
     const selectedThemes: string[] = [];
     const usedIndices = new Set<number>();
     for (let i = 0; i < count; i++) {
@@ -616,7 +626,6 @@ serve(async (req) => {
       }
     }
 
-    /* ── Generate templates sequentially (to avoid rate limits) ─ */
     const results: Array<{
       success: boolean;
       title?: string;
@@ -633,17 +642,45 @@ serve(async (req) => {
         sellerId,
         theme,
         LOVABLE_API_KEY,
-        demandContext
+        demandContext,
+        jobId
       );
       results.push(result);
 
-      // Brief pause between generations to be nice to the AI API
       if (selectedThemes.indexOf(theme) < selectedThemes.length - 1) {
         await new Promise((r) => setTimeout(r, 2000));
       }
     }
 
     const successful = results.filter((r) => r.success);
+
+    /* ── Update job to complete/failed ────────────────────────── */
+    if (jobId) {
+      const firstResult = results[0];
+      if (firstResult?.success) {
+        await updateJob(supabase, jobId, {
+          status: "complete",
+          stage: "done",
+          listing_id: firstResult.listing_id,
+          listing_title: firstResult.title,
+        });
+
+        // Send notification
+        await supabase.from("notifications").insert({
+          user_id: sellerId,
+          type: "template_generated",
+          title: "Your template is ready! 🎉",
+          message: `"${firstResult.title || themes[0]}" has been generated and is pending review.`,
+          link: `/listing/${firstResult.listing_id}/edit`,
+        });
+      } else {
+        await updateJob(supabase, jobId, {
+          status: "failed",
+          stage: "error",
+          error: firstResult?.error || "Generation failed",
+        });
+      }
+    }
 
     return new Response(
       JSON.stringify({
@@ -656,6 +693,23 @@ serve(async (req) => {
     );
   } catch (e) {
     console.error("generate-template-app error:", e);
+
+    // Try to update job on catastrophic failure
+    try {
+      const body = await req.clone().json().catch(() => ({}));
+      if (body.job_id) {
+        const supabase = createClient(
+          Deno.env.get("SUPABASE_URL")!,
+          Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+        );
+        await updateJob(supabase, body.job_id, {
+          status: "failed",
+          stage: "error",
+          error: e instanceof Error ? e.message : "Unknown error",
+        });
+      }
+    } catch (_) { /* best effort */ }
+
     return new Response(
       JSON.stringify({
         error: e instanceof Error ? e.message : "Unknown error",

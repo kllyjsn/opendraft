@@ -421,6 +421,53 @@ export type Database = {
         }
         Relationships: []
       }
+      generation_jobs: {
+        Row: {
+          created_at: string
+          error: string | null
+          id: string
+          listing_id: string | null
+          listing_title: string | null
+          prompt: string
+          stage: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          listing_id?: string | null
+          listing_title?: string | null
+          prompt: string
+          stage?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          listing_id?: string | null
+          listing_title?: string | null
+          prompt?: string
+          stage?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "generation_jobs_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listing_flags: {
         Row: {
           created_at: string

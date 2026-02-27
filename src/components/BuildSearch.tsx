@@ -17,16 +17,17 @@ const PLACEHOLDERS = [
   "a Twitter clone with Supabase...",
 ];
 
-const BUILD_STAGES = [
-  { label: "Analyzing your idea…", pct: 10, duration: 2000 },
-  { label: "Researching market demand…", pct: 20, duration: 3000 },
-  { label: "Generating source code…", pct: 40, duration: 8000 },
-  { label: "Writing components…", pct: 55, duration: 6000 },
-  { label: "Creating screenshots…", pct: 70, duration: 8000 },
-  { label: "Packaging ZIP bundle…", pct: 85, duration: 4000 },
-  { label: "Creating your listing…", pct: 92, duration: 3000 },
-  { label: "Almost there…", pct: 96, duration: 10000 },
-];
+const STAGE_MAP: Record<string, { label: string; pct: number }> = {
+  queued: { label: "Queuing your build…", pct: 5 },
+  researching: { label: "Researching market demand…", pct: 15 },
+  generating_code: { label: "Generating source code…", pct: 35 },
+  generating_screenshots: { label: "Creating screenshots…", pct: 60 },
+  packaging: { label: "Packaging ZIP bundle…", pct: 78 },
+  uploading: { label: "Uploading files…", pct: 88 },
+  creating_listing: { label: "Creating your listing…", pct: 95 },
+  done: { label: "Complete!", pct: 100 },
+  error: { label: "Something went wrong", pct: 0 },
+};
 
 interface MatchedListing {
   id: string;
@@ -42,6 +43,15 @@ interface MatchedListing {
   reason: string;
 }
 
+interface GenerationJob {
+  id: string;
+  status: string;
+  stage: string;
+  listing_id: string | null;
+  listing_title: string | null;
+  error: string | null;
+}
+
 export function BuildSearch() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -49,16 +59,13 @@ export function BuildSearch() {
   const [prompt, setPrompt] = useState("");
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
-  const [generatedListing, setGeneratedListing] = useState<{ id: string; title: string } | null>(null);
-  const [genError, setGenError] = useState<string | null>(null);
-  const [genStage, setGenStage] = useState(0);
+  const [job, setJob] = useState<GenerationJob | null>(null);
   const [results, setResults] = useState<MatchedListing[] | null>(null);
   const [noMatch, setNoMatch] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [placeholderIdx, setPlaceholderIdx] = useState(0);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
-  const stageTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -67,28 +74,63 @@ export function BuildSearch() {
     return () => clearInterval(interval);
   }, []);
 
-  // Progress stage ticker
-  const startStageTimer = useCallback(() => {
-    setGenStage(0);
-    let current = 0;
-    const tick = () => {
-      current++;
-      if (current < BUILD_STAGES.length) {
-        setGenStage(current);
-        stageTimerRef.current = setTimeout(tick, BUILD_STAGES[current].duration);
+  // Subscribe to job updates via realtime
+  useEffect(() => {
+    if (!job || job.status === "complete" || job.status === "failed") return;
+
+    const channel = supabase
+      .channel(`job-${job.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "generation_jobs",
+          filter: `id=eq.${job.id}`,
+        },
+        (payload) => {
+          const updated = payload.new as GenerationJob;
+          setJob(updated);
+          if (updated.status === "complete" || updated.status === "failed") {
+            setGenerating(false);
+          }
+        }
+      )
+      .subscribe();
+
+    // Also poll as fallback every 5s in case realtime misses
+    const pollInterval = setInterval(async () => {
+      const { data } = await supabase
+        .from("generation_jobs")
+        .select("id, status, stage, listing_id, listing_title, error")
+        .eq("id", job.id)
+        .single();
+      if (data) {
+        setJob(data as GenerationJob);
+        if (data.status === "complete" || data.status === "failed") {
+          setGenerating(false);
+          clearInterval(pollInterval);
+        }
       }
+    }, 5000);
+
+    // Safety timeout: if job is still processing after 3 minutes, show fallback
+    const safetyTimeout = setTimeout(() => {
+      setJob(prev => {
+        if (prev && prev.status !== "complete" && prev.status !== "failed") {
+          setGenerating(false);
+          return { ...prev, status: "failed", stage: "error", error: "Generation is taking longer than expected. Check your dashboard — your app may still be building." };
+        }
+        return prev;
+      });
+    }, 180000);
+
+    return () => {
+      supabase.removeChannel(channel);
+      clearInterval(pollInterval);
+      clearTimeout(safetyTimeout);
     };
-    stageTimerRef.current = setTimeout(tick, BUILD_STAGES[0].duration);
-  }, []);
-
-  const stopStageTimer = useCallback(() => {
-    if (stageTimerRef.current) {
-      clearTimeout(stageTimerRef.current);
-      stageTimerRef.current = null;
-    }
-  }, []);
-
-  useEffect(() => () => stopStageTimer(), [stopStageTimer]);
+  }, [job?.id, job?.status]);
 
   async function handleSearch(e?: React.FormEvent) {
     e?.preventDefault();
@@ -97,8 +139,7 @@ export function BuildSearch() {
     setResults(null);
     setNoMatch(false);
     setError(null);
-    setGeneratedListing(null);
-    setGenError(null);
+    setJob(null);
 
     try {
       const { data, error: fnError } = await supabase.functions.invoke("match-listings", {
@@ -136,10 +177,8 @@ export function BuildSearch() {
     setResults(null);
     setNoMatch(false);
     setError(null);
-    setGeneratedListing(null);
-    setGenError(null);
+    setJob(null);
     setGenerating(false);
-    stopStageTimer();
     inputRef.current?.focus();
   }
 
@@ -149,55 +188,47 @@ export function BuildSearch() {
       return;
     }
     setGenerating(true);
-    setGenError(null);
-    setGeneratedListing(null);
-    startStageTimer();
+    setJob(null);
 
     try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 120000); // 2 min timeout
+      // Step 1: Create job row in DB (user can see it immediately)
+      const { data: jobRow, error: jobErr } = await supabase
+        .from("generation_jobs")
+        .insert({
+          user_id: user.id,
+          prompt: prompt.trim(),
+          status: "pending",
+          stage: "queued",
+        })
+        .select("id, status, stage, listing_id, listing_title, error")
+        .single();
 
-      const { data, error: fnErr } = await supabase.functions.invoke("generate-template-app", {
-        body: { count: 1, themes: [prompt.trim()] },
+      if (jobErr || !jobRow) {
+        throw new Error("Failed to create generation job");
+      }
+
+      setJob(jobRow as GenerationJob);
+
+      // Step 2: Fire off the edge function (don't await the result — we poll instead)
+      supabase.functions.invoke("generate-template-app", {
+        body: { count: 1, themes: [prompt.trim()], job_id: jobRow.id },
+      }).catch((err) => {
+        // If the HTTP call itself fails, update job state
+        console.error("Edge function call failed:", err);
+        setJob(prev => prev ? { ...prev, status: "failed", stage: "error", error: "Network error — check your dashboard, the build may still complete." } : prev);
+        setGenerating(false);
       });
 
-      clearTimeout(timeout);
-
-      if (fnErr) throw new Error(fnErr.message);
-      if (!data?.success) throw new Error(data?.error || "Generation failed — please try again");
-
-      const result = data.results?.[0];
-      if (result?.success && result.listing_id) {
-        // Send notification
-        supabase.from("notifications").insert({
-          user_id: user.id,
-          type: "template_generated",
-          title: "Your template is ready! 🎉",
-          message: `"${result.title || prompt.trim()}" has been generated and is pending review.`,
-          link: `/listing/${result.listing_id}/edit`,
-        }).then(() => {});
-
-        stopStageTimer();
-        setGeneratedListing({ id: result.listing_id, title: result.title || prompt.trim() });
-      } else {
-        throw new Error(result?.error || "Generation failed — please try again");
-      }
     } catch (err) {
-      stopStageTimer();
       const message = err instanceof Error ? err.message : "Unknown error";
-      const isTimeout = message.includes("abort") || message.includes("timeout") || message.includes("Failed to fetch");
-      setGenError(isTimeout
-        ? "Generation is taking longer than expected. Your app may still be building — check your dashboard in a few minutes."
-        : message
-      );
-    } finally {
+      setJob({ id: "", status: "failed", stage: "error", listing_id: null, listing_title: null, error: message });
       setGenerating(false);
     }
   }
 
-  const currentStage = BUILD_STAGES[Math.min(genStage, BUILD_STAGES.length - 1)];
+  const currentStage = job ? (STAGE_MAP[job.stage] || STAGE_MAP.queued) : STAGE_MAP.queued;
 
-  const generateCta = generating ? (
+  const generateCta = generating || (job && job.status === "processing") || (job && job.status === "pending") ? (
     <div className="flex flex-col items-center gap-4 py-3">
       <div className="flex items-center gap-3 w-full max-w-sm">
         <div className="relative h-10 w-10 shrink-0">
@@ -209,7 +240,9 @@ export function BuildSearch() {
         </div>
         <div className="text-left flex-1">
           <p className="text-sm font-bold">{currentStage.label}</p>
-          <p className="text-xs text-muted-foreground">This usually takes 30–60 seconds</p>
+          <p className="text-xs text-muted-foreground">
+            {job?.listing_title ? `Building "${job.listing_title}"` : "This usually takes 30–60 seconds"}
+          </p>
         </div>
       </div>
       <div className="w-full max-w-sm">
@@ -225,20 +258,20 @@ export function BuildSearch() {
         </div>
       </div>
     </div>
-  ) : generatedListing ? (
+  ) : job?.status === "complete" && job.listing_id ? (
     <div className="rounded-xl border border-primary/30 bg-primary/5 p-5 text-center space-y-3">
       <div className="inline-flex items-center justify-center h-12 w-12 rounded-full bg-primary/10 mx-auto">
         <CheckCircle className="h-6 w-6 text-primary" />
       </div>
       <div>
-        <h4 className="font-bold text-foreground">"{generatedListing.title}" is ready!</h4>
+        <h4 className="font-bold text-foreground">"{job.listing_title || prompt}" is ready!</h4>
         <p className="text-sm text-muted-foreground mt-1">
           Your app has been generated with source code, screenshots, and a downloadable ZIP.
           It's pending review and will go live shortly.
         </p>
       </div>
       <div className="flex gap-2 justify-center flex-wrap">
-        <Button size="sm" onClick={() => navigate(`/listing/${generatedListing.id}/edit`)} className="gradient-hero text-white border-0 shadow-glow hover:opacity-90 gap-2">
+        <Button size="sm" onClick={() => navigate(`/listing/${job.listing_id}/edit`)} className="gradient-hero text-white border-0 shadow-glow hover:opacity-90 gap-2">
           <ExternalLink className="h-3.5 w-3.5" /> Edit your listing
         </Button>
         <Button size="sm" variant="outline" onClick={() => navigate("/dashboard?tab=listings")} className="gap-2">
@@ -249,14 +282,14 @@ export function BuildSearch() {
         </Button>
       </div>
     </div>
-  ) : genError ? (
+  ) : job?.status === "failed" ? (
     <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-center space-y-3">
       <div className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-destructive/10 mx-auto">
         <AlertCircle className="h-5 w-5 text-destructive" />
       </div>
       <div>
         <p className="text-sm font-semibold text-foreground">Generation failed</p>
-        <p className="text-xs text-muted-foreground mt-1">{genError}</p>
+        <p className="text-xs text-muted-foreground mt-1">{job.error || "Unknown error"}</p>
       </div>
       <div className="flex gap-2 justify-center">
         <Button size="sm" variant="outline" onClick={handleGenerate} className="gap-2">

@@ -135,11 +135,19 @@ export function usePubNub(conversationId: string | null) {
         const data = event.message as { type?: string; userId?: string };
         if (data.type === "typing" && data.userId !== globalConfig?.userId) {
           setTypingUserId(data.userId ?? null);
-          // Auto-clear after 4s if no new signal
           if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
           typingTimeoutRef.current = setTimeout(() => setTypingUserId(null), 4000);
         } else if (data.type === "stop_typing" && data.userId !== globalConfig?.userId) {
           setTypingUserId(null);
+        } else if (data.type === "read_receipt" && data.userId !== globalConfig?.userId) {
+          // The other user read our messages — mark all as read
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.sender_id === globalConfig?.userId && !m.read
+                ? { ...m, read: true }
+                : m
+            )
+          );
         }
       },
       status: (event) => {
@@ -182,6 +190,38 @@ export function usePubNub(conversationId: string | null) {
     }).catch(() => {});
   }, [conversationId]);
 
+  // Mark messages as read & notify sender via signal
+  const markAsRead = useCallback(async (convoId: string) => {
+    if (!globalConfig) return;
+    const myId = globalConfig.userId;
+
+    // Update DB: mark unread messages from the other person as read
+    await supabase
+      .from("messages")
+      .update({ read: true })
+      .eq("conversation_id", convoId)
+      .eq("read", false)
+      .neq("sender_id", myId);
+
+    // Update local state
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.conversation_id === convoId && m.sender_id !== myId && !m.read
+          ? { ...m, read: true }
+          : m
+      )
+    );
+
+    // Notify the other user via PubNub signal so their UI updates in real-time
+    if (pubnubRef.current) {
+      const channel = `chat_${convoId}`;
+      pubnubRef.current.signal({
+        channel,
+        message: { type: "read_receipt", userId: myId },
+      }).catch(() => {});
+    }
+  }, []);
+
   // Load existing messages from DB
   const loadMessages = useCallback(async (convoId: string) => {
     const { data } = await supabase
@@ -190,7 +230,10 @@ export function usePubNub(conversationId: string | null) {
       .eq("conversation_id", convoId)
       .order("created_at", { ascending: true });
     if (data) setMessages(data as ChatMessage[]);
-  }, []);
+
+    // Auto-mark as read on load
+    await markAsRead(convoId);
+  }, [markAsRead]);
 
   useEffect(() => {
     if (conversationId) loadMessages(conversationId);
@@ -229,5 +272,5 @@ export function usePubNub(conversationId: string | null) {
     [conversationId, sendStopTyping]
   );
 
-  return { messages, connected, sendMessage, setMessages, typingUserId, sendTypingSignal, sendStopTyping };
+  return { messages, connected, sendMessage, setMessages, markAsRead, typingUserId, sendTypingSignal, sendStopTyping };
 }

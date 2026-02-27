@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Loader2, Circle, ArrowLeft } from "lucide-react";
+import { Send, Loader2, Circle, ArrowLeft, Check, CheckCheck } from "lucide-react";
 import { usePubNub, usePresence } from "@/hooks/usePubNub";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -33,7 +33,7 @@ export function ChatDrawer({
 }: ChatDrawerProps) {
   const { user } = useAuth();
   const isMobile = useIsMobile();
-  const { messages, sendMessage, typingUserId, sendTypingSignal, sendStopTyping } = usePubNub(open ? conversationId : null);
+  const { messages, sendMessage, markAsRead, typingUserId, sendTypingSignal, sendStopTyping } = usePubNub(open ? conversationId : null);
   const isOtherTyping = typingUserId != null && typingUserId !== user?.id;
   const { isOnline } = usePresence();
   const [input, setInput] = useState("");
@@ -50,7 +50,11 @@ export function ChatDrawer({
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    // Mark incoming messages as read when drawer is open
+    if (open && conversationId) {
+      markAsRead(conversationId);
+    }
+  }, [messages, open, conversationId, markAsRead]);
 
   // Auto-focus input on open (desktop only, avoids keyboard pop on mobile)
   useEffect(() => {
@@ -167,17 +171,27 @@ export function ChatDrawer({
                 >
                   <p className="whitespace-pre-wrap break-words">{msg.content}</p>
                   {!grouped && (
-                    <p
-                      className={cn(
-                        "text-[10px] mt-1",
-                        isMe ? "text-primary-foreground/60" : "text-muted-foreground"
+                    <div className={cn(
+                      "flex items-center gap-1 mt-1",
+                      isMe ? "justify-end" : ""
+                    )}>
+                      <span
+                        className={cn(
+                          "text-[10px]",
+                          isMe ? "text-primary-foreground/60" : "text-muted-foreground"
+                        )}
+                      >
+                        {new Date(msg.created_at).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                      {isMe && (
+                        msg.read
+                          ? <CheckCheck className="h-3 w-3 text-primary-foreground/80" />
+                          : <Check className="h-3 w-3 text-primary-foreground/40" />
                       )}
-                    >
-                      {new Date(msg.created_at).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </p>
+                    </div>
                   )}
                 </div>
               </div>

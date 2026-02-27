@@ -826,31 +826,39 @@ serve(async (req) => {
       }
     }
 
-    const results: Array<{
-      success: boolean;
-      title?: string;
-      listing_id?: string;
-      error?: string;
-      file_count?: number;
-      zip_size_kb?: number;
-    }> = [];
-
+    // Run all templates in parallel to avoid edge function timeout
+    console.log(`Generating ${selectedThemes.length} templates in parallel (with ${signals.topSearches.length} demand signals)...`);
     for (const theme of selectedThemes) {
-      console.log(`Generating template: "${theme}" (with ${signals.topSearches.length} demand signals)...`);
-      const result = await generateSingleTemplate(
-        supabase,
-        sellerId,
-        theme,
-        LOVABLE_API_KEY,
-        demandContext,
-        jobId
-      );
-      results.push(result);
-
-      if (selectedThemes.indexOf(theme) < selectedThemes.length - 1) {
-        await new Promise((r) => setTimeout(r, 2000));
-      }
+      console.log(`  → "${theme}"`);
     }
+
+    const settled = await Promise.allSettled(
+      selectedThemes.map((theme, idx) =>
+        // Stagger starts by 1s to reduce rate-limit bursts
+        new Promise<typeof generateSingleTemplate extends (...a: any[]) => Promise<infer R> ? R : never>(
+          (resolve) => setTimeout(async () => {
+            try {
+              const result = await generateSingleTemplate(
+                supabase,
+                sellerId,
+                theme,
+                LOVABLE_API_KEY,
+                demandContext,
+                // Only pass jobId for the first template so stage updates don't conflict
+                idx === 0 ? jobId : undefined
+              );
+              resolve(result);
+            } catch (err) {
+              resolve({ success: false, error: err instanceof Error ? err.message : "Unknown error" });
+            }
+          }, idx * 1000)
+        )
+      )
+    );
+
+    const results = settled.map((s) =>
+      s.status === "fulfilled" ? s.value : { success: false, error: "Generation timed out or crashed" }
+    );
 
     const successful = results.filter((r) => r.success);
 

@@ -78,7 +78,8 @@ serve(async (req) => {
             "lucide-react": "^0.462.0",
             "framer-motion": "^12.0.0",
           },
-          devDependencies: {
+      devDependencies: {
+            "@types/node": "^22.0.0",
             "@types/react": "^18.3.0",
             "@types/react-dom": "^18.3.0",
             "@vitejs/plugin-react": "^4.3.0",
@@ -98,7 +99,8 @@ serve(async (req) => {
             skipLibCheck: true, moduleResolution: "bundler",
             allowImportingTsExtensions: true, isolatedModules: true,
             moduleDetection: "force", noEmit: true, jsx: "react-jsx",
-            strict: true, baseUrl: ".", paths: { "@/*": ["./src/*"] },
+            strict: true, noUnusedLocals: false, noUnusedParameters: false,
+            noFallthroughCasesInSwitch: true, baseUrl: ".", paths: { "@/*": ["./src/*"] },
           },
           include: ["src"],
         }, null, 2));

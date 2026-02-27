@@ -5,7 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CanonicalTag } from "@/components/CanonicalTag";
 import { JsonLd } from "@/components/JsonLd";
-import { Code, Terminal, Zap, Key, BookOpen, ExternalLink, Copy, Check, Globe, Bot, ArrowRight } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Code, Terminal, Zap, Key, BookOpen, ExternalLink, Copy, Check, Globe, Bot, ArrowRight, Workflow, ShoppingCart } from "lucide-react";
 import { useState } from "react";
 
 const MCP_URL = "https://api.opendraft.co/mcp";
@@ -48,6 +49,7 @@ const mcpTools = [
   { name: "get_demand_signals", desc: "See what agents are searching for but can't find — unmet market needs", auth: false },
   { name: "create_account", desc: "Register a new user account", auth: false },
   { name: "sign_in", desc: "Authenticate and get an access token for write operations", auth: false },
+  { name: "quick_purchase", desc: "One-call frictionless purchase: auto-creates account, generates API key, returns payment link", auth: false },
   { name: "generate_api_key", desc: "Create a persistent API key (od_xxx) for agent auth", auth: true },
   { name: "register_webhook", desc: "Subscribe to events (new listings, price drops, bounties)", auth: true },
   { name: "create_listing", desc: "List a new app for sale on the marketplace", auth: true },
@@ -57,6 +59,7 @@ const mcpTools = [
   { name: "get_my_offers", desc: "View all your bids with status, counters, and next actions", auth: true },
   { name: "respond_to_counter", desc: "Accept, reject, or counter a seller's counter-offer", auth: true },
   { name: "withdraw_offer", desc: "Cancel a pending or countered offer", auth: true },
+  { name: "headless_checkout", desc: "Get a payment link without browser redirects — API-driven checkout", auth: true },
 ];
 
 const restEndpoints = [
@@ -89,7 +92,7 @@ export default function Developers() {
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/20 bg-primary/5 text-primary text-xs font-semibold mb-6">
             <Bot className="h-3.5 w-3.5" />
-            21 MCP Tools + REST API
+            23 MCP Tools + REST API
           </div>
           <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-4">
             Build with the <span className="text-gradient">OpenDraft API</span>
@@ -153,7 +156,161 @@ export default function Developers() {
           </Card>
         </section>
 
-        {/* Connection examples */}
+        {/* Step-by-step integration tutorial */}
+        <section className="mb-16">
+          <h2 className="text-2xl font-bold mb-2 flex items-center gap-2">
+            <Workflow className="h-5 w-5 text-primary" /> Step-by-Step Integration Guide
+          </h2>
+          <p className="text-muted-foreground text-sm mb-6">Choose your platform and follow the walkthrough.</p>
+
+          <Tabs defaultValue="claude" className="w-full">
+            <TabsList className="grid w-full grid-cols-4 mb-6">
+              <TabsTrigger value="claude">Claude Desktop</TabsTrigger>
+              <TabsTrigger value="cursor">Cursor</TabsTrigger>
+              <TabsTrigger value="custom">Custom Agent</TabsTrigger>
+              <TabsTrigger value="quick">Quick Purchase</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="claude" className="space-y-4">
+              <div className="space-y-4">
+                <div className="flex items-start gap-3 p-4 rounded-lg border border-border/60">
+                  <div className="h-7 w-7 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold shrink-0">1</div>
+                  <div className="flex-1">
+                    <p className="font-semibold mb-1">Open your Claude config file</p>
+                    <p className="text-sm text-muted-foreground mb-2">On macOS: <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">~/Library/Application Support/Claude/claude_desktop_config.json</code></p>
+                    <p className="text-sm text-muted-foreground">On Windows: <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">%APPDATA%\Claude\claude_desktop_config.json</code></p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 p-4 rounded-lg border border-border/60">
+                  <div className="h-7 w-7 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold shrink-0">2</div>
+                  <div className="flex-1">
+                    <p className="font-semibold mb-2">Add the OpenDraft server</p>
+                    <CodeBlock code={JSON.stringify({ mcpServers: { opendraft: { url: MCP_URL } } }, null, 2)} />
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 p-4 rounded-lg border border-border/60">
+                  <div className="h-7 w-7 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold shrink-0">3</div>
+                  <div className="flex-1">
+                    <p className="font-semibold mb-1">Restart Claude Desktop</p>
+                    <p className="text-sm text-muted-foreground">You'll see "opendraft" in your MCP tools. Try asking: <em>"Search OpenDraft for AI dashboard apps under $50"</em></p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 p-4 rounded-lg border border-border/60">
+                  <div className="h-7 w-7 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold shrink-0">4</div>
+                  <div className="flex-1">
+                    <p className="font-semibold mb-1">Go further — authenticate</p>
+                    <p className="text-sm text-muted-foreground">Ask Claude to <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">create_account</code> or <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">sign_in</code> to unlock listing creation, bidding, and purchases.</p>
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="cursor" className="space-y-4">
+              <div className="space-y-4">
+                <div className="flex items-start gap-3 p-4 rounded-lg border border-border/60">
+                  <div className="h-7 w-7 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold shrink-0">1</div>
+                  <div className="flex-1">
+                    <p className="font-semibold mb-1">Open Cursor Settings</p>
+                    <p className="text-sm text-muted-foreground">Go to <strong>Settings → MCP</strong> (or <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">Cmd/Ctrl + Shift + P</code> → "MCP: Add Server")</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 p-4 rounded-lg border border-border/60">
+                  <div className="h-7 w-7 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold shrink-0">2</div>
+                  <div className="flex-1">
+                    <p className="font-semibold mb-2">Add OpenDraft as an MCP server</p>
+                    <CodeBlock code={`Name: opendraft\nURL: ${MCP_URL}\nTransport: Streamable HTTP`} language="text" />
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 p-4 rounded-lg border border-border/60">
+                  <div className="h-7 w-7 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold shrink-0">3</div>
+                  <div className="flex-1">
+                    <p className="font-semibold mb-1">Use in Agent mode</p>
+                    <p className="text-sm text-muted-foreground">Switch to Agent mode in Cursor chat, then ask: <em>"Find me a React + Supabase SaaS template on OpenDraft"</em></p>
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="custom" className="space-y-4">
+              <div className="space-y-4">
+                <div className="flex items-start gap-3 p-4 rounded-lg border border-border/60">
+                  <div className="h-7 w-7 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold shrink-0">1</div>
+                  <div className="flex-1">
+                    <p className="font-semibold mb-2">Initialize MCP connection</p>
+                    <CodeBlock language="bash" code={`curl -X POST ${MCP_URL} \\
+  -H "Content-Type: application/json" \\
+  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-03-26","clientInfo":{"name":"my-agent","version":"1.0"}}}'`} />
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 p-4 rounded-lg border border-border/60">
+                  <div className="h-7 w-7 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold shrink-0">2</div>
+                  <div className="flex-1">
+                    <p className="font-semibold mb-2">Discover available tools</p>
+                    <CodeBlock language="bash" code={`curl -X POST ${MCP_URL} \\
+  -H "Content-Type: application/json" \\
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/list"}'`} />
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 p-4 rounded-lg border border-border/60">
+                  <div className="h-7 w-7 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold shrink-0">3</div>
+                  <div className="flex-1">
+                    <p className="font-semibold mb-2">Call tools via JSON-RPC</p>
+                    <CodeBlock language="bash" code={`curl -X POST ${MCP_URL} \\
+  -H "Content-Type: application/json" \\
+  -d '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"search_listings","arguments":{"query":"AI app","limit":5}}}'`} />
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 p-4 rounded-lg border border-border/60">
+                  <div className="h-7 w-7 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold shrink-0">4</div>
+                  <div className="flex-1">
+                    <p className="font-semibold mb-1">Authenticate for write ops</p>
+                    <p className="text-sm text-muted-foreground">Call <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">sign_in</code> → get token → pass as <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">Authorization: Bearer &lt;token&gt;</code> header on subsequent calls.</p>
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="quick" className="space-y-4">
+              <div className="p-4 rounded-lg border border-primary/20 bg-primary/[0.02] mb-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <ShoppingCart className="h-4 w-4 text-primary" />
+                  <p className="font-semibold text-sm">Zero-friction purchase — one API call</p>
+                </div>
+                <p className="text-sm text-muted-foreground">No registration, no sign-in, no API key needed. <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">quick_purchase</code> handles everything.</p>
+              </div>
+              <div className="space-y-4">
+                <div className="flex items-start gap-3 p-4 rounded-lg border border-border/60">
+                  <div className="h-7 w-7 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold shrink-0">1</div>
+                  <div className="flex-1">
+                    <p className="font-semibold mb-2">Find what you want</p>
+                    <CodeBlock language="bash" code={`curl -X POST ${MCP_URL} \\
+  -H "Content-Type: application/json" \\
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"search_listings","arguments":{"query":"invoice SaaS","limit":3}}}'`} />
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 p-4 rounded-lg border border-border/60">
+                  <div className="h-7 w-7 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold shrink-0">2</div>
+                  <div className="flex-1">
+                    <p className="font-semibold mb-2">Buy in one call</p>
+                    <CodeBlock language="bash" code={`curl -X POST ${MCP_URL} \\
+  -H "Content-Type: application/json" \\
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"quick_purchase","arguments":{"listing_id":"LISTING_UUID","email":"buyer@example.com"}}}'`} />
+                    <p className="text-sm text-muted-foreground mt-2">Returns a payment link + auto-generated API key. Account created automatically.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 p-4 rounded-lg border border-border/60">
+                  <div className="h-7 w-7 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold shrink-0">3</div>
+                  <div className="flex-1">
+                    <p className="font-semibold mb-1">Or negotiate first</p>
+                    <p className="text-sm text-muted-foreground">Use <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">place_offer</code> → wait for seller response → <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">respond_to_counter</code> → <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">headless_checkout</code> for the full autonomous bidding flow.</p>
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </section>
+
+
         <section className="mb-16">
           <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
             <Terminal className="h-5 w-5 text-primary" /> Code Examples

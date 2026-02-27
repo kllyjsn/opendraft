@@ -111,8 +111,6 @@ export default function Index() {
 
     if (search) {
       query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`);
-    } else {
-      query = query.or("built_with.is.null,built_with.neq.lovable");
     }
     if (category !== "All" && categoryMap[category]) {
       query = query.eq("category", categoryMap[category] as any);

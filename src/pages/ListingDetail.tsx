@@ -7,6 +7,7 @@ import { CompletenessBadge } from "@/components/CompletenessBadge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { ExternalLink, Github, Star, ShoppingCart, ChevronLeft, ChevronRight, Download, Eye, Package, Gift, MessageSquare, GitFork, RefreshCw, Wrench, Shield, Infinity } from "lucide-react";
+import { DeployToNetlify } from "@/components/DeployToNetlify";
 import { useToast } from "@/hooks/use-toast";
 import { MakeOfferDialog } from "@/components/MakeOfferDialog";
 import { ActiveOfferBanner } from "@/components/ActiveOfferBanner";
@@ -37,6 +38,7 @@ interface Listing {
   tech_stack: string[];
   github_url: string | null;
   demo_url: string | null;
+  file_path: string | null;
   screenshots: string[];
   sales_count: number;
   view_count: number;
@@ -459,7 +461,7 @@ export default function ListingDetail() {
                   <div className="rounded-xl bg-primary/8 border border-primary/20 px-4 py-3 text-center">
                     <p className="font-bold text-primary text-sm">✓ You own this project</p>
                   </div>
-                  <Button
+                   <Button
                     onClick={handleDownload}
                     disabled={downloading}
                     className="w-full gradient-hero text-white border-0 shadow-glow hover:opacity-90 h-12 text-base font-bold"
@@ -467,6 +469,12 @@ export default function ListingDetail() {
                     <Download className="h-4 w-4 mr-2" />
                     {downloading ? "Preparing download…" : "Download Project"}
                   </Button>
+                  <DeployToNetlify
+                    listingId={listing.id}
+                    listingTitle={listing.title}
+                    hasFile={!!listing.file_path}
+                    githubUrl={listing.github_url}
+                  />
                   {listing.seller_id !== user?.id && (
                     <>
                       <Button

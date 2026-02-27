@@ -93,3 +93,7 @@ verify_jwt = false
 # Get checkout session — public
 [functions.get-checkout-session]
 verify_jwt = false
+
+# Deploy to Netlify — auth checked in code
+[functions.deploy-to-netlify]
+verify_jwt = false

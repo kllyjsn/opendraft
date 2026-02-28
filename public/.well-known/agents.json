@@ -16,7 +16,10 @@
     "openclaw": {
       "skill_manifest": "https://opendraft.co/.well-known/skill.yaml",
       "skill_readme": "https://opendraft.co/.well-known/SKILL.md",
-      "install": "npx playbooks add skill opendraft/marketplace"
+      "skill_folder": "https://opendraft.co/openclaw/opendraft-marketplace/SKILL.md",
+      "discovery": "https://opendraft.co/.well-known/openclaw.json",
+      "landing_page": "https://opendraft.co/openclaw",
+      "install": "curl -o ~/.openclaw/workspace/skills/opendraft-marketplace/SKILL.md https://opendraft.co/openclaw/opendraft-marketplace/SKILL.md"
     }
   },
   "capabilities": [

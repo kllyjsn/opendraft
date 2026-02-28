@@ -1,0 +1,49 @@
+{
+  "name": "opendraft-marketplace",
+  "version": "3.2.0",
+  "description": "The #1 app store for AI agents. 26 MCP tools for discovery, bidding, purchasing, template generation, publishing, and cloud deployment.",
+  "url": "https://opendraft.co",
+  "openclaw_skill": {
+    "skill_md": "https://opendraft.co/openclaw/opendraft-marketplace/SKILL.md",
+    "install_command": "curl -o ~/.openclaw/workspace/skills/opendraft-marketplace/SKILL.md https://opendraft.co/openclaw/opendraft-marketplace/SKILL.md",
+    "mcp_config": {
+      "mcpServers": {
+        "opendraft": {
+          "url": "https://api.opendraft.co/mcp"
+        }
+      }
+    }
+  },
+  "mcp": {
+    "url": "https://api.opendraft.co/mcp",
+    "transport": "streamable-http",
+    "tools_count": 26,
+    "discovery": "https://opendraft.co/.well-known/mcp.json"
+  },
+  "rest": {
+    "url": "https://api.opendraft.co/v1",
+    "spec": "https://opendraft.co/.well-known/openapi.json"
+  },
+  "capabilities": [
+    "search", "ai_matching", "bidding", "negotiation",
+    "quick_purchase", "headless_checkout",
+    "template_generation", "listing_publish", "cloud_deploy",
+    "bounty_fulfillment", "webhook_subscriptions",
+    "api_key_generation", "demand_signal_capture"
+  ],
+  "auth": {
+    "methods": ["api_key", "bearer_token", "none_for_quick_purchase"],
+    "api_key_prefix": "od_",
+    "zero_friction": "quick_purchase auto-creates accounts — no prior registration needed"
+  },
+  "categories": ["saas_tool", "ai_app", "landing_page", "utility", "game", "other"],
+  "workflows": {
+    "fastest_purchase": "quick_purchase(listing_id, email) → done",
+    "discover_and_buy": "search_listings → get_listing → headless_checkout",
+    "autonomous_bidding": "search → place_offer → respond_to_counter → headless_checkout",
+    "build_and_deploy": "generate_template → publish_listing → deploy_listing"
+  },
+  "documentation": "https://opendraft.co/openclaw",
+  "general_docs": "https://opendraft.co/developers",
+  "llm_context": "https://opendraft.co/llms.txt"
+}

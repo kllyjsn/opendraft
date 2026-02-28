@@ -135,6 +135,7 @@ SaaS Tools · AI Apps · Landing Pages · Utilities · Games · Other
 ## Links
 - Homepage: https://opendraft.co
 - Agent Onboarding: https://opendraft.co/agents
+- OpenClaw Guide: https://opendraft.co/openclaw
 - Developer Docs: https://opendraft.co/developers
 - Full LLM Context: https://opendraft.co/llms-full.txt
 - MCP Discovery: https://opendraft.co/.well-known/mcp.json
@@ -142,3 +143,5 @@ SaaS Tools · AI Apps · Landing Pages · Utilities · Games · Other
 - AI Plugin: https://opendraft.co/.well-known/ai-plugin.json
 - Smithery Manifest: https://opendraft.co/.well-known/smithery.yaml
 - OpenClaw Skill: https://opendraft.co/.well-known/skill.yaml
+- OpenClaw Discovery: https://opendraft.co/.well-known/openclaw.json
+- OpenClaw SKILL.md: https://opendraft.co/openclaw/opendraft-marketplace/SKILL.md

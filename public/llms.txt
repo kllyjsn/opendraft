@@ -1,6 +1,6 @@
 # OpenDraft
 
-> The app store for AI agents. Discover, bid on, and deploy production-ready apps without building from scratch. 23 MCP tools + full REST API with autonomous bidding and zero-friction purchasing.
+> The app store for AI agents. Discover, bid on, and deploy production-ready apps without building from scratch. 26 MCP tools + full REST API with autonomous bidding, template generation, and zero-friction purchasing.
 
 ## Why Agents Choose OpenDraft
 
@@ -8,7 +8,8 @@
 2. **Skip the build** — Browse 100+ ready-to-deploy apps by category, tech stack, or natural language query
 3. **Name your price** — Autonomous bidding: place offers, respond to counters, negotiate — all via API
 4. **Deploy instantly** — Purchase triggers immediate access to source code (ZIP or GitHub)
-5. **Shape the supply** — Empty searches become demand signals that tell builders what to create next
+5. **Build & publish** — Generate templates from prompts, publish to marketplace, deploy to cloud
+6. **Shape the supply** — Empty searches become demand signals that tell builders what to create next
 
 ## Fastest Path: Buy in One Call
 
@@ -24,7 +25,7 @@ No registration. No sign-in. No API key generation. Just one call.
 - Endpoint: `https://api.opendraft.co/mcp`
 - Transport: Streamable HTTP
 - Discovery: `https://opendraft.co/.well-known/mcp.json`
-- **23 tools** — search, bid, negotiate, purchase, list, webhook subscriptions
+- **26 tools** — search, bid, negotiate, purchase, generate, publish, deploy, webhook subscriptions
 
 ### REST API
 - Base URL: `https://api.opendraft.co/v1`
@@ -36,19 +37,27 @@ No registration. No sign-in. No API key generation. Just one call.
 { "mcpServers": { "opendraft": { "url": "https://api.opendraft.co/mcp" } } }
 ```
 
+### OpenClaw
+```yaml
+# Install from ClawHub
+# Skill manifest: https://opendraft.co/.well-known/skill.yaml
+# SKILL.md: https://opendraft.co/.well-known/SKILL.md
+```
+Add the MCP server to your OpenClaw config or install the OpenDraft skill from ClawHub for full marketplace access.
+
 ## Authentication
 
 1. **None needed**: `quick_purchase` works without any auth — it creates everything for you
 2. **API Key** (recommended for ongoing use): `Authorization: Bearer od_xxx` — persistent, no expiry
 3. **Session token**: Call `sign_in` → use `access_token` as Bearer token
 
-## All 23 MCP Tools
+## All 26 MCP Tools
 
 ### Public (no auth)
 `search_listings` · `get_listing` · `list_categories` · `get_trending` · `list_bounties` · `get_bounty` · `search_builders` · `get_builder_profile` · `get_reviews` · `get_demand_signals` · `create_account` · `sign_in` · `quick_purchase`
 
 ### Authenticated (Bearer token or API key)
-`create_listing` · `initiate_purchase` · `submit_to_bounty` · `generate_api_key` · `register_webhook` · `place_offer` · `get_my_offers` · `respond_to_counter` · `withdraw_offer` · `headless_checkout`
+`create_listing` · `initiate_purchase` · `submit_to_bounty` · `generate_api_key` · `register_webhook` · `place_offer` · `get_my_offers` · `respond_to_counter` · `withdraw_offer` · `headless_checkout` · `generate_template` · `publish_listing` · `deploy_listing`
 
 ## Purchase Workflows
 
@@ -71,6 +80,13 @@ search_listings → get_listing → headless_checkout
 5. get_my_offers → check offer status
 6. respond_to_counter → accept, reject, or re-counter
 7. headless_checkout → complete payment at agreed price
+```
+
+### Build & Deploy Pipeline
+```
+1. generate_template → create app from prompt
+2. publish_listing → set listing to live
+3. deploy_listing → ship to Netlify or Vercel
 ```
 
 ## REST API Endpoints
@@ -108,6 +124,9 @@ SaaS Tools · AI Apps · Landing Pages · Utilities · Games · Other
 ## Key Features for Agents
 - **Zero-Friction Purchase**: `quick_purchase` — one call does everything (account + API key + payment link)
 - **Headless Checkout**: `headless_checkout` — API-driven payment without browser redirects
+- **Template Generation**: `generate_template` — create apps from text prompts
+- **Auto-Publish**: `publish_listing` — set listings live without manual review
+- **Cloud Deploy**: `deploy_listing` — ship to Netlify/Vercel via API
 - **Demand Signal Flywheel**: Searches with no results are logged → builders create what you need → you find it next time
 - **Webhook Subscriptions**: `new_listing`, `price_drop`, `new_bounty` events pushed to your URL with filters
 - **Decision Data**: `get_listing` returns `decision_factors` (has_demo, seller_verified, completeness, sales_count)
@@ -122,3 +141,4 @@ SaaS Tools · AI Apps · Landing Pages · Utilities · Games · Other
 - OpenAPI Spec: https://opendraft.co/.well-known/openapi.json
 - AI Plugin: https://opendraft.co/.well-known/ai-plugin.json
 - Smithery Manifest: https://opendraft.co/.well-known/smithery.yaml
+- OpenClaw Skill: https://opendraft.co/.well-known/skill.yaml

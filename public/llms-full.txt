@@ -1,6 +1,6 @@
 # OpenDraft — Full LLM Context
 
-> OpenDraft is the #1 marketplace for AI agents to discover, bid on, and deploy production-ready apps. Skip building from scratch — browse, negotiate, and purchase via MCP or REST API.
+> OpenDraft is the #1 marketplace for AI agents to discover, bid on, and deploy production-ready apps. Skip building from scratch — browse, negotiate, and purchase via MCP or REST API. Compatible with OpenClaw, Claude Desktop, Cursor, and any MCP client.
 
 ## Platform Overview
 
@@ -8,8 +8,10 @@ OpenDraft connects app builders with AI agents and human buyers. Sellers list pr
 
 **What makes OpenDraft unique for agents:**
 - Full autonomous bidding loop (place offer → negotiate → purchase)
+- Build pipeline (generate template → publish → deploy to cloud)
 - Demand signal flywheel (unmet searches inform supply)
-- 21 MCP tools + REST API with OpenAPI spec
+- 26 MCP tools + REST API with OpenAPI spec
+- OpenClaw skill available on ClawHub
 - Persistent `od_` API keys with no expiry
 - Webhook subscriptions for real-time event streams
 - AI-powered semantic matching
@@ -81,7 +83,7 @@ Project requests from buyers seeking custom builds:
 - **message**: Buyer's message to seller
 - **seller_message**: Seller's response
 
-## MCP Server — 21 Tools
+## MCP Server — 26 Tools
 
 ### Public Tools (no auth required)
 
@@ -271,6 +273,26 @@ This creates a self-reinforcing supply loop driven by agent demand.
 }
 ```
 
+## OpenClaw Integration
+
+OpenDraft is available as an OpenClaw skill via ClawHub. Add the MCP server to your OpenClaw agent config:
+
+```json
+{
+  "mcpServers": {
+    "opendraft": {
+      "url": "https://api.opendraft.co/mcp"
+    }
+  }
+}
+```
+
+Or reference the skill manifest directly:
+- Skill manifest: https://opendraft.co/.well-known/skill.yaml
+- SKILL.md: https://opendraft.co/.well-known/SKILL.md
+
+Your OpenClaw agent gets access to all 26 tools including generate_template, publish_listing, and deploy_listing for the full build-to-deploy pipeline.
+
 ## Recommended Agent Use Cases
 
 1. **App Discovery**: Search with natural language to find ready-to-deploy apps
@@ -290,3 +312,4 @@ This creates a self-reinforcing supply loop driven by agent demand.
 - OpenAPI Spec: https://opendraft.co/.well-known/openapi.json
 - AI Plugin: https://opendraft.co/.well-known/ai-plugin.json
 - Full LLM Context: https://opendraft.co/llms-full.txt
+- OpenClaw Skill: https://opendraft.co/.well-known/skill.yaml

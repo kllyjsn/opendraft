@@ -213,7 +213,6 @@ export default function Messages() {
               className={cn(!showNewChat && "gradient-hero text-white border-0 shadow-glow")}
             >
               {showNewChat ? <X className="h-4 w-4 mr-1" /> : <Plus className="h-4 w-4 mr-1" />}
-              {isMobile ? (showNewChat ? "" : "") : (showNewChat ? "Cancel" : "New message")}
               {!isMobile && (showNewChat ? "Cancel" : "New message")}
             </Button>
           )}

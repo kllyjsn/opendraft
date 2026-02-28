@@ -10,18 +10,8 @@ import { Search, TrendingUp, SlidersHorizontal, X, Loader2, ChevronDown } from "
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { BuildSearch } from "@/components/BuildSearch";
-import { HeroStats } from "@/components/HeroStats";
-import { SocialProof } from "@/components/SocialProof";
 import { FeaturedListings } from "@/components/FeaturedListings";
-import { FeaturedCarousel } from "@/components/FeaturedCarousel";
-import { HowItWorks } from "@/components/HowItWorks";
-import { TrendingBuilders } from "@/components/TrendingBuilders";
-import { CategoryShowcase } from "@/components/CategoryShowcase";
 import { CtaBanner } from "@/components/CtaBanner";
-import { AgentHero } from "@/components/AgentHero";
-import { BrandMascot } from "@/components/BrandMascot";
-
-import { PromoBanner } from "@/components/PromoBanner";
 
 const CATEGORIES = ["All", "SaaS Tool", "AI App", "Landing Page", "Utility", "Game", "Other"];
 const COMPLETENESS = ["All", "Prototype", "MVP", "Production Ready"];
@@ -176,33 +166,16 @@ export default function Index() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <PromoBanner />
       <Navbar />
-      {/* BuyerWelcomeModal removed from homepage — triggers on listing detail instead */}
 
       {/* ── HERO ── */}
-      <section className="relative overflow-hidden py-20 md:py-36 grain-overlay">
+      <section className="relative overflow-hidden py-16 md:py-28 grain-overlay">
         <div className="absolute -top-60 -right-60 h-[700px] w-[700px] rounded-full bg-primary/20 blur-[140px] animate-pulse-glow pointer-events-none" />
         <div className="absolute -bottom-60 -left-60 h-[600px] w-[600px] rounded-full bg-accent/20 blur-[120px] animate-pulse-glow pointer-events-none" style={{ animationDelay: "2s" }} />
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 h-[500px] w-[500px] rounded-full bg-secondary/10 blur-[100px] animate-float pointer-events-none" />
-
-        <div className="absolute inset-0 pointer-events-none opacity-[0.03]"
-          style={{
-            backgroundImage: `linear-gradient(hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)`,
-            backgroundSize: '60px 60px',
-          }}
-        />
 
         <div className="container mx-auto px-4 text-center relative z-10">
           <motion.div initial="hidden" animate="visible" variants={staggerContainer}>
-            <motion.div variants={fadeUp} custom={0}>
-              <span className="inline-flex items-center gap-2 rounded-full glass px-4 py-1.5 text-xs font-semibold text-primary mb-6">
-                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-                Fork it. Ship it. We maintain it.
-              </span>
-            </motion.div>
-
-            <motion.h1 variants={fadeUp} custom={1} className="text-5xl md:text-8xl font-black tracking-tighter mb-5 md:mb-6 leading-[0.95]">
+            <motion.h1 variants={fadeUp} custom={0} className="text-5xl md:text-8xl font-black tracking-tighter mb-5 md:mb-6 leading-[0.95]">
               Create anything.
               <br />
               <span className="text-gradient animate-gradient-shift inline-block"
@@ -212,62 +185,29 @@ export default function Index() {
               </span>
             </motion.h1>
 
-            <motion.div variants={fadeUp} custom={2} className="flex justify-center mb-4">
-              <BrandMascot size={100} variant="wave" />
-            </motion.div>
-
-            <motion.p variants={fadeUp} custom={3} className="text-sm md:text-lg text-muted-foreground max-w-lg mx-auto mb-10 md:mb-12 leading-relaxed">
-              Describe what you want to build — or fork an existing app and make it yours.
-              <span className="text-foreground font-medium"> Buy the code. Subscribe for updates.</span>
+            <motion.p variants={fadeUp} custom={1} className="text-sm md:text-lg text-muted-foreground max-w-md mx-auto mb-8 leading-relaxed">
+              Describe what you want — or fork an existing app. Full source code, deploy anywhere.
             </motion.p>
 
-            <motion.div variants={fadeUp} custom={3}>
+            <motion.div variants={fadeUp} custom={2}>
               <BuildSearch />
             </motion.div>
 
-            <motion.div variants={fadeUp} custom={4} className="mt-8 flex items-center justify-center gap-3 text-xs text-muted-foreground">
-              <span>or</span>
-              <a href="#browse" className="underline underline-offset-4 hover:text-foreground transition-colors">browse all forks</a>
+            <motion.div variants={fadeUp} custom={3} className="mt-6 flex items-center justify-center gap-3 text-xs text-muted-foreground">
+              <a href="#browse" className="underline underline-offset-4 hover:text-foreground transition-colors">browse apps</a>
               <span>·</span>
               <Link to={user ? "/sell" : "/login"} className="underline underline-offset-4 hover:text-foreground transition-colors">
-                {user ? "list your project" : "sell your code"}
+                sell your code
               </Link>
-              <span>·</span>
-              <Link to="/agents" className="underline underline-offset-4 hover:text-foreground transition-colors">
-                agent API
-              </Link>
-            </motion.div>
-
-            <motion.div variants={fadeUp} custom={5}>
-              <HeroStats />
-              <SocialProof />
             </motion.div>
           </motion.div>
         </div>
       </section>
 
-      {/* ── HOW IT WORKS ── */}
-      <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}>
-        <HowItWorks />
-      </motion.div>
-
-      {/* ── FEATURED CAROUSEL (purchased listings) ── */}
-      <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}>
-        <FeaturedCarousel />
-      </motion.div>
-
       {/* ── TRENDING ── */}
       <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}>
         <FeaturedListings />
       </motion.div>
-
-      {/* ── CATEGORY SHOWCASE ── */}
-      <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}>
-        <CategoryShowcase />
-      </motion.div>
-
-      {/* ── AGENT HERO ── */}
-      <AgentHero />
 
       {/* ── BROWSE ── */}
       <section id="browse" className="container mx-auto px-4 pb-24">

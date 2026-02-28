@@ -1,84 +1,106 @@
 
-## Vibe Market — MVP + Polish Build Plan
+## OpenDraft — Business Plan & Product Vision (Revised February 2026)
 
-A marketplace for developers to buy and sell vibe-coded projects, prototypes, and templates. Playful, bold design with full transaction support via Stripe.
-
----
-
-### 1. Design System & Landing Page
-- Bold, colorful design with vibrant gradients and expressive typography
-- Hero section with tagline, CTA to browse or sell, and a live count of listings
-- Navigation with Browse, Sell, and Sign In / Dashboard links
-- Footer with links to ToS, DMCA policy notice
+**The first app store where AI agents autonomously discover, bid on, and purchase software.**
 
 ---
 
-### 2. User Accounts (Buyers & Sellers)
-- Sign up / log in with email + password (Supabase Auth)
-- A single account can act as both buyer and seller
-- Basic profile page showing listings created and purchases made
+### Vision
+
+OpenDraft is building the infrastructure layer for AI-to-AI commerce. Today's AI agents — from Claude to GPT to custom enterprise swarms — need tools, templates, and micro-apps to accomplish tasks. There is no marketplace where they can programmatically browse, evaluate, negotiate, and purchase software. OpenDraft fills that gap.
+
+Our long-term vision: **become the default procurement layer for the autonomous economy** — the "GitHub for vibe coders" and the "App Store for AI agents," simultaneously.
 
 ---
 
-### 3. Project Listing Creation (Seller Flow)
-- Multi-step listing form:
-  - **Title, description, price** (with a minimum of $1)
-  - **Completeness badge** picker: Prototype / MVP / Production-Ready
-  - **Tech stack tags** (e.g. React, Supabase, Tailwind, Python)
-  - **Category** (SaaS Tool, AI App, Landing Page, Utility, Game, Other)
-  - **File delivery**: upload a ZIP file OR paste a GitHub repo URL (or both)
-  - **Screenshots** (up to 5 images) and optional demo URL
-- Listings start in "pending review" state before going live (basic moderation)
+### Platform Capabilities (Current State)
+
+| Capability | Details |
+|---|---|
+| Live Listings | 92 across 5 categories (SaaS, AI Apps, Landing Pages, Utilities, Other) |
+| MCP Tools | 23 tools for full agent-native access |
+| REST API | 12+ endpoints including search, bidding, purchasing |
+| Webhook System | Real-time event subscriptions for agents |
+| AI Swarm | 4 autonomous agents (SEO, Outreach, Product QA, Deploy) |
+| AI Board of Directors | 5 AI director agents that generate prioritized strategic initiatives from live metrics |
+| Boardroom → Spec Pipeline | Board resolutions auto-generate implementation-ready specs with one click |
+| Completeness Badges | Prototype / MVP / Production-Ready — manages buyer expectations |
+| Remix Economy | Fork, improve, and resell projects with attribution chains |
+| Stripe Connect | 20% platform fee, 80% to sellers, instant payouts |
+| One-Click Deploy | Netlify & Vercel deployment from purchased templates |
+| Bounty System | Buyers post bounties, builders compete to fulfill them |
 
 ---
 
-### 4. Browse & Discovery
-- Grid-based marketplace homepage with listing cards showing:
-  - Screenshot thumbnail, title, price, completeness badge, tech stack tags
-- Filter sidebar: category, completeness level, price range, tech stack
-- Search bar with keyword search across titles and descriptions
-- "Newest" and "Popular" sort options
+### Total Addressable Market (TAM)
+
+| Segment | Size | Rationale |
+|---|---|---|
+| **TAM — AI Agent Software Economy** | **$120B by 2030** | Gartner projects 15B+ autonomous agent instances by 2030; each needing tools/templates at $8 avg spend |
+| **SAM — Indie/SMB AI-Built Tools** | **$8B** | 2M+ active vibe coders (Lovable, Cursor, Bolt, Replit) × $4K avg annual tool spend |
+| **SOM — Year 1** | **$2M GMV** | 1,000 listings × $50 avg price × 40 purchases each |
+| **Agent-Driven Commerce (new)** | **$50B by 2030** | MCP/A2A protocols enabling programmatic procurement; OpenDraft is first-mover |
+
+The AI agent economy is projected to grow 10–25x by 2030. As autonomous agents proliferate, the procurement infrastructure they use becomes a critical choke point — and a massive revenue opportunity.
 
 ---
 
-### 5. Listing Detail Page
-- Full description, all screenshots (gallery view)
-- Completeness badge with tooltip explaining what each level means
-- Tech stack tag chips and demo link button
-- Seller info (username, total sales)
-- Buy Now button with price
-- Reviews section (visible after purchase flow exists)
+### Revenue Model
+
+- **Platform Fee**: 20% of every transaction (sellers keep 80%)
+- **Pricing Options**: One-time purchases + monthly subscriptions ($15–$20/mo avg)
+- **Future Revenue Streams**: Featured placements, premium agent API tiers, enterprise fleet licensing
 
 ---
 
-### 6. Purchase & Download (Buyer Flow)
-- Stripe Checkout for one-time payments
-- Platform takes 20% fee, seller receives 80% (via Stripe Connect)
-- After successful payment: instant access to download ZIP or view GitHub link
-- Purchase history on the buyer's profile
+### Financial Projections
+
+| Quarter | Listings | Subscriptions | Agent Calls/mo | GMV | Revenue |
+|---|---|---|---|---|---|
+| Q1 | 100 | 120 | 5K | $30K | $6K |
+| Q2 | 300 | 600 | 50K | $150K | $30K |
+| Q3 | 700 | 2,000 | 500K | $500K | $100K |
+| Q4 | 1,500 | 5,000 | 2M | $1.5M | $300K |
+
+**Year 1**: $2.2M GMV → $436K Revenue
+**Year 2**: $22M GMV → $4.4M Revenue (agent traffic 40%)
+**Year 3**: $100M GMV → $20M Revenue (agent traffic 65%)
 
 ---
 
-### 7. Seller Dashboard
-- Overview: total earnings, number of sales, active listings
-- List of all listings with status (pending / live / hidden) and edit option
-- Sales history table (date, buyer, listing, amount received)
-- Stripe Connect onboarding to set up payouts
+### Competitive Moat
+
+1. **Agent-Native Infrastructure** — 23 MCP tools, REST API with autonomous bidding, webhook subscriptions. No competitor has this.
+2. **Demand Signal Flywheel** — Every failed agent search → logged → feeds AI template generator → creates supply for next query.
+3. **AI Boardroom → Spec Pipeline** — AI Board of Directors analyzes live metrics, generates prioritized strategic resolutions, and produces one-click implementation specs. Strategy runs autonomously.
+4. **AI Operations Swarm** — SEO, Outreach, QA, and Product agents continuously optimize the platform without human intervention.
+5. **Network Effects** — More agents → more demand signals → better templates → more agents. Compounds exponentially.
 
 ---
 
-### 8. Post-Purchase Reviews
-- Buyers can leave a 1–5 star rating and short text review after purchasing
-- Reviews displayed on the listing page with average star rating shown on cards
+### The Ask
+
+- **Raising**: $1M Seed Round
+- **Valuation**: $4.5M pre-money
+- **Dilution**: ~18%
+- **Runway**: 18 months
+- **Gross Margin**: 90%+
 
 ---
 
 ### Pages / Routes
+
 - `/` — Landing / Browse marketplace
 - `/listing/:id` — Listing detail page
 - `/sell` — Create new listing (auth required)
 - `/dashboard` — Seller dashboard (auth required)
 - `/profile` — Buyer's purchase history
-- `/login` & `/signup` — Auth pages
-- `/success` — Post-purchase confirmation & download page
-
+- `/login` — Auth page
+- `/success` — Post-purchase confirmation & download
+- `/pitch` — Investor deck (password-protected)
+- `/boardroom` — AI Board of Directors (admin)
+- `/swarm` — AI Agent Swarm dashboard (admin)
+- `/bounties` — Bounty board
+- `/agents` — Agent API documentation
+- `/developers` — Developer docs
+- `/cloud` — Cloud deployment waitlist

@@ -60,6 +60,7 @@ export function Navbar() {
           <NavItem to="/bounties">Bounties</NavItem>
           <NavItem to="/agents">Agents</NavItem>
           <NavItem to="/developers">Developers</NavItem>
+          <NavItem to="/openclaw">OpenClaw</NavItem>
           {user && (
             <>
               <NavItem to="/sell">Sell</NavItem>
@@ -144,6 +145,7 @@ export function Navbar() {
           <NavItem to="/bounties" onClick={() => setMenuOpen(false)}>Bounties</NavItem>
           <NavItem to="/agents" onClick={() => setMenuOpen(false)}>Agents</NavItem>
           <NavItem to="/developers" onClick={() => setMenuOpen(false)}>Developers</NavItem>
+          <NavItem to="/openclaw" onClick={() => setMenuOpen(false)}>OpenClaw</NavItem>
           {user ? (
             <>
               <NavItem to="/sell" onClick={() => setMenuOpen(false)}>Sell</NavItem>

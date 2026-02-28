@@ -181,9 +181,9 @@ export default function Success() {
             <CheckCircle className="h-10 w-10 text-white" />
           </div>
 
-          <h1 className="text-3xl font-black mb-2 tracking-tight">Welcome aboard! 🎉</h1>
+          <h1 className="text-3xl font-black mb-2 tracking-tight">You own the fork! 🎉</h1>
           <p className="text-muted-foreground mb-6">
-            Your purchase is confirmed — you now own this project forever. Here's what's included.
+            The full source code is yours — fork it, modify it, deploy it anywhere. Here's what's included.
           </p>
 
           {/* Purchase summary card */}
@@ -210,30 +210,65 @@ export default function Success() {
 
           {/* What's included */}
           <div className="rounded-2xl border border-primary/20 bg-primary/5 p-6 mb-6 text-left">
-            <p className="font-bold text-sm uppercase tracking-wider text-primary mb-4">What's included</p>
+            <p className="font-bold text-sm uppercase tracking-wider text-primary mb-4">What you got</p>
             <div className="space-y-4">
               <div className="flex gap-3">
                 <Infinity className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-semibold text-sm">Full source code & lifetime access</p>
-                  <p className="text-xs text-muted-foreground">The code is yours forever — no recurring fees required.</p>
+                  <p className="font-semibold text-sm">Full source code fork</p>
+                  <p className="text-xs text-muted-foreground">Your own copy of the entire codebase — modify, rebrand, and deploy it however you want.</p>
                 </div>
               </div>
               <div className="flex gap-3">
                 <MessageSquare className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-semibold text-sm">Talk directly with the builder</p>
-                  <p className="text-xs text-muted-foreground">Got a question or need help getting started? Message the builder right from opendraft.co.</p>
-                </div>
-              </div>
-              <div className="flex gap-3">
-                <Shield className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-semibold text-sm">Optional support subscription</p>
-                  <p className="text-xs text-muted-foreground">Want ongoing updates, priority support, and custom feature requests? Ask the builder about their support plan.</p>
+                  <p className="font-semibold text-sm">Direct builder access</p>
+                  <p className="text-xs text-muted-foreground">Message the builder for questions, setup help, or custom feature requests.</p>
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* 🔥 Subscription upsell */}
+          <div className="rounded-2xl border-2 border-accent bg-gradient-to-br from-accent/10 to-accent/5 p-6 mb-6 text-left relative overflow-hidden">
+            <div className="absolute top-0 right-0 bg-accent text-accent-foreground text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-bl-xl">
+              Recommended
+            </div>
+            <div className="flex items-center gap-2 mb-3">
+              <RefreshCw className="h-5 w-5 text-accent" />
+              <p className="font-black text-base">Stay up to date</p>
+            </div>
+            <p className="text-sm text-muted-foreground mb-4">
+              Your fork is a snapshot of today's code. The builder keeps shipping new features, bug fixes, and improvements. Subscribe to get:
+            </p>
+            <div className="space-y-2 mb-5">
+              {[
+                "All future updates merged into your fork",
+                "Priority support & bug fixes",
+                "Custom feature requests",
+                "Early access to new modules",
+              ].map((item) => (
+                <div key={item} className="flex items-center gap-2 text-sm">
+                  <span className="h-4 w-4 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
+                    <svg className="h-2.5 w-2.5 text-accent-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </span>
+                  <span className="text-foreground font-medium">{item}</span>
+                </div>
+              ))}
+            </div>
+            {sellerInfo ? (
+              <Button
+                onClick={() => setChatOpen(true)}
+                className="w-full bg-accent text-accent-foreground hover:bg-accent/90 h-11 text-sm font-bold shadow-md"
+              >
+                <MessageSquare className="h-4 w-4 mr-2" />
+                Ask {sellerInfo.sellerUsername} about their maintenance plan
+              </Button>
+            ) : (
+              <p className="text-xs text-muted-foreground text-center">Message the builder from your purchases page to learn about their maintenance plan.</p>
+            )}
           </div>
 
           {/* How to get the most out of it */}

@@ -198,7 +198,8 @@ export default function Checkout() {
         </Link>
 
         <div className="rounded-2xl border border-border bg-card p-8 shadow-card hover:shadow-card-hover transition-shadow duration-500">
-          <h1 className="text-2xl font-black mb-6">Complete your purchase</h1>
+          <h1 className="text-2xl font-black mb-2">Complete your purchase</h1>
+          <p className="text-sm text-muted-foreground mb-6">You're buying a <strong className="text-foreground">full fork of the source code</strong> — it's yours to own, modify, and deploy forever.</p>
 
           {/* Order summary */}
           <div className="rounded-xl border border-border bg-muted/30 p-5 mb-6">
@@ -263,7 +264,7 @@ export default function Checkout() {
 
           {/* What you get */}
           <div className="mb-6 space-y-2">
-            {["Instant delivery after payment", "Lifetime access to the full source code", "One-time payment — no recurring fees", "Optional support subscription available after purchase"].map((item) => (
+            {["Instant delivery — fork the full source code", "Your own copy to modify, brand, and deploy", "One-time payment — no recurring fees", "Optional maintenance subscription for ongoing updates"].map((item) => (
               <div key={item} className="flex items-center gap-2 text-sm text-muted-foreground">
                 <span className="h-4 w-4 rounded-full gradient-hero flex items-center justify-center flex-shrink-0">
                   <svg className="h-2.5 w-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>

@@ -404,8 +404,8 @@ export default function ListingDetail() {
               <div className="mb-5">
                 <div className={`text-4xl font-black mb-0.5 ${isFree ? "text-primary" : ""}`}>{priceLabel}</div>
                 <p className="text-xs text-muted-foreground">
-                  {isFree ? "Free forever · Instant access" : "One-time purchase · Instant delivery"}
-                </p>
+                   {isFree ? "Free forever · Fork the full source code" : "One-time purchase · Fork the full source code"}
+                 </p>
               </div>
 
               {purchased ? (
@@ -473,10 +473,10 @@ export default function ListingDetail() {
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-2">
                     <Link to={user ? `/checkout/${listing.id}` : "/login"} className="col-span-1">
-                      <Button className="w-full gradient-hero text-white border-0 shadow-glow hover:opacity-90 h-12 text-sm sm:text-base font-bold transition-opacity">
-                        <ShoppingCart className="h-4 w-4 mr-1.5 shrink-0" />
-                        <span className="truncate">Buy Now</span>
-                      </Button>
+                     <Button className="w-full gradient-hero text-white border-0 shadow-glow hover:opacity-90 h-12 text-sm sm:text-base font-bold transition-opacity">
+                         <ShoppingCart className="h-4 w-4 mr-1.5 shrink-0" />
+                         <span className="truncate">Buy &amp; Fork</span>
+                       </Button>
                     </Link>
                     <div className="col-span-1">
                       <MakeOfferDialog
@@ -486,7 +486,7 @@ export default function ListingDetail() {
                       />
                     </div>
                   </div>
-                  <p className="text-center text-xs text-muted-foreground font-medium">{priceLabel}</p>
+                  <p className="text-center text-xs text-muted-foreground font-medium">{priceLabel} · You get the full fork</p>
                   <div className="space-y-2">
                     <Button
                       variant="outline"

@@ -6,7 +6,7 @@
     "mcp": {
       "url": "https://api.opendraft.co/mcp",
       "transport": "streamable-http",
-      "tools_count": 23,
+      "tools_count": 26,
       "discovery": "https://opendraft.co/.well-known/mcp.json"
     },
     "rest": {
@@ -21,6 +21,9 @@
     "quick_purchase",
     "headless_checkout",
     "listing_creation",
+    "template_generation",
+    "listing_publish",
+    "cloud_deploy",
     "bounty_fulfillment",
     "webhook_subscriptions",
     "api_key_generation",

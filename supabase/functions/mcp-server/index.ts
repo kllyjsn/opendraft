@@ -156,6 +156,18 @@ const TOOLS: Record<string, { description: string; inputSchema: any }> = {
     description: "Get a payment link without browser redirects. Requires auth.",
     inputSchema: { type: "object", properties: { listing_id: { type: "string" }, offer_id: { type: "string" } }, required: ["listing_id"] },
   },
+  generate_template: {
+    description: "Generate a full React template app from a text prompt. Returns a listing in 'pending' status with source code ZIP. Requires auth with 'write' scope.",
+    inputSchema: { type: "object", properties: { prompt: { type: "string", description: "Describe the app to generate, e.g. 'AI-powered task manager with Kanban board'" }, category: { type: "string", enum: categoryEnum }, price: { type: "number", description: "Price in cents. Default 1500 ($15)" } }, required: ["prompt"] },
+  },
+  publish_listing: {
+    description: "Set a listing you own to 'live' status, making it publicly visible on the marketplace. Requires auth.",
+    inputSchema: { type: "object", properties: { listing_id: { type: "string" } }, required: ["listing_id"] },
+  },
+  deploy_listing: {
+    description: "Deploy a listing's source code to Netlify or Vercel. Requires auth and a personal access token for the target platform.",
+    inputSchema: { type: "object", properties: { listing_id: { type: "string" }, platform: { type: "string", enum: ["netlify", "vercel"] }, token: { type: "string", description: "Personal access token for the deploy platform" } }, required: ["listing_id", "platform", "token"] },
+  },
 };
 
 // ── Tool handlers ─────────────────────────────────────────────────
@@ -502,6 +514,121 @@ async function handleAuthTool(toolName: string, args: any, authHeader?: string):
     return { checkout_url: session.url, listing_title: listing.title, price: `$${(unitAmount / 100).toFixed(2)}`, pricing_type: listing.pricing_type };
   }
 
+  // ── generate_template: AI-powered template generation ──
+  if (toolName === "generate_template") {
+    if (!args.prompt || args.prompt.length < 5) throw new Error("prompt must be at least 5 characters");
+    if (args.prompt.length > 1000) throw new Error("prompt must be under 1000 characters");
+    const admin = getAdmin();
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) throw new Error("AI generation not configured on this server");
+
+    // Create a generation job for tracking
+    const { data: job, error: jobErr } = await admin.from("generation_jobs").insert({
+      user_id: auth.userId, prompt: args.prompt.slice(0, 1000), status: "processing", stage: "analyzing",
+    }).select("id").single();
+    if (jobErr) throw new Error(jobErr.message);
+
+    // Call the generate-template-app edge function internally
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const genRes = await fetch(`${supabaseUrl}/functions/v1/generate-template-app`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${serviceKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        theme: args.prompt,
+        sellerId: auth.userId,
+        jobId: job.id,
+        category: args.category || undefined,
+        price: args.price || 1500,
+      }),
+    });
+
+    if (!genRes.ok) {
+      const errText = await genRes.text();
+      throw new Error(`Generation failed: ${errText}`);
+    }
+
+    const genData = await genRes.json();
+
+    // Log activity
+    await admin.from("activity_log").insert({
+      event_type: "agent_generate_template", user_id: auth.userId,
+      event_data: { prompt: args.prompt, listing_id: genData.listing_id || genData.results?.[0]?.listing_id, job_id: job.id },
+    });
+
+    return {
+      job_id: job.id,
+      listing_id: genData.listing_id || genData.results?.[0]?.listing_id,
+      title: genData.title || genData.results?.[0]?.title,
+      status: "pending",
+      message: "Template generated. Use publish_listing to make it live, then deploy_listing to deploy.",
+    };
+  }
+
+  // ── publish_listing: set listing to live ──
+  if (toolName === "publish_listing") {
+    if (!args.listing_id) throw new Error("listing_id required");
+    const admin = getAdmin();
+    const { data: listing, error: listErr } = await admin.from("listings")
+      .select("id,seller_id,status,title").eq("id", args.listing_id).single();
+    if (listErr || !listing) throw new Error("Listing not found");
+    if (listing.seller_id !== auth.userId) throw new Error("You can only publish your own listings");
+    if (listing.status === "live") return { listing_id: listing.id, status: "live", message: "Already live." };
+
+    const { error: updateErr } = await admin.from("listings")
+      .update({ status: "live", updated_at: new Date().toISOString() })
+      .eq("id", args.listing_id);
+    if (updateErr) throw new Error(updateErr.message);
+
+    await admin.from("activity_log").insert({
+      event_type: "agent_publish_listing", user_id: auth.userId,
+      event_data: { listing_id: args.listing_id, title: listing.title },
+    });
+
+    return {
+      listing_id: listing.id, title: listing.title, status: "live",
+      url: `https://opendraft.lovable.app/listing/${listing.id}`,
+      message: "Listing is now live on the marketplace.",
+    };
+  }
+
+  // ── deploy_listing: deploy to Netlify or Vercel ──
+  if (toolName === "deploy_listing") {
+    if (!args.listing_id || !args.platform || !args.token) throw new Error("listing_id, platform, and token required");
+    if (!["netlify", "vercel"].includes(args.platform)) throw new Error("platform must be 'netlify' or 'vercel'");
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const functionName = args.platform === "netlify" ? "deploy-to-netlify" : "deploy-to-vercel";
+    const tokenKey = args.platform === "netlify" ? "netlifyToken" : "vercelToken";
+
+    // Call the deploy edge function with the user's auth
+    const deployRes = await fetch(`${supabaseUrl}/functions/v1/${functionName}`, {
+      method: "POST",
+      headers: {
+        "Authorization": authHeader || `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ listingId: args.listing_id, [tokenKey]: args.token }),
+    });
+
+    const deployData = await deployRes.json();
+    if (!deployRes.ok || deployData.error) {
+      throw new Error(deployData.error || `Deploy failed (${deployRes.status})`);
+    }
+
+    return {
+      listing_id: args.listing_id,
+      platform: args.platform,
+      site_url: deployData.siteUrl || deployData.deployUrl,
+      admin_url: deployData.adminUrl,
+      method: deployData.method,
+      message: `Successfully deployed to ${args.platform}. Site: ${deployData.siteUrl || deployData.deployUrl}`,
+    };
+  }
+
   throw new Error(`Unknown tool: ${toolName}`);
 }
 
@@ -518,8 +645,8 @@ const CORS = {
 app.options("/*", (c) => new Response(null, { headers: CORS }));
 
 app.get("/*", (c) => c.json({
-  name: "opendraft-marketplace", version: "3.1.0", protocol: "MCP", transport: "Streamable HTTP",
-  description: "OpenDraft — the #1 app store for AI agents. 23 tools.",
+  name: "opendraft-marketplace", version: "3.2.0", protocol: "MCP", transport: "Streamable HTTP",
+  description: "OpenDraft — the #1 app store for AI agents. 26 tools: search, buy, generate, publish, deploy.",
   tools: Object.keys(TOOLS),
   documentation: "https://opendraft.co/developers",
 }, 200, CORS));
@@ -535,7 +662,7 @@ app.post("/*", async (c) => {
       result: {
         protocolVersion: "2024-11-05",
         capabilities: { tools: { listChanged: false } },
-        serverInfo: { name: "opendraft-marketplace", version: "3.1.0" },
+        serverInfo: { name: "opendraft-marketplace", version: "3.2.0" },
       },
     }, 200, CORS);
   }

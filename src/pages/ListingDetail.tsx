@@ -6,7 +6,8 @@ import { Footer } from "@/components/Footer";
 import { CompletenessBadge } from "@/components/CompletenessBadge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { ExternalLink, Github, Star, ShoppingCart, ChevronLeft, ChevronRight, Download, Eye, Package, Gift, MessageSquare, GitFork, RefreshCw, Wrench, Shield, Infinity, Rocket, Triangle } from "lucide-react";
+import { ExternalLink, Github, Star, ShoppingCart, ChevronLeft, Download, Eye, Package, Gift, MessageSquare, GitFork, RefreshCw, Wrench, Shield, Infinity, Rocket, Triangle } from "lucide-react";
+import { ImageGallery } from "@/components/ImageGallery";
 import { DeployToNetlify } from "@/components/DeployToNetlify";
 import { DeployToVercel } from "@/components/DeployToVercel";
 import { useToast } from "@/hooks/use-toast";
@@ -70,7 +71,7 @@ export default function ListingDetail() {
   const [listing, setListing] = useState<Listing | null>(null);
   const [seller, setSeller] = useState<Profile | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
-  const [activeImg, setActiveImg] = useState(0);
+  
   const [loading, setLoading] = useState(true);
   const [purchased, setPurchased] = useState(false);
   const [downloading, setDownloading] = useState(false);
@@ -345,62 +346,7 @@ export default function ListingDetail() {
           <div className="lg:col-span-2 space-y-8">
 
             {/* Image gallery */}
-            {listing.screenshots.length > 0 ? (
-              <div className="space-y-3">
-                <div className="relative rounded-2xl overflow-hidden bg-muted aspect-video ring-1 ring-border/40 shadow-card group/gallery">
-                  <img
-                    src={listing.screenshots[activeImg]}
-                    alt={`Screenshot ${activeImg + 1}`}
-                    className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover/gallery:scale-[1.02]"
-                  />
-                  {listing.screenshots.length > 1 && (
-                    <>
-                      <button
-                        onClick={() => setActiveImg((i) => (i - 1 + listing.screenshots.length) % listing.screenshots.length)}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-black/50 text-white flex items-center justify-center backdrop-blur-md hover:bg-black/70 transition-all duration-200 border border-white/10 opacity-0 group-hover/gallery:opacity-100 hover:scale-110"
-                      >
-                        <ChevronLeft className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => setActiveImg((i) => (i + 1) % listing.screenshots.length)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-black/50 text-white flex items-center justify-center backdrop-blur-md hover:bg-black/70 transition-all duration-200 border border-white/10 opacity-0 group-hover/gallery:opacity-100 hover:scale-110"
-                      >
-                        <ChevronRight className="h-4 w-4" />
-                      </button>
-                      {/* Slide dots */}
-                      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-                        {listing.screenshots.map((_, i) => (
-                          <button
-                            key={i}
-                            onClick={() => setActiveImg(i)}
-                            className={`h-1.5 rounded-full transition-all duration-300 ${activeImg === i ? "w-5 bg-white" : "w-1.5 bg-white/50"}`}
-                          />
-                        ))}
-                      </div>
-                    </>
-                  )}
-                </div>
-                {listing.screenshots.length > 1 && (
-                  <div className="flex gap-2 overflow-x-auto pb-1">
-                    {listing.screenshots.map((src, i) => (
-                      <button
-                        key={i}
-                        onClick={() => setActiveImg(i)}
-                        className={`flex-shrink-0 h-16 w-24 rounded-xl overflow-hidden border-2 transition-all ${
-                          activeImg === i ? "border-primary shadow-glow" : "border-transparent opacity-50 hover:opacity-80"
-                        }`}
-                      >
-                        <img src={src} alt={`Thumb ${i}`} className="w-full h-full object-cover" />
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="rounded-2xl aspect-video gradient-hero opacity-40 flex items-center justify-center ring-1 ring-border/40">
-                <span className="text-6xl">⚡</span>
-              </div>
-            )}
+            <ImageGallery images={listing.screenshots} title={listing.title} />
 
             {/* Title + meta */}
             <div className="space-y-3">

@@ -98,14 +98,24 @@ export default function EditListing() {
     setTechInput("");
   }
 
-  async function uploadScreenshot(file: File) {
+  async function uploadScreenshots(files: FileList) {
     if (!user) return;
     setUploadingScreenshot(true);
-    const path = `${user.id}/${Date.now()}-${file.name}`;
-    const { data, error } = await supabase.storage.from("listing-screenshots").upload(path, file, { upsert: true });
-    if (!error && data) {
-      const { data: urlData } = supabase.storage.from("listing-screenshots").getPublicUrl(data.path);
-      update("screenshots", [...form.screenshots, urlData.publicUrl]);
+    const remaining = 10 - form.screenshots.length;
+    const toUpload = Array.from(files).slice(0, remaining);
+    const newUrls: string[] = [];
+
+    for (const file of toUpload) {
+      const path = `${user.id}/${Date.now()}-${file.name}`;
+      const { data, error } = await supabase.storage.from("listing-screenshots").upload(path, file, { upsert: true });
+      if (!error && data) {
+        const { data: urlData } = supabase.storage.from("listing-screenshots").getPublicUrl(data.path);
+        newUrls.push(urlData.publicUrl);
+      }
+    }
+    if (newUrls.length) {
+      update("screenshots", [...form.screenshots, ...newUrls]);
+      toast({ title: `${newUrls.length} image${newUrls.length > 1 ? "s" : ""} uploaded ✓` });
     }
     setUploadingScreenshot(false);
   }
@@ -313,28 +323,29 @@ export default function EditListing() {
             </div>
           </div>
 
-          {/* Screenshots */}
+          {/* Screenshots — bulk upload */}
           <div>
-            <label className="block text-sm font-semibold mb-1.5">Screenshots</label>
+            <label className="block text-sm font-semibold mb-1.5">Screenshots (up to 10)</label>
             <div className="flex flex-wrap gap-3 mb-3">
               {form.screenshots.map((src, i) => (
-                <div key={i} className="relative h-24 w-36 rounded-lg overflow-hidden">
+                <div key={i} className="relative h-24 w-36 rounded-lg overflow-hidden group">
                   <img src={src} alt={`Screenshot ${i + 1}`} className="w-full h-full object-cover" />
                   <button
                     onClick={() => update("screenshots", form.screenshots.filter((_, idx) => idx !== i))}
-                    className="absolute top-1 right-1 h-5 w-5 rounded-full bg-black/60 text-white flex items-center justify-center"
+                    className="absolute top-1 right-1 h-5 w-5 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                   >
                     <X className="h-3 w-3" />
                   </button>
                 </div>
               ))}
-              {form.screenshots.length < 5 && (
+              {form.screenshots.length < 10 && (
                 <label className="h-24 w-36 rounded-lg border-2 border-dashed border-border hover:border-primary flex flex-col items-center justify-center cursor-pointer transition-colors text-muted-foreground hover:text-primary">
-                  {uploadingScreenshot ? <div className="h-5 w-5 rounded-full border-2 border-primary border-t-transparent animate-spin" /> : <><Upload className="h-5 w-5 mb-1" /><span className="text-xs">Upload</span></>}
-                  <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && uploadScreenshot(e.target.files[0])} />
+                  {uploadingScreenshot ? <div className="h-5 w-5 rounded-full border-2 border-primary border-t-transparent animate-spin" /> : <><Upload className="h-5 w-5 mb-1" /><span className="text-xs">Upload images</span></>}
+                  <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => e.target.files?.length && uploadScreenshots(e.target.files)} />
                 </label>
               )}
             </div>
+            <p className="text-xs text-muted-foreground">{form.screenshots.length}/10 — Select multiple files at once</p>
           </div>
 
           {/* ZIP */}

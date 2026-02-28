@@ -161,43 +161,144 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 `,
 };
 
-const THEME_POOL = [
+const THEME_POOL_FALLBACK = [
   "AI-powered writing assistant with grammar scoring",
   "SaaS analytics dashboard with real-time charts",
   "Kanban board with drag-and-drop and swimlanes",
   "Personal finance tracker with spending heatmaps",
   "Recipe discovery platform with dietary filters",
-  "Fitness workout planner with progress rings",
-  "Social media content calendar with preview cards",
-  "Customer support ticketing system with priority queues",
-  "Interactive e-learning course platform with quizzes",
-  "Real estate listing browser with map view",
-  "Podcast player with waveform visualization",
-  "Job board with applicant pipeline tracker",
-  "Habit tracker with streak flames and gamification",
-  "Team collaboration whiteboard with sticky notes",
-  "Invoice generator with PDF export preview",
-  "Weather dashboard with animated forecast cards",
-  "Travel itinerary planner with timeline view",
-  "Crypto portfolio tracker with sparkline charts",
-  "Restaurant reservation system with table layout",
-  "Event management platform with ticket tiers",
-  "AI chatbot builder with conversation flow designer",
-  "Email newsletter editor with drag-and-drop blocks",
-  "Inventory management with barcode scanner UI",
-  "Code snippet library with syntax highlighting",
-  "Video conferencing landing page with pricing tiers",
-  "Music streaming player with equalizer animation",
-  "Online marketplace storefront with cart drawer",
-  "Health and wellness dashboard with mood tracker",
-  "Workflow automation builder with node graph",
-  "Blog CMS admin panel with rich text editor",
-  "AI image prompt gallery with style filters",
-  "Startup pitch deck builder with slide editor",
-  "Developer portfolio with project showcase cards",
-  "SaaS pricing page with toggle and comparison table",
-  "AI meeting notes summarizer with action items",
 ];
+
+/**
+ * Fetch live trending themes from Reddit, Hacker News, Product Hunt
+ * via Firecrawl search, then let AI distill them into buildable app ideas.
+ */
+async function fetchTrendValidatedThemes(
+  count: number,
+  LOVABLE_API_KEY: string,
+  existingTitles: string[],
+  FIRECRAWL_API_KEY?: string
+): Promise<string[]> {
+  const trendSnippets: string[] = [];
+
+  if (FIRECRAWL_API_KEY) {
+    console.log("Fetching live trends for template theme generation...");
+    const searches = [
+      "trending AI SaaS tools launching 2026 site:producthunt.com",
+      "Show HN trending projects this week site:news.ycombinator.com",
+      "trending developer tools micro-SaaS ideas site:reddit.com",
+      "viral web app ideas indie hackers 2026",
+      "MCP server AI agent tools trending 2026",
+      "most requested SaaS templates developers need",
+    ];
+
+    const results = await Promise.allSettled(
+      searches.map(async (q) => {
+        try {
+          const resp = await fetch("https://api.firecrawl.dev/v1/search", {
+            method: "POST",
+            headers: { Authorization: \`Bearer \${FIRECRAWL_API_KEY}\`, "Content-Type": "application/json" },
+            body: JSON.stringify({ query: q, limit: 5, tbs: "qdr:w" }),
+          });
+          if (!resp.ok) return null;
+          const data = await resp.json();
+          return (data?.data || [])
+            .map((r: any) => \`- \${r.title}: \${r.description || ""}\`)
+            .join("\\n")
+            .slice(0, 1200);
+        } catch { return null; }
+      })
+    );
+
+    for (const r of results) {
+      if (r.status === "fulfilled" && r.value) trendSnippets.push(r.value);
+    }
+    console.log(\`Gathered \${trendSnippets.length} trend snippets for theme distillation\`);
+  }
+
+  if (trendSnippets.length === 0) {
+    console.log("No trend data available, falling back to static pool");
+    const shuffled = [...THEME_POOL_FALLBACK].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, count);
+  }
+
+  // Use AI to distill trends into specific, creative app themes
+  const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: { Authorization: \`Bearer \${LOVABLE_API_KEY}\`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "google/gemini-3-flash-preview",
+      messages: [
+        {
+          role: "system",
+          content: \`You distill internet trends into highly specific, creative web app ideas that developers would pay for. Each idea should be:
+- Inspired by a REAL trend you see in the data
+- Specific enough to build (not "CRM" but "CRM for freelance videographers with project-based invoicing")
+- Diverse across categories (SaaS, AI, utility, agent tool, dashboard, landing page)
+- At least 30% should be agent-first (MCP servers, API tools, autonomous workflow builders)
+- NEVER generic — each must have a unique angle
+- Reference the trend that inspired it\`
+        },
+        {
+          role: "user",
+          content: \`Based on these LIVE internet trends from this week, generate exactly \${count} specific app ideas.
+
+TRENDS:
+\${trendSnippets.join("\\n\\n")}
+
+AVOID DUPLICATING THESE EXISTING APPS:
+\${existingTitles.slice(0, 30).join(", ") || "None"}
+
+Return exactly \${count} ideas, each as a single descriptive sentence like "AI-powered code review dashboard that scores PRs on maintainability and suggests refactors" — NOT just "Code Review Tool".\`
+        },
+      ],
+      tools: [{
+        type: "function",
+        function: {
+          name: "return_themes",
+          description: "Return the distilled app themes",
+          parameters: {
+            type: "object",
+            properties: {
+              themes: {
+                type: "array",
+                items: { type: "string", description: "A specific, creative app idea in one sentence" },
+                description: \`Exactly \${count} trend-validated app themes\`
+              }
+            },
+            required: ["themes"],
+            additionalProperties: false
+          }
+        }
+      }],
+      tool_choice: { type: "function", function: { name: "return_themes" } },
+    }),
+  });
+
+  if (!aiResp.ok) {
+    console.error("Theme distillation AI call failed, falling back");
+    const shuffled = [...THEME_POOL_FALLBACK].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, count);
+  }
+
+  const aiData = await aiResp.json();
+  const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
+  if (!toolCall) {
+    const shuffled = [...THEME_POOL_FALLBACK].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, count);
+  }
+
+  const parsed = JSON.parse(toolCall.function.arguments || '{"themes":[]}');
+  const themes: string[] = parsed.themes || [];
+
+  if (themes.length === 0) {
+    const shuffled = [...THEME_POOL_FALLBACK].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, count);
+  }
+
+  console.log("Trend-validated themes:", themes);
+  return themes.slice(0, count);
+}
 
 async function gatherDemandSignals(
   supabase: ReturnType<typeof createClient>
@@ -810,19 +911,21 @@ serve(async (req) => {
     }
     const demandContext = demandParts.length > 0 ? demandParts.join("\n\n") : undefined;
 
-    const selectedThemes: string[] = [];
-    const usedIndices = new Set<number>();
-    for (let i = 0; i < count; i++) {
-      if (themes[i]) {
-        selectedThemes.push(themes[i]);
-      } else {
-        let idx: number;
-        do {
-          idx = Math.floor(Math.random() * THEME_POOL.length);
-        } while (usedIndices.has(idx) && usedIndices.size < THEME_POOL.length);
-        usedIndices.add(idx);
-        selectedThemes.push(THEME_POOL[idx]);
-      }
+    // Use live trend research to generate themes when admin doesn't specify
+    let selectedThemes: string[];
+    if (themes.length >= count) {
+      selectedThemes = themes.slice(0, count);
+    } else {
+      const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY");
+      const neededCount = count - themes.length;
+      console.log(`Fetching ${neededCount} trend-validated themes from live internet data...`);
+      const trendThemes = await fetchTrendValidatedThemes(
+        neededCount,
+        LOVABLE_API_KEY,
+        signals.existingTitles,
+        FIRECRAWL_API_KEY || undefined
+      );
+      selectedThemes = [...themes, ...trendThemes];
     }
 
     // Run all templates in parallel to avoid edge function timeout

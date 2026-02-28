@@ -13,6 +13,7 @@ import { BuildSearch } from "@/components/BuildSearch";
 import { HeroStats } from "@/components/HeroStats";
 import { SocialProof } from "@/components/SocialProof";
 import { FeaturedListings } from "@/components/FeaturedListings";
+import { FeaturedCarousel } from "@/components/FeaturedCarousel";
 import { HowItWorks } from "@/components/HowItWorks";
 import { TrendingBuilders } from "@/components/TrendingBuilders";
 import { CategoryShowcase } from "@/components/CategoryShowcase";
@@ -242,7 +243,12 @@ export default function Index() {
         <HowItWorks />
       </motion.div>
 
-      {/* ── FEATURED ── */}
+      {/* ── FEATURED CAROUSEL (purchased listings) ── */}
+      <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}>
+        <FeaturedCarousel />
+      </motion.div>
+
+      {/* ── TRENDING ── */}
       <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}>
         <FeaturedListings />
       </motion.div>

@@ -1092,6 +1092,24 @@ export type Database = {
       }
     }
     Functions: {
+      get_featured_listings: {
+        Args: never
+        Returns: {
+          built_with: string
+          completeness_badge: Database["public"]["Enums"]["completeness_badge"]
+          description: string
+          id: string
+          price: number
+          pricing_type: Database["public"]["Enums"]["pricing_type"]
+          purchase_count: number
+          sales_count: number
+          screenshots: string[]
+          seller_id: string
+          tech_stack: string[]
+          title: string
+          view_count: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

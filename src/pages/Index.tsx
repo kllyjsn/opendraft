@@ -203,12 +203,12 @@ export default function Index() {
             </motion.div>
 
             <motion.h1 variants={fadeUp} custom={1} className="text-5xl md:text-8xl font-black tracking-tighter mb-5 md:mb-6 leading-[0.95]">
-              Buy the fork.
+              Create anything.
               <br />
               <span className="text-gradient animate-gradient-shift inline-block"
                 style={{ backgroundImage: 'linear-gradient(135deg, hsl(265 85% 58%), hsl(330 90% 60%), hsl(185 90% 45%), hsl(265 85% 58%))', backgroundSize: '200% 200%' }}
               >
-                Own the code.
+                Ship today.
               </span>
             </motion.h1>
 
@@ -217,8 +217,8 @@ export default function Index() {
             </motion.div>
 
             <motion.p variants={fadeUp} custom={3} className="text-sm md:text-lg text-muted-foreground max-w-lg mx-auto mb-10 md:mb-12 leading-relaxed">
-              Browse AI-built apps, fork the source code, and launch today.
-              <span className="text-foreground font-medium"> Subscribe for ongoing updates from the builder.</span>
+              Describe what you want to build — or fork an existing app and make it yours.
+              <span className="text-foreground font-medium"> Buy the code. Subscribe for updates.</span>
             </motion.p>
 
             <motion.div variants={fadeUp} custom={3}>

@@ -193,44 +193,18 @@ serve(async (req) => {
       });
     }
 
-    // Poll deploy state briefly so users don't open a still-empty build URL immediately
-    let deployState = "unknown";
-    for (let attempt = 0; attempt < 8; attempt++) {
-      const statusRes = await fetch(`https://api.netlify.com/api/v1/sites/${siteId}/deploys/${deployId}`, {
-        headers: { Authorization: `Bearer ${netlifyToken}` },
-      });
-
-      if (statusRes.ok) {
-        const statusData = await statusRes.json();
-        deployState = statusData.state || "unknown";
-
-        if (deployState === "ready") break;
-        if (deployState === "error" || deployState === "failed") {
-          return new Response(JSON.stringify({ error: "Netlify build failed. Check build logs in Netlify dashboard." }), {
-            status: 500,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
-      } else {
-        await statusRes.text();
-      }
-
-      if (attempt < 7) {
-        await new Promise((resolve) => setTimeout(resolve, 2500));
-      }
-    }
-
+    // Return immediately — frontend will poll status via check-netlify-deploy
     await supabase.from("activity_log").insert({
       event_type: "netlify_deploy",
       user_id: user.id,
-      event_data: { listing_id: listingId, site_url: siteUrl, site_id: siteId, deploy_id: deployId, deploy_state: deployState },
+      event_data: { listing_id: listingId, site_url: siteUrl, site_id: siteId, deploy_id: deployId },
     });
 
     return new Response(JSON.stringify({
       success: true, siteUrl, siteId, deployId,
       adminUrl: `https://app.netlify.com/sites/${siteData.name}`,
       method: "source_build",
-      deployState,
+      deployState: "building",
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
     console.error("deploy-to-netlify error:", e);

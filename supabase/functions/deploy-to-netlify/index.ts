@@ -119,8 +119,11 @@ serve(async (req) => {
       const content = await entry.async("uint8array");
       cleanZip.file(relativePath, content);
     }
-    // Add Netlify SPA redirect
-    cleanZip.file("_redirects", "/*    /index.html   200\n");
+    // Add Netlify SPA redirects (root + public for built output)
+    const spaRedirect = "/*    /index.html   200\n";
+    cleanZip.file("_redirects", spaRedirect);
+    cleanZip.file("public/_redirects", spaRedirect);
+
     // Add netlify.toml for build settings
     cleanZip.file("netlify.toml", `[build]
   command = "npm install && npm run build"
@@ -163,33 +166,71 @@ serve(async (req) => {
     const siteId = siteData.id;
     const siteUrl = siteData.ssl_url || siteData.url;
 
-    // Deploy the source ZIP — Netlify will use netlify.toml to build
-    const deployRes = await fetch(`https://api.netlify.com/api/v1/sites/${siteId}/deploys`, {
+    // Trigger a Netlify BUILD from source ZIP (not a static zip deploy)
+    const buildForm = new FormData();
+    buildForm.append("zip", new Blob([cleanZipBlob], { type: "application/zip" }), "source.zip");
+
+    const deployRes = await fetch(`https://api.netlify.com/api/v1/sites/${siteId}/builds`, {
       method: "POST",
-      headers: { Authorization: `Bearer ${netlifyToken}`, "Content-Type": "application/zip" },
-      body: cleanZipBlob,
+      headers: { Authorization: `Bearer ${netlifyToken}` },
+      body: buildForm,
     });
 
     if (!deployRes.ok) {
       const errText = await deployRes.text();
-      console.error("Netlify deploy error:", deployRes.status, errText);
-      return new Response(JSON.stringify({ error: "Failed to deploy to Netlify" }), {
+      console.error("Netlify build trigger error:", deployRes.status, errText);
+      return new Response(JSON.stringify({ error: "Failed to trigger Netlify build" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const deployData = await deployRes.json();
+    const deployId = deployData.deploy_id || deployData.id;
+
+    if (!deployId) {
+      return new Response(JSON.stringify({ error: "Netlify build started but no deploy ID was returned" }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Poll deploy state briefly so users don't open a still-empty build URL immediately
+    let deployState = "unknown";
+    for (let attempt = 0; attempt < 8; attempt++) {
+      const statusRes = await fetch(`https://api.netlify.com/api/v1/sites/${siteId}/deploys/${deployId}`, {
+        headers: { Authorization: `Bearer ${netlifyToken}` },
+      });
+
+      if (statusRes.ok) {
+        const statusData = await statusRes.json();
+        deployState = statusData.state || "unknown";
+
+        if (deployState === "ready") break;
+        if (deployState === "error" || deployState === "failed") {
+          return new Response(JSON.stringify({ error: "Netlify build failed. Check build logs in Netlify dashboard." }), {
+            status: 500,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      } else {
+        await statusRes.text();
+      }
+
+      if (attempt < 7) {
+        await new Promise((resolve) => setTimeout(resolve, 2500));
+      }
+    }
 
     await supabase.from("activity_log").insert({
       event_type: "netlify_deploy",
       user_id: user.id,
-      event_data: { listing_id: listingId, site_url: siteUrl, site_id: siteId, deploy_id: deployData.id },
+      event_data: { listing_id: listingId, site_url: siteUrl, site_id: siteId, deploy_id: deployId, deploy_state: deployState },
     });
 
     return new Response(JSON.stringify({
-      success: true, siteUrl, siteId, deployId: deployData.id,
+      success: true, siteUrl, siteId, deployId,
       adminUrl: `https://app.netlify.com/sites/${siteData.name}`,
-      method: "source_deploy",
+      method: "source_build",
+      deployState,
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
     console.error("deploy-to-netlify error:", e);

@@ -92,6 +92,7 @@ export default function SwarmPage() {
   const [loading, setLoading] = useState(true);
   const [runningAgent, setRunningAgent] = useState<string | null>(null);
   const [deployingId, setDeployingId] = useState<string | null>(null);
+  const [deployResults, setDeployResults] = useState<Record<string, { status: string; taskId?: string; result?: any; error?: string }>>({});
 
   useEffect(() => {
     if (!adminLoading && !isAdmin) navigate("/");
@@ -137,6 +138,7 @@ export default function SwarmPage() {
   const deploySuggestion = async (suggestion: any, category: string, sourceTaskId: string) => {
     const deployKey = `${sourceTaskId}-${suggestion.title || suggestion.feature || suggestion.listing_title || Math.random()}`;
     setDeployingId(deployKey);
+    setDeployResults(prev => ({ ...prev, [deployKey]: { status: "generating" } }));
     toast.info("🚀 Generating implementation code...");
 
     try {
@@ -145,13 +147,104 @@ export default function SwarmPage() {
       });
 
       if (error) throw error;
-      toast.success("✅ Code generated! Check the Deploy Suggestions tab.");
+
+      const taskId = data?.task_id;
+      const result = data?.result;
+
+      if (!taskId) throw new Error("No task ID returned");
+
+      // Check if the result has actual code changes
+      if (result?.changes && result.changes.length > 0) {
+        setDeployResults(prev => ({
+          ...prev,
+          [deployKey]: { status: "completed", taskId, result },
+        }));
+        toast.success(`✅ Generated ${result.changes.length} code changes (${result.risk_level} risk)`);
+      } else if (result?.error) {
+        setDeployResults(prev => ({
+          ...prev,
+          [deployKey]: { status: "failed", taskId, error: result.error },
+        }));
+        toast.error(`❌ Code generation returned error: ${result.error}`);
+      } else {
+        // Poll for completion if result is not immediately available
+        setDeployResults(prev => ({
+          ...prev,
+          [deployKey]: { status: "polling", taskId },
+        }));
+        pollDeployTask(taskId, deployKey);
+      }
+
       fetchTasks();
     } catch (e: any) {
+      setDeployResults(prev => ({
+        ...prev,
+        [deployKey]: { status: "failed", error: e.message },
+      }));
       toast.error(`❌ Code generation failed: ${e.message}`);
     } finally {
       setDeployingId(null);
     }
+  };
+
+  const pollDeployTask = async (taskId: string, deployKey: string) => {
+    let attempts = 0;
+    const maxAttempts = 20;
+    const interval = 3000;
+
+    const poll = async () => {
+      attempts++;
+      const { data } = await supabase
+        .from("swarm_tasks")
+        .select("status, output, error")
+        .eq("id", taskId)
+        .single();
+
+      if (!data) return;
+
+      if (data.status === "completed") {
+        const result = data.output as any;
+        const hasChanges = result?.changes && result.changes.length > 0;
+        setDeployResults(prev => ({
+          ...prev,
+          [deployKey]: {
+            status: hasChanges ? "completed" : "empty",
+            taskId,
+            result,
+            error: hasChanges ? undefined : "No code changes generated",
+          },
+        }));
+        if (hasChanges) {
+          toast.success(`✅ Generated ${result.changes.length} code changes`);
+        } else {
+          toast.warning("⚠️ Agent completed but generated no code changes");
+        }
+        fetchTasks();
+        return;
+      }
+
+      if (data.status === "failed") {
+        setDeployResults(prev => ({
+          ...prev,
+          [deployKey]: { status: "failed", taskId, error: data.error || "Unknown error" },
+        }));
+        toast.error(`❌ Code generation failed: ${data.error}`);
+        fetchTasks();
+        return;
+      }
+
+      if (attempts < maxAttempts) {
+        setTimeout(poll, interval);
+      } else {
+        setDeployResults(prev => ({
+          ...prev,
+          [deployKey]: { status: "timeout", taskId, error: "Timed out waiting for code generation" },
+        }));
+        toast.error("⏰ Code generation timed out");
+      }
+    };
+
+    setTimeout(poll, interval);
   };
 
   const tasksByType = (type: string) => tasks.filter(t => t.agent_type === type);
@@ -258,7 +351,7 @@ export default function SwarmPage() {
             {tasksByType("product_improvement").length === 0 ? (
               <EmptyState text="No product improvement runs yet." />
             ) : tasksByType("product_improvement").map(task => (
-              <ProductTaskCard key={task.id} task={task} onDeploy={deploySuggestion} deployingId={deployingId} />
+              <ProductTaskCard key={task.id} task={task} onDeploy={deploySuggestion} deployingId={deployingId} deployResults={deployResults} />
             ))}
           </TabsContent>
 
@@ -266,7 +359,7 @@ export default function SwarmPage() {
             {tasksByType("qa_testing").length === 0 ? (
               <EmptyState text="No QA runs yet." />
             ) : tasksByType("qa_testing").map(task => (
-              <QATaskCard key={task.id} task={task} onDeploy={deploySuggestion} deployingId={deployingId} />
+              <QATaskCard key={task.id} task={task} onDeploy={deploySuggestion} deployingId={deployingId} deployResults={deployResults} />
             ))}
           </TabsContent>
 
@@ -311,7 +404,7 @@ function EmptyState({ text }: { text: string }) {
 }
 
 /* ---- Product Improvement Task Card ---- */
-function ProductTaskCard({ task, onDeploy, deployingId }: { task: SwarmTask; onDeploy: (s: any, cat: string, taskId: string) => void; deployingId: string | null }) {
+function ProductTaskCard({ task, onDeploy, deployingId, deployResults }: { task: SwarmTask; onDeploy: (s: any, cat: string, taskId: string) => void; deployingId: string | null; deployResults: Record<string, { status: string; taskId?: string; result?: any; error?: string }> }) {
   const [expanded, setExpanded] = useState(false);
   const output = task.output;
 
@@ -350,6 +443,7 @@ function ProductTaskCard({ task, onDeploy, deployingId }: { task: SwarmTask; onD
               taskId={task.id}
               onDeploy={onDeploy}
               deployingId={deployingId}
+              deployResults={deployResults}
             />
           ))}
           {!output && !task.error && <p className="text-xs text-muted-foreground">No output yet.</p>}
@@ -360,7 +454,7 @@ function ProductTaskCard({ task, onDeploy, deployingId }: { task: SwarmTask; onD
 }
 
 /* ---- QA Task Card ---- */
-function QATaskCard({ task, onDeploy, deployingId }: { task: SwarmTask; onDeploy: (s: any, cat: string, taskId: string) => void; deployingId: string | null }) {
+function QATaskCard({ task, onDeploy, deployingId, deployResults }: { task: SwarmTask; onDeploy: (s: any, cat: string, taskId: string) => void; deployingId: string | null; deployResults: Record<string, { status: string; taskId?: string; result?: any; error?: string }> }) {
   const [expanded, setExpanded] = useState(false);
   const output = task.output;
   const summary = output?.summary;
@@ -417,21 +511,30 @@ function QATaskCard({ task, onDeploy, deployingId }: { task: SwarmTask; onDeploy
               <p className="text-sm font-medium">{f.title}</p>
               <p className="text-xs opacity-80">{f.description}</p>
               {f.affected_items && <p className="text-[10px] opacity-60">Affected: {f.affected_items}</p>}
-              {f.implementation && f.severity !== "pass" && (
-                <div className="flex items-center gap-2 pt-1">
-                  <p className="text-[10px] opacity-70 flex-1 font-mono">{f.implementation.slice(0, 120)}…</p>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="text-[10px] h-7 gap-1"
-                    onClick={() => onDeploy(f, f.category, task.id)}
-                    disabled={deployingId !== null}
-                  >
-                    {deployingId ? <Loader2 className="h-3 w-3 animate-spin" /> : <Rocket className="h-3 w-3" />}
-                    Deploy Fix
-                  </Button>
-                </div>
-              )}
+              {f.implementation && f.severity !== "pass" && (() => {
+                const deployKey = `${task.id}-${f.title || f.feature || f.listing_title || ""}`;
+                const deployState = deployResults[deployKey];
+                return (
+                  <div className="space-y-2 pt-1">
+                    <div className="flex items-center gap-2">
+                      <p className="text-[10px] opacity-70 flex-1 font-mono">{f.implementation.slice(0, 120)}…</p>
+                      {!deployState || deployState.status === "failed" || deployState.status === "timeout" ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-[10px] h-7 gap-1"
+                          onClick={() => onDeploy(f, f.category, task.id)}
+                          disabled={deployingId !== null}
+                        >
+                          {deployingId ? <Loader2 className="h-3 w-3 animate-spin" /> : <Rocket className="h-3 w-3" />}
+                          {deployState?.status === "failed" ? "Retry" : "Deploy Fix"}
+                        </Button>
+                      ) : null}
+                    </div>
+                    <DeployStatusBadge state={deployState} />
+                  </div>
+                );
+              })()}
             </div>
           ))}
         </CardContent>
@@ -441,17 +544,20 @@ function QATaskCard({ task, onDeploy, deployingId }: { task: SwarmTask; onDeploy
 }
 
 /* ---- Suggestion Card with Deploy Button ---- */
-function SuggestionCard({ suggestion, category, taskId, onDeploy, deployingId }: {
+function SuggestionCard({ suggestion, category, taskId, onDeploy, deployingId, deployResults }: {
   suggestion: any;
   category: string;
   taskId: string;
   onDeploy: (s: any, cat: string, taskId: string) => void;
   deployingId: string | null;
+  deployResults: Record<string, { status: string; taskId?: string; result?: any; error?: string }>;
 }) {
   const title = suggestion.listing_title || suggestion.page_or_listing || suggestion.area || suggestion.feature || "Suggestion";
   const severity = suggestion.severity || suggestion.priority || "medium";
   const desc = suggestion.issue || suggestion.gap || suggestion.description || suggestion.rationale || "";
   const fix = suggestion.suggestion || suggestion.fix || "";
+  const deployKey = `${taskId}-${suggestion.title || suggestion.feature || suggestion.listing_title || ""}`;
+  const deployState = deployResults[deployKey];
 
   return (
     <div className={cn("rounded-lg border p-3 space-y-2", severityColor(severity))}>
@@ -464,22 +570,89 @@ function SuggestionCard({ suggestion, category, taskId, onDeploy, deployingId }:
       {desc && <p className="text-xs opacity-80">{desc}</p>}
       {fix && <p className="text-xs opacity-70">→ {fix}</p>}
       {suggestion.implementation && (
-        <div className="flex items-center gap-2 pt-1">
-          <p className="text-[10px] opacity-60 flex-1 font-mono">{suggestion.implementation.slice(0, 120)}…</p>
-          <Button
-            size="sm"
-            variant="outline"
-            className="text-[10px] h-7 gap-1 shrink-0"
-            onClick={() => onDeploy(suggestion, category, taskId)}
-            disabled={deployingId !== null}
-          >
-            {deployingId ? <Loader2 className="h-3 w-3 animate-spin" /> : <Rocket className="h-3 w-3" />}
-            Deploy
-          </Button>
+        <div className="space-y-2 pt-1">
+          <div className="flex items-center gap-2">
+            <p className="text-[10px] opacity-60 flex-1 font-mono">{suggestion.implementation.slice(0, 120)}…</p>
+            {!deployState || deployState.status === "failed" || deployState.status === "timeout" ? (
+              <Button
+                size="sm"
+                variant="outline"
+                className="text-[10px] h-7 gap-1 shrink-0"
+                onClick={() => onDeploy(suggestion, category, taskId)}
+                disabled={deployingId !== null}
+              >
+                {deployingId ? <Loader2 className="h-3 w-3 animate-spin" /> : <Rocket className="h-3 w-3" />}
+                {deployState?.status === "failed" ? "Retry" : "Deploy"}
+              </Button>
+            ) : null}
+          </div>
+          <DeployStatusBadge state={deployState} />
         </div>
       )}
     </div>
   );
+}
+
+/* ---- Deploy Status Badge ---- */
+function DeployStatusBadge({ state }: { state?: { status: string; taskId?: string; result?: any; error?: string } }) {
+  if (!state) return null;
+
+  switch (state.status) {
+    case "generating":
+      return (
+        <div className="flex items-center gap-1.5 text-[10px] text-primary">
+          <Loader2 className="h-3 w-3 animate-spin" />
+          <span>Generating code changes…</span>
+        </div>
+      );
+    case "polling":
+      return (
+        <div className="flex items-center gap-1.5 text-[10px] text-primary">
+          <Loader2 className="h-3 w-3 animate-spin" />
+          <span>Waiting for AI agent to complete…</span>
+        </div>
+      );
+    case "completed":
+      return (
+        <div className="rounded-md bg-emerald-500/10 border border-emerald-500/30 p-2 space-y-1">
+          <div className="flex items-center gap-1.5 text-[10px] text-emerald-600 font-medium">
+            <CheckCircle className="h-3 w-3" />
+            <span>✅ Code generated — {state.result?.changes?.length || 0} files, {state.result?.risk_level || "unknown"} risk</span>
+          </div>
+          {state.result?.summary && (
+            <p className="text-[10px] text-emerald-600/80">{state.result.summary}</p>
+          )}
+          {state.result?.test_steps?.length > 0 && (
+            <p className="text-[9px] text-muted-foreground">Verify: {state.result.test_steps[0]}</p>
+          )}
+        </div>
+      );
+    case "empty":
+      return (
+        <div className="flex items-center gap-1.5 text-[10px] text-amber-500">
+          <AlertTriangle className="h-3 w-3" />
+          <span>Agent completed but generated no actionable code changes</span>
+        </div>
+      );
+    case "failed":
+      return (
+        <div className="rounded-md bg-destructive/10 border border-destructive/30 p-2">
+          <div className="flex items-center gap-1.5 text-[10px] text-destructive font-medium">
+            <XCircle className="h-3 w-3" />
+            <span>Failed: {state.error}</span>
+          </div>
+        </div>
+      );
+    case "timeout":
+      return (
+        <div className="flex items-center gap-1.5 text-[10px] text-amber-500">
+          <Clock className="h-3 w-3" />
+          <span>Timed out — check Deploy Suggestions tab for results</span>
+        </div>
+      );
+    default:
+      return null;
+  }
 }
 
 /* ---- Deploy Suggestion Task Card ---- */
@@ -507,6 +680,28 @@ function DeployTaskCard({ task }: { task: SwarmTask }) {
       </CardHeader>
       {expanded && (
         <CardContent className="pt-0 space-y-3">
+          {/* Validation Status Banner */}
+          {task.status === "completed" && changes.length > 0 && (
+            <div className="rounded-md bg-emerald-500/10 border border-emerald-500/30 p-2 flex items-center gap-2">
+              <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
+              <div>
+                <p className="text-xs font-medium text-emerald-600">✅ Validated — {changes.length} code changes generated successfully</p>
+                <p className="text-[10px] text-emerald-600/70">Risk: {output?.risk_level || "unknown"} · {output?.test_steps?.length || 0} verification steps</p>
+              </div>
+            </div>
+          )}
+          {task.status === "completed" && changes.length === 0 && (
+            <div className="rounded-md bg-amber-500/10 border border-amber-500/30 p-2 flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0" />
+              <p className="text-xs font-medium text-amber-600">⚠️ Agent completed but produced no actionable code changes</p>
+            </div>
+          )}
+          {task.status === "failed" && (
+            <div className="rounded-md bg-destructive/10 border border-destructive/30 p-2 flex items-center gap-2">
+              <XCircle className="h-4 w-4 text-destructive shrink-0" />
+              <p className="text-xs font-medium text-destructive">❌ Code generation failed — see error below</p>
+            </div>
+          )}
           {task.error && <ErrorBlock error={task.error} />}
           {output?.summary && (
             <p className="text-sm font-medium text-foreground">{output.summary}</p>

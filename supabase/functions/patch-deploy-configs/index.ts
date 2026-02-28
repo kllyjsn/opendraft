@@ -20,6 +20,8 @@ const DEPLOY_FILES: Record<string, string> = {
 `,
   "_redirects": `/*    /index.html   200
 `,
+  "public/_redirects": `/*    /index.html   200
+`,
   "vercel.json": JSON.stringify(
     {
       buildCommand: "npm run build",

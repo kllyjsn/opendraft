@@ -4,7 +4,7 @@ import { Footer } from "@/components/Footer";
 import { CanonicalTag } from "@/components/CanonicalTag";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Lock, TrendingUp, Users, Zap, DollarSign, Globe, Bot, Shield, Rocket, Target } from "lucide-react";
+import { Lock, TrendingUp, Users, Zap, DollarSign, Globe, Bot, Shield, Rocket, Target, Brain, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 
 const PITCH_PASSWORD = "opendraft2026";
@@ -136,8 +136,9 @@ export default function Pitch() {
         <Slide title="The Problem" icon={Target} index={0}>
           <ul className="space-y-3 text-muted-foreground">
             <li className="flex gap-3"><span className="text-destructive font-bold">1.</span> AI agents need software tools but have no marketplace to buy from programmatically.</li>
-            <li className="flex gap-3"><span className="text-destructive font-bold">2.</span> Indie developers build apps with no distribution beyond manual marketing.</li>
+            <li className="flex gap-3"><span className="text-destructive font-bold">2.</span> 2M+ vibe coders build apps with no distribution beyond manual marketing.</li>
             <li className="flex gap-3"><span className="text-destructive font-bold">3.</span> Existing marketplaces (Gumroad, LemonSqueezy) have zero agent-native infrastructure.</li>
+            <li className="flex gap-3"><span className="text-destructive font-bold">4.</span> No platform connects autonomous AI demand with human-built supply at scale.</li>
           </ul>
         </Slide>
 
@@ -146,28 +147,30 @@ export default function Pitch() {
           <p className="text-muted-foreground mb-4">
             A two-sided marketplace with full programmatic access — MCP server, REST API, webhooks — so both humans <strong className="text-foreground">and AI agents</strong> can browse, negotiate, and purchase autonomously.
           </p>
-          <div className="grid grid-cols-3 gap-2 sm:gap-3 mt-6">
-            <MetricCard label="MCP Tools" value="21" sub="Full agent toolkit" />
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mt-6">
+            <MetricCard label="MCP Tools" value="23" sub="Full agent toolkit" />
             <MetricCard label="REST Endpoints" value="12+" sub="Including bidding" />
             <MetricCard label="Webhook Events" value="Real-time" sub="Agent subscriptions" />
+            <MetricCard label="Live Listings" value="92" sub="Across 5 categories" />
           </div>
         </Slide>
 
         {/* Market */}
         <Slide title="Market Opportunity" icon={Globe} index={2}>
-          <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-6">
-            <MetricCard label="TAM" value="$40B+" sub="AI agent software (2028)" />
-            <MetricCard label="SAM" value="$3B" sub="Indie/SMB AI tools" />
-            <MetricCard label="SOM Y1" value="$2M" sub="Ambitious GMV target" />
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-6">
+            <MetricCard label="TAM" value="$120B" sub="AI agent economy (2030)" />
+            <MetricCard label="Agent Commerce" value="$50B" sub="Programmatic procurement" />
+            <MetricCard label="SAM" value="$8B" sub="Indie/SMB AI tools" />
+            <MetricCard label="SOM Y1" value="$2M" sub="Year 1 GMV target" />
           </div>
           <p className="text-sm text-muted-foreground">
-            The AI agent economy is projected to grow 10x by 2028. OpenDraft is positioned to be the default procurement layer.
+            Gartner projects 15B+ autonomous agent instances by 2030. As agents proliferate, their procurement infrastructure becomes a critical choke point — and a massive revenue opportunity. OpenDraft is the first-mover building this layer.
           </p>
         </Slide>
 
         {/* Revenue Model */}
         <Slide title="Revenue Model" icon={DollarSign} index={3}>
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid md:grid-cols-3 gap-6">
             <div>
               <h3 className="font-bold text-foreground mb-2">Platform Fee</h3>
               <p className="text-4xl font-black text-gradient mb-1">20%</p>
@@ -178,6 +181,13 @@ export default function Pitch() {
               <div className="space-y-2 text-sm text-muted-foreground">
                 <p><span className="font-semibold text-foreground">One-time</span> — Single purchase, instant delivery</p>
                 <p><span className="font-semibold text-foreground">Monthly</span> — Recurring subscriptions ($15–$20/mo avg)</p>
+              </div>
+            </div>
+            <div>
+              <h3 className="font-bold text-foreground mb-2">Future Streams</h3>
+              <div className="space-y-2 text-sm text-muted-foreground">
+                <p><span className="font-semibold text-foreground">Featured Placements</span> — Promoted listings</p>
+                <p><span className="font-semibold text-foreground">Enterprise API</span> — Agent fleet licensing</p>
               </div>
             </div>
           </div>
@@ -191,16 +201,16 @@ export default function Pitch() {
                 <TableRow header cells={["Quarter", "Listings", "Subscriptions", "Agent Calls/mo", "GMV", "Revenue"]} />
               </thead>
               <tbody>
-                <TableRow cells={["Q1", "50", "120", "5K", "$30K", "$6K"]} />
-                <TableRow cells={["Q2", "200", "600", "50K", "$150K", "$30K"]} />
-                <TableRow cells={["Q3", "500", "2,000", "500K", "$500K", "$100K"]} />
-                <TableRow cells={["Q4", "1,000", "5,000", "2M", "$1.2M", "$240K"]} />
+                <TableRow cells={["Q1", "100", "120", "5K", "$30K", "$6K"]} />
+                <TableRow cells={["Q2", "300", "600", "50K", "$150K", "$30K"]} />
+                <TableRow cells={["Q3", "700", "2,000", "500K", "$500K", "$100K"]} />
+                <TableRow cells={["Q4", "1,500", "5,000", "2M", "$1.5M", "$300K"]} />
               </tbody>
             </table>
           </div>
           <div className="grid grid-cols-3 gap-2 sm:gap-3 mt-6">
-            <MetricCard label="Year 1 GMV" value="$1.9M" />
-            <MetricCard label="Year 1 Revenue" value="$376K" />
+            <MetricCard label="Year 1 GMV" value="$2.2M" />
+            <MetricCard label="Year 1 Revenue" value="$436K" />
             <MetricCard label="LTV:CAC" value="18:1" />
           </div>
         </Slide>
@@ -213,20 +223,75 @@ export default function Pitch() {
                 <TableRow header cells={["Year", "Listings", "Active Subs", "Agent Traffic", "GMV", "Revenue"]} />
               </thead>
               <tbody>
-                <TableRow cells={["Y1", "1,000", "5,000", "15%", "$1.9M", "$376K"]} />
-                <TableRow cells={["Y2", "5,000", "30,000", "40%", "$18M", "$3.6M"]} />
-                <TableRow cells={["Y3", "15,000", "100,000", "65%", "$80M", "$16M"]} />
+                <TableRow cells={["Y1", "1,500", "5,000", "15%", "$2.2M", "$436K"]} />
+                <TableRow cells={["Y2", "8,000", "35,000", "40%", "$22M", "$4.4M"]} />
+                <TableRow cells={["Y3", "20,000", "120,000", "65%", "$100M", "$20M"]} />
               </tbody>
             </table>
           </div>
         </Slide>
 
+        {/* AI Boardroom → Spec Pipeline (NEW) */}
+        <Slide title="Autonomous Strategy Engine" icon={Brain} index={6}>
+          <p className="text-muted-foreground mb-6">
+            OpenDraft runs itself. An AI Board of Directors analyzes live platform metrics and generates strategic resolutions — then converts them into implementation-ready specs with one click.
+          </p>
+          <div className="space-y-3 mb-6">
+            <div className="flex items-center gap-3 rounded-xl border border-border/40 bg-muted/20 p-4">
+              <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                <span className="text-lg">📊</span>
+              </div>
+              <div className="flex-1">
+                <p className="font-bold text-foreground text-sm">Live Metrics Ingestion</p>
+                <p className="text-xs text-muted-foreground">Revenue, listings, agent traffic, conversion rates pulled in real-time</p>
+              </div>
+              <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
+            </div>
+            <div className="flex items-center gap-3 rounded-xl border border-border/40 bg-muted/20 p-4">
+              <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                <span className="text-lg">🧠</span>
+              </div>
+              <div className="flex-1">
+                <p className="font-bold text-foreground text-sm">5 AI Directors Deliberate</p>
+                <p className="text-xs text-muted-foreground">CEO, CFO, CMO, CTO, CPO — each with specialized perspectives and KPIs</p>
+              </div>
+              <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
+            </div>
+            <div className="flex items-center gap-3 rounded-xl border border-border/40 bg-muted/20 p-4">
+              <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                <span className="text-lg">📋</span>
+              </div>
+              <div className="flex-1">
+                <p className="font-bold text-foreground text-sm">Prioritized Board Resolution</p>
+                <p className="text-xs text-muted-foreground">P0–P2 initiatives with revenue impact projections and ownership assignments</p>
+              </div>
+              <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
+            </div>
+            <div className="flex items-center gap-3 rounded-xl border border-primary/30 bg-primary/5 p-4">
+              <div className="h-9 w-9 rounded-lg gradient-hero flex items-center justify-center shrink-0">
+                <span className="text-lg">⚡</span>
+              </div>
+              <div className="flex-1">
+                <p className="font-bold text-foreground text-sm">One-Click Implementation Spec</p>
+                <p className="text-xs text-muted-foreground">Each initiative generates a structured Markdown prompt → paste into Lovable/Cursor → built</p>
+              </div>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+            <MetricCard label="AI Directors" value="5" sub="Specialized agents" />
+            <MetricCard label="Swarm Agents" value="4" sub="SEO, QA, Outreach, Product" />
+            <MetricCard label="Automation" value="90%+" sub="Strategy-to-spec pipeline" />
+            <MetricCard label="Human Input" value="1 click" sub="Approve & implement" />
+          </div>
+        </Slide>
+
         {/* Moat */}
-        <Slide title="Competitive Moat" icon={Shield} index={6}>
+        <Slide title="Competitive Moat" icon={Shield} index={7}>
           <div className="space-y-4">
             {[
-              { t: "Agent-Native Infrastructure", d: "21 MCP tools, REST API with autonomous bidding, webhook subscriptions. No competitor has this." },
+              { t: "Agent-Native Infrastructure", d: "23 MCP tools, REST API with autonomous bidding, webhook subscriptions. No competitor has this." },
               { t: "Demand Signal Flywheel", d: "Every failed agent search → logged → feeds AI template generator → creates supply for next query." },
+              { t: "Autonomous Strategy Engine", d: "AI Board of Directors + 4-agent operations swarm. The platform strategizes, prioritizes, and specs its own improvements." },
               { t: "Network Effects", d: "More agents → more demand signals → better templates → more agents. Compounds exponentially." },
             ].map((m) => (
               <div key={m.t} className="rounded-xl border border-border/40 bg-muted/20 p-5">
@@ -238,12 +303,12 @@ export default function Pitch() {
         </Slide>
 
         {/* Go-to-Market */}
-        <Slide title="Go-to-Market" icon={Users} index={7}>
+        <Slide title="Go-to-Market" icon={Users} index={8}>
           <div className="space-y-3">
             {[
-              { phase: "Phase 1 (Now)", desc: "Seed supply via AI-generated templates. Target Lovable/Cursor/Bolt builders." },
-              { phase: "Phase 2 (Q2)", desc: "Agent developer outreach — SDK packages, Claude Desktop configs, MCP registry." },
-              { phase: "Phase 3 (Q3+)", desc: "Enterprise agent fleet deals — bulk API access for agent swarms." },
+              { phase: "Phase 1 (Now)", desc: "92 live listings. AI-generated supply seeding. Targeting Lovable, Cursor, and Bolt builders." },
+              { phase: "Phase 2 (Q2)", desc: "Agent developer outreach — SDK packages, Claude Desktop configs, MCP registry listing." },
+              { phase: "Phase 3 (Q3+)", desc: "Enterprise agent fleet deals — bulk API access, custom procurement pipelines for agent swarms." },
             ].map((p) => (
               <div key={p.phase} className="flex gap-4 items-start">
                 <div className="h-8 w-8 rounded-lg gradient-hero flex items-center justify-center shrink-0 mt-0.5">
@@ -260,7 +325,7 @@ export default function Pitch() {
 
         {/* The Ask */}
         <motion.section
-          custom={8}
+          custom={9}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}

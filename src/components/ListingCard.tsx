@@ -129,14 +129,6 @@ export function ListingCard({
             </div>
           )}
 
-          {sales_count <= 3 && !owned && (
-            <div className="flex items-center gap-1.5 rounded-md bg-accent/10 border border-accent/20 px-2 py-1">
-              <span className="text-[10px]">🚀</span>
-              <span className="text-[10px] font-bold text-accent">
-                {sales_count === 0 ? "Be the first buyer — shape this product" : `Only ${sales_count} sold — early adopter pricing`}
-              </span>
-            </div>
-          )}
 
           <div className="flex items-center justify-between text-xs text-muted-foreground pt-2 border-t border-border/50">
             <div className="flex items-center gap-2.5">

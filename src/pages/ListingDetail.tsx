@@ -19,7 +19,7 @@ import { JsonLd } from "@/components/JsonLd";
 import { CanonicalTag } from "@/components/CanonicalTag";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { FlagListingButton } from "@/components/FlagListingButton";
-
+import { BuyerWelcomeModal } from "@/components/BuyerWelcomeModal";
 const BUILT_WITH_LABELS: Record<string, string> = {
   lovable: "Lovable",
   claude_code: "Claude Code",
@@ -326,6 +326,7 @@ export default function ListingDetail() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <BuyerWelcomeModal />
       <Navbar />
       {listing && <CanonicalTag path={`/listing/${listing.id}`} />}
       {productSchema && <JsonLd data={productSchema} />}

@@ -39,7 +39,7 @@ export function AdminConceptGenerator() {
   const [conceptResults, setConceptResults] = useState<GeneratedConcept[] | null>(null);
   const [templateResult, setTemplateResult] = useState<TemplateBatchResult | null>(null);
   const [count, setCount] = useState(3);
-  const [templateCount, setTemplateCount] = useState(1);
+  const [templateCount, setTemplateCount] = useState(3);
   const [theme, setTheme] = useState("");
 
   async function generateConcepts() {
@@ -158,14 +158,14 @@ export function AdminConceptGenerator() {
               <span className="text-xs text-muted-foreground">× $15/mo each</span>
             </div>
             <div className="mb-4">
-              <label className="text-sm font-medium block mb-1.5">App theme / idea (optional)</label>
+              <label className="text-sm font-medium block mb-1.5">Override theme (optional)</label>
               <Input
-                placeholder="e.g. AI-powered recipe finder, fitness tracker dashboard…"
+                placeholder="Leave blank → AI picks from live Reddit, HN, Product Hunt trends"
                 value={theme}
                 onChange={(e) => setTheme(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && !loading && generateTemplate()}
               />
-              <p className="text-xs text-muted-foreground mt-1">Leave blank for random trending concepts with AI screenshots</p>
+              <p className="text-xs text-muted-foreground mt-1">When blank, fetches this week's trending ideas from Reddit, Hacker News & Product Hunt</p>
             </div>
             <Button onClick={generateTemplate} disabled={loading} className="gradient-hero text-white border-0 shadow-glow hover:opacity-90 gap-2">
               {loading ? (

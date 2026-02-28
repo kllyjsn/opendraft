@@ -97,3 +97,7 @@ verify_jwt = false
 # Deploy to Netlify — auth checked in code
 [functions.deploy-to-netlify]
 verify_jwt = false
+
+# Deploy to Vercel — auth checked in code
+[functions.deploy-to-vercel]
+verify_jwt = false

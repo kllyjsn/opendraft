@@ -20,7 +20,7 @@ const steps = [
   {
     icon: DollarSign,
     title: "3. Set Your Price",
-    content: "You can offer one-time purchases or monthly subscriptions. Subscriptions ($15–$30/mo is the sweet spot) work best because buyers get ongoing support and you get recurring revenue. Think of it as offering a 'developer on retainer' — you maintain the app, fix bugs, and ship updates.",
+    content: "Set a one-time price for your project. The sweet spot for templates is $19–$49, while production-ready SaaS apps can command $99–$299+. You can also offer it free to build trust. Buyers get full source code and lifetime access — price based on value delivered, not time spent building.",
   },
   {
     icon: CreditCard,
@@ -29,17 +29,17 @@ const steps = [
   },
   {
     icon: TrendingUp,
-    title: "5. Grow Your Subscriber Base",
-    content: "Promote your listing on Twitter/X, Product Hunt, and in relevant communities. Respond quickly to buyer messages — great support = great reviews = more sales. Ship monthly updates to keep subscribers happy. The builders who treat it like a micro-SaaS earn the most.",
+    title: "5. Promote & Grow",
+    content: "Share your listing on Twitter/X, Product Hunt, and builder communities. Respond quickly to buyer messages — great support = great reviews = more sales. Consider offering optional monthly support tiers for buyers who want hands-on help after purchase.",
   },
 ];
 
 const tips = [
-  "Price subscriptions between $15–$30/month — it's the sweet spot for value and conversion.",
+  "Price your project based on value — $19–$49 for templates, $99+ for production-ready apps.",
   "Add at least 3 screenshots. Listings with more visuals convert 2x better.",
   "Include a live demo URL. Buyers want to click around before committing.",
   "Respond to messages within 24 hours. Fast support builds trust and earns reviews.",
-  "Ship at least one update per month. Subscribers are paying for ongoing value.",
+  "Consider optional support tiers — buyers pay extra for ongoing help.",
   "Tag your listing with the right 'Built with' tool — buyers search by tool.",
 ];
 
@@ -69,7 +69,7 @@ export default function GuideSell() {
             How to Sell Your Project on OpenDraft
           </h1>
           <p className="text-muted-foreground text-lg leading-relaxed">
-            Turn your vibe-coded side project into recurring revenue. Here's how to list, price, and grow your subscriber base.
+            Turn your vibe-coded side project into income. Here's how to list, price, and grow your sales on OpenDraft.
           </p>
         </div>
       </section>

@@ -12,6 +12,7 @@ import { MagicImport } from "@/components/MagicImport";
 import { Upload, Plus, X, Link as LinkIcon, Github, FileArchive, CheckCircle2, GitFork } from "lucide-react";
 import { Navigate } from "react-router-dom";
 import { logActivity } from "@/lib/activity-logger";
+import { FounderProgramBanner } from "@/components/FounderProgramBanner";
 
 interface RemixParent {
   id: string;
@@ -167,6 +168,22 @@ export default function Sell() {
           remixer_id: user.id,
         });
       }
+
+      // Send creator welcome email for first listing (fire-and-forget)
+      const { count } = await supabase
+        .from("listings")
+        .select("id", { count: "exact", head: true })
+        .eq("seller_id", user.id);
+      if (count === 1) {
+        supabase.functions.invoke("creator-welcome-email", {
+          body: {
+            email: user.email,
+            username: user.user_metadata?.name || user.email?.split("@")[0],
+            listing_title: form.title,
+          },
+        }).catch(() => {}); // fire-and-forget
+      }
+
       logActivity({ event_type: "listing_submitted", event_data: { title: form.title, category: form.category, price: form.price, built_with: form.built_with, remixed_from: remixParent?.id }, page: "/sell" });
       toast({ title: remixParent ? "Remix submitted! 🔄" : "Listing submitted! 🎉", description: "Your listing is pending review and will go live soon." });
       navigate("/dashboard");
@@ -192,6 +209,8 @@ export default function Sell() {
             </div>
           </div>
         )}
+
+        {!remixParent && <FounderProgramBanner />}
 
         {/* Seller value prop */}
         <div className="mb-8">

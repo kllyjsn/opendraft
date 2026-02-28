@@ -172,7 +172,6 @@ export default function Checkout() {
   }
 
   const originalPrice = offerPrice || listing.price;
-  const isMonthly = listing.pricing_type === "monthly";
   let finalPrice = originalPrice;
   if (appliedDiscount) {
     if (appliedDiscount.discount_type === "percentage") {
@@ -181,11 +180,10 @@ export default function Checkout() {
       finalPrice = Math.max(0, originalPrice - appliedDiscount.discount_value);
     }
   }
-  const priceSuffix = isMonthly ? "/mo" : "";
   const priceDisplay = offerPrice
-    ? `$${(offerPrice / 100).toFixed(2)}${priceSuffix}`
-    : `$${(listing.price / 100).toFixed(2)}${priceSuffix}`;
-  const finalPriceDisplay = `$${(finalPrice / 100).toFixed(2)}${priceSuffix}`;
+    ? `$${(offerPrice / 100).toFixed(2)}`
+    : `$${(listing.price / 100).toFixed(2)}`;
+  const finalPriceDisplay = `$${(finalPrice / 100).toFixed(2)}`;
   const isOfferCheckout = !!offerPrice;
 
   return (
@@ -265,10 +263,7 @@ export default function Checkout() {
 
           {/* What you get */}
           <div className="mb-6 space-y-2">
-            {(isMonthly
-              ? ["Access as long as you're subscribed", "Cancel anytime — no lock-in", "Automatic monthly billing"]
-              : ["Instant delivery after payment", "Lifetime access to the project", "One-time payment — no recurring fees"]
-            ).map((item) => (
+            {["Instant delivery after payment", "Lifetime access to the full source code", "One-time payment — no recurring fees", "Optional support subscription available after purchase"].map((item) => (
               <div key={item} className="flex items-center gap-2 text-sm text-muted-foreground">
                 <span className="h-4 w-4 rounded-full gradient-hero flex items-center justify-center flex-shrink-0">
                   <svg className="h-2.5 w-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
@@ -294,7 +289,7 @@ export default function Checkout() {
             {processing ? (
               <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Redirecting to payment…</>
             ) : (
-              <><ShoppingCart className="h-4 w-4 mr-2" /> {isMonthly ? `Subscribe ${finalPriceDisplay}` : `Pay ${finalPriceDisplay} securely`}</>
+              <><ShoppingCart className="h-4 w-4 mr-2" /> Pay {finalPriceDisplay} securely</>
             )}
           </Button>
 

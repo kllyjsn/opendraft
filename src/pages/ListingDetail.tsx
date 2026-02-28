@@ -322,8 +322,7 @@ export default function ListingDetail() {
   }
 
   const isFree = listing.price === 0;
-  const isMonthly = listing.pricing_type === "monthly";
-  const priceLabel = isFree ? "Free" : `$${(listing.price / 100).toFixed(2)}${isMonthly ? "/mo" : ""}`;
+  const priceLabel = isFree ? "Free" : `$${(listing.price / 100).toFixed(2)}`;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -405,7 +404,7 @@ export default function ListingDetail() {
               <div className="mb-5">
                 <div className={`text-4xl font-black mb-0.5 ${isFree ? "text-primary" : ""}`}>{priceLabel}</div>
                 <p className="text-xs text-muted-foreground">
-                  {isFree ? "Free forever · Instant access" : isMonthly ? "Monthly subscription · Cancel anytime" : "One-time purchase · Instant delivery"}
+                  {isFree ? "Free forever · Instant access" : "One-time purchase · Instant delivery"}
                 </p>
               </div>
 
@@ -476,7 +475,7 @@ export default function ListingDetail() {
                     <Link to={user ? `/checkout/${listing.id}` : "/login"} className="col-span-1">
                       <Button className="w-full gradient-hero text-white border-0 shadow-glow hover:opacity-90 h-12 text-sm sm:text-base font-bold transition-opacity">
                         <ShoppingCart className="h-4 w-4 mr-1.5 shrink-0" />
-                        <span className="truncate">{isMonthly ? `Subscribe` : `Buy Now`}</span>
+                        <span className="truncate">Buy Now</span>
                       </Button>
                     </Link>
                     <div className="col-span-1">
@@ -561,12 +560,12 @@ export default function ListingDetail() {
                 </div>
               )}
 
-              {/* Subscription value banner */}
+              {/* Value banner */}
               <div className="mt-5 rounded-xl gradient-hero p-[1px]">
                 <div className="rounded-[11px] bg-card p-4 space-y-1.5 text-center">
-                  <p className="text-xs font-black uppercase tracking-wide text-primary">Your subscription includes</p>
-                  <p className="text-[13px] font-semibold leading-snug">Ongoing support & personalized feature requests</p>
-                  <p className="text-[11px] text-muted-foreground leading-relaxed">Tell us what you need — we build it for you. Like having a developer on retainer.</p>
+                  <p className="text-xs font-black uppercase tracking-wide text-primary">What you get</p>
+                  <p className="text-[13px] font-semibold leading-snug">Full source code + lifetime access</p>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">Buy once, own forever. Want ongoing support & feature requests? Subscribe to the builder's support plan after purchase.</p>
                 </div>
               </div>
 

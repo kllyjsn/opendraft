@@ -183,7 +183,7 @@ export default function Success() {
 
           <h1 className="text-3xl font-black mb-2 tracking-tight">Welcome aboard! 🎉</h1>
           <p className="text-muted-foreground mb-6">
-            Your purchase is confirmed. Here's what you can expect as a customer.
+            Your purchase is confirmed — you now own this project forever. Here's what's included.
           </p>
 
           {/* Purchase summary card */}
@@ -215,36 +215,22 @@ export default function Success() {
               <div className="flex gap-3">
                 <Infinity className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-semibold text-sm">Unlimited app usage</p>
-                  <p className="text-xs text-muted-foreground">Use the app as much as you want — no caps or restrictions.</p>
+                  <p className="font-semibold text-sm">Full source code & lifetime access</p>
+                  <p className="text-xs text-muted-foreground">The code is yours forever — no recurring fees required.</p>
                 </div>
               </div>
               <div className="flex gap-3">
                 <MessageSquare className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="font-semibold text-sm">Talk directly with the builder</p>
-                  <p className="text-xs text-muted-foreground">Got an idea, feature request, or need help? Message the builder right from opendraft.co.</p>
-                </div>
-              </div>
-              <div className="flex gap-3">
-                <RefreshCw className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-semibold text-sm">Monthly updates</p>
-                  <p className="text-xs text-muted-foreground">Ongoing improvements, bug fixes, and new features shipped every month.</p>
-                </div>
-              </div>
-              <div className="flex gap-3">
-                <Wrench className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-semibold text-sm">Feature requests</p>
-                  <p className="text-xs text-muted-foreground">Want something added? Submit requests and the builder will prioritize what matters to you.</p>
+                  <p className="text-xs text-muted-foreground">Got a question or need help getting started? Message the builder right from opendraft.co.</p>
                 </div>
               </div>
               <div className="flex gap-3">
                 <Shield className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-semibold text-sm">Stability & support</p>
-                  <p className="text-xs text-muted-foreground">The builder maintains the app so you can focus on your work, not the tech.</p>
+                  <p className="font-semibold text-sm">Optional support subscription</p>
+                  <p className="text-xs text-muted-foreground">Want ongoing updates, priority support, and custom feature requests? Ask the builder about their support plan.</p>
                 </div>
               </div>
             </div>

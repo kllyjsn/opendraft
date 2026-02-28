@@ -39,7 +39,6 @@ export function ListingCard({
 }: ListingCardProps) {
   const navigate = useNavigate();
   const thumbnail = screenshots?.[0];
-  const isMonthly = pricing_type === "monthly";
 
   return (
     <div
@@ -82,7 +81,7 @@ export function ListingCard({
             <CompletenessBadge level={completeness_badge} showTooltip={false} />
             {!owned && (
               <span className="rounded-full bg-black/70 text-white px-2.5 py-0.5 text-xs md:text-sm font-bold backdrop-blur-md tracking-tight shrink-0 border border-white/10">
-                {price === 0 ? "Free" : isMonthly ? "Subscribe" : "Bid / Buy"}
+                {price === 0 ? "Free" : "Bid / Buy"}
               </span>
             )}
           </div>

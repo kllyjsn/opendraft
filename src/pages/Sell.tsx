@@ -131,9 +131,8 @@ export default function Sell() {
     if (!user) return;
     setSubmitting(true);
     const priceFloat = parseFloat(form.price);
-    const minPrice = form.pricing_type === "monthly" ? 1 : 0;
-    if (isNaN(priceFloat) || priceFloat < minPrice) {
-      toast({ title: form.pricing_type === "monthly" ? "Monthly price must be at least $1.00" : "Price must be $0.00 or more", variant: "destructive" });
+    if (isNaN(priceFloat) || priceFloat < 0) {
+      toast({ title: "Price must be $0.00 or more", variant: "destructive" });
       setSubmitting(false);
       return;
     }
@@ -257,45 +256,23 @@ export default function Sell() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold mb-2">Pricing type *</label>
-                <div className="flex gap-2">
-                  {([
-                    { value: "one_time", label: "One-time", desc: "Single purchase, lifetime access" },
-                    { value: "monthly", label: "Monthly", desc: "Recurring subscription" },
-                  ] as const).map(({ value, label, desc }) => (
-                    <button
-                      key={value}
-                      onClick={() => update("pricing_type", value)}
-                      className={`flex-1 rounded-xl border-2 p-3 text-left transition-all ${
-                        form.pricing_type === value ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground"
-                      }`}
-                    >
-                      <span className="text-sm font-bold">{label}</span>
-                      <p className="text-[11px] text-muted-foreground mt-0.5">{desc}</p>
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
                 <label className="block text-sm font-semibold mb-1.5">
-                  Price (USD) {form.pricing_type === "monthly" ? "per month" : ""} *
+                  Price (USD) *
                 </label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
                   <Input
                     type="number"
-                    min={form.pricing_type === "monthly" ? "1" : "0"}
+                    min="0"
                     step="0.01"
-                    placeholder={form.pricing_type === "monthly" ? "9.00" : "29.00"}
+                    placeholder="29.00"
                     value={form.price}
                     onChange={(e) => update("price", e.target.value)}
                     className="pl-7"
                   />
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {form.pricing_type === "monthly"
-                    ? "Subscribers are billed monthly · You receive 80% of each payment"
-                    : "Set to $0.00 to offer it free · Paid out to you instantly on every sale"}
+                  Set to $0.00 to offer it free · Paid out to you instantly on every sale
                 </p>
               </div>
             </>

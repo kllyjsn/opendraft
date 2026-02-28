@@ -9,18 +9,18 @@ const STORAGE_KEY = "opendraft_welcome_seen";
 const steps = [
   {
     icon: Search,
-    title: "Browse & discover",
-    desc: "Search hundreds of ready-to-launch apps built with Lovable, Cursor, Bolt & more.",
+    title: "Fork the source code",
+    desc: "When you buy, you get a full fork of the codebase — yours to own, modify, and deploy forever.",
   },
   {
     icon: DollarSign,
-    title: "Name your price",
-    desc: "Every listing is a flat one-time fee. See something you like? Place a bid or buy instantly.",
+    title: "Bid or buy instantly",
+    desc: "Every listing has a price. Make an offer or purchase outright — no subscriptions required to start.",
   },
   {
     icon: Download,
-    title: "Own it forever",
-    desc: "Get full source code, lifetime access, and deploy to Vercel or Netlify in one click.",
+    title: "Subscribe for updates",
+    desc: "Optionally subscribe to maintenance. Your builder ships new features and fixes directly to your fork.",
   },
 ];
 
@@ -31,7 +31,8 @@ export function BuyerWelcomeModal() {
   useEffect(() => {
     const seen = localStorage.getItem(STORAGE_KEY);
     if (!seen) {
-      const timer = setTimeout(() => setOpen(true), 2500);
+      // Delay 5s so user has time to read the listing first
+      const timer = setTimeout(() => setOpen(true), 5000);
       return () => clearTimeout(timer);
     }
   }, []);

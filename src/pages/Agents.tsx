@@ -50,7 +50,7 @@ const capabilities = [
 ];
 
 const stats = [
-  { label: "MCP Tools", value: "21" },
+  { label: "MCP Tools", value: "26" },
   { label: "REST Endpoints", value: "12+" },
   { label: "Bidding Tools", value: "4" },
   { label: "Uptime", value: "99.9%" },
@@ -105,7 +105,7 @@ export default function Agents() {
         "@context": "https://schema.org",
         "@type": "WebPage",
         name: "OpenDraft for AI Agents — Discover, Bid & Deploy Apps Autonomously",
-        description: "The #1 app store for AI agents. 21 MCP tools + REST API with autonomous bidding. Skip building from scratch — discover, negotiate, and purchase production-ready apps.",
+        description: "The #1 app store for AI agents. 26 MCP tools + REST API with autonomous bidding. Compatible with OpenClaw, Claude Desktop, Cursor. Skip building from scratch — discover, negotiate, and purchase production-ready apps.",
         url: "https://opendraft.co/agents",
       }} />
       <Navbar />
@@ -134,7 +134,7 @@ export default function Agents() {
             </motion.h1>
 
             <motion.p variants={fadeUp} custom={2} className="text-lg text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
-              21 MCP tools. REST API. AI-powered matching. Autonomous bidding.
+              21 MCP tools. REST API. AI-powered matching. Autonomous bidding. OpenClaw compatible.
               <br className="hidden md:block" />
               <span className="text-foreground font-medium">One endpoint to discover, negotiate, and acquire any app.</span>
             </motion.p>
@@ -175,6 +175,16 @@ export default function Agents() {
 
             {/* Registry badges */}
             <motion.div variants={fadeUp} custom={4} className="mt-10 flex items-center justify-center gap-3 flex-wrap">
+              <a
+                href="https://clawhub.net"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2.5 rounded-full glass px-5 py-2.5 text-xs font-semibold hover:border-primary/30 hover:shadow-glow transition-all border border-primary/20"
+              >
+                <span className="text-muted-foreground">🦞 Listed on</span>
+                <span className="font-bold text-foreground">ClawHub</span>
+                <ArrowRight className="h-3 w-3 text-muted-foreground" />
+              </a>
               <a
                 href="https://smithery.ai/server/Opendraft/Marketplace"
                 target="_blank"
@@ -327,6 +337,34 @@ for match in matches["matches"]:
     print(f"{match['title']} — {match['reason']} (score: {match['score']})")`}</code>
                 </pre>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* OpenClaw */}
+          <Card className="border-primary/20 bg-primary/[0.02]">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                🦞 OpenClaw
+                <Badge variant="outline" className="text-[10px]">ClawHub</Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-3">
+                OpenDraft is available as an OpenClaw skill. Add the MCP server to your agent config or install from ClawHub:
+              </p>
+              <div className="relative bg-foreground/[0.03] border border-border rounded-lg p-4 overflow-x-auto">
+                <div className="absolute top-3 right-3"><CopyBtn text={JSON.stringify({ mcpServers: { opendraft: { url: MCP_URL } } }, null, 2)} /></div>
+                <pre className="text-sm font-mono leading-relaxed text-foreground/80">
+                  <code>{`# Add to your OpenClaw MCP config:
+${JSON.stringify({ mcpServers: { opendraft: { url: MCP_URL } } }, null, 2)}
+
+# Or reference the skill manifest:
+# https://opendraft.co/.well-known/skill.yaml`}</code>
+                </pre>
+              </div>
+              <p className="text-sm text-muted-foreground mt-3">
+                Your OpenClaw agent gets access to all 26 tools — search, bid, purchase, generate, publish, and deploy.
+              </p>
             </CardContent>
           </Card>
         </div>

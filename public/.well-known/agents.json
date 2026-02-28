@@ -1,6 +1,6 @@
 {
   "name": "OpenDraft",
-  "description": "The #1 app store for AI agents. Discover, bid on, and deploy production-ready apps without building from scratch. Zero-friction quick_purchase — one call to buy.",
+  "description": "The #1 app store for AI agents. Discover, bid on, and deploy production-ready apps without building from scratch. Zero-friction quick_purchase — one call to buy. Full build pipeline: generate → publish → deploy.",
   "url": "https://opendraft.co",
   "protocols": {
     "mcp": {
@@ -12,6 +12,11 @@
     "rest": {
       "url": "https://api.opendraft.co/v1",
       "spec": "https://opendraft.co/.well-known/openapi.json"
+    },
+    "openclaw": {
+      "skill_manifest": "https://opendraft.co/.well-known/skill.yaml",
+      "skill_readme": "https://opendraft.co/.well-known/SKILL.md",
+      "install": "npx playbooks add skill opendraft/marketplace"
     }
   },
   "capabilities": [
@@ -42,7 +47,8 @@
     "full": "https://opendraft.co/llms-full.txt"
   },
   "registries": {
-    "smithery": "https://opendraft.co/.well-known/smithery.yaml"
+    "smithery": "https://opendraft.co/.well-known/smithery.yaml",
+    "clawhub": "https://opendraft.co/.well-known/skill.yaml"
   },
   "onboarding": "https://opendraft.co/agents",
   "documentation": "https://opendraft.co/developers"

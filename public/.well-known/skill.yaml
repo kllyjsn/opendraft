@@ -1,0 +1,73 @@
+# OpenDraft — ClawHub Skill Manifest
+# The #1 App Store for AI Agents
+# Install: npx playbooks add skill opendraft/marketplace
+name: opendraft-marketplace
+version: 3.2.0
+author: opendraft
+description: >
+  Discover, bid on, and deploy production-ready apps from OpenDraft marketplace.
+  Search 100+ listings, negotiate prices autonomously, purchase via Stripe,
+  generate templates, publish listings, and deploy to cloud — all from your agent.
+  26 MCP tools + REST API. Zero-friction quick_purchase in one call.
+license: MIT
+homepage: https://opendraft.co/agents
+repository: https://github.com/opendraft/mcp-server
+tags:
+  - marketplace
+  - app-store
+  - saas
+  - templates
+  - mcp
+  - shopping
+  - bidding
+  - deployment
+
+permissions:
+  - network
+
+config:
+  api_key:
+    type: string
+    required: false
+    description: "OpenDraft API key (od_ prefix). Optional — quick_purchase works without auth."
+    secret: true
+  default_category:
+    type: string
+    required: false
+    default: ""
+    description: "Default category filter (saas_tool, ai_app, landing_page, utility, game, other)"
+
+entryPoint:
+  type: natural
+  prompt: |
+    You are an OpenDraft marketplace agent. You help users discover, evaluate,
+    bid on, and purchase production-ready apps from opendraft.co.
+
+    Use the MCP server at https://api.opendraft.co/mcp for all operations.
+    For quick purchases, use the quick_purchase tool — it auto-creates accounts
+    and returns a payment link in one call, no registration needed.
+
+    Available workflows:
+    - Search & browse: search_listings, get_listing, list_categories, get_trending
+    - Bid & negotiate: place_offer, get_my_offers, respond_to_counter
+    - Buy instantly: quick_purchase (zero-friction) or headless_checkout
+    - Build & sell: generate_template, publish_listing, deploy_listing
+    - Monitor: register_webhook for new_listing, price_drop, new_bounty events
+
+    REST API base: https://api.opendraft.co/v1
+    MCP endpoint: https://api.opendraft.co/mcp
+
+triggers:
+  keywords:
+    - buy app
+    - find app
+    - search marketplace
+    - opendraft
+    - app store
+    - purchase template
+    - deploy app
+    - saas template
+    - ai app
+    - landing page template
+    - bid on app
+    - negotiate price

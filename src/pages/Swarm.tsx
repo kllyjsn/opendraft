@@ -8,9 +8,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Bot, Zap, TrendingUp, Globe, RefreshCw, Clock, CheckCircle, XCircle, Loader2, Play } from "lucide-react";
+import { Bot, Zap, TrendingUp, Globe, RefreshCw, Clock, CheckCircle, XCircle, Loader2, Play, ShieldCheck, Lightbulb, Rocket, Code, AlertTriangle, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 import { CanonicalTag } from "@/components/CanonicalTag";
+import { cn } from "@/lib/utils";
 
 interface SwarmTask {
   id: string;
@@ -34,6 +35,17 @@ const statusIcon = (status: string) => {
   }
 };
 
+const severityColor = (severity: string) => {
+  switch (severity) {
+    case "critical": return "bg-red-500/10 text-red-500 border-red-500/30";
+    case "high": return "bg-orange-500/10 text-orange-500 border-orange-500/30";
+    case "medium": return "bg-amber-500/10 text-amber-500 border-amber-500/30";
+    case "low": return "bg-blue-500/10 text-blue-500 border-blue-500/30";
+    case "pass": return "bg-emerald-500/10 text-emerald-500 border-emerald-500/30";
+    default: return "bg-muted text-muted-foreground";
+  }
+};
+
 const agentConfig = {
   seo_content: {
     label: "SEO & Content",
@@ -53,6 +65,24 @@ const agentConfig = {
     functionName: "swarm-outreach-agent",
     actions: ["full_cycle", "find_directories", "craft_submissions"],
   },
+  product_improvement: {
+    label: "Product Improvement",
+    icon: Lightbulb,
+    color: "text-amber-500",
+    bgColor: "bg-amber-500/10",
+    description: "Analyzes listing quality, SEO gaps, conversion funnel, and feature gaps",
+    functionName: "swarm-product-agent",
+    actions: ["full_cycle", "listing_quality", "seo_gaps", "conversion_funnel", "feature_gaps"],
+  },
+  qa_testing: {
+    label: "QA Testing",
+    icon: ShieldCheck,
+    color: "text-emerald-500",
+    bgColor: "bg-emerald-500/10",
+    description: "Tests deploy pipelines, edge functions, listing integrity, and auth",
+    functionName: "swarm-qa-agent",
+    actions: ["full_cycle", "deploy_pipelines", "edge_function_health", "listing_integrity", "auth_permissions"],
+  },
 };
 
 export default function SwarmPage() {
@@ -61,6 +91,7 @@ export default function SwarmPage() {
   const [tasks, setTasks] = useState<SwarmTask[]>([]);
   const [loading, setLoading] = useState(true);
   const [runningAgent, setRunningAgent] = useState<string | null>(null);
+  const [deployingId, setDeployingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!adminLoading && !isAdmin) navigate("/");
@@ -76,7 +107,7 @@ export default function SwarmPage() {
       .from("swarm_tasks")
       .select("*")
       .order("created_at", { ascending: false })
-      .limit(50);
+      .limit(100);
     setTasks((data as SwarmTask[]) ?? []);
     setLoading(false);
   };
@@ -94,7 +125,6 @@ export default function SwarmPage() {
       });
 
       if (error) throw error;
-
       toast.success(`✅ ${config.label} agent completed!`);
       fetchTasks();
     } catch (e: any) {
@@ -104,8 +134,27 @@ export default function SwarmPage() {
     }
   };
 
-  const seoTasks = tasks.filter(t => t.agent_type === "seo_content");
-  const outreachTasks = tasks.filter(t => t.agent_type === "outreach_growth");
+  const deploySuggestion = async (suggestion: any, category: string, sourceTaskId: string) => {
+    const deployKey = `${sourceTaskId}-${suggestion.title || suggestion.feature || suggestion.listing_title || Math.random()}`;
+    setDeployingId(deployKey);
+    toast.info("🚀 Generating implementation code...");
+
+    try {
+      const { data, error } = await supabase.functions.invoke("swarm-deploy-suggestion", {
+        body: { suggestion, source_task_id: sourceTaskId, category },
+      });
+
+      if (error) throw error;
+      toast.success("✅ Code generated! Check the Deploy Suggestions tab.");
+      fetchTasks();
+    } catch (e: any) {
+      toast.error(`❌ Code generation failed: ${e.message}`);
+    } finally {
+      setDeployingId(null);
+    }
+  };
+
+  const tasksByType = (type: string) => tasks.filter(t => t.agent_type === type);
 
   if (adminLoading) return null;
   if (!isAdmin) return null;
@@ -121,7 +170,7 @@ export default function SwarmPage() {
           </div>
           <div>
             <h1 className="text-2xl font-bold">AI Swarm Control Center</h1>
-            <p className="text-sm text-muted-foreground">Autonomous agents optimizing marketing & growth</p>
+            <p className="text-sm text-muted-foreground">Autonomous agents for marketing, product improvement & QA</p>
           </div>
           <Button variant="outline" size="sm" className="ml-auto" onClick={fetchTasks}>
             <RefreshCw className="h-3.5 w-3.5 mr-1" /> Refresh
@@ -132,9 +181,9 @@ export default function SwarmPage() {
         <div className="grid md:grid-cols-2 gap-4 mt-6">
           {Object.entries(agentConfig).map(([key, config]) => {
             const Icon = config.icon;
-            const agentTasks = tasks.filter(t => t.agent_type === key);
-            const lastRun = agentTasks[0];
-            const completedCount = agentTasks.filter(t => t.status === "completed").length;
+            const agTasks = tasksByType(key);
+            const completedCount = agTasks.filter(t => t.status === "completed").length;
+            const lastRun = agTasks[0];
 
             return (
               <Card key={key} className="border-border/50">
@@ -182,35 +231,68 @@ export default function SwarmPage() {
           })}
         </div>
 
-        {/* Results */}
-        <Tabs defaultValue="seo" className="mt-8">
-          <TabsList>
+        {/* Results Tabs */}
+        <Tabs defaultValue="product" className="mt-8">
+          <TabsList className="flex-wrap h-auto gap-1">
+            <TabsTrigger value="product" className="gap-1.5">
+              <Lightbulb className="h-3.5 w-3.5" /> Product
+            </TabsTrigger>
+            <TabsTrigger value="qa" className="gap-1.5">
+              <ShieldCheck className="h-3.5 w-3.5" /> QA
+            </TabsTrigger>
             <TabsTrigger value="seo" className="gap-1.5">
-              <TrendingUp className="h-3.5 w-3.5" /> SEO Results
+              <TrendingUp className="h-3.5 w-3.5" /> SEO
             </TabsTrigger>
             <TabsTrigger value="outreach" className="gap-1.5">
-              <Globe className="h-3.5 w-3.5" /> Outreach Results
+              <Globe className="h-3.5 w-3.5" /> Outreach
+            </TabsTrigger>
+            <TabsTrigger value="deploys" className="gap-1.5">
+              <Code className="h-3.5 w-3.5" /> Deploy Suggestions
             </TabsTrigger>
             <TabsTrigger value="all" className="gap-1.5">
-              <Zap className="h-3.5 w-3.5" /> All Activity
+              <Zap className="h-3.5 w-3.5" /> All
             </TabsTrigger>
           </TabsList>
 
+          <TabsContent value="product" className="space-y-4 mt-4">
+            {tasksByType("product_improvement").length === 0 ? (
+              <EmptyState text="No product improvement runs yet." />
+            ) : tasksByType("product_improvement").map(task => (
+              <ProductTaskCard key={task.id} task={task} onDeploy={deploySuggestion} deployingId={deployingId} />
+            ))}
+          </TabsContent>
+
+          <TabsContent value="qa" className="space-y-4 mt-4">
+            {tasksByType("qa_testing").length === 0 ? (
+              <EmptyState text="No QA runs yet." />
+            ) : tasksByType("qa_testing").map(task => (
+              <QATaskCard key={task.id} task={task} onDeploy={deploySuggestion} deployingId={deployingId} />
+            ))}
+          </TabsContent>
+
           <TabsContent value="seo" className="space-y-4 mt-4">
-            {seoTasks.length === 0 ? (
-              <Card><CardContent className="py-8 text-center text-muted-foreground text-sm">No SEO agent runs yet. Click "full cycle" above to start.</CardContent></Card>
-            ) : seoTasks.map(task => <TaskResultCard key={task.id} task={task} />)}
+            {tasksByType("seo_content").length === 0 ? (
+              <EmptyState text="No SEO runs yet." />
+            ) : tasksByType("seo_content").map(task => <TaskResultCard key={task.id} task={task} />)}
           </TabsContent>
 
           <TabsContent value="outreach" className="space-y-4 mt-4">
-            {outreachTasks.length === 0 ? (
-              <Card><CardContent className="py-8 text-center text-muted-foreground text-sm">No Outreach agent runs yet. Click "full cycle" above to start.</CardContent></Card>
-            ) : outreachTasks.map(task => <TaskResultCard key={task.id} task={task} />)}
+            {tasksByType("outreach_growth").length === 0 ? (
+              <EmptyState text="No outreach runs yet." />
+            ) : tasksByType("outreach_growth").map(task => <TaskResultCard key={task.id} task={task} />)}
+          </TabsContent>
+
+          <TabsContent value="deploys" className="space-y-4 mt-4">
+            {tasksByType("deploy_suggestion").length === 0 ? (
+              <EmptyState text="No deployed suggestions yet. Run a Product or QA scan, then click 'Deploy' on a suggestion." />
+            ) : tasksByType("deploy_suggestion").map(task => (
+              <DeployTaskCard key={task.id} task={task} />
+            ))}
           </TabsContent>
 
           <TabsContent value="all" className="space-y-4 mt-4">
             {tasks.length === 0 ? (
-              <Card><CardContent className="py-8 text-center text-muted-foreground text-sm">No agent activity yet.</CardContent></Card>
+              <EmptyState text="No agent activity yet." />
             ) : tasks.map(task => <TaskResultCard key={task.id} task={task} />)}
           </TabsContent>
         </Tabs>
@@ -220,6 +302,269 @@ export default function SwarmPage() {
   );
 }
 
+function EmptyState({ text }: { text: string }) {
+  return (
+    <Card>
+      <CardContent className="py-8 text-center text-muted-foreground text-sm">{text}</CardContent>
+    </Card>
+  );
+}
+
+/* ---- Product Improvement Task Card ---- */
+function ProductTaskCard({ task, onDeploy, deployingId }: { task: SwarmTask; onDeploy: (s: any, cat: string, taskId: string) => void; deployingId: string | null }) {
+  const [expanded, setExpanded] = useState(false);
+  const output = task.output;
+
+  const allSuggestions = [
+    ...(output?.listing_quality || []).map((s: any) => ({ ...s, _cat: "listing_quality" })),
+    ...(output?.seo_gaps || []).map((s: any) => ({ ...s, _cat: "seo_gaps" })),
+    ...(output?.conversion_improvements || []).map((s: any) => ({ ...s, _cat: "conversion" })),
+    ...(output?.feature_gaps || []).map((s: any) => ({ ...s, _cat: "feature_gaps" })),
+  ];
+
+  return (
+    <Card className="border-border/50">
+      <CardHeader className="pb-2 cursor-pointer" onClick={() => setExpanded(!expanded)}>
+        <div className="flex items-center gap-2">
+          {statusIcon(task.status)}
+          <Lightbulb className="h-4 w-4 text-amber-500" />
+          <span className="text-sm font-medium">Product Improvement</span>
+          <Badge variant="outline" className="text-[10px]">{task.action.replace(/_/g, " ")}</Badge>
+          {output && (
+            <Badge className="text-[10px] bg-amber-500/10 text-amber-600 border-amber-500/30">
+              {allSuggestions.length} suggestions
+            </Badge>
+          )}
+          <span className="text-[10px] text-muted-foreground ml-auto">{new Date(task.created_at).toLocaleString()}</span>
+          {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+        </div>
+      </CardHeader>
+      {expanded && (
+        <CardContent className="pt-0 space-y-4">
+          {task.error && <ErrorBlock error={task.error} />}
+          {allSuggestions.map((s, i) => (
+            <SuggestionCard
+              key={i}
+              suggestion={s}
+              category={s._cat}
+              taskId={task.id}
+              onDeploy={onDeploy}
+              deployingId={deployingId}
+            />
+          ))}
+          {!output && !task.error && <p className="text-xs text-muted-foreground">No output yet.</p>}
+        </CardContent>
+      )}
+    </Card>
+  );
+}
+
+/* ---- QA Task Card ---- */
+function QATaskCard({ task, onDeploy, deployingId }: { task: SwarmTask; onDeploy: (s: any, cat: string, taskId: string) => void; deployingId: string | null }) {
+  const [expanded, setExpanded] = useState(false);
+  const output = task.output;
+  const summary = output?.summary;
+  const findings = output?.findings || [];
+
+  return (
+    <Card className="border-border/50">
+      <CardHeader className="pb-2 cursor-pointer" onClick={() => setExpanded(!expanded)}>
+        <div className="flex items-center gap-2">
+          {statusIcon(task.status)}
+          <ShieldCheck className="h-4 w-4 text-emerald-500" />
+          <span className="text-sm font-medium">QA Testing</span>
+          <Badge variant="outline" className="text-[10px]">{task.action.replace(/_/g, " ")}</Badge>
+          {summary && (
+            <>
+              <Badge className={cn("text-[10px]", summary.health_score >= 80 ? "bg-emerald-500/10 text-emerald-600" : summary.health_score >= 50 ? "bg-amber-500/10 text-amber-600" : "bg-red-500/10 text-red-600")}>
+                Score: {summary.health_score}/100
+              </Badge>
+              {summary.critical_count > 0 && (
+                <Badge className="text-[10px] bg-red-500/10 text-red-500">
+                  {summary.critical_count} critical
+                </Badge>
+              )}
+            </>
+          )}
+          <span className="text-[10px] text-muted-foreground ml-auto">{new Date(task.created_at).toLocaleString()}</span>
+          {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+        </div>
+      </CardHeader>
+      {expanded && (
+        <CardContent className="pt-0 space-y-3">
+          {task.error && <ErrorBlock error={task.error} />}
+          {summary && (
+            <div className="grid grid-cols-4 gap-2">
+              <StatBox label="Health" value={`${summary.health_score}%`} color={summary.health_score >= 80 ? "text-emerald-500" : "text-amber-500"} />
+              <StatBox label="Critical" value={summary.critical_count} color="text-red-500" />
+              <StatBox label="Warnings" value={summary.warning_count} color="text-amber-500" />
+              <StatBox label="Passed" value={summary.passed_count} color="text-emerald-500" />
+            </div>
+          )}
+          {findings.map((f: any, i: number) => (
+            <div key={i} className={cn("rounded-lg border p-3 space-y-2", severityColor(f.severity))}>
+              <div className="flex items-center gap-2">
+                {f.severity === "critical" || f.severity === "high" ? (
+                  <AlertTriangle className="h-3.5 w-3.5" />
+                ) : f.severity === "pass" ? (
+                  <CheckCircle className="h-3.5 w-3.5" />
+                ) : (
+                  <ShieldCheck className="h-3.5 w-3.5" />
+                )}
+                <span className="text-xs font-bold uppercase">{f.severity}</span>
+                <Badge variant="outline" className="text-[9px]">{f.category.replace(/_/g, " ")}</Badge>
+              </div>
+              <p className="text-sm font-medium">{f.title}</p>
+              <p className="text-xs opacity-80">{f.description}</p>
+              {f.affected_items && <p className="text-[10px] opacity-60">Affected: {f.affected_items}</p>}
+              {f.implementation && f.severity !== "pass" && (
+                <div className="flex items-center gap-2 pt-1">
+                  <p className="text-[10px] opacity-70 flex-1 font-mono">{f.implementation.slice(0, 120)}…</p>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-[10px] h-7 gap-1"
+                    onClick={() => onDeploy(f, f.category, task.id)}
+                    disabled={deployingId !== null}
+                  >
+                    {deployingId ? <Loader2 className="h-3 w-3 animate-spin" /> : <Rocket className="h-3 w-3" />}
+                    Deploy Fix
+                  </Button>
+                </div>
+              )}
+            </div>
+          ))}
+        </CardContent>
+      )}
+    </Card>
+  );
+}
+
+/* ---- Suggestion Card with Deploy Button ---- */
+function SuggestionCard({ suggestion, category, taskId, onDeploy, deployingId }: {
+  suggestion: any;
+  category: string;
+  taskId: string;
+  onDeploy: (s: any, cat: string, taskId: string) => void;
+  deployingId: string | null;
+}) {
+  const title = suggestion.listing_title || suggestion.page_or_listing || suggestion.area || suggestion.feature || "Suggestion";
+  const severity = suggestion.severity || suggestion.priority || "medium";
+  const desc = suggestion.issue || suggestion.gap || suggestion.description || suggestion.rationale || "";
+  const fix = suggestion.suggestion || suggestion.fix || "";
+
+  return (
+    <div className={cn("rounded-lg border p-3 space-y-2", severityColor(severity))}>
+      <div className="flex items-center gap-2">
+        <Badge variant="outline" className="text-[9px]">{category.replace(/_/g, " ")}</Badge>
+        <span className="text-xs font-bold uppercase">{severity}</span>
+        {suggestion.effort && <Badge variant="secondary" className="text-[9px]">{suggestion.effort}</Badge>}
+      </div>
+      <p className="text-sm font-medium">{title}</p>
+      {desc && <p className="text-xs opacity-80">{desc}</p>}
+      {fix && <p className="text-xs opacity-70">→ {fix}</p>}
+      {suggestion.implementation && (
+        <div className="flex items-center gap-2 pt-1">
+          <p className="text-[10px] opacity-60 flex-1 font-mono">{suggestion.implementation.slice(0, 120)}…</p>
+          <Button
+            size="sm"
+            variant="outline"
+            className="text-[10px] h-7 gap-1 shrink-0"
+            onClick={() => onDeploy(suggestion, category, taskId)}
+            disabled={deployingId !== null}
+          >
+            {deployingId ? <Loader2 className="h-3 w-3 animate-spin" /> : <Rocket className="h-3 w-3" />}
+            Deploy
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ---- Deploy Suggestion Task Card ---- */
+function DeployTaskCard({ task }: { task: SwarmTask }) {
+  const [expanded, setExpanded] = useState(true);
+  const output = task.output;
+  const changes = output?.changes || [];
+
+  return (
+    <Card className="border-border/50">
+      <CardHeader className="pb-2 cursor-pointer" onClick={() => setExpanded(!expanded)}>
+        <div className="flex items-center gap-2">
+          {statusIcon(task.status)}
+          <Code className="h-4 w-4 text-primary" />
+          <span className="text-sm font-medium">Generated Code</span>
+          {output?.risk_level && (
+            <Badge className={cn("text-[10px]", output.risk_level === "low" ? "bg-emerald-500/10 text-emerald-600" : output.risk_level === "high" ? "bg-red-500/10 text-red-600" : "bg-amber-500/10 text-amber-600")}>
+              {output.risk_level} risk
+            </Badge>
+          )}
+          <Badge variant="outline" className="text-[10px]">{changes.length} files</Badge>
+          <span className="text-[10px] text-muted-foreground ml-auto">{new Date(task.created_at).toLocaleString()}</span>
+          {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+        </div>
+      </CardHeader>
+      {expanded && (
+        <CardContent className="pt-0 space-y-3">
+          {task.error && <ErrorBlock error={task.error} />}
+          {output?.summary && (
+            <p className="text-sm font-medium text-foreground">{output.summary}</p>
+          )}
+          {/* Source suggestion */}
+          {task.input?.suggestion && (
+            <div className="text-xs text-muted-foreground bg-muted/30 rounded-lg p-2">
+              <span className="font-medium">Source:</span> {task.input.suggestion.title || task.input.suggestion.feature || task.input.suggestion.listing_title || task.input.category}
+            </div>
+          )}
+          {/* Code changes */}
+          {changes.map((c: any, i: number) => (
+            <div key={i} className="rounded-lg border border-border/50 overflow-hidden">
+              <div className="flex items-center gap-2 px-3 py-2 bg-muted/30 border-b border-border/50">
+                <Badge variant={c.change_type === "create" ? "default" : c.change_type === "delete" ? "destructive" : "secondary"} className="text-[9px]">
+                  {c.change_type}
+                </Badge>
+                <code className="text-xs font-mono text-foreground">{c.file_path}</code>
+              </div>
+              <p className="text-xs text-muted-foreground px-3 py-1.5">{c.description}</p>
+              <pre className="text-[10px] bg-background/50 px-3 py-2 overflow-x-auto max-h-60 font-mono whitespace-pre-wrap">
+                {c.code}
+              </pre>
+            </div>
+          ))}
+          {/* Test steps */}
+          {output?.test_steps && output.test_steps.length > 0 && (
+            <div>
+              <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Verification Steps</h4>
+              <ol className="list-decimal list-inside space-y-0.5">
+                {output.test_steps.map((step: string, i: number) => (
+                  <li key={i} className="text-xs text-muted-foreground">{step}</li>
+                ))}
+              </ol>
+            </div>
+          )}
+        </CardContent>
+      )}
+    </Card>
+  );
+}
+
+function ErrorBlock({ error }: { error: string }) {
+  return (
+    <div className="text-sm text-red-500 bg-red-500/10 p-3 rounded-md">❌ {error}</div>
+  );
+}
+
+function StatBox({ label, value, color }: { label: string; value: any; color: string }) {
+  return (
+    <div className="rounded-lg bg-muted/30 p-2 text-center">
+      <p className={cn("text-lg font-bold", color)}>{value}</p>
+      <p className="text-[10px] text-muted-foreground">{label}</p>
+    </div>
+  );
+}
+
+/* ---- Generic Task Result Card (for SEO/Outreach/All) ---- */
 function TaskResultCard({ task }: { task: SwarmTask }) {
   const [expanded, setExpanded] = useState(false);
   const config = agentConfig[task.agent_type as keyof typeof agentConfig];
@@ -241,94 +586,36 @@ function TaskResultCard({ task }: { task: SwarmTask }) {
       </CardHeader>
       {expanded && (
         <CardContent className="pt-0">
-          {task.error && (
-            <div className="text-sm text-red-500 bg-red-500/10 p-3 rounded-md mb-3">
-              ❌ {task.error}
-            </div>
-          )}
+          {task.error && <ErrorBlock error={task.error} />}
           {task.output && (
             <div className="space-y-4">
-              {/* SEO output */}
               {task.output.blog_posts && (
-                <div>
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Blog Post Ideas</h4>
-                  <div className="space-y-2">
-                    {task.output.blog_posts.map((post: any, i: number) => (
-                      <div key={i} className="p-3 rounded-md bg-muted/30">
-                        <p className="text-sm font-medium">{post.title}</p>
-                        <p className="text-xs text-muted-foreground mt-1">{post.meta_description}</p>
-                        <div className="flex gap-1 mt-2 flex-wrap">
-                          {post.target_keywords?.map((kw: string) => (
-                            <Badge key={kw} variant="outline" className="text-[9px]">{kw}</Badge>
-                          ))}
-                        </div>
+                <OutputSection title="Blog Post Ideas">
+                  {task.output.blog_posts.map((post: any, i: number) => (
+                    <div key={i} className="p-3 rounded-md bg-muted/30">
+                      <p className="text-sm font-medium">{post.title}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{post.meta_description}</p>
+                      <div className="flex gap-1 mt-2 flex-wrap">
+                        {post.target_keywords?.map((kw: string) => (
+                          <Badge key={kw} variant="outline" className="text-[9px]">{kw}</Badge>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {task.output.meta_improvements && task.output.meta_improvements.length > 0 && (
-                <div>
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Meta Improvements</h4>
-                  {task.output.meta_improvements.map((m: any, i: number) => (
-                    <div key={i} className="p-2 rounded-md bg-muted/30 mb-1">
-                      <p className="text-xs font-medium">{m.listing_title}: <span className="text-muted-foreground">{m.recommendation}</span></p>
                     </div>
                   ))}
-                </div>
+                </OutputSection>
               )}
-              {task.output.content_gaps && task.output.content_gaps.length > 0 && (
-                <div>
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Content Gaps</h4>
-                  {task.output.content_gaps.map((g: any, i: number) => (
-                    <div key={i} className="p-2 rounded-md bg-muted/30 mb-1">
-                      <p className="text-xs"><span className="font-medium">{g.page_title}</span> → {g.url_path}</p>
-                      <p className="text-[10px] text-muted-foreground">{g.reason}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Outreach output */}
               {task.output.directories && (
-                <div>
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Discovered Directories</h4>
-                  <div className="space-y-1">
-                    {task.output.directories.map((d: any, i: number) => (
-                      <div key={i} className="flex items-center gap-2 p-2 rounded-md bg-muted/30">
-                        <Badge variant={d.priority === "high" ? "default" : "outline"} className="text-[9px]">{d.priority}</Badge>
-                        <span className="text-sm font-medium flex-1">{d.name}</span>
-                        <a href={d.url} target="_blank" rel="noopener" className="text-xs text-primary hover:underline">Visit</a>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {task.output.partnerships && task.output.partnerships.length > 0 && (
-                <div>
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Partnership Opportunities</h4>
-                  {task.output.partnerships.map((p: any, i: number) => (
-                    <div key={i} className="p-2 rounded-md bg-muted/30 mb-1">
-                      <p className="text-xs"><span className="font-medium">{p.partner_name}</span>: {p.opportunity}</p>
-                      <p className="text-[10px] text-muted-foreground">→ {p.action_item}</p>
+                <OutputSection title="Discovered Directories">
+                  {task.output.directories.map((d: any, i: number) => (
+                    <div key={i} className="flex items-center gap-2 p-2 rounded-md bg-muted/30">
+                      <Badge variant={d.priority === "high" ? "default" : "outline"} className="text-[9px]">{d.priority}</Badge>
+                      <span className="text-sm font-medium flex-1">{d.name}</span>
+                      <a href={d.url} target="_blank" rel="noopener" className="text-xs text-primary hover:underline">Visit</a>
                     </div>
                   ))}
-                </div>
+                </OutputSection>
               )}
-              {task.output.growth_tactics && task.output.growth_tactics.length > 0 && (
-                <div>
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Growth Tactics</h4>
-                  {task.output.growth_tactics.map((t: any, i: number) => (
-                    <div key={i} className="p-2 rounded-md bg-muted/30 mb-1">
-                      <p className="text-xs"><span className="font-medium">{t.tactic}</span> via {t.channel}</p>
-                      <p className="text-[10px] text-muted-foreground">Expected: {t.expected_result}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Fallback raw output */}
-              {!task.output.blog_posts && !task.output.directories && (
+              {!task.output.blog_posts && !task.output.directories && !task.output.findings && !task.output.changes && (
                 <pre className="text-[10px] bg-muted/30 p-3 rounded-md overflow-auto max-h-60">
                   {JSON.stringify(task.output, null, 2)}
                 </pre>
@@ -338,5 +625,14 @@ function TaskResultCard({ task }: { task: SwarmTask }) {
         </CardContent>
       )}
     </Card>
+  );
+}
+
+function OutputSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">{title}</h4>
+      <div className="space-y-2">{children}</div>
+    </div>
   );
 }

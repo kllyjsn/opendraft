@@ -42,12 +42,12 @@ export function AgentHero() {
 
           {/* Headline */}
           <h2 className="text-3xl md:text-5xl font-black tracking-tight text-center mb-4 leading-tight">
-            Your agent's
-            <span className="text-gradient"> app store</span>
+            Let your agent
+            <span className="text-gradient"> buy the fork</span>
           </h2>
           <p className="text-center text-muted-foreground max-w-xl mx-auto mb-10 leading-relaxed">
-            17 MCP tools + REST API. Let your AI agent browse the marketplace, purchase apps,
-            and deploy solutions — all programmatically. No human in the loop.
+            23 MCP tools + REST API. Your AI agent can search, purchase, and deploy
+            forks — fully autonomous. No human in the loop.
           </p>
 
           {/* Capabilities grid */}

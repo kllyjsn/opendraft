@@ -18,14 +18,14 @@ export function CtaBanner() {
             <BrandMascot size={80} variant="happy" />
           </div>
           <h2 className="text-3xl md:text-4xl font-black tracking-tight mb-4">
-            Built something cool?
+            Your code deserves buyers.
           </h2>
           <p className="text-muted-foreground mb-8 leading-relaxed">
-            List your project in minutes. Get discovered by thousands of buyers and start earning from your work — instantly.
+            List your fork in minutes. Buyers get the source code, you earn from every sale — plus recurring revenue from maintenance subscriptions.
           </p>
           <Link to={user ? "/sell" : "/login"}>
             <Button size="lg" className="gradient-hero text-white border-0 shadow-glow hover:opacity-90 text-base px-8">
-              {user ? "List your project" : "Get started — it's free"}
+              {user ? "List your fork" : "Start selling — it's free"}
             </Button>
           </Link>
         </div>

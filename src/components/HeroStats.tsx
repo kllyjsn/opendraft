@@ -1,9 +1,9 @@
-import { Zap, Clock, Gavel } from "lucide-react";
+import { GitFork, Rocket, Bot } from "lucide-react";
 
 const items = [
-  { icon: Zap, label: "Faster than building from scratch", value: "10×" },
-  { icon: Clock, label: "Launch instantly & make it yours", value: "Day 1" },
-  { icon: Gavel, label: "Name your price on any project", value: "Bid" },
+  { icon: GitFork, label: "Full source code — yours forever", value: "Fork" },
+  { icon: Rocket, label: "Deploy anywhere, no lock-in", value: "Day 1" },
+  { icon: Bot, label: "AI agents can buy too", value: "MCP" },
 ];
 
 export function HeroStats() {

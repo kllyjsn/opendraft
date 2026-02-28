@@ -1,27 +1,27 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { MousePointerClick, MessageSquare, RefreshCw } from "lucide-react";
+import { GitFork, Code, RefreshCw } from "lucide-react";
 
 const steps = [
   {
-    icon: MousePointerClick,
+    icon: GitFork,
     number: "01",
-    title: "Find & Subscribe",
-    description: "Browse AI-built projects and subscribe to one that fits your needs. Instant access, no waiting.",
+    title: "Fork the Code",
+    description: "Find an AI-built app you like and buy the fork. You get the full source code — yours to own, modify, and deploy forever.",
     gradient: "from-primary to-accent",
   },
   {
-    icon: MessageSquare,
+    icon: Code,
     number: "02",
-    title: "Message Your Builder",
-    description: "Get a direct line to the developer. Request features, report bugs, ask questions — they're on retainer for you.",
+    title: "Ship on Day One",
+    description: "Deploy to Vercel, Netlify, or your own infra. No lock-in, no proprietary runtime. It's a standard React + Supabase stack.",
     gradient: "from-accent to-secondary",
   },
   {
     icon: RefreshCw,
     number: "03",
-    title: "Get Monthly Updates",
-    description: "Your builder ships improvements, bug fixes, and new features every month. Peace of mind, not just code.",
+    title: "Subscribe for Updates",
+    description: "Optionally subscribe to maintenance. Your builder ships new features, bug fixes, and improvements — merged directly into your fork.",
     gradient: "from-secondary to-primary",
   },
 ];
@@ -45,9 +45,9 @@ export function HowItWorks() {
         <div className="text-center mb-14">
           <p className="text-xs font-bold uppercase tracking-widest text-primary mb-3">How it works</p>
           <h2 className="text-3xl md:text-5xl font-black tracking-tighter leading-[1.05]">
-            A developer on retainer —
+            Fork it. Ship it.
             <br className="hidden md:block" />
-            <span className="text-gradient"> not just a file download</span>
+            <span className="text-gradient"> We keep building.</span>
           </h2>
         </div>
 
@@ -95,7 +95,7 @@ export function HowItWorks() {
             to="/faq"
             className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground transition-colors"
           >
-            Learn more about how subscriptions work →
+            Learn more about forks & maintenance →
           </Link>
         </div>
       </div>

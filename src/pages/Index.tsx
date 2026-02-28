@@ -12,6 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { BuildSearch } from "@/components/BuildSearch";
 import { FeaturedListings } from "@/components/FeaturedListings";
 import { CtaBanner } from "@/components/CtaBanner";
+import { BrandMascot } from "@/components/BrandMascot";
 
 const CATEGORIES = ["All", "SaaS Tool", "AI App", "Landing Page", "Utility", "Game", "Other"];
 const COMPLETENESS = ["All", "Prototype", "MVP", "Production Ready"];
@@ -175,6 +176,10 @@ export default function Index() {
 
         <div className="container mx-auto px-4 text-center relative z-10">
           <motion.div initial="hidden" animate="visible" variants={staggerContainer}>
+            <motion.div variants={fadeUp} custom={0} className="flex justify-center mb-4">
+              <BrandMascot size={90} variant="wave" />
+            </motion.div>
+
             <motion.h1 variants={fadeUp} custom={0} className="text-5xl md:text-8xl font-black tracking-tighter mb-5 md:mb-6 leading-[0.95]">
               Create anything.
               <br />

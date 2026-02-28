@@ -62,7 +62,7 @@ export default function BoardRoomPage() {
   const [meetings, setMeetings] = useState<BoardMeeting[]>([]);
   const [loading, setLoading] = useState(true);
   const [convening, setConvening] = useState(false);
-  const [deployingId, setDeployingId] = useState<string | null>(null);
+  
 
   useEffect(() => {
     if (!adminLoading && !isAdmin) navigate("/");
@@ -100,38 +100,31 @@ export default function BoardRoomPage() {
     }
   };
 
-  const deployInitiative = async (initiative: any, meetingId: string) => {
-    const key = `${meetingId}-${initiative.title}`;
-    setDeployingId(key);
-    toast.info("🚀 Generating implementation code...");
+  const copySpecToClipboard = (initiative: any) => {
+    const spec = [
+      `## Initiative: ${initiative.title}`,
+      ``,
+      `**Priority:** ${initiative.priority || "N/A"}`,
+      `**Timeline:** ${initiative.timeline?.replace(/_/g, " ") || "N/A"}`,
+      `**Expected Impact:** ${initiative.expected_revenue_impact || "N/A"}`,
+      ``,
+      `### Description`,
+      initiative.description,
+      ``,
+      `### Implementation Details`,
+      initiative.implementation || "No implementation details provided.",
+      ``,
+      `### Acceptance Criteria`,
+      `- The change described above is implemented and working`,
+      `- No regressions to existing functionality`,
+      `- Code follows existing project conventions`,
+    ].join("\n");
 
-    try {
-      const { data, error } = await supabase.functions.invoke("swarm-deploy-suggestion", {
-        body: {
-          suggestion: {
-            title: initiative.title,
-            description: initiative.description,
-            implementation: initiative.implementation,
-            issue: initiative.description,
-            suggestion: initiative.expected_revenue_impact,
-          },
-          source_task_id: meetingId,
-          category: "board_initiative",
-        },
-      });
-      if (error) throw error;
-
-      const changes = data?.result?.changes?.length || 0;
-      if (changes > 0) {
-        toast.success(`✅ Generated ${changes} code changes! Check Swarm → Deploy Suggestions.`);
-      } else {
-        toast.warning("⚠️ Agent completed but generated no code changes.");
-      }
-    } catch (e: any) {
-      toast.error(`❌ Deploy failed: ${e.message}`);
-    } finally {
-      setDeployingId(null);
-    }
+    navigator.clipboard.writeText(spec).then(() => {
+      toast.success("📋 Spec copied! Paste it into Lovable to implement.");
+    }).catch(() => {
+      toast.error("Failed to copy to clipboard");
+    });
   };
 
   if (adminLoading || !isAdmin) return null;
@@ -309,15 +302,9 @@ export default function BoardRoomPage() {
                                   size="sm"
                                   variant="outline"
                                   className="text-[10px] h-7 gap-1 shrink-0"
-                                  onClick={() => deployInitiative(init, latestMeeting.id)}
-                                  disabled={deployingId !== null}
+                                  onClick={() => copySpecToClipboard(init)}
                                 >
-                                  {deployingId === `${latestMeeting.id}-${init.title}` ? (
-                                    <Loader2 className="h-3 w-3 animate-spin" />
-                                  ) : (
-                                    <Rocket className="h-3 w-3" />
-                                  )}
-                                  Deploy
+                                  📋 Copy Spec
                                 </Button>
                               </div>
                             )}
@@ -446,18 +433,12 @@ export default function BoardRoomPage() {
                                       size="sm"
                                       variant="outline"
                                       className="text-[10px] h-7 gap-1 shrink-0"
-                                      onClick={() => deployInitiative({
+                                      onClick={() => copySpecToClipboard({
                                         ...rec,
                                         expected_revenue_impact: rec.expected_impact,
-                                      }, latestMeeting.id)}
-                                      disabled={deployingId !== null}
+                                      })}
                                     >
-                                      {deployingId === `${latestMeeting.id}-${rec.title}` ? (
-                                        <Loader2 className="h-3 w-3 animate-spin" />
-                                      ) : (
-                                        <Rocket className="h-3 w-3" />
-                                      )}
-                                      Deploy
+                                      📋 Copy Spec
                                     </Button>
                                   </div>
                                 )}

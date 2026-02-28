@@ -42,6 +42,7 @@ import OpenClawPage from "./pages/OpenClaw";
 import SwarmPage from "./pages/Swarm";
 import BoardRoomPage from "./pages/BoardRoom";
 import MascotExport from "./pages/MascotExport";
+import ForPersona from "./pages/ForPersona";
 
 const queryClient = new QueryClient();
 
@@ -85,6 +86,7 @@ const App = () => (
           <Route path="/swarm" element={<SwarmPage />} />
           <Route path="/boardroom" element={<BoardRoomPage />} />
           <Route path="/mascot-export" element={<MascotExport />} />
+          <Route path="/for/:persona" element={<ForPersona />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

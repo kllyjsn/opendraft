@@ -52,17 +52,28 @@ export function ListingCard({
         {/* Thumbnail */}
         <div className="relative h-32 md:h-44 bg-muted overflow-hidden">
           {thumbnail ? (
-          <img
-              src={thumbnail}
-              alt={title}
-              loading="lazy"
-              width={400}
-              height={225}
-              decoding="async"
-              sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 20vw"
-              srcSet={`${thumbnail}?width=300 300w, ${thumbnail}?width=400 400w, ${thumbnail}?width=600 600w`}
-              className="w-full h-full object-cover group-hover:scale-[1.06] transition-transform duration-700 ease-out"
-            />
+            <>
+              <img
+                src={thumbnail}
+                alt={title}
+                loading="lazy"
+                width={400}
+                height={225}
+                decoding="async"
+                sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 20vw"
+                srcSet={`${thumbnail}?width=300 300w, ${thumbnail}?width=400 400w, ${thumbnail}?width=600 600w`}
+                className="w-full h-full object-cover group-hover:scale-[1.06] transition-transform duration-700 ease-out"
+                onError={(e) => {
+                  const target = e.currentTarget;
+                  target.style.display = "none";
+                  const fallback = target.parentElement?.querySelector(".img-fallback") as HTMLElement;
+                  if (fallback) fallback.style.display = "flex";
+                }}
+              />
+              <div className="img-fallback w-full h-full items-center justify-center gradient-hero opacity-80 hidden absolute inset-0">
+                <span className="text-4xl">⚡</span>
+              </div>
+            </>
           ) : (
             <div className="w-full h-full flex items-center justify-center gradient-hero opacity-80">
               <span className="text-4xl">⚡</span>

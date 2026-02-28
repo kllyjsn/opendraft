@@ -275,6 +275,25 @@ export default function App() {
 }
 `);
 
+        // Deploy config files for Netlify/Vercel
+        folder.file("netlify.toml", `[build]
+  command = "npm run build"
+  publish = "dist"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+`);
+        folder.file("_redirects", `/*    /index.html   200
+`);
+        folder.file("vercel.json", JSON.stringify({
+          buildCommand: "npm run build",
+          outputDirectory: "dist",
+          framework: "vite",
+          rewrites: [{ source: "/(.*)", destination: "/index.html" }],
+        }, null, 2));
+
         folder.file("README.md", `# ${listing.title}
 
 ${listing.description || "A modern web application template."}

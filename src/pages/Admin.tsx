@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { CompletenessBadge } from "@/components/CompletenessBadge";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle, XCircle, Eye, Loader2, ShieldCheck, Clock, BarChart3, Flag, Archive } from "lucide-react";
+import { CheckCircle, XCircle, Eye, Loader2, ShieldCheck, Clock, BarChart3, Flag, Archive, Bot } from "lucide-react";
 import { AdminDiscountCodes } from "@/components/AdminDiscountCodes";
 import { AdminFlagReview } from "@/components/AdminFlagReview";
 import { AdminConceptGenerator } from "@/components/AdminConceptGenerator";
@@ -188,6 +188,11 @@ export default function Admin() {
             <h1 className="text-2xl font-black">Admin Panel</h1>
             <p className="text-sm text-muted-foreground">Marketplace moderation</p>
           </div>
+          <Link to="/swarm" className="ml-auto">
+            <Button variant="outline" size="sm" className="gap-1.5">
+              <Bot className="h-3.5 w-3.5" /> AI Swarm
+            </Button>
+          </Link>
         </div>
 
         {/* Stats */}

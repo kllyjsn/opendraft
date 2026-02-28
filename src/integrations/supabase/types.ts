@@ -936,6 +936,45 @@ export type Database = {
           },
         ]
       }
+      swarm_tasks: {
+        Row: {
+          action: string
+          agent_type: string
+          completed_at: string | null
+          created_at: string
+          error: string | null
+          id: string
+          input: Json
+          output: Json | null
+          status: string
+          triggered_by: string
+        }
+        Insert: {
+          action: string
+          agent_type: string
+          completed_at?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          input?: Json
+          output?: Json | null
+          status?: string
+          triggered_by?: string
+        }
+        Update: {
+          action?: string
+          agent_type?: string
+          completed_at?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          input?: Json
+          output?: Json | null
+          status?: string
+          triggered_by?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string

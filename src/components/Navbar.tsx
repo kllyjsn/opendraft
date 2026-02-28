@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
-import { Zap, Menu, X, ShieldCheck } from "lucide-react";
+import { Zap, Menu, X, ShieldCheck, Bot } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -78,9 +78,14 @@ export function Navbar() {
             </>
           )}
           {isAdmin && (
-            <Link to="/admin" className="text-sm font-medium text-primary hover:opacity-80 transition-opacity duration-200 flex items-center gap-1">
-              <ShieldCheck className="h-3.5 w-3.5" /> Admin
-            </Link>
+            <>
+              <Link to="/admin" className="text-sm font-medium text-primary hover:opacity-80 transition-opacity duration-200 flex items-center gap-1">
+                <ShieldCheck className="h-3.5 w-3.5" /> Admin
+              </Link>
+              <Link to="/swarm" className="text-sm font-medium text-primary hover:opacity-80 transition-opacity duration-200 flex items-center gap-1">
+                <Bot className="h-3.5 w-3.5" /> Swarm
+              </Link>
+            </>
           )}
         </div>
 
@@ -162,9 +167,14 @@ export function Navbar() {
               </NavItem>
               <NavItem to="/profile" onClick={() => setMenuOpen(false)}>Profile</NavItem>
               {isAdmin && (
-                <Link to="/admin" className="text-sm font-medium text-primary flex items-center gap-1" onClick={() => setMenuOpen(false)}>
-                  <ShieldCheck className="h-3.5 w-3.5" /> Admin
-                </Link>
+                <>
+                  <Link to="/admin" className="text-sm font-medium text-primary flex items-center gap-1" onClick={() => setMenuOpen(false)}>
+                    <ShieldCheck className="h-3.5 w-3.5" /> Admin
+                  </Link>
+                  <Link to="/swarm" className="text-sm font-medium text-primary flex items-center gap-1" onClick={() => setMenuOpen(false)}>
+                    <Bot className="h-3.5 w-3.5" /> AI Swarm
+                  </Link>
+                </>
               )}
               <div className="pt-3 border-t border-border/40">
                 <Button variant="outline" size="sm" onClick={handleSignOut} className="w-full">

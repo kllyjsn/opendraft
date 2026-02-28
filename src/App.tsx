@@ -39,6 +39,7 @@ import Developers from "./pages/Developers";
 import Agents from "./pages/Agents";
 import Pitch from "./pages/Pitch";
 import OpenClawPage from "./pages/OpenClaw";
+import SwarmPage from "./pages/Swarm";
 
 const queryClient = new QueryClient();
 
@@ -79,6 +80,7 @@ const App = () => (
           <Route path="/agents" element={<Agents />} />
           <Route path="/pitch" element={<Pitch />} />
           <Route path="/openclaw" element={<OpenClawPage />} />
+          <Route path="/swarm" element={<SwarmPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

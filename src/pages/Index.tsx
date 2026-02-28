@@ -20,6 +20,8 @@ import { CategoryShowcase } from "@/components/CategoryShowcase";
 import { CtaBanner } from "@/components/CtaBanner";
 import { AgentHero } from "@/components/AgentHero";
 import { BrandMascot } from "@/components/BrandMascot";
+import { BuyerWelcomeModal } from "@/components/BuyerWelcomeModal";
+import { PromoBanner } from "@/components/PromoBanner";
 
 const CATEGORIES = ["All", "SaaS Tool", "AI App", "Landing Page", "Utility", "Game", "Other"];
 const COMPLETENESS = ["All", "Prototype", "MVP", "Production Ready"];
@@ -174,7 +176,9 @@ export default function Index() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <PromoBanner />
       <Navbar />
+      <BuyerWelcomeModal />
 
       {/* ── HERO ── */}
       <section className="relative overflow-hidden py-20 md:py-36 grain-overlay">

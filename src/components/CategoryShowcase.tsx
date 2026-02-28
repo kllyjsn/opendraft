@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Bot, LayoutDashboard, Globe, Gamepad2, Wrench, Sparkles } from "lucide-react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const categories = [
   { icon: Bot, label: "AI Apps", slug: "ai_app", color: "from-violet-500/20 to-purple-500/20" },
@@ -21,6 +23,22 @@ const cardVariant = {
 };
 
 export function CategoryShowcase() {
+  const [counts, setCounts] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    supabase
+      .from("listings")
+      .select("category", { count: "exact", head: false })
+      .eq("status", "live")
+      .then(({ data }) => {
+        const map: Record<string, number> = {};
+        (data ?? []).forEach((row: any) => {
+          map[row.category] = (map[row.category] || 0) + 1;
+        });
+        setCounts(map);
+      });
+  }, []);
+
   return (
     <section className="container mx-auto px-4 py-16">
       <div className="text-center mb-10">
@@ -32,6 +50,26 @@ export function CategoryShowcase() {
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 max-w-4xl mx-auto">
         {categories.map((cat, i) => {
           const Icon = cat.icon;
+          const hasListings = (counts[cat.slug] ?? 0) > 0;
+          const content = (
+            <div className={`flex flex-col items-center gap-3 rounded-2xl glass p-5 transition-all duration-300 ${
+              hasListings
+                ? "group hover:shadow-glow hover:-translate-y-1 cursor-pointer"
+                : "opacity-40 cursor-default"
+            }`}>
+              <div className={`h-12 w-12 rounded-xl bg-gradient-to-br ${cat.color} flex items-center justify-center ${hasListings ? "group-hover:scale-110" : ""} transition-transform duration-300`}>
+                <Icon className="h-6 w-6 text-foreground/80" />
+              </div>
+              <span className={`text-xs font-semibold transition-colors ${
+                hasListings
+                  ? "text-muted-foreground group-hover:text-foreground"
+                  : "text-muted-foreground"
+              }`}>
+                {cat.label}
+              </span>
+            </div>
+          );
+
           return (
             <motion.div
               key={cat.slug}
@@ -41,17 +79,11 @@ export function CategoryShowcase() {
               whileInView="visible"
               viewport={{ once: true, margin: "-50px" }}
             >
-              <Link
-                to={`/category/${cat.slug}`}
-                className="group flex flex-col items-center gap-3 rounded-2xl glass p-5 hover:shadow-glow hover:-translate-y-1 transition-all duration-300"
-              >
-                <div className={`h-12 w-12 rounded-xl bg-gradient-to-br ${cat.color} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
-                  <Icon className="h-6 w-6 text-foreground/80" />
-                </div>
-                <span className="text-xs font-semibold text-muted-foreground group-hover:text-foreground transition-colors">
-                  {cat.label}
-                </span>
-              </Link>
+              {hasListings ? (
+                <Link to={`/category/${cat.slug}`}>{content}</Link>
+              ) : (
+                content
+              )}
             </motion.div>
           );
         })}

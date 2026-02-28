@@ -43,6 +43,8 @@ import SwarmPage from "./pages/Swarm";
 import BoardRoomPage from "./pages/BoardRoom";
 import MascotExport from "./pages/MascotExport";
 import ForPersona from "./pages/ForPersona";
+import Founders from "./pages/Founders";
+import CreatorHandbook from "./pages/CreatorHandbook";
 
 const queryClient = new QueryClient();
 
@@ -75,6 +77,7 @@ const App = () => (
           <Route path="/category/:slug" element={<Category />} />
           <Route path="/built-with/:tool" element={<BuiltWith />} />
           <Route path="/guides/sell" element={<GuideSell />} />
+          <Route path="/guides/creators" element={<CreatorHandbook />} />
           <Route path="/blog" element={<BlogIndex />} />
           <Route path="/blog/:slug" element={<BlogPost />} />
           <Route path="/terms" element={<Terms />} />
@@ -87,6 +90,7 @@ const App = () => (
           <Route path="/boardroom" element={<BoardRoomPage />} />
           <Route path="/mascot-export" element={<MascotExport />} />
           <Route path="/for/:persona" element={<ForPersona />} />
+          <Route path="/founders" element={<Founders />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

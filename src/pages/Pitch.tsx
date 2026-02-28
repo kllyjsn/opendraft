@@ -164,7 +164,7 @@ export default function Pitch() {
             <MetricCard label="SOM Y1" value="$2M" sub="Year 1 GMV target" />
           </div>
           <p className="text-sm text-muted-foreground">
-            Gartner projects 15B+ autonomous agent instances by 2030. As agents proliferate, their procurement infrastructure becomes a critical choke point — and a massive revenue opportunity. OpenDraft is the first-mover building this layer.
+            Gartner projects 15B+ autonomous agent instances by 2030. <strong className="text-foreground">Market validation:</strong> TrustMRR — a simple revenue-verification directory — already facilitates $30M+/mo across 125 OpenClaw startups. A full transactional marketplace with agent-native infrastructure captures significantly more value. OpenDraft is the first-mover building this layer.
           </p>
         </Slide>
 
@@ -285,8 +285,36 @@ export default function Pitch() {
           </div>
         </Slide>
 
+        {/* Competitive Landscape */}
+        <Slide title="Competitive Landscape" icon={Globe} index={7}>
+          <p className="text-muted-foreground mb-6">
+            TrustMRR — the largest comparable today — facilitates <strong className="text-foreground">$30M+/mo in GMV</strong> across 125 OpenClaw startups as a revenue verification directory. But no platform handles end-to-end transactions <em>and</em> agent-native infrastructure.
+          </p>
+          <div className="overflow-x-auto mb-6">
+            <table className="w-full text-sm">
+              <thead>
+                <TableRow header cells={["Feature", "OpenDraft", "TrustMRR", "Gumroad", "LemonSqueezy"]} />
+              </thead>
+              <tbody>
+                <TableRow cells={["Agent API (MCP)", "✅ 23 tools", "❌", "❌", "❌"]} />
+                <TableRow cells={["Autonomous Bidding", "✅", "❌", "❌", "❌"]} />
+                <TableRow cells={["Built-in Checkout", "✅ Stripe", "❌ External", "✅", "✅"]} />
+                <TableRow cells={["Webhook Subscriptions", "✅ Real-time", "❌", "✅", "✅"]} />
+                <TableRow cells={["AI-Generated Supply", "✅", "❌", "❌", "❌"]} />
+                <TableRow cells={["Fork & Remix Model", "✅", "❌", "❌", "❌"]} />
+                <TableRow cells={["Revenue Verification", "🔜", "✅", "❌", "❌"]} />
+              </tbody>
+            </table>
+          </div>
+          <div className="rounded-xl border border-primary/30 bg-primary/5 p-5">
+            <p className="text-sm text-muted-foreground">
+              <strong className="text-foreground">Key insight:</strong> Existing platforms serve either <em>listing/verification</em> (TrustMRR) or <em>digital product sales</em> (Gumroad/Lemon). None combine transactional commerce with programmatic agent access — the critical infrastructure layer for the autonomous economy.
+            </p>
+          </div>
+        </Slide>
+
         {/* Moat */}
-        <Slide title="Competitive Moat" icon={Shield} index={7}>
+        <Slide title="Competitive Moat" icon={Shield} index={8}>
           <div className="space-y-4">
             {[
               { t: "Agent-Native Infrastructure", d: "23 MCP tools, REST API with autonomous bidding, webhook subscriptions. No competitor has this." },
@@ -303,7 +331,7 @@ export default function Pitch() {
         </Slide>
 
         {/* Go-to-Market */}
-        <Slide title="Go-to-Market" icon={Users} index={8}>
+        <Slide title="Go-to-Market" icon={Users} index={9}>
           <div className="space-y-3">
             {[
               { phase: "Phase 1 (Now)", desc: "92 live listings. AI-generated supply seeding. Targeting Lovable, Cursor, and Bolt builders." },
@@ -325,7 +353,7 @@ export default function Pitch() {
 
         {/* The Ask */}
         <motion.section
-          custom={9}
+          custom={10}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}

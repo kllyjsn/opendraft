@@ -56,12 +56,11 @@ export function Navbar() {
         {/* Desktop Nav */}
         <div className="hidden md:flex items-center gap-7">
           <NavItem to="/">Browse</NavItem>
+          <NavItem to="/credits">Pricing</NavItem>
           <NavItem to="/builders">Builders</NavItem>
-          <NavItem to="/cloud">Cloud</NavItem>
           <NavItem to="/bounties">Bounties</NavItem>
           <NavItem to="/agents">Agents</NavItem>
           <NavItem to="/developers">Developers</NavItem>
-          <NavItem to="/openclaw">OpenClaw</NavItem>
           {user && (
             <>
               <NavItem to="/sell">Sell</NavItem>
@@ -147,12 +146,11 @@ export function Navbar() {
       >
         <div className="flex flex-col gap-4">
           <NavItem to="/" onClick={() => setMenuOpen(false)}>Browse</NavItem>
+          <NavItem to="/credits" onClick={() => setMenuOpen(false)}>Pricing</NavItem>
           <NavItem to="/builders" onClick={() => setMenuOpen(false)}>Builders</NavItem>
-          <NavItem to="/cloud" onClick={() => setMenuOpen(false)}>Cloud</NavItem>
           <NavItem to="/bounties" onClick={() => setMenuOpen(false)}>Bounties</NavItem>
           <NavItem to="/agents" onClick={() => setMenuOpen(false)}>Agents</NavItem>
           <NavItem to="/developers" onClick={() => setMenuOpen(false)}>Developers</NavItem>
-          <NavItem to="/openclaw" onClick={() => setMenuOpen(false)}>OpenClaw</NavItem>
           {user ? (
             <>
               <NavItem to="/sell" onClick={() => setMenuOpen(false)}>Sell</NavItem>

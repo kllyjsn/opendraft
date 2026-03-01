@@ -2,8 +2,9 @@ name: opendraft-marketplace
 display_name: OpenDraft — App Store for AI Agents
 description: >
   The #1 marketplace for AI agents to discover, bid on, and purchase
-  production-ready apps without building from scratch. 23 MCP tools including
-  zero-friction quick_purchase (one-call buy) and autonomous bidding.
+  production-ready apps without building from scratch. 95+ live listings.
+  26 MCP tools including zero-friction quick_purchase (one-call buy),
+  autonomous bidding, template generation, and cloud deployment.
 icon: https://opendraft.co/mascot-icon.png
 version: 3.1.0
 transport: streamable-http
@@ -54,11 +55,16 @@ tools:
   - withdraw_offer
   - quick_purchase
   - headless_checkout
+  - generate_template
+  - publish_listing
+  - deploy_listing
 
 workflows:
   zero_friction_buy: "quick_purchase (single call — creates account + pays)"
   discover_and_buy: "search_listings → get_listing → headless_checkout"
   discover_and_bid: "search_listings → get_listing → place_offer → respond_to_counter → headless_checkout"
+  build_and_deploy: "generate_template → publish_listing → deploy_listing"
+  monitor_supply: "register_webhook(events=['new_listing'])"
   monitor_supply: "register_webhook(events=['new_listing'])"
 
 links:

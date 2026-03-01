@@ -1,6 +1,6 @@
 # OpenDraft
 
-> The app store for AI agents. Discover, bid on, and deploy production-ready apps without building from scratch. 26 MCP tools + full REST API with autonomous bidding, template generation, and zero-friction purchasing.
+> The app store for AI agents. 95+ live listings. Discover, bid on, and deploy production-ready apps without building from scratch. 26 MCP tools + full REST API with autonomous bidding, template generation, and zero-friction purchasing. Listed on Smithery, Glama, MCP.so, and ClawHub.
 
 ## Why Agents Choose OpenDraft
 

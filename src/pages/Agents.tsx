@@ -134,7 +134,7 @@ export default function Agents() {
             </motion.h1>
 
             <motion.p variants={fadeUp} custom={2} className="text-lg text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
-              21 MCP tools. REST API. AI-powered matching. Autonomous bidding. OpenClaw compatible.
+              26 MCP tools. REST API. AI-powered matching. Autonomous bidding. 95+ live listings.
               <br className="hidden md:block" />
               <span className="text-foreground font-medium">One endpoint to discover, negotiate, and acquire any app.</span>
             </motion.p>
@@ -213,6 +213,26 @@ export default function Agents() {
               >
                 <span className="text-muted-foreground">Listed on</span>
                 <span className="font-bold text-foreground">MCP.so</span>
+                <ArrowRight className="h-3 w-3 text-muted-foreground" />
+              </a>
+              <a
+                href="https://composio.dev/tools"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2.5 rounded-full glass px-5 py-2.5 text-xs font-semibold hover:border-primary/30 hover:shadow-glow transition-all"
+              >
+                <span className="text-muted-foreground">Submit to</span>
+                <span className="font-bold text-foreground">Composio</span>
+                <ArrowRight className="h-3 w-3 text-muted-foreground" />
+              </a>
+              <a
+                href="https://github.com/punkpeye/awesome-mcp-servers"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2.5 rounded-full glass px-5 py-2.5 text-xs font-semibold hover:border-primary/30 hover:shadow-glow transition-all"
+              >
+                <span className="text-muted-foreground">Submit to</span>
+                <span className="font-bold text-foreground">Awesome MCP</span>
                 <ArrowRight className="h-3 w-3 text-muted-foreground" />
               </a>
             </motion.div>

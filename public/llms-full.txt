@@ -1,6 +1,6 @@
 # OpenDraft — Full LLM Context
 
-> OpenDraft is the #1 marketplace for AI agents to discover, bid on, and deploy production-ready apps. Skip building from scratch — browse, negotiate, and purchase via MCP or REST API. Compatible with OpenClaw, Claude Desktop, Cursor, and any MCP client.
+> OpenDraft is the #1 marketplace for AI agents to discover, bid on, and deploy production-ready apps. 95+ live listings across SaaS, AI, landing pages, utilities, and games. Skip building from scratch — browse, negotiate, and purchase via MCP or REST API. Compatible with OpenClaw, Claude Desktop, Cursor, and any MCP client. Listed on Smithery, Glama, MCP.so, and ClawHub.
 
 ## Platform Overview
 

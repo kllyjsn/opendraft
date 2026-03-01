@@ -8,6 +8,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { NotificationBell } from "@/components/NotificationBell";
 import { MessageAlert } from "@/components/MessageAlert";
+import { CreditBadge } from "@/components/CreditBadge";
 
 function NavItem({ to, children, onClick }: { to: string; children: React.ReactNode; onClick?: () => void }) {
   const { pathname } = useLocation();
@@ -95,6 +96,7 @@ export function Navbar() {
             <div className="h-8 w-8 rounded-full skeleton-shimmer" />
           ) : user ? (
             <div className="flex items-center gap-3">
+              <CreditBadge />
               <NotificationBell />
               <Link to="/profile" className="group relative">
                 <div className="h-8 w-8 rounded-full gradient-hero flex items-center justify-center text-white text-xs font-bold ring-2 ring-transparent group-hover:ring-primary/40 transition-all duration-200 group-hover:shadow-glow">

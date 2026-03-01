@@ -6,7 +6,7 @@ import { ListingCard } from "@/components/ListingCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, TrendingUp, SlidersHorizontal, X, Loader2, ChevronDown } from "lucide-react";
+import { Search, TrendingUp, SlidersHorizontal, X, Loader2, ChevronDown, Sparkles, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { BuildSearch } from "@/components/BuildSearch";
@@ -190,9 +190,21 @@ export default function Index() {
               </span>
             </motion.h1>
 
-            <motion.p variants={fadeUp} custom={1} className="text-sm md:text-lg text-muted-foreground max-w-md mx-auto mb-8 leading-relaxed">
+            <motion.p variants={fadeUp} custom={1} className="text-sm md:text-lg text-muted-foreground max-w-md mx-auto mb-4 leading-relaxed">
               Describe what you want — or fork an existing app. Full source code, deploy anywhere.
             </motion.p>
+
+            {/* $25 credit promo */}
+            <motion.div variants={fadeUp} custom={1.5} className="mb-8">
+              <Link
+                to={user ? "/credits" : "/login"}
+                className="inline-flex items-center gap-2 rounded-full bg-primary/10 border border-primary/20 px-5 py-2 text-sm font-semibold text-primary hover:bg-primary/15 hover:border-primary/30 transition-all duration-200 group"
+              >
+                <Sparkles className="h-4 w-4" />
+                <span>Sign up &amp; get <span className="font-black">$25 free credits</span> — download your first app free</span>
+                <ArrowRight className="h-3.5 w-3.5 opacity-60 group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+            </motion.div>
 
             <motion.div variants={fadeUp} custom={2}>
               <BuildSearch />
@@ -200,6 +212,10 @@ export default function Index() {
 
             <motion.div variants={fadeUp} custom={3} className="mt-6 flex items-center justify-center gap-3 text-xs text-muted-foreground">
               <a href="#browse" className="underline underline-offset-4 hover:text-foreground transition-colors">browse apps</a>
+              <span>·</span>
+              <Link to="/credits" className="underline underline-offset-4 hover:text-foreground transition-colors">
+                pricing
+              </Link>
               <span>·</span>
               <Link to={user ? "/sell" : "/login"} className="underline underline-offset-4 hover:text-foreground transition-colors">
                 sell your code

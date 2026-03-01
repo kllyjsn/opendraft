@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { CompletenessBadge } from "@/components/CompletenessBadge";
 import { Input } from "@/components/ui/input";
-import { Loader2, ShoppingCart, ChevronLeft, Lock, Tag } from "lucide-react";
+import { Loader2, ShoppingCart, ChevronLeft, Lock, Tag, Coins } from "lucide-react";
+import { useCredits } from "@/hooks/useCredits";
 
 interface Listing {
   id: string;
@@ -18,11 +19,13 @@ interface Listing {
   completeness_badge: "prototype" | "mvp" | "production_ready";
   screenshots: string[];
   tech_stack: string[];
+  seller_id: string;
 }
 
 export default function Checkout() {
   const { id } = useParams<{ id: string }>();
   const { user, loading: authLoading } = useAuth();
+  const { balance: creditBalance, loading: creditsLoading, refetch: refetchCredits } = useCredits();
   const navigate = useNavigate();
   const [listing, setListing] = useState<Listing | null>(null);
   const [loading, setLoading] = useState(true);
@@ -34,6 +37,7 @@ export default function Checkout() {
   const [applyingDiscount, setApplyingDiscount] = useState(false);
   const [offerPrice, setOfferPrice] = useState<number | null>(null);
   const [offerId, setOfferId] = useState<string | null>(null);
+  const [useCreditsToggle, setUseCreditsToggle] = useState(true);
 
   useEffect(() => {
     if (authLoading) return;
@@ -55,7 +59,7 @@ export default function Checkout() {
   async function fetchListing() {
     const { data } = await supabase
       .from("listings")
-      .select("id,title,description,price,pricing_type,completeness_badge,screenshots,tech_stack")
+      .select("id,title,description,price,pricing_type,completeness_badge,screenshots,tech_stack,seller_id")
       .eq("id", id)
       .single();
     const listing = data as Listing | null;
@@ -125,6 +129,37 @@ export default function Checkout() {
     setError(null);
 
     try {
+      // If credits cover the full price, spend credits directly
+      if (useCreditsToggle && creditBalance !== null && creditBalance >= finalPrice && finalPrice > 0) {
+        const { data: spent, error: spendErr } = await supabase.rpc("spend_credits" as any, {
+          p_user_id: user.id,
+          p_amount: finalPrice,
+          p_listing_id: listing.id,
+          p_description: `Purchased: ${listing.title}`,
+        });
+        if (spendErr) throw new Error(spendErr.message);
+        if (!spent) throw new Error("Insufficient credits");
+
+        // Record the purchase
+        const { error: purchErr } = await supabase.from("purchases").insert({
+          listing_id: listing.id,
+          buyer_id: user.id,
+          seller_id: listing.seller_id,
+          amount_paid: finalPrice,
+          platform_fee: Math.round(finalPrice * 0.2),
+          seller_amount: Math.round(finalPrice * 0.8),
+        } as any);
+        if (purchErr) throw new Error(purchErr.message);
+
+        // Increment sales
+        await supabase.rpc("increment_sales_count", { listing_id_param: listing.id });
+
+        refetchCredits();
+        navigate(`/success?credit_purchase=true&listing=${listing.id}`);
+        return;
+      }
+
+      // Fallback to Stripe
       const body: Record<string, string> = { listingId: listing.id };
       if (appliedDiscount) body.discountCodeId = appliedDiscount.id;
       if (offerId) body.offerId = offerId;
@@ -256,9 +291,38 @@ export default function Checkout() {
               {discountError && <p className="text-xs text-destructive mt-1">{discountError}</p>}
             </div>
 
+            {/* Credits section */}
+            {creditBalance !== null && creditBalance > 0 && (
+              <div className="mt-4 pt-4 border-t border-border">
+                <label className="flex items-center justify-between cursor-pointer">
+                  <div className="flex items-center gap-2 text-sm">
+                    <Coins className="h-4 w-4 text-primary" />
+                    <span className="font-medium">Pay with credits</span>
+                    <span className="text-muted-foreground">(${(creditBalance / 100).toFixed(2)} available)</span>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={useCreditsToggle}
+                    onChange={(e) => setUseCreditsToggle(e.target.checked)}
+                    className="h-4 w-4 rounded border-border text-primary accent-primary"
+                  />
+                </label>
+                {useCreditsToggle && creditBalance < finalPrice && (
+                  <p className="text-xs text-muted-foreground mt-1.5">
+                    Credits don't fully cover this — you'll pay the remaining ${((finalPrice - creditBalance) / 100).toFixed(2)} via Stripe.
+                  </p>
+                )}
+              </div>
+            )}
+
             <div className="mt-4 pt-4 border-t border-border flex justify-between text-sm">
               <span className="text-muted-foreground">Total</span>
-              <span className="font-bold">{finalPriceDisplay}</span>
+              <div className="text-right">
+                <span className="font-bold">{finalPriceDisplay}</span>
+                {useCreditsToggle && creditBalance !== null && creditBalance >= finalPrice && (
+                  <span className="block text-xs text-primary font-medium">Paid with credits</span>
+                )}
+              </div>
             </div>
           </div>
 
@@ -288,14 +352,20 @@ export default function Checkout() {
             className="w-full gradient-hero text-white border-0 shadow-glow hover:opacity-90 h-12 text-base font-bold"
           >
             {processing ? (
-              <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Redirecting to payment…</>
+              <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Processing…</>
+            ) : useCreditsToggle && creditBalance !== null && creditBalance >= finalPrice ? (
+              <><Coins className="h-4 w-4 mr-2" /> Pay {finalPriceDisplay} with credits</>
             ) : (
               <><ShoppingCart className="h-4 w-4 mr-2" /> Pay {finalPriceDisplay} securely</>
             )}
           </Button>
 
           <p className="mt-3 text-xs text-muted-foreground text-center flex items-center justify-center gap-1">
-            <Lock className="h-3 w-3" /> Secured by Stripe
+            {useCreditsToggle && creditBalance !== null && creditBalance >= finalPrice ? (
+              <><Coins className="h-3 w-3" /> Instant credit purchase</>
+            ) : (
+              <><Lock className="h-3 w-3" /> Secured by Stripe</>
+            )}
           </p>
         </div>
       </main>

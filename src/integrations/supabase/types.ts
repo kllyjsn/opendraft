@@ -344,6 +344,71 @@ export type Database = {
           },
         ]
       }
+      credit_balances: {
+        Row: {
+          balance: number
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      credit_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string | null
+          id: string
+          listing_id: string | null
+          stripe_session_id: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          listing_id?: string | null
+          stripe_session_id?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          listing_id?: string | null
+          stripe_session_id?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_transactions_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       discount_code_usage: {
         Row: {
           buyer_id: string
@@ -1125,6 +1190,16 @@ export type Database = {
       }
     }
     Functions: {
+      add_credits: {
+        Args: {
+          p_amount: number
+          p_description?: string
+          p_stripe_session_id?: string
+          p_type?: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
       get_featured_listings: {
         Args: never
         Returns: {
@@ -1157,6 +1232,15 @@ export type Database = {
       increment_seller_sales: {
         Args: { seller_id_param: string }
         Returns: undefined
+      }
+      spend_credits: {
+        Args: {
+          p_amount: number
+          p_description?: string
+          p_listing_id?: string
+          p_user_id: string
+        }
+        Returns: boolean
       }
     }
     Enums: {

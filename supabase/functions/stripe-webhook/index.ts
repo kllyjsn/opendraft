@@ -455,6 +455,30 @@ async function handleCheckoutSessionCompleted(
   console.log(`Checkout session ${session.id} completed. Metadata:`, JSON.stringify(metadata));
   console.log(`Payment status: ${session.payment_status}, Amount total: ${session.amount_total}`);
 
+  // Handle credit top-up purchases
+  if (metadata.type === "credit_top_up" && metadata.user_id && metadata.credit_amount) {
+    if (session.payment_status !== "paid") return;
+    const creditAmount = parseInt(metadata.credit_amount, 10);
+    console.log(`Credit top-up: user=${metadata.user_id}, amount=${creditAmount}`);
+    // Call the add_credits function
+    await fetch(`${supabaseUrl}/rest/v1/rpc/add_credits`, {
+      method: "POST",
+      headers: {
+        apikey: supabaseServiceKey,
+        Authorization: `Bearer ${supabaseServiceKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        p_user_id: metadata.user_id,
+        p_amount: creditAmount,
+        p_type: "top_up",
+        p_description: `Purchased $${(creditAmount / 100).toFixed(0)} credit pack`,
+        p_stripe_session_id: session.id,
+      }),
+    });
+    return;
+  }
+
   // Only process listing-based purchases (productId purchases don't need DB records here)
   if (!listing_id || !buyer_id || !seller_id || !price) {
     console.warn("Missing required metadata for purchase record — skipping DB insert. Fields present:", 

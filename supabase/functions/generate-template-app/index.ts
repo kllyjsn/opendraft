@@ -197,14 +197,14 @@ async function fetchTrendValidatedThemes(
         try {
           const resp = await fetch("https://api.firecrawl.dev/v1/search", {
             method: "POST",
-            headers: { Authorization: \`Bearer \${FIRECRAWL_API_KEY}\`, "Content-Type": "application/json" },
+            headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({ query: q, limit: 5, tbs: "qdr:w" }),
           });
           if (!resp.ok) return null;
           const data = await resp.json();
           return (data?.data || [])
-            .map((r: any) => \`- \${r.title}: \${r.description || ""}\`)
-            .join("\\n")
+            .map((r: any) => `- ${r.title}: ${r.description || ""}`)
+            .join("\n")
             .slice(0, 1200);
         } catch { return null; }
       })
@@ -213,7 +213,7 @@ async function fetchTrendValidatedThemes(
     for (const r of results) {
       if (r.status === "fulfilled" && r.value) trendSnippets.push(r.value);
     }
-    console.log(\`Gathered \${trendSnippets.length} trend snippets for theme distillation\`);
+    console.log(`Gathered ${trendSnippets.length} trend snippets for theme distillation`);
   }
 
   if (trendSnippets.length === 0) {
@@ -223,34 +223,24 @@ async function fetchTrendValidatedThemes(
   }
 
   // Use AI to distill trends into specific, creative app themes
+  const systemPrompt = "You distill internet trends into highly specific, creative web app ideas that developers would pay for. Each idea should be:\n" +
+    "- Inspired by a REAL trend you see in the data\n" +
+    "- Specific enough to build (not \"CRM\" but \"CRM for freelance videographers with project-based invoicing\")\n" +
+    "- Diverse across categories (SaaS, AI, utility, agent tool, dashboard, landing page)\n" +
+    "- At least 30% should be agent-first (MCP servers, API tools, autonomous workflow builders)\n" +
+    "- NEVER generic — each must have a unique angle\n" +
+    "- Reference the trend that inspired it";
+
+  const userPrompt = `Based on these LIVE internet trends from this week, generate exactly ${count} specific app ideas.\n\nTRENDS:\n${trendSnippets.join("\n\n")}\n\nAVOID DUPLICATING THESE EXISTING APPS:\n${existingTitles.slice(0, 30).join(", ") || "None"}\n\nReturn exactly ${count} ideas, each as a single descriptive sentence like "AI-powered code review dashboard that scores PRs on maintainability and suggests refactors" — NOT just "Code Review Tool".`;
+
   const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
-    headers: { Authorization: \`Bearer \${LOVABLE_API_KEY}\`, "Content-Type": "application/json" },
+    headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({
       model: "google/gemini-3-flash-preview",
       messages: [
-        {
-          role: "system",
-          content: \`You distill internet trends into highly specific, creative web app ideas that developers would pay for. Each idea should be:
-- Inspired by a REAL trend you see in the data
-- Specific enough to build (not "CRM" but "CRM for freelance videographers with project-based invoicing")
-- Diverse across categories (SaaS, AI, utility, agent tool, dashboard, landing page)
-- At least 30% should be agent-first (MCP servers, API tools, autonomous workflow builders)
-- NEVER generic — each must have a unique angle
-- Reference the trend that inspired it\`
-        },
-        {
-          role: "user",
-          content: \`Based on these LIVE internet trends from this week, generate exactly \${count} specific app ideas.
-
-TRENDS:
-\${trendSnippets.join("\\n\\n")}
-
-AVOID DUPLICATING THESE EXISTING APPS:
-\${existingTitles.slice(0, 30).join(", ") || "None"}
-
-Return exactly \${count} ideas, each as a single descriptive sentence like "AI-powered code review dashboard that scores PRs on maintainability and suggests refactors" — NOT just "Code Review Tool".\`
-        },
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
       ],
       tools: [{
         type: "function",
@@ -263,7 +253,7 @@ Return exactly \${count} ideas, each as a single descriptive sentence like "AI-p
               themes: {
                 type: "array",
                 items: { type: "string", description: "A specific, creative app idea in one sentence" },
-                description: \`Exactly \${count} trend-validated app themes\`
+                description: `Exactly ${count} trend-validated app themes`
               }
             },
             required: ["themes"],
@@ -382,20 +372,7 @@ async function generateSingleTemplate(
   /* ── Step 1: Generate concept + source code via AI ─────────── */
   if (jobId) await updateJob(supabase, jobId, { stage: "generating_code" });
 
-  const aiResponse = await fetch(
-    "https://ai.gateway.lovable.dev/v1/chat/completions",
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          {
-            role: "system",
-            content: `You are a WORLD-CLASS React developer and UI designer who creates STUNNING, production-grade React + Tailwind template apps that developers would happily pay for.
+  const systemContent = `You are a WORLD-CLASS React developer and UI designer who creates STUNNING, production-grade React + Tailwind template apps that developers would happily pay for.
 
 ## YOUR QUALITY BAR
 Think Vercel's templates, Linear's UI, Stripe's dashboard — that level of craft. Every template you generate should look like it was hand-built by a top design agency. Buyers should think "I can't believe this is a template."
@@ -464,11 +441,9 @@ useEffect(() => { const timer = setInterval(() => setCount(prev => prev < target
 - Professional color palette that looks intentional
 - At least one "wow" moment (animated counter, particle effect, gradient shift)
 
-${demandContext ? `\n--- MARKET INTELLIGENCE ---\n${demandContext}` : ""}`,
-          },
-          {
-            role: "user",
-            content: `Generate an EXCEPTIONAL template app with theme: "${theme}".
+${demandContext ? "\n--- MARKET INTELLIGENCE ---\n" + demandContext : ""}`;
+
+  const userContent = `Generate an EXCEPTIONAL template app with theme: "${theme}".
 
 This template needs to be so polished that developers will pay $15/month for it. Make it visually STUNNING with rich animations, professional color palette, realistic data, and at least 8 source files including a knockout hero section.
 
@@ -482,8 +457,21 @@ Requirements:
 7. At least one interactive feature (tabs, filters, toggles, etc.)
 8. Gradient backgrounds and modern card designs
 9. The app should feel COMPLETE, not like a skeleton
-10. Must compile and work immediately with the base scaffold (React 18, Tailwind, lucide-react, framer-motion only)`,
-          },
+10. Must compile and work immediately with the base scaffold (React 18, Tailwind, lucide-react, framer-motion only)`;
+
+  const aiResponse = await fetch(
+    "https://ai.gateway.lovable.dev/v1/chat/completions",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          { role: "system", content: systemContent },
+          { role: "user", content: userContent },
         ],
         tools: [
           {
@@ -706,50 +694,22 @@ Requirements:
     }
   }
 
-  projectFolder.file(
-    "README.md",
-    `# ${template.title}
+  const readmeContent = "# " + (template.title || "Template") + "\n\n" +
+    (template.tagline ? "> " + template.tagline + "\n\n" : "") +
+    (template.description || "") + "\n\n" +
+    "## 🚀 Quick Start\n\n" +
+    "```bash\nnpm install\nnpm run dev\n```\n\n" +
+    "## ☁️ One-Click Deploy\n\n" +
+    "[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start)\n" +
+    "[![Deploy to Vercel](https://vercel.com/button)](https://vercel.com/import)\n\n" +
+    "```bash\n# Build for production\nnpm run build\n# Output is in dist/ — deploy anywhere\n```\n\n" +
+    "## 🛠 Tech Stack\n\n" +
+    (template.tech_stack || []).map((t: string) => "- " + t).join("\n") + "\n\n" +
+    "## 📁 Project Structure\n\n" +
+    "```\n├── src/\n│   ├── App.tsx          # Main application\n│   ├── components/      # UI components\n│   ├── data/            # Sample data\n│   └── index.css        # Tailwind styles\n├── netlify.toml         # Netlify deploy config\n├── vercel.json          # Vercel deploy config\n└── vite.config.ts       # Vite configuration\n```\n\n" +
+    "Built with ❤️ and listed on [OpenDraft](https://opendraft.lovable.app)\n";
 
-${template.tagline ? `> ${template.tagline}\n\n` : ""}${template.description}
-
-## 🚀 Quick Start
-
-\`\`\`bash
-npm install
-npm run dev
-\`\`\`
-
-## ☁️ One-Click Deploy
-
-[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start)
-[![Deploy to Vercel](https://vercel.com/button)](https://vercel.com/import)
-
-\`\`\`bash
-# Build for production
-npm run build
-# Output is in dist/ — deploy anywhere
-\`\`\`
-
-## 🛠 Tech Stack
-
-${(template.tech_stack || []).map((t: string) => `- ${t}`).join("\n")}
-
-## 📁 Project Structure
-
-\`\`\`
-├── src/
-│   ├── App.tsx          # Main application
-│   ├── components/      # UI components
-│   ├── data/            # Sample data
-│   └── index.css        # Tailwind styles
-├── netlify.toml         # Netlify deploy config
-├── vercel.json          # Vercel deploy config
-└── vite.config.ts       # Vite configuration
-\`\`\`
-
-Built with ❤️ and listed on [OpenDraft](https://opendraft.lovable.app)
-`
-  );
+  projectFolder.file("README.md", readmeContent);
 
   const zipBlob = await zip.generateAsync({ type: "uint8array" });
 
@@ -898,16 +858,16 @@ serve(async (req) => {
 
     const demandParts: string[] = [];
     if (signals.topSearches.length > 0) {
-      demandParts.push(`TOP USER SEARCHES (what people are actively looking for):\n${signals.topSearches.map(s => `- "${s}"`).join("\n")}`);
+      demandParts.push("TOP USER SEARCHES (what people are actively looking for):\n" + signals.topSearches.map(s => `- "${s}"`).join("\n"));
     }
     if (signals.unfilledBounties.length > 0) {
-      demandParts.push(`OPEN BOUNTIES (explicit paid demand):\n${signals.unfilledBounties.map(b => `- ${b}`).join("\n")}`);
+      demandParts.push("OPEN BOUNTIES (explicit paid demand):\n" + signals.unfilledBounties.map(b => `- ${b}`).join("\n"));
     }
     if (signals.highViewGaps.length > 0) {
-      demandParts.push(`HIGH-VIEW LOW-SALE GAPS (interest but no conversion — opportunity to build better versions):\n${signals.highViewGaps.map(g => `- ${g}`).join("\n")}`);
+      demandParts.push("HIGH-VIEW LOW-SALE GAPS (interest but no conversion — opportunity to build better versions):\n" + signals.highViewGaps.map(g => `- ${g}`).join("\n"));
     }
     if (signals.existingTitles.length > 0) {
-      demandParts.push(`EXISTING LISTINGS (avoid duplicating these):\n${signals.existingTitles.slice(0, 30).join(", ")}`);
+      demandParts.push("EXISTING LISTINGS (avoid duplicating these):\n" + signals.existingTitles.slice(0, 30).join(", "));
     }
     const demandContext = demandParts.length > 0 ? demandParts.join("\n\n") : undefined;
 

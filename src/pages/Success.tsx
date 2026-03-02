@@ -39,6 +39,7 @@ export default function Success() {
   const sessionId = searchParams.get("session_id");
   const isCreditPurchase = searchParams.get("credit_purchase") === "true";
   const creditListingId = searchParams.get("listing");
+  const creditAmount = searchParams.get("amount");
   const { user } = useAuth();
 
   const [session, setSession] = useState<SessionDetails | null>(null);
@@ -57,10 +58,11 @@ export default function Success() {
         .eq("id", creditListingId!)
         .single();
       if (listing) {
+        const paidAmount = creditAmount ? parseInt(creditAmount, 10) : listing.price;
         setSession({
           status: "complete",
           paymentStatus: "paid",
-          amountTotal: listing.price,
+          amountTotal: paidAmount,
           currency: "usd",
           productName: listing.title,
           productImage: listing.screenshots?.[0] ?? null,

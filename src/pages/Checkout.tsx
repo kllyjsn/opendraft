@@ -129,6 +129,15 @@ export default function Checkout() {
     setError(null);
 
     try {
+      // ── Guard: duplicate purchase check ──────────────────────────
+      const { data: existingPurchase } = await supabase
+        .from("purchases")
+        .select("id")
+        .eq("listing_id", listing.id)
+        .eq("buyer_id", user.id)
+        .maybeSingle();
+      if (existingPurchase) throw new Error("You already own this project");
+
       // Record discount code usage for non-Stripe flows (credits / free-after-discount)
       async function recordDiscountUsage() {
         if (!appliedDiscount || !user) return;
@@ -138,7 +147,7 @@ export default function Checkout() {
         } as any);
       }
 
-      // Helper: insert purchase record + increment sales
+      // Helper: insert purchase record + increment sales + auto-create conversation
       async function insertPurchaseAndIncrement(pricePaid: number) {
         const { error: purchErr } = await supabase.from("purchases").insert({
           listing_id: listing.id,
@@ -149,14 +158,48 @@ export default function Checkout() {
           seller_amount: Math.round(pricePaid * 0.8),
         } as any);
         if (purchErr) throw new Error(purchErr.message);
-        await supabase.rpc("increment_sales_count", { listing_id_param: listing.id });
+
+        // Increment both listing and seller sales counters (matches webhook behavior)
+        await Promise.all([
+          supabase.rpc("increment_sales_count", { listing_id_param: listing.id }),
+          supabase.rpc("increment_seller_sales", { seller_id_param: listing.seller_id }),
+        ]);
+
+        // Auto-create conversation so buyer and seller can chat immediately
+        try {
+          const { data: existingConvo } = await supabase
+            .from("conversations")
+            .select("id")
+            .eq("buyer_id", user.id)
+            .eq("seller_id", listing.seller_id)
+            .eq("listing_id", listing.id)
+            .maybeSingle();
+
+          if (!existingConvo) {
+            const { data: newConvo } = await supabase
+              .from("conversations")
+              .insert({ buyer_id: user.id, seller_id: listing.seller_id, listing_id: listing.id })
+              .select("id")
+              .single();
+
+            if (newConvo) {
+              await supabase.from("messages").insert({
+                conversation_id: newConvo.id,
+                sender_id: listing.seller_id,
+                content: `Thanks for purchasing ${listing.title}! 🎉 I'm your builder — feel free to ask me anything, request features, or share feedback.`,
+              } as any);
+            }
+          }
+        } catch (chatErr) {
+          console.error("Auto-chat creation failed (non-blocking):", chatErr);
+        }
       }
 
       // Case 1: Free after discount — no payment needed
       if (finalPrice === 0) {
         await recordDiscountUsage();
         await insertPurchaseAndIncrement(0);
-        navigate(`/success?credit_purchase=true&listing=${listing.id}`);
+        navigate(`/success?credit_purchase=true&listing=${listing.id}&amount=0`);
         return;
       }
 
@@ -174,7 +217,7 @@ export default function Checkout() {
         await recordDiscountUsage();
         await insertPurchaseAndIncrement(finalPrice);
         refetchCredits();
-        navigate(`/success?credit_purchase=true&listing=${listing.id}`);
+        navigate(`/success?credit_purchase=true&listing=${listing.id}&amount=${finalPrice}`);
         return;
       }
 

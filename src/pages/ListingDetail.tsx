@@ -7,11 +7,10 @@ import { CompletenessBadge } from "@/components/CompletenessBadge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
-import { ExternalLink, Github, Star, Crown, ChevronLeft, Download, Eye, Package, Gift, MessageSquare, GitFork, RefreshCw, Wrench, Shield, Infinity, Rocket, Triangle } from "lucide-react";
+import { ExternalLink, Github, Star, Crown, ChevronLeft, Download, Eye, Package, Gift, MessageSquare, GitFork, RefreshCw, Wrench, Shield, Infinity, Rocket } from "lucide-react";
 import { RequestForkDialog } from "@/components/RequestForkDialog";
 import { ImageGallery } from "@/components/ImageGallery";
-import { DeployToNetlify } from "@/components/DeployToNetlify";
-import { DeployToVercel } from "@/components/DeployToVercel";
+import { DeployPanel } from "@/components/DeployPanel";
 import { useToast } from "@/hooks/use-toast";
 import { ChatDrawer } from "@/components/ChatDrawer";
 import { RemixChain } from "@/components/RemixChain";
@@ -482,13 +481,7 @@ export default function ListingDetail() {
                     <Download className="h-4 w-4 mr-2" />
                     {downloading ? "Preparing download…" : "Download Project"}
                   </Button>
-                  <DeployToNetlify
-                    listingId={listing.id}
-                    listingTitle={listing.title}
-                    hasFile={!!listing.file_path}
-                    githubUrl={listing.github_url}
-                  />
-                  <DeployToVercel
+                  <DeployPanel
                     listingId={listing.id}
                     listingTitle={listing.title}
                     hasFile={!!listing.file_path}
@@ -547,24 +540,14 @@ export default function ListingDetail() {
                     </Button>
                   </Link>
                   <p className="text-center text-xs text-muted-foreground font-medium">Unlimited access to every app on OpenDraft</p>
-                  <div className="space-y-2">
                     <Button
                       variant="outline"
                       disabled
                       className="w-full border-border/60 text-muted-foreground gap-2 cursor-not-allowed"
                     >
                       <Rocket className="h-4 w-4" />
-                      Deploy to Netlify after claiming
+                      Deploy to cloud after claiming
                     </Button>
-                    <Button
-                      variant="outline"
-                      disabled
-                      className="w-full border-border/60 text-muted-foreground gap-2 cursor-not-allowed"
-                    >
-                      <Triangle className="h-4 w-4" />
-                      Deploy to Vercel after claiming
-                    </Button>
-                  </div>
                   {user && listing.seller_id !== user.id && (
                     <RequestForkDialog
                       listingId={listing.id}

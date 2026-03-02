@@ -516,6 +516,63 @@ export type Database = {
         }
         Relationships: []
       }
+      fork_requests: {
+        Row: {
+          budget: number | null
+          builder_fee: number | null
+          builder_id: string
+          created_at: string
+          delivered_listing_id: string | null
+          description: string
+          id: string
+          listing_id: string
+          requester_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          budget?: number | null
+          builder_fee?: number | null
+          builder_id: string
+          created_at?: string
+          delivered_listing_id?: string | null
+          description: string
+          id?: string
+          listing_id: string
+          requester_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          budget?: number | null
+          builder_fee?: number | null
+          builder_id?: string
+          created_at?: string
+          delivered_listing_id?: string | null
+          description?: string
+          id?: string
+          listing_id?: string
+          requester_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fork_requests_delivered_listing_id_fkey"
+            columns: ["delivered_listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fork_requests_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       generation_jobs: {
         Row: {
           created_at: string

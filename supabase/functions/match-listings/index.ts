@@ -28,7 +28,8 @@ serve(async (req) => {
       .from("listings")
       .select("id,title,description,price,completeness_badge,tech_stack,screenshots,category,sales_count")
       .eq("status", "live")
-      .limit(60);
+      .order("sales_count", { ascending: false })
+      .limit(200);
 
     if (error) throw error;
 

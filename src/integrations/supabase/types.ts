@@ -660,6 +660,7 @@ export type Database = {
           remixed_from: string | null
           sales_count: number | null
           screenshots: string[] | null
+          search_vector: unknown
           seller_id: string
           status: Database["public"]["Enums"]["listing_status"]
           tech_stack: string[] | null
@@ -684,6 +685,7 @@ export type Database = {
           remixed_from?: string | null
           sales_count?: number | null
           screenshots?: string[] | null
+          search_vector?: unknown
           seller_id: string
           status?: Database["public"]["Enums"]["listing_status"]
           tech_stack?: string[] | null
@@ -708,6 +710,7 @@ export type Database = {
           remixed_from?: string | null
           sales_count?: number | null
           screenshots?: string[] | null
+          search_vector?: unknown
           seller_id?: string
           status?: Database["public"]["Enums"]["listing_status"]
           tech_stack?: string[] | null
@@ -1302,6 +1305,35 @@ export type Database = {
         Args: { seller_id_param: string }
         Returns: undefined
       }
+      search_listings: {
+        Args: {
+          category_filter?: string
+          completeness_filter?: string
+          free_only?: boolean
+          page_limit?: number
+          page_offset?: number
+          search_query: string
+          sort_by?: string
+        }
+        Returns: {
+          built_with: string
+          completeness_badge: Database["public"]["Enums"]["completeness_badge"]
+          description: string
+          id: string
+          price: number
+          pricing_type: Database["public"]["Enums"]["pricing_type"]
+          relevance_score: number
+          sales_count: number
+          screenshots: string[]
+          seller_id: string
+          tech_stack: string[]
+          title: string
+          total_count: number
+          view_count: number
+        }[]
+      }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
       spend_credits: {
         Args: {
           p_amount: number

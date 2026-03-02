@@ -103,9 +103,6 @@ export default function Index() {
       .select("id,title,description,price,pricing_type,completeness_badge,tech_stack,screenshots,sales_count,view_count,built_with,seller_id", { count: "exact" })
       .eq("status", "live");
 
-    if (search) {
-      query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`);
-    }
     if (category !== "All" && categoryMap[category]) {
       query = query.eq("category", categoryMap[category] as any);
     }
@@ -121,17 +118,39 @@ export default function Index() {
       query = query.order("sales_count", { ascending: false });
     }
     return query;
-  }, [search, category, completeness, sort, freeOnly]);
+  }, [category, completeness, sort, freeOnly]);
 
   async function fetchListings(pageNum: number, reset: boolean = false) {
     if (reset) setLoading(true);
     else setLoadingMore(true);
 
     const from = pageNum * PAGE_SIZE;
-    const to = from + PAGE_SIZE - 1;
+    let listingsData: Listing[] = [];
+    let count: number = 0;
 
-    const { data, count } = await buildQuery().range(from, to);
-    const listingsData = (data as Listing[]) ?? [];
+    if (search.trim()) {
+      // Use the powerful search_listings RPC with full-text + trigram + fuzzy matching
+      const { data, error } = await supabase.rpc("search_listings", {
+        search_query: search.trim(),
+        category_filter: category !== "All" && categoryMap[category] ? categoryMap[category] : null,
+        completeness_filter: completeness !== "All" && completenessMap[completeness] ? completenessMap[completeness] : null,
+        free_only: freeOnly,
+        sort_by: sort === "Popular" ? "popular" : "relevance",
+        page_offset: from,
+        page_limit: PAGE_SIZE,
+      });
+
+      if (!error && data && data.length > 0) {
+        count = (data[0] as any).total_count ?? data.length;
+        listingsData = data as unknown as Listing[];
+      }
+    } else {
+      // No search term — use standard query
+      const to = from + PAGE_SIZE - 1;
+      const result = await buildQuery().range(from, to);
+      listingsData = (result.data as Listing[]) ?? [];
+      count = result.count ?? 0;
+    }
 
     // Fetch seller usernames
     const sellerIds = [...new Set(listingsData.map((l) => l.seller_id))];
@@ -151,7 +170,7 @@ export default function Index() {
     } else {
       setListings((prev) => [...prev, ...enriched]);
     }
-    setTotalCount(count ?? 0);
+    setTotalCount(count);
     setLoading(false);
     setLoadingMore(false);
   }

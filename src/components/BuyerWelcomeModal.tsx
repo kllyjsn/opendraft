@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Search, DollarSign, Download, ArrowRight } from "lucide-react";
+import { X, Crown, Download, Wrench, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BrandMascot } from "@/components/BrandMascot";
 
@@ -8,19 +8,19 @@ const STORAGE_KEY = "opendraft_welcome_seen";
 
 const steps = [
   {
-    icon: Search,
-    title: "Fork the source code",
-    desc: "When you buy, you get a full fork of the codebase — yours to own, modify, and deploy forever.",
-  },
-  {
-    icon: DollarSign,
-    title: "Bid or buy instantly",
-    desc: "Every listing has a price. Make an offer or purchase outright — no subscriptions required to start.",
+    icon: Crown,
+    title: "Subscribe for $20/mo",
+    desc: "One subscription gets you unlimited access to claim any app on OpenDraft.",
   },
   {
     icon: Download,
-    title: "Subscribe for updates",
-    desc: "Optionally subscribe to maintenance. Your builder ships new features and fixes directly to your fork.",
+    title: "Claim & download",
+    desc: "Every project gives you the full source code — yours to own, modify, and deploy forever.",
+  },
+  {
+    icon: Wrench,
+    title: "Hire your builder",
+    desc: "Need customization? Set up a monthly retainer with the builder for ongoing support and features.",
   },
 ];
 
@@ -31,7 +31,6 @@ export function BuyerWelcomeModal() {
   useEffect(() => {
     const seen = localStorage.getItem(STORAGE_KEY);
     if (!seen) {
-      // Delay 5s so user has time to read the listing first
       const timer = setTimeout(() => setOpen(true), 5000);
       return () => clearTimeout(timer);
     }
@@ -56,10 +55,7 @@ export function BuyerWelcomeModal() {
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-[100] flex items-center justify-center p-4"
         >
-          {/* Backdrop */}
           <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={dismiss} />
-
-          {/* Modal */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -77,7 +73,6 @@ export function BuyerWelcomeModal() {
               <p className="text-sm text-muted-foreground mt-1">Here's how it works — in 10 seconds.</p>
             </div>
 
-            {/* Step content */}
             <AnimatePresence mode="wait">
               <motion.div
                 key={step}
@@ -102,7 +97,6 @@ export function BuyerWelcomeModal() {
               </motion.div>
             </AnimatePresence>
 
-            {/* Progress dots */}
             <div className="flex items-center justify-center gap-2 mt-5">
               {steps.map((_, i) => (
                 <div
@@ -114,7 +108,6 @@ export function BuyerWelcomeModal() {
               ))}
             </div>
 
-            {/* Actions */}
             <div className="flex gap-3 mt-6">
               <Button variant="ghost" onClick={dismiss} className="flex-1 text-muted-foreground">
                 Skip

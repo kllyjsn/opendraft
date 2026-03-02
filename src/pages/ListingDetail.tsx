@@ -183,19 +183,78 @@ export default function ListingDetail() {
     if (!user || !listing) return;
     setClaiming(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/claim-free-listing`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session?.access_token}`,
-        },
-        body: JSON.stringify({ listingId: listing.id }),
-      });
-      const result = await res.json();
-      if (!res.ok) throw new Error(result.error ?? "Failed to claim");
+      if (listing.price === 0) {
+        // Free listings use the existing edge function
+        const { data: { session } } = await supabase.auth.getSession();
+        const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/claim-free-listing`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session?.access_token}`,
+          },
+          body: JSON.stringify({ listingId: listing.id }),
+        });
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.error ?? "Failed to claim");
+      } else {
+        // Subscriber claim — create purchase record directly
+        const { data: existing } = await supabase
+          .from("purchases")
+          .select("id")
+          .eq("listing_id", listing.id)
+          .eq("buyer_id", user.id)
+          .maybeSingle();
+        if (existing) throw new Error("You already own this project");
+
+        const { error: purchErr } = await supabase.from("purchases").insert({
+          listing_id: listing.id,
+          buyer_id: user.id,
+          seller_id: listing.seller_id,
+          amount_paid: 0,
+          platform_fee: 0,
+          seller_amount: 0,
+        } as any);
+        if (purchErr) throw new Error(purchErr.message);
+
+        await Promise.all([
+          supabase.rpc("increment_sales_count", { listing_id_param: listing.id }),
+          supabase.rpc("increment_seller_sales", { seller_id_param: listing.seller_id }),
+        ]);
+      }
+
+      // Auto-create conversation so buyer and builder can chat immediately
+      try {
+        const { data: existingConvo } = await supabase
+          .from("conversations")
+          .select("id")
+          .eq("buyer_id", user.id)
+          .eq("seller_id", listing.seller_id)
+          .eq("listing_id", listing.id)
+          .maybeSingle();
+
+        if (!existingConvo) {
+          const { data: newConvo } = await supabase
+            .from("conversations")
+            .insert({ buyer_id: user.id, seller_id: listing.seller_id, listing_id: listing.id })
+            .select("id")
+            .single();
+
+          if (newConvo) {
+            await supabase.from("messages").insert({
+              conversation_id: newConvo.id,
+              sender_id: listing.seller_id,
+              content: `Thanks for claiming ${listing.title}! 🎉 I'm your builder — feel free to ask me anything, request features, or set up a support retainer.`,
+            } as any);
+          }
+        }
+      } catch (chatErr) {
+        console.error("Auto-chat creation failed (non-blocking):", chatErr);
+      }
+
       setPurchased(true);
-      toast({ title: "Project claimed! 🎉", description: "You now have access to download it." });
+      toast({ title: "Project claimed! 🎉", description: "You can now download it and chat with your builder." });
+      // Auto-open chat drawer after claiming
+      setChatOpen(true);
     } catch (e) {
       toast({ title: "Claim failed", description: e instanceof Error ? e.message : "Unknown error", variant: "destructive" });
     } finally {

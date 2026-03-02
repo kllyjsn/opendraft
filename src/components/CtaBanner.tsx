@@ -18,14 +18,14 @@ export function CtaBanner() {
             <BrandMascot size={80} variant="happy" />
           </div>
           <h2 className="text-3xl md:text-4xl font-black tracking-tight mb-4">
-            Your code deserves buyers.
+            Every app. One subscription.
           </h2>
           <p className="text-muted-foreground mb-8 leading-relaxed">
-            List your fork in minutes. Buyers get the source code, you earn from every sale — plus recurring revenue from maintenance subscriptions.
+            For $20/mo, claim and download any project on OpenDraft. Full source code, deploy anywhere. Need custom work? Hire the builder directly.
           </p>
-          <Link to={user ? "/sell" : "/login"}>
+          <Link to="/credits">
             <Button size="lg" className="gradient-hero text-white border-0 shadow-glow hover:opacity-90 text-base px-8">
-              {user ? "List your fork" : "Start selling — it's free"}
+              Subscribe — $20/mo
             </Button>
           </Link>
         </div>

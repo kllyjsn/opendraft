@@ -6,7 +6,8 @@ import { Footer } from "@/components/Footer";
 import { CompletenessBadge } from "@/components/CompletenessBadge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { ExternalLink, Github, Star, ShoppingCart, ChevronLeft, Download, Eye, Package, Gift, MessageSquare, GitFork, RefreshCw, Wrench, Shield, Infinity, Rocket, Triangle } from "lucide-react";
+import { useSubscription } from "@/hooks/useSubscription";
+import { ExternalLink, Github, Star, Crown, ChevronLeft, Download, Eye, Package, Gift, MessageSquare, GitFork, RefreshCw, Wrench, Shield, Infinity, Rocket, Triangle } from "lucide-react";
 import { ImageGallery } from "@/components/ImageGallery";
 import { DeployToNetlify } from "@/components/DeployToNetlify";
 import { DeployToVercel } from "@/components/DeployToVercel";
@@ -67,6 +68,7 @@ interface Profile {
 export default function ListingDetail() {
   const { id } = useParams<{ id: string }>();
   const { user, loading: authLoading } = useAuth();
+  const { isSubscribed } = useSubscription();
   const { toast } = useToast();
   const [listing, setListing] = useState<Listing | null>(null);
   const [seller, setSeller] = useState<Profile | null>(null);
@@ -403,9 +405,9 @@ export default function ListingDetail() {
             <div className="rounded-2xl border border-border/60 bg-card p-6 shadow-card sticky top-20 hover:shadow-card-hover transition-shadow duration-500">
               {/* Price */}
               <div className="mb-5">
-                <div className={`text-4xl font-black mb-0.5 ${isFree ? "text-primary" : ""}`}>{priceLabel}</div>
+                <div className={`text-4xl font-black mb-0.5 ${isFree ? "text-primary" : ""}`}>{isFree ? "Free" : priceLabel}</div>
                 <p className="text-xs text-muted-foreground">
-                   {isFree ? "Free forever · Fork the full source code" : "One-time purchase · Fork the full source code"}
+                   {isFree ? "Free forever · Fork the full source code" : isSubscribed ? "Included with your subscription" : "Requires $20/mo subscription"}
                  </p>
               </div>
 
@@ -452,7 +454,8 @@ export default function ListingDetail() {
                     </>
                   )}
                 </div>
-              ) : isFree ? (
+              ) : isSubscribed || isFree ? (
+                /* Subscribers and free listings use the claim flow */
                 user ? (
                   <Button
                     onClick={handleClaim}
@@ -460,34 +463,26 @@ export default function ListingDetail() {
                     className="w-full gradient-hero text-white border-0 shadow-glow hover:opacity-90 h-12 text-base font-bold transition-opacity"
                   >
                     <Gift className="h-4 w-4 mr-2" />
-                    {claiming ? "Claiming…" : "Get for Free"}
+                    {claiming ? "Claiming…" : isFree ? "Get for Free" : "Claim Project"}
                   </Button>
                 ) : (
                   <Link to="/login">
                     <Button className="w-full gradient-hero text-white border-0 shadow-glow hover:opacity-90 h-12 text-base font-bold transition-opacity">
                       <Gift className="h-4 w-4 mr-2" />
-                      Sign in to claim free
+                      Sign in to claim
                     </Button>
                   </Link>
                 )
               ) : (
+                /* Non-subscribers see subscription CTA */
                 <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-2">
-                    <Link to={user ? `/checkout/${listing.id}` : "/login"} className="col-span-1">
-                     <Button className="w-full gradient-hero text-white border-0 shadow-glow hover:opacity-90 h-12 text-sm sm:text-base font-bold transition-opacity">
-                         <ShoppingCart className="h-4 w-4 mr-1.5 shrink-0" />
-                         <span className="truncate">Buy &amp; Fork</span>
-                       </Button>
-                    </Link>
-                    <div className="col-span-1">
-                      <MakeOfferDialog
-                        listingId={listing.id}
-                        listingTitle={listing.title}
-                        askingPrice={listing.price}
-                      />
-                    </div>
-                  </div>
-                  <p className="text-center text-xs text-muted-foreground font-medium">{priceLabel} · You get the full fork</p>
+                  <Link to="/credits">
+                    <Button className="w-full gradient-hero text-white border-0 shadow-glow hover:opacity-90 h-12 text-base font-bold transition-opacity">
+                      <Crown className="h-4 w-4 mr-2" />
+                      Subscribe to claim — $20/mo
+                    </Button>
+                  </Link>
+                  <p className="text-center text-xs text-muted-foreground font-medium">Unlimited access to every app on OpenDraft</p>
                   <div className="space-y-2">
                     <Button
                       variant="outline"
@@ -495,7 +490,7 @@ export default function ListingDetail() {
                       className="w-full border-border/60 text-muted-foreground gap-2 cursor-not-allowed"
                     >
                       <Rocket className="h-4 w-4" />
-                      Deploy to Netlify after purchase
+                      Deploy to Netlify after claiming
                     </Button>
                     <Button
                       variant="outline"
@@ -503,7 +498,7 @@ export default function ListingDetail() {
                       className="w-full border-border/60 text-muted-foreground gap-2 cursor-not-allowed"
                     >
                       <Triangle className="h-4 w-4" />
-                      Deploy to Vercel after purchase
+                      Deploy to Vercel after claiming
                     </Button>
                   </div>
                   {/* Active offer status */}

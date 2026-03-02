@@ -8,6 +8,61 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+type GithubRepo = { owner: string; repo: string };
+
+function parseGithubRepo(githubUrl: string): GithubRepo | null {
+  try {
+    const parsed = new URL(githubUrl);
+    if (parsed.hostname !== "github.com") return null;
+
+    const segments = parsed.pathname.split("/").filter(Boolean);
+    if (segments.length < 2) return null;
+
+    const owner = segments[0];
+    const repo = segments[1].replace(/\.git$/, "");
+    if (!owner || !repo) return null;
+
+    return { owner, repo };
+  } catch {
+    return null;
+  }
+}
+
+async function downloadGithubRepoZip(githubUrl: string): Promise<ArrayBuffer> {
+  const parsedRepo = parseGithubRepo(githubUrl);
+  if (!parsedRepo) {
+    throw new Error("Invalid GitHub repository URL");
+  }
+
+  const repoInfoRes = await fetch(`https://api.github.com/repos/${parsedRepo.owner}/${parsedRepo.repo}`, {
+    headers: {
+      Accept: "application/vnd.github+json",
+      "User-Agent": "opendraft-deployer",
+    },
+  });
+
+  if (!repoInfoRes.ok) {
+    if (repoInfoRes.status === 404) {
+      throw new Error("GitHub repository not found or private. Upload a ZIP file to deploy this project.");
+    }
+    throw new Error("Failed to read GitHub repository metadata");
+  }
+
+  const repoInfo = await repoInfoRes.json();
+  const defaultBranch = repoInfo.default_branch || "main";
+
+  const zipRes = await fetch(
+    `https://codeload.github.com/${parsedRepo.owner}/${parsedRepo.repo}/zip/refs/heads/${encodeURIComponent(defaultBranch)}`,
+    { headers: { "User-Agent": "opendraft-deployer" } }
+  );
+
+  if (!zipRes.ok) {
+    throw new Error("Failed to download GitHub repository archive");
+  }
+
+  return await zipRes.arrayBuffer();
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -58,16 +113,9 @@ serve(async (req) => {
       }
     }
 
-    // GitHub redirect shortcut
-    if (!listing.file_path) {
-      if (listing.github_url) {
-        return new Response(JSON.stringify({
-          success: true,
-          deployUrl: `https://app.netlify.com/start/deploy?repository=${encodeURIComponent(listing.github_url)}`,
-          method: "github_redirect",
-        }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      }
-      return new Response(JSON.stringify({ error: "No deployable file available" }), {
+    // Require either uploaded file or GitHub repository source
+    if (!listing.file_path && !listing.github_url) {
+      return new Response(JSON.stringify({ error: "No deployable source available" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -84,18 +132,26 @@ serve(async (req) => {
     }
     await tokenCheckRes.text(); // consume body
 
-    // Download and extract ZIP
-    const { data: fileData } = await supabase.storage
-      .from("listing-files")
-      .download(listing.file_path);
+    // Download and extract ZIP from uploaded file or GitHub repository
+    let sourceZipBuffer: ArrayBuffer;
 
-    if (!fileData) {
-      return new Response(JSON.stringify({ error: "Failed to download source file" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    if (listing.file_path) {
+      const { data: fileData } = await supabase.storage
+        .from("listing-files")
+        .download(listing.file_path);
+
+      if (!fileData) {
+        return new Response(JSON.stringify({ error: "Failed to download source file" }), {
+          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      sourceZipBuffer = await fileData.arrayBuffer();
+    } else {
+      sourceZipBuffer = await downloadGithubRepoZip(listing.github_url!);
     }
 
-    const zip = await JSZip.loadAsync(await fileData.arrayBuffer());
+    const zip = await JSZip.loadAsync(sourceZipBuffer);
     const entries = Object.keys(zip.files);
 
     // Detect common root directory prefix

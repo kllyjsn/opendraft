@@ -271,6 +271,11 @@ export function DeployPanel({ listingId, listingTitle, hasFile, githubUrl }: Dep
     setTimeout(() => setCopied(false), 2000);
   }
 
+  function switchToTokenDeploy(provider: "netlify" | "vercel") {
+    resetDialog();
+    setActiveTab(provider);
+  }
+
   const currentStepIndex = DEPLOY_STEPS.findIndex(s => s.id === currentStep);
   const isDeploying = deployState === "submitting" || deployState === "polling";
 
@@ -363,7 +368,7 @@ export function DeployPanel({ listingId, listingTitle, hasFile, githubUrl }: Dep
                     hasFile={hasFile}
                     copied={copied}
                     onCopy={handleCopyGithub}
-                    listingTitle={listingTitle}
+                    onUseProvider={switchToTokenDeploy}
                   />
                 </TabsContent>
               </Tabs>
@@ -440,13 +445,13 @@ function TokenInput({
 }
 
 function GitHubTab({
-  githubUrl, hasFile, copied, onCopy, listingTitle,
+  githubUrl, hasFile, copied, onCopy, onUseProvider,
 }: {
   githubUrl?: string | null;
   hasFile: boolean;
   copied: boolean;
   onCopy: () => void;
-  listingTitle: string;
+  onUseProvider: (provider: "netlify" | "vercel") => void;
 }) {
   if (githubUrl) {
     return (
@@ -477,8 +482,25 @@ function GitHubTab({
             </Button>
           </a>
         </div>
+        <div className="rounded-xl border border-primary/30 bg-primary/5 p-3.5 space-y-2.5">
+          <p className="text-xs font-semibold">Mobile-safe deploy route</p>
+          <p className="text-[11px] text-muted-foreground">
+            If one-click deploy opens an "Invalid state key" page, use token deploy instead (no OAuth redirect).
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            <Button variant="outline" className="w-full gap-1.5 text-xs h-9" onClick={() => onUseProvider("netlify")}>
+              <Rocket className="h-3.5 w-3.5" />
+              Netlify Token
+            </Button>
+            <Button variant="outline" className="w-full gap-1.5 text-xs h-9" onClick={() => onUseProvider("vercel")}>
+              <Triangle className="h-3.5 w-3.5" />
+              Vercel Token
+            </Button>
+          </div>
+        </div>
+
         <div className="space-y-2">
-          <p className="text-[11px] text-muted-foreground font-medium">Quick deploy from GitHub:</p>
+          <p className="text-[11px] text-muted-foreground font-medium">One-click deploy from GitHub:</p>
           <div className="grid grid-cols-2 gap-2">
             <a href={`https://app.netlify.com/start/deploy?repository=${encodeURIComponent(githubUrl)}`} target="_blank" rel="noopener noreferrer">
               <Button variant="outline" className="w-full gap-1.5 text-xs h-9">

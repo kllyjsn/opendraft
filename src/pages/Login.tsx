@@ -14,7 +14,10 @@ const TRUST_POINTS = [
 export default function Login() {
   const { user, loading } = useAuth();
 
-  if (!loading && user) return <Navigate to="/" replace />;
+  if (!loading && user) {
+    const onboarded = localStorage.getItem("opendraft_onboarding_done");
+    return <Navigate to={onboarded ? "/" : "/onboarding"} replace />;
+  }
 
   return (
     <div className="min-h-screen flex flex-col">

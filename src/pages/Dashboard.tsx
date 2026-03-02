@@ -8,12 +8,13 @@ import { useAuth } from "@/hooks/useAuth";
 import { CompletenessBadge } from "@/components/CompletenessBadge";
 import { StripeConnectPanel } from "@/components/StripeConnectPanel";
 import { CreateProductPanel } from "@/components/CreateProductPanel";
-import { TrendingUp, Package, Eye, Trash2, Plus, ShoppingBag, BarChart3, Rss, Pencil } from "lucide-react";
+import { TrendingUp, Package, Eye, Trash2, Plus, ShoppingBag, BarChart3, Rss, Pencil, GitFork } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { SellerAnalytics } from "@/components/SellerAnalytics";
 import { ActivityFeed } from "@/components/ActivityFeed";
 import { VerifyListingPanel } from "@/components/VerifyListingPanel";
 import { AgentDemandFeed } from "@/components/AgentDemandFeed";
+import { ForkRequestsManager } from "@/components/ForkRequestsManager";
 
 interface Sale {
   id: string;
@@ -58,8 +59,8 @@ export default function Dashboard() {
   const [sales, setSales] = useState<Sale[]>([]);
   const [summary, setSummary] = useState<SaleSummary>({ total_earned: 0, total_sales: 0 });
   const [dataLoading, setDataLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"feed" | "listings" | "sales" | "analytics">(
-    (new URLSearchParams(window.location.search).get("tab") as "feed" | "listings" | "sales" | "analytics") || "feed"
+  const [activeTab, setActiveTab] = useState<"feed" | "listings" | "sales" | "forks" | "analytics">(
+    (new URLSearchParams(window.location.search).get("tab") as "feed" | "listings" | "sales" | "forks" | "analytics") || "feed"
   );
 
   useEffect(() => {
@@ -187,6 +188,7 @@ export default function Dashboard() {
             { key: "feed" as const, label: "Feed", icon: <Rss className="h-3.5 w-3.5" /> },
             { key: "listings" as const, label: "Listings", icon: <Package className="h-3.5 w-3.5" /> },
             { key: "sales" as const, label: "Sales", icon: <ShoppingBag className="h-3.5 w-3.5" /> },
+            { key: "forks" as const, label: "Fork Requests", icon: <GitFork className="h-3.5 w-3.5" /> },
             { key: "analytics" as const, label: "Analytics", icon: <BarChart3 className="h-3.5 w-3.5" /> },
           ]).map(({ key, label, icon }) => (
             <button
@@ -376,6 +378,8 @@ export default function Dashboard() {
         )}
           </>
         )}
+
+        {activeTab === "forks" && <ForkRequestsManager />}
 
         {activeTab === "analytics" && <SellerAnalytics />}
       </main>

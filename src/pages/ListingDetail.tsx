@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
 import { ExternalLink, Github, Star, Crown, ChevronLeft, Download, Eye, Package, Gift, MessageSquare, GitFork, RefreshCw, Wrench, Shield, Infinity, Rocket, Triangle } from "lucide-react";
+import { RequestForkDialog } from "@/components/RequestForkDialog";
 import { ImageGallery } from "@/components/ImageGallery";
 import { DeployToNetlify } from "@/components/DeployToNetlify";
 import { DeployToVercel } from "@/components/DeployToVercel";
@@ -508,6 +509,12 @@ export default function ListingDetail() {
                           Remix this project
                         </Button>
                       </Link>
+                      <RequestForkDialog
+                        listingId={listing.id}
+                        listingTitle={listing.title}
+                        builderId={listing.seller_id}
+                        builderName={seller?.username ?? "Builder"}
+                      />
                     </>
                   )}
                 </div>
@@ -558,6 +565,14 @@ export default function ListingDetail() {
                       Deploy to Vercel after claiming
                     </Button>
                   </div>
+                  {user && listing.seller_id !== user.id && (
+                    <RequestForkDialog
+                      listingId={listing.id}
+                      listingTitle={listing.title}
+                      builderId={listing.seller_id}
+                      builderName={seller?.username ?? "Builder"}
+                    />
+                  )}
                 </div>
               )}
 

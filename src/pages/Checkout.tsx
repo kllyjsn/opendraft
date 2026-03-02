@@ -129,8 +129,39 @@ export default function Checkout() {
     setError(null);
 
     try {
-      // If credits cover the full price, spend credits directly
-      if (useCreditsToggle && creditBalance !== null && creditBalance >= finalPrice && finalPrice > 0) {
+      // Record discount code usage for non-Stripe flows (credits / free-after-discount)
+      async function recordDiscountUsage() {
+        if (!appliedDiscount || !user) return;
+        await supabase.from("discount_code_usage").insert({
+          discount_code_id: appliedDiscount.id,
+          buyer_id: user.id,
+        } as any);
+      }
+
+      // Helper: insert purchase record + increment sales
+      async function insertPurchaseAndIncrement(pricePaid: number) {
+        const { error: purchErr } = await supabase.from("purchases").insert({
+          listing_id: listing.id,
+          buyer_id: user.id,
+          seller_id: listing.seller_id,
+          amount_paid: pricePaid,
+          platform_fee: Math.round(pricePaid * 0.2),
+          seller_amount: Math.round(pricePaid * 0.8),
+        } as any);
+        if (purchErr) throw new Error(purchErr.message);
+        await supabase.rpc("increment_sales_count", { listing_id_param: listing.id });
+      }
+
+      // Case 1: Free after discount — no payment needed
+      if (finalPrice === 0) {
+        await recordDiscountUsage();
+        await insertPurchaseAndIncrement(0);
+        navigate(`/success?credit_purchase=true&listing=${listing.id}`);
+        return;
+      }
+
+      // Case 2: Credits cover the full price
+      if (useCreditsToggle && creditBalance !== null && creditBalance >= finalPrice) {
         const { data: spent, error: spendErr } = await supabase.rpc("spend_credits" as any, {
           p_user_id: user.id,
           p_amount: finalPrice,
@@ -140,26 +171,14 @@ export default function Checkout() {
         if (spendErr) throw new Error(spendErr.message);
         if (!spent) throw new Error("Insufficient credits");
 
-        // Record the purchase
-        const { error: purchErr } = await supabase.from("purchases").insert({
-          listing_id: listing.id,
-          buyer_id: user.id,
-          seller_id: listing.seller_id,
-          amount_paid: finalPrice,
-          platform_fee: Math.round(finalPrice * 0.2),
-          seller_amount: Math.round(finalPrice * 0.8),
-        } as any);
-        if (purchErr) throw new Error(purchErr.message);
-
-        // Increment sales
-        await supabase.rpc("increment_sales_count", { listing_id_param: listing.id });
-
+        await recordDiscountUsage();
+        await insertPurchaseAndIncrement(finalPrice);
         refetchCredits();
         navigate(`/success?credit_purchase=true&listing=${listing.id}`);
         return;
       }
 
-      // Fallback to Stripe
+      // Case 3: Fallback to Stripe
       const body: Record<string, string> = { listingId: listing.id };
       if (appliedDiscount) body.discountCodeId = appliedDiscount.id;
       if (offerId) body.offerId = offerId;

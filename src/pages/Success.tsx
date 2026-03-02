@@ -37,13 +37,40 @@ interface SessionDetails {
 export default function Success() {
   const [searchParams] = useSearchParams();
   const sessionId = searchParams.get("session_id");
+  const isCreditPurchase = searchParams.get("credit_purchase") === "true";
+  const creditListingId = searchParams.get("listing");
   const { user } = useAuth();
 
   const [session, setSession] = useState<SessionDetails | null>(null);
-  const [loading, setLoading] = useState(!!sessionId);
+  const [loading, setLoading] = useState(!!sessionId || isCreditPurchase);
   const [error, setError] = useState<string | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
   const [sellerInfo, setSellerInfo] = useState<{ sellerId: string; listingId: string; listingTitle: string; sellerUsername: string } | null>(null);
+
+  // Handle credit-based purchases (no Stripe session)
+  useEffect(() => {
+    if (!isCreditPurchase || !creditListingId) return;
+    async function loadCreditPurchaseInfo() {
+      const { data: listing } = await supabase
+        .from("listings")
+        .select("title, seller_id, price, screenshots")
+        .eq("id", creditListingId!)
+        .single();
+      if (listing) {
+        setSession({
+          status: "complete",
+          paymentStatus: "paid",
+          amountTotal: listing.price,
+          currency: "usd",
+          productName: listing.title,
+          productImage: listing.screenshots?.[0] ?? null,
+          metadata: { listing_id: creditListingId!, seller_id: listing.seller_id },
+        });
+      }
+      setLoading(false);
+    }
+    loadCreditPurchaseInfo();
+  }, [isCreditPurchase, creditListingId]);
 
   useEffect(() => {
     if (!sessionId) return;

@@ -12,8 +12,6 @@ import { ImageGallery } from "@/components/ImageGallery";
 import { DeployToNetlify } from "@/components/DeployToNetlify";
 import { DeployToVercel } from "@/components/DeployToVercel";
 import { useToast } from "@/hooks/use-toast";
-import { MakeOfferDialog } from "@/components/MakeOfferDialog";
-import { ActiveOfferBanner } from "@/components/ActiveOfferBanner";
 import { ChatDrawer } from "@/components/ChatDrawer";
 import { RemixChain } from "@/components/RemixChain";
 import { JsonLd } from "@/components/JsonLd";
@@ -560,10 +558,6 @@ export default function ListingDetail() {
                       Deploy to Vercel after claiming
                     </Button>
                   </div>
-                  {/* Active offer status */}
-                  {user && listing.seller_id !== user.id && (
-                    <ActiveOfferBanner listingId={listing.id} askingPrice={listing.price} />
-                  )}
                 </div>
               )}
 

@@ -6,6 +6,7 @@
  *  - sale_milestone: When a listing hits sales milestones (5, 10, 25, 50, 100)
  *  - trending: Daily trending apps digest
  *  - custom: Admin-triggered custom posts
+ *  - blog_post: Automated blog promotion with rotation
  *
  * Uses OAuth 1.0a for X API v2
  */
@@ -15,6 +16,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
+
+const SITE_URL = "https://opendraft.co";
 
 // OAuth 1.0a helpers
 function percentEncode(str: string): string {
@@ -77,23 +80,37 @@ async function createOAuthHeader(
   return header;
 }
 
-// Tweet templates
+// Helper: pick a random item from array
+function pick<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+// ---------------------------------------------------------------
+// TWEET TEMPLATES — High-quality, varied, platform-native copy
+// ---------------------------------------------------------------
+
 function newListingTweet(listing: any): string {
   const price = listing.price === 0 ? "FREE" : `$${(listing.price / 100).toFixed(0)}`;
-  const category = listing.category?.replace(/_/g, " ") || "app";
-  const badge = listing.completeness_badge === "production_ready" ? "🚀 Production-ready" :
-    listing.completeness_badge === "mvp" ? "⚡ MVP" : "🧪 Prototype";
+  const badge = listing.completeness_badge === "production_ready" ? "Production-ready" :
+    listing.completeness_badge === "mvp" ? "MVP" : "Prototype";
+  const url = `${SITE_URL}/listing/${listing.id}`;
   
   const templates = [
-    `🆕 Just listed: "${listing.title}" — a ${category} for ${price}\n\n${badge} • Ready to fork & ship today\n\nhttps://opendraft.co/listing/${listing.id}`,
-    `New on OpenDraft 🏪\n\n"${listing.title}" (${price})\n${badge}\n\nOwn the source code. Ship it today.\n\nhttps://opendraft.co/listing/${listing.id}`,
-    `Fresh drop 🔥\n\n${listing.title} — ${price}\n\nFork it. Ship it. Own it.\n\nhttps://opendraft.co/listing/${listing.id}`,
+    `New drop on OpenDraft 🏪\n\n"${listing.title}"\n${badge} · ${price}\n\nOwn the source. Deploy today.\n\n${url}`,
+    `Just listed → ${listing.title}\n\n${badge} · Ready to fork and ship.\n\n${url}`,
+    `Fresh on the marketplace:\n\n${listing.title} (${price})\n\nFork it. Ship it. Support included.\n\n${url}`,
   ];
-  return templates[Math.floor(Math.random() * templates.length)];
+  return pick(templates);
 }
 
 function saleMilestoneTweet(listing: any, milestone: number): string {
-  return `🎉 "${listing.title}" just hit ${milestone} sales on OpenDraft!\n\nJoin ${milestone}+ builders who shipped with this template.\n\nhttps://opendraft.co/listing/${listing.id}`;
+  const url = `${SITE_URL}/listing/${listing.id}`;
+  const templates = [
+    `${milestone} builders chose "${listing.title}" on OpenDraft.\n\nSee what they're shipping 👇\n${url}`,
+    `"${listing.title}" just crossed ${milestone} sales 🎉\n\nJoin them → ${url}`,
+    `${milestone}x sold.\n\n"${listing.title}" is one of the most popular projects on OpenDraft.\n\n${url}`,
+  ];
+  return pick(templates);
 }
 
 function trendingDigestTweet(listings: any[]): string {
@@ -102,20 +119,96 @@ function trendingDigestTweet(listings: any[]): string {
     const price = l.price === 0 ? "FREE" : `$${(l.price / 100).toFixed(0)}`;
     return `${i + 1}. ${l.title} (${price})`;
   });
-  return `🔥 Trending on OpenDraft today:\n\n${lines.join("\n")}\n\nBrowse all → https://opendraft.co`;
+  return `Trending on OpenDraft today 🔥\n\n${lines.join("\n")}\n\nBrowse → ${SITE_URL}`;
 }
 
 function weeklyStatsTweet(stats: { listings: number; sales: number; builders: number }): string {
-  return `📊 OpenDraft this week:\n\n🏪 ${stats.listings} new apps listed\n💰 ${stats.sales} sales completed\n👷 ${stats.builders} active builders\n\nThe app store for AI agents keeps growing.\n\nhttps://opendraft.co`;
+  return `This week on OpenDraft:\n\n🏪 ${stats.listings} new apps listed\n💰 ${stats.sales} sales completed\n👷 ${stats.builders} builders joined\n\nThe app store for AI agents.\n\n${SITE_URL}`;
 }
 
-function blogPostTweet(post: { title: string; slug: string; description: string; category: string }): string {
+// ---------------------------------------------------------------
+// BLOG POST TEMPLATES — High-quality, varied hooks
+// Each post gets multiple unique tweet angles
+// ---------------------------------------------------------------
+
+interface BlogEntry {
+  title: string;
+  slug: string;
+  hook: string;      // Short punchy hook for the tweet body
+  hashtags: string;   // 1-2 relevant hashtags
+}
+
+const BLOG_CATALOG: BlogEntry[] = [
+  {
+    title: "We Hit $10K ARR With Zero Employees — Here's How",
+    slug: "autonomous-revenue-zero-employees",
+    hook: "No support team. No marketing dept. No ops staff.\n\nJust AI agents, cron jobs, and edge functions running a profitable marketplace.",
+    hashtags: "#buildinpublic #AI",
+  },
+  {
+    title: "AI Agents Are Now Buying Software",
+    slug: "ai-agents-buying-software",
+    hook: "Last month, an AI agent discovered a template, negotiated 15% off, paid, and deployed it — in under 90 seconds.\n\nNo human involved.",
+    hashtags: "#AIagents #MCP",
+  },
+  {
+    title: "Self-Healing Deployments: How Our AI Fixes Broken Sites",
+    slug: "site-doctor-self-healing-deploys",
+    hook: "Your deployed site breaks at 3 AM.\n\nOur Site Doctor detects it, diagnoses the issue, and rebuilds — before you wake up.",
+    hashtags: "#DevOps #AI",
+  },
+  {
+    title: "The Complete Guide to MCP Servers in 2026",
+    slug: "mcp-servers-complete-guide-2026",
+    hook: "MCP is the new REST.\n\nIf you want AI agents to use your product, you need an MCP server. Here's everything you need to know.",
+    hashtags: "#MCP #AIagents",
+  },
+  {
+    title: "What Is Vibe Coding? The Complete Guide",
+    slug: "what-is-vibe-coding",
+    hook: "Describe what you want. AI writes the code.\n\nVibe coding is how 2M+ people are building software in 2026.",
+    hashtags: "#vibecoding #AI",
+  },
+  {
+    title: "The 6 Best AI Coding Tools in 2026",
+    slug: "best-ai-coding-tools-2026",
+    hook: "Lovable, Cursor, Claude Code, Bolt, Replit, Windsurf — which one should you actually use?\n\nWe compared them all.",
+    hashtags: "#AIcoding #devtools",
+  },
+  {
+    title: "How to Monetize Your Side Project in 2026",
+    slug: "monetize-side-project",
+    hook: "You built something cool over the weekend.\n\nNow it's sitting on GitHub collecting dust.\n\nHere's how to turn it into $200/mo recurring revenue.",
+    hashtags: "#indiehackers #buildinpublic",
+  },
+  {
+    title: "The Rise of the AI Agent Marketplace",
+    slug: "rise-of-ai-agent-marketplace",
+    hook: "The buyers aren't just humans anymore.\n\nAI agents are discovering, evaluating, and purchasing software — programmatically.",
+    hashtags: "#AIagents #marketplace",
+  },
+  {
+    title: "Build Multi-Agent Workflows With Vibe Coding",
+    slug: "vibe-coding-multi-agent-workflows",
+    hook: "Single AI agents are powerful.\n\nBut chain 4-5 specialized agents together? That's where the real magic happens.",
+    hashtags: "#multiagent #vibecoding",
+  },
+];
+
+function blogPostTweet(entry: BlogEntry): string {
+  const url = `${SITE_URL}/blog/${entry.slug}`;
+
   const templates = [
-    `📝 New on the blog: "${post.title}"\n\n${post.description.slice(0, 120)}…\n\nhttps://opendraft.co/blog/${post.slug}`,
-    `🧠 Fresh read → ${post.title}\n\n${post.description.slice(0, 100)}…\n\nRead more 👇\nhttps://opendraft.co/blog/${post.slug}`,
-    `New from OpenDraft ✍️\n\n${post.title}\n\n${post.description.slice(0, 110)}…\n\nhttps://opendraft.co/blog/${post.slug}`,
+    // Hook-first format (best engagement)
+    `${entry.hook}\n\n${url}\n\n${entry.hashtags}`,
+
+    // Title-led with curiosity gap
+    `${entry.title}\n\n${entry.hook.split("\n")[0]}\n\nRead → ${url}`,
+
+    // Thread-starter style
+    `New on the OpenDraft blog:\n\n${entry.title}\n\n${entry.hook.split("\n\n")[0]}\n\n${url}`,
   ];
-  return templates[Math.floor(Math.random() * templates.length)];
+  return pick(templates);
 }
 
 Deno.serve(async (req) => {
@@ -135,7 +228,7 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
     const body = await req.json();
-    const postType = body.type; // new_listing | sale_milestone | trending | weekly_stats | custom
+    const postType = body.type;
     let tweetText = "";
 
     if (postType === "new_listing" && body.listing_id) {
@@ -166,7 +259,6 @@ Deno.serve(async (req) => {
       tweetText = trendingDigestTweet(listings);
 
     } else if (postType === "weekly_stats") {
-      // Get stats for the last 7 days
       const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
       
       const [listingsRes, salesRes, buildersRes] = await Promise.all([
@@ -188,32 +280,26 @@ Deno.serve(async (req) => {
       tweetText = weeklyStatsTweet({ listings: listingsCount, sales: salesCount, builders: buildersCount });
 
     } else if (postType === "blog_post") {
-      // Support rotate mode: cycle through blog posts by hour
       if (body.rotate) {
-        const blogPosts = [
-          { title: "We Hit $10K ARR With Zero Employees — Here's How", slug: "autonomous-revenue-zero-employees", description: "OpenDraft runs on AI agents, cron jobs, and automation. No customer support team, no marketing department. Here's the exact system.", category: "Behind the Build" },
-          { title: "AI Agents Are Now Buying Software. Here's What That Means.", slug: "ai-agents-buying-software", description: "Autonomous AI agents are making purchasing decisions without human approval. We built the infrastructure to let them.", category: "Agent Economy" },
-          { title: "Self-Healing Deployments: How Our AI Fixes Broken Sites Automatically", slug: "site-doctor-self-healing-deploys", description: "When a deployed site breaks, our autonomous Site Doctor diagnoses the issue and attempts a fix before the buyer notices.", category: "Engineering" },
-          { title: "The Complete Guide to MCP Servers in 2026", slug: "mcp-servers-complete-guide-2026", description: "Model Context Protocol is becoming the backbone of the autonomous economy. Everything you need to know.", category: "Technical Deep Dive" },
-          { title: "What Is Vibe Coding? The Complete Guide for 2026", slug: "what-is-vibe-coding", description: "Vibe coding is using AI tools like Lovable, Cursor, and Bolt to build software through natural language prompts.", category: "Guides" },
-          { title: "The 6 Best AI Coding Tools in 2026", slug: "best-ai-coding-tools-2026", description: "A comparison of the top AI coding tools: Lovable, Cursor, Claude Code, Bolt, Replit, and more.", category: "Guides" },
-          { title: "How to Monetize Your Side Project in 2026", slug: "monetize-side-project", description: "Stop letting side projects collect dust. Turn your AI-built app into recurring revenue.", category: "Guides" },
-          { title: "The Rise of the AI Agent Marketplace", slug: "rise-of-ai-agent-marketplace", description: "How marketplaces are creating a new economy for autonomous agents and SaaS tools.", category: "Agent Economy" },
-          { title: "Build Multi-Agent Workflows With Vibe Coding", slug: "vibe-coding-multi-agent-workflows", description: "Explore how to build sophisticated multi-agent AI systems using vibe coding tools.", category: "Technical Deep Dive" },
-        ];
+        // Rotate through blog catalog by hour — ensures variety across the day
         const hourOfDay = new Date().getUTCHours();
-        const postIndex = hourOfDay % blogPosts.length;
-        const selected = blogPosts[postIndex];
-        tweetText = blogPostTweet(selected);
-      } else if (body.title && body.slug) {
+        const entry = BLOG_CATALOG[hourOfDay % BLOG_CATALOG.length];
+        tweetText = blogPostTweet(entry);
+      } else if (body.slug) {
+        // Post a specific blog entry by slug
+        const entry = BLOG_CATALOG.find(e => e.slug === body.slug);
+        if (!entry) throw new Error(`Blog slug "${body.slug}" not found in catalog`);
+        tweetText = blogPostTweet(entry);
+      } else if (body.title && body.custom_slug) {
+        // Fully custom blog post tweet
         tweetText = blogPostTweet({
           title: body.title,
-          slug: body.slug,
-          description: body.description || "",
-          category: body.category || "Blog",
+          slug: body.custom_slug,
+          hook: body.hook || body.description || "",
+          hashtags: body.hashtags || "#opendraft",
         });
       } else {
-        throw new Error("blog_post requires either rotate:true or title+slug");
+        throw new Error("blog_post requires rotate:true, slug, or title+custom_slug");
       }
 
     } else if (postType === "custom" && body.text) {

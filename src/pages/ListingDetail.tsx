@@ -90,8 +90,8 @@ export default function ListingDetail() {
   // Dynamic SEO meta tags
   useEffect(() => {
     if (!listing) return;
-    const price = listing.price === 0 ? "Free" : `$${(listing.price / 100).toFixed(2)}`;
-    const title = `${listing.title} — ${price} | OpenDraft`;
+    const price = "$15/mo";
+    const title = `${listing.title} — ${price} support | OpenDraft`;
     const desc = listing.description.slice(0, 155).replace(/\n/g, " ") + (listing.description.length > 155 ? "…" : "");
     const image = listing.screenshots?.[0] || "https://opendraft.co/og-image.png";
 
@@ -266,7 +266,7 @@ export default function ListingDetail() {
 
   const productSchema = useMemo(() => {
     if (!listing) return null;
-    const priceVal = (listing.price / 100).toFixed(2);
+    const priceVal = "15.00";
     const schema: Record<string, unknown> = {
       "@context": "https://schema.org",
       "@type": "Product",
@@ -380,8 +380,8 @@ export default function ListingDetail() {
     );
   }
 
-  const isFree = listing.price === 0;
-  const priceLabel = isFree ? "Free" : `$${(listing.price / 100).toFixed(2)}`;
+  const supportPrice = "$15/mo";
+  const isFree = false; // All listings now use the support model
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -462,10 +462,10 @@ export default function ListingDetail() {
             <div className="rounded-2xl border border-border/60 bg-card p-6 shadow-card sticky top-20 hover:shadow-card-hover transition-shadow duration-500">
               {/* Price */}
               <div className="mb-5">
-                <div className={`text-4xl font-black mb-0.5 ${isFree ? "text-primary" : ""}`}>{isFree ? "Free" : priceLabel}</div>
+                <div className="text-4xl font-black">{supportPrice}</div>
                 <p className="text-xs text-muted-foreground">
-                   {isFree ? "Free forever · Fork the full source code" : isSubscribed ? "Included with your subscription" : "Requires $20/mo subscription"}
-                 </p>
+                  Monthly support · Auto-fixes + human builder access
+                </p>
               </div>
 
               {purchased ? (
@@ -511,8 +511,8 @@ export default function ListingDetail() {
                     </>
                   )}
                 </div>
-              ) : isSubscribed || isFree ? (
-                /* Subscribers and free listings use the claim flow */
+              ) : isSubscribed ? (
+                /* Subscribers use the claim flow */
                 user ? (
                   <Button
                     onClick={handleClaim}
@@ -520,7 +520,7 @@ export default function ListingDetail() {
                     className="w-full gradient-hero text-white border-0 shadow-glow hover:opacity-90 h-12 text-base font-bold transition-opacity"
                   >
                     <Gift className="h-4 w-4 mr-2" />
-                    {claiming ? "Claiming…" : isFree ? "Get for Free" : "Claim Project"}
+                    {claiming ? "Claiming…" : "Claim Project"}
                   </Button>
                 ) : (
                   <Link to="/login">
@@ -582,11 +582,9 @@ export default function ListingDetail() {
               )}
 
               {/* Trust line */}
-              {!isFree && (
-                <p className="mt-4 text-center text-[11px] text-muted-foreground">
-                  🔒 Secure checkout via Stripe
-                </p>
-              )}
+              <p className="mt-4 text-center text-[11px] text-muted-foreground">
+                🔒 Secure checkout via Stripe · Cancel anytime
+              </p>
 
               {/* Early Adopter Advantage */}
               {listing.sales_count <= 5 && (
@@ -611,8 +609,8 @@ export default function ListingDetail() {
               <div className="mt-5 rounded-xl gradient-hero p-[1px]">
                 <div className="rounded-[11px] bg-card p-4 space-y-1.5 text-center">
                   <p className="text-xs font-black uppercase tracking-wide text-primary">What you get</p>
-                  <p className="text-[13px] font-semibold leading-snug">Full source code + lifetime access</p>
-                  <p className="text-[11px] text-muted-foreground leading-relaxed">Buy once, own forever. Want ongoing support & feature requests? Subscribe to the builder's support plan after purchase.</p>
+                  <p className="text-[13px] font-semibold leading-snug">Full source code + auto-healing deploys</p>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">$15/mo covers AI-powered site monitoring, automated bug fixes, and direct builder access for feature requests and support.</p>
                 </div>
               </div>
 

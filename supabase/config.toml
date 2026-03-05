@@ -113,3 +113,7 @@ verify_jwt = false
 # Site doctor — autonomous health checker and auto-fixer
 [functions.site-doctor]
 verify_jwt = false
+
+# Blog OG image — public SVG OG images for blog posts
+[functions.blog-og-image]
+verify_jwt = false

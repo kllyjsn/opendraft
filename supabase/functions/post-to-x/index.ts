@@ -109,6 +109,15 @@ function weeklyStatsTweet(stats: { listings: number; sales: number; builders: nu
   return `📊 OpenDraft this week:\n\n🏪 ${stats.listings} new apps listed\n💰 ${stats.sales} sales completed\n👷 ${stats.builders} active builders\n\nThe app store for AI agents keeps growing.\n\nhttps://opendraft.co`;
 }
 
+function blogPostTweet(post: { title: string; slug: string; description: string; category: string }): string {
+  const templates = [
+    `📝 New on the blog: "${post.title}"\n\n${post.description.slice(0, 120)}…\n\nhttps://opendraft.co/blog/${post.slug}`,
+    `🧠 Fresh read → ${post.title}\n\n${post.description.slice(0, 100)}…\n\nRead more 👇\nhttps://opendraft.co/blog/${post.slug}`,
+    `New from OpenDraft ✍️\n\n${post.title}\n\n${post.description.slice(0, 110)}…\n\nhttps://opendraft.co/blog/${post.slug}`,
+  ];
+  return templates[Math.floor(Math.random() * templates.length)];
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -178,11 +187,19 @@ Deno.serve(async (req) => {
 
       tweetText = weeklyStatsTweet({ listings: listingsCount, sales: salesCount, builders: buildersCount });
 
+    } else if (postType === "blog_post" && body.title && body.slug) {
+      tweetText = blogPostTweet({
+        title: body.title,
+        slug: body.slug,
+        description: body.description || "",
+        category: body.category || "Blog",
+      });
+
     } else if (postType === "custom" && body.text) {
       tweetText = body.text;
 
     } else {
-      throw new Error("Invalid post type. Use: new_listing, sale_milestone, trending, weekly_stats, or custom");
+      throw new Error("Invalid post type. Use: new_listing, sale_milestone, trending, weekly_stats, blog_post, or custom");
     }
 
     // Post to X API v2

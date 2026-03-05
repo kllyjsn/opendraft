@@ -187,13 +187,34 @@ Deno.serve(async (req) => {
 
       tweetText = weeklyStatsTweet({ listings: listingsCount, sales: salesCount, builders: buildersCount });
 
-    } else if (postType === "blog_post" && body.title && body.slug) {
-      tweetText = blogPostTweet({
-        title: body.title,
-        slug: body.slug,
-        description: body.description || "",
-        category: body.category || "Blog",
-      });
+    } else if (postType === "blog_post") {
+      // Support rotate mode: cycle through blog posts by hour
+      if (body.rotate) {
+        const blogPosts = [
+          { title: "We Hit $10K ARR With Zero Employees — Here's How", slug: "autonomous-revenue-zero-employees", description: "OpenDraft runs on AI agents, cron jobs, and automation. No customer support team, no marketing department. Here's the exact system.", category: "Behind the Build" },
+          { title: "AI Agents Are Now Buying Software. Here's What That Means.", slug: "ai-agents-buying-software", description: "Autonomous AI agents are making purchasing decisions without human approval. We built the infrastructure to let them.", category: "Agent Economy" },
+          { title: "Self-Healing Deployments: How Our AI Fixes Broken Sites Automatically", slug: "site-doctor-self-healing-deploys", description: "When a deployed site breaks, our autonomous Site Doctor diagnoses the issue and attempts a fix before the buyer notices.", category: "Engineering" },
+          { title: "The Complete Guide to MCP Servers in 2026", slug: "mcp-servers-complete-guide-2026", description: "Model Context Protocol is becoming the backbone of the autonomous economy. Everything you need to know.", category: "Technical Deep Dive" },
+          { title: "What Is Vibe Coding? The Complete Guide for 2026", slug: "what-is-vibe-coding", description: "Vibe coding is using AI tools like Lovable, Cursor, and Bolt to build software through natural language prompts.", category: "Guides" },
+          { title: "The 6 Best AI Coding Tools in 2026", slug: "best-ai-coding-tools-2026", description: "A comparison of the top AI coding tools: Lovable, Cursor, Claude Code, Bolt, Replit, and more.", category: "Guides" },
+          { title: "How to Monetize Your Side Project in 2026", slug: "monetize-side-project", description: "Stop letting side projects collect dust. Turn your AI-built app into recurring revenue.", category: "Guides" },
+          { title: "The Rise of the AI Agent Marketplace", slug: "rise-of-ai-agent-marketplace", description: "How marketplaces are creating a new economy for autonomous agents and SaaS tools.", category: "Agent Economy" },
+          { title: "Build Multi-Agent Workflows With Vibe Coding", slug: "vibe-coding-multi-agent-workflows", description: "Explore how to build sophisticated multi-agent AI systems using vibe coding tools.", category: "Technical Deep Dive" },
+        ];
+        const hourOfDay = new Date().getUTCHours();
+        const postIndex = hourOfDay % blogPosts.length;
+        const selected = blogPosts[postIndex];
+        tweetText = blogPostTweet(selected);
+      } else if (body.title && body.slug) {
+        tweetText = blogPostTweet({
+          title: body.title,
+          slug: body.slug,
+          description: body.description || "",
+          category: body.category || "Blog",
+        });
+      } else {
+        throw new Error("blog_post requires either rotate:true or title+slug");
+      }
 
     } else if (postType === "custom" && body.text) {
       tweetText = body.text;

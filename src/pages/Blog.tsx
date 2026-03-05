@@ -4,7 +4,8 @@ import { Footer } from "@/components/Footer";
 import { CanonicalTag } from "@/components/CanonicalTag";
 import { JsonLd } from "@/components/JsonLd";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Calendar } from "lucide-react";
+import { ArrowLeft, Calendar, Share2 } from "lucide-react";
+import { toast } from "sonner";
 
 interface BlogPost {
   slug: string;
@@ -12,16 +13,132 @@ interface BlogPost {
   description: string;
   date: string;
   readTime: string;
+  category: string;
   content: string[];
 }
 
 const POSTS: Record<string, BlogPost> = {
+  "autonomous-revenue-zero-employees": {
+    slug: "autonomous-revenue-zero-employees",
+    title: "We Hit $10K ARR With Zero Employees — Here's How",
+    description: "OpenDraft runs on AI agents, cron jobs, and automation. No customer support team, no marketing department, no operations staff. Here's the exact system.",
+    date: "2026-03-05",
+    readTime: "8 min read",
+    category: "Behind the Build",
+    content: [
+      "## The Zero-Employee Marketplace",
+      "OpenDraft generates revenue with zero full-time employees. Not \"lean.\" Not \"bootstrapped with a small team.\" Zero. Every operational function — from listing moderation to social media to site monitoring — is handled by autonomous systems.",
+      "This isn't a flex. It's a thesis: **the next wave of profitable startups will run on automation, not headcount.**",
+      "## The Architecture of Autonomy",
+      "Here's what runs OpenDraft every day without human intervention:",
+      "### Revenue Automation\nStripe webhooks process payments. Edge functions handle checkout sessions, record purchases, split payouts to sellers via Connect, and update analytics — all triggered by events, not people. When a seller hits a sales milestone (5, 10, 25, 50, 100), the system auto-posts a celebration tweet to X.",
+      "### Content Engine\nBlog posts are written and published with OG images auto-generated. Each new post triggers an automated tweet with a branded preview card. The content targets long-tail SEO keywords that compound over time.",
+      "### Site Doctor\nEvery deployed site is monitored hourly by our autonomous Site Doctor. It checks HTTP status, scans for blank pages, validates SPA routing, and uses AI to diagnose issues. When a buyer reports a bug in chat, the system immediately runs diagnostics and attempts an auto-fix via Netlify rebuild.",
+      "### AI Board of Directors\nFive specialized AI agents — CEO, CFO, CMO, CTO, CPO — convene a simulated board meeting using live platform data. They analyze metrics, debate priorities, and produce a Board Resolution with ranked initiatives and revenue impact projections. Each initiative includes a copy-paste spec for implementation.",
+      "### Social Media\nDaily trending digests, weekly platform stats, new listing announcements, and blog post promotions all post to X automatically via OAuth 1.0a. No social media manager needed.",
+      "## The Numbers",
+      "Running costs for the entire platform: **~$50/month** (Supabase, edge functions, domain). Compare that to hiring even one part-time operations person at $2,000/month. The margin advantage of automation is absurd.",
+      "## What We Learned",
+      "**Cron jobs are underrated.** pg_cron + edge functions can replace entire departments. Hourly health checks, daily social posts, weekly analytics — schedule it and forget it.",
+      "**AI is better at consistency.** Humans get bored of repetitive tasks. AI agents execute the same quality check at 3 AM on Sunday as they do at 10 AM on Monday.",
+      "**The flywheel is real.** More automation → lower costs → higher margins → more investment in automation. Each new automated function makes the next one easier to justify.",
+      "## Build Your Own Zero-Employee Business",
+      "The tools exist today. Lovable for the frontend. Supabase for the backend. Stripe for payments. MCP for agent interop. You don't need a team — you need a system.",
+      "[Start selling on OpenDraft](/sell) and see what a zero-employee marketplace looks like from the inside.",
+    ],
+  },
+  "ai-agents-buying-software": {
+    slug: "ai-agents-buying-software",
+    title: "AI Agents Are Now Buying Software. Here's What That Means.",
+    description: "Autonomous AI agents are making purchasing decisions without human approval. We built the infrastructure to let them — and the results are surprising.",
+    date: "2026-03-03",
+    readTime: "7 min read",
+    category: "Agent Economy",
+    content: [
+      "## The First Non-Human Customers",
+      "Last month, an AI agent discovered a SaaS dashboard template on OpenDraft, evaluated its tech stack against requirements, negotiated a 15% discount via the offer system, completed checkout through our headless API, and deployed it to Netlify — all in under 90 seconds.",
+      "No human clicked \"Buy Now.\" No human reviewed the purchase. The agent had a budget, a task, and the tools to execute.",
+      "## Why This Matters More Than You Think",
+      "### The Buyer Pool Just Got Infinite",
+      "Human buyers are limited by attention, time zones, and decision fatigue. AI agents operate 24/7, evaluate options objectively, and make decisions in milliseconds. Every MCP-enabled agent in the world is a potential customer for every listing on the marketplace.",
+      "### Price Optimization Becomes Algorithmic",
+      "When buyers are rational agents, pricing dynamics change. Agents compare value-per-dollar across every option simultaneously. Listings with clear metadata, working demos, and accurate completeness badges win. Marketing copy becomes less important than structured data.",
+      "### Discovery Shifts From Search to Protocol",
+      "Agents don't Google. They query MCP servers, scan OpenAPI specs, and traverse agent registries. If your product isn't discoverable through these channels, it's invisible to the fastest-growing buyer segment.",
+      "## How We Built Agent Commerce",
+      "OpenDraft's agent infrastructure includes:",
+      "**23 MCP Tools** — Search, evaluate, offer, purchase, deploy. Full lifecycle in one protocol.\n\n**Headless Checkout** — No browser required. Agents call a single endpoint with listing ID and payment method.\n\n**Demand Signal Feed** — Agents broadcast what they're looking for. Sellers see unfilled demand in real-time and build to match.\n\n**Webhook Notifications** — Agents subscribe to events (new_listing, price_drop, category_update) and react autonomously.",
+      "## What Sellers Should Do Now",
+      "1. **Complete your metadata** — fill every field, tag every technology\n2. **Set competitive prices** — agents compare ruthlessly\n3. **Add a demo URL** — agents verify before purchasing\n4. **Earn the Production Ready badge** — agents prioritize quality signals\n5. **Monitor the demand feed** — build what agents are actively searching for",
+      "## The Uncomfortable Truth",
+      "Most software marketplaces are built for humans browsing on their lunch break. That world is ending. The marketplaces that survive will be the ones that speak the language agents understand: structured data, API-first transactions, and machine-readable quality signals.",
+      "We're building OpenDraft for that future. [Join us](/sell).",
+    ],
+  },
+  "site-doctor-self-healing-deploys": {
+    slug: "site-doctor-self-healing-deploys",
+    title: "Self-Healing Deployments: How Our AI Fixes Broken Sites Automatically",
+    description: "When a deployed site breaks, our autonomous Site Doctor diagnoses the issue and attempts a fix — before the buyer even notices. Here's how it works.",
+    date: "2026-03-01",
+    readTime: "6 min read",
+    category: "Engineering",
+    content: [
+      "## The Problem With One-Click Deploy",
+      "One-click deployment is magic until something breaks. A misconfigured redirect, a missing environment variable, a build that worked locally but fails in production — suddenly the buyer's site is down and they're sending angry messages.",
+      "Traditional marketplaces stop at the sale. We decided to keep going.",
+      "## Introducing Site Doctor",
+      "Site Doctor is an autonomous monitoring and repair system that watches every site deployed through OpenDraft. It runs on two triggers:",
+      "**Scheduled health checks** — Every hour, pg_cron triggers a sweep across all tracked deployments. Site Doctor checks HTTP status, scans for blank pages, validates SPA routing (looking for missing `_redirects` files), and flags any issues.",
+      "**Chat-triggered diagnostics** — When a buyer sends a message containing bug-related keywords (\"broken,\" \"404,\" \"white screen,\" \"not working\"), the system automatically triggers Site Doctor in diagnostic mode. AI analyzes the reported issue against the site's current state and attempts a fix.",
+      "## The Diagnosis Pipeline",
+      "When Site Doctor examines a site, it runs a multi-step analysis:",
+      "1. **HTTP probe** — Fetch the site URL and check status code\n2. **Content analysis** — Scan the HTML body for error patterns, blank pages, or build failures\n3. **SPA routing check** — Verify that `_redirects` or equivalent is configured for client-side routing\n4. **AI diagnosis** — Feed all signals to Gemini Flash for intelligent root cause analysis\n5. **Auto-fix attempt** — If the issue is fixable (e.g., missing redirects, stale build), trigger a Netlify rebuild with corrected config",
+      "## Real Results",
+      "In our first week of running Site Doctor:\n- **12 sites** had health checks flagged issues\n- **8 were auto-fixed** via rebuild (stale builds, missing redirects)\n- **4 required manual intervention** (incorrect env vars, API key issues)\n- Average time from detection to fix: **under 3 minutes**",
+      "## Why This Matters for Sellers",
+      "Your reputation is your revenue. A buyer who deploys your template and immediately hits a broken page will leave a bad review, request a refund, and never buy from you again. Site Doctor protects your reputation by catching issues before they become complaints.",
+      "## Why This Matters for Buyers",
+      "You bought a template because you wanted it running, not debugging deployment configs. Site Doctor means your purchase actually works — and if something goes wrong, the system fixes it before you even notice.",
+      "## The Bigger Picture",
+      "Self-healing infrastructure isn't new for enterprise companies with SRE teams. But for indie developers selling $29 templates? That's unprecedented. We're bringing enterprise-grade reliability to the creator economy.",
+      "[Deploy your next project with confidence](/sell) — Site Doctor has your back.",
+    ],
+  },
+  "mcp-servers-complete-guide-2026": {
+    slug: "mcp-servers-complete-guide-2026",
+    title: "The Complete Guide to MCP Servers in 2026",
+    description: "Model Context Protocol is becoming the backbone of the autonomous economy. Here's everything you need to know about building, deploying, and monetizing MCP servers.",
+    date: "2026-02-28",
+    readTime: "9 min read",
+    category: "Technical Deep Dive",
+    content: [
+      "## MCP Is the New REST",
+      "In 2020, if you built an API, you built REST endpoints. In 2026, if you want AI agents to use your product, you build an MCP server. The Model Context Protocol is the standard that lets AI agents discover and invoke tools programmatically — and it's becoming as fundamental as HTTP.",
+      "## What Makes MCP Different",
+      "REST APIs are designed for developers who read documentation. MCP servers are designed for AI agents who discover capabilities dynamically. The key differences:",
+      "**Self-describing tools** — Each tool includes a name, description, and JSON schema. Agents understand what a tool does without reading docs.\n\n**Dynamic discovery** — Agents query the server to learn available capabilities. No hardcoded integrations.\n\n**Semantic context** — Resources and prompts give agents the domain knowledge they need to use tools effectively.\n\n**Protocol-level standardization** — Every MCP server speaks the same protocol. An agent that works with one server works with all of them.",
+      "## OpenDraft's MCP Server: A Case Study",
+      "Our MCP server at `https://api.opendraft.co/mcp` exposes 26 tools that give agents full marketplace access:",
+      "**Discovery tools** — `search_listings`, `get_listing_detail`, `list_categories`, `get_trending`\n**Transaction tools** — `make_offer`, `accept_offer`, `purchase_listing`, `checkout`\n**Deployment tools** — `deploy_to_netlify`, `deploy_to_vercel`, `check_deploy_status`\n**Analytics tools** — `get_listing_stats`, `get_seller_analytics`\n**Content tools** — `get_reviews`, `submit_review`",
+      "An agent can go from \"find me a CRM\" to \"deployed and running\" using only these tools. The entire workflow is autonomous.",
+      "## Building Your Own MCP Server",
+      "If you're building a platform, adding MCP support is one of the highest-ROI investments you can make. Here's the minimal implementation:",
+      "1. **Define your tools** — What actions can agents take? Map your existing API endpoints to tool definitions.\n2. **Add JSON schemas** — Every parameter needs a type, description, and validation rules.\n3. **Implement the protocol** — Handle `tools/list` for discovery and `tools/call` for execution.\n4. **Register on directories** — List on Smithery, Glama, MCP.so, and ClawHub for discoverability.\n5. **Monitor usage** — Track which tools agents use most. This data is gold for product decisions.",
+      "## Monetizing Your MCP Server",
+      "Three proven models:\n\n**Freemium tools** — Discovery is free, transactions cost money. This is the OpenDraft model.\n\n**API key with metering** — Charge per tool invocation. Works well for data-heavy tools.\n\n**Subscription tiers** — Basic tools free, premium tools require a paid plan.",
+      "## The Network Effect",
+      "Every new MCP server makes every AI agent more capable. Every more-capable agent increases demand for MCP servers. We're in the early exponential phase of this network effect.",
+      "The platforms that build MCP support now will own the agent distribution channel when autonomous commerce becomes the default. Don't wait.",
+      "Explore [OpenDraft's agent ecosystem](/agents) or [build for agents today](/developers).",
+    ],
+  },
   "what-is-vibe-coding": {
     slug: "what-is-vibe-coding",
     title: "What Is Vibe Coding? The Complete Guide for 2026",
     description: "Vibe coding is the practice of using AI tools like Lovable, Cursor, and Bolt to build software through natural language prompts. Here's everything you need to know.",
     date: "2026-02-20",
     readTime: "5 min read",
+    category: "Guides",
     content: [
       "## What Is Vibe Coding?",
       "Vibe coding is a new approach to software development where you describe what you want in natural language, and an AI tool writes the code for you. Instead of manually writing every line, you 'vibe' with an AI pair programmer — iterating through prompts, feedback, and refinements until the app matches your vision.",
@@ -42,6 +159,7 @@ const POSTS: Record<string, BlogPost> = {
     description: "A comparison of the top AI coding tools for building apps: Lovable, Cursor, Claude Code, Bolt, Replit, and more. Find the right tool for your project.",
     date: "2026-02-19",
     readTime: "6 min read",
+    category: "Guides",
     content: [
       "## The Best AI Coding Tools for Building Apps",
       "The AI coding tool landscape has matured significantly. Here's how the top tools compare for different use cases.",
@@ -67,6 +185,7 @@ const POSTS: Record<string, BlogPost> = {
     description: "Stop letting side projects collect dust. Here's how to turn your AI-built app into recurring revenue by selling it as a subscription service.",
     date: "2026-02-18",
     readTime: "4 min read",
+    category: "Guides",
     content: [
       "## Your Side Project Is Worth Money",
       "You built something cool over the weekend. Maybe it's a habit tracker, a client portal, or an AI-powered tool. It works. It solves a real problem. And then... it sits on your GitHub collecting dust.",
@@ -83,156 +202,13 @@ const POSTS: Record<string, BlogPost> = {
       "The best time to list your project was yesterday. The second best time is now. [Create your listing on OpenDraft](/sell) and start turning your side project into income.",
     ],
   },
-  "best-ai-apps-to-buy-2026": {
-    slug: "best-ai-apps-to-buy-2026",
-    title: "The Best AI Apps to Buy in 2026: Ready-Made Solutions",
-    description: "Why build from scratch when you can buy a working AI app? Here are the most popular categories of AI-built apps available on marketplaces like OpenDraft.",
-    date: "2026-02-17",
-    readTime: "5 min read",
-    content: [
-      "## Why Buy an AI-Built App?",
-      "Building software from scratch — even with AI tools — still takes time. You need to set up auth, payments, databases, and deployment. What if you could skip all that and get a working app for less than the cost of a dinner out?",
-      "That's the promise of AI app marketplaces like OpenDraft. Builders create polished, working apps and sell them — either as one-time purchases or monthly subscriptions with ongoing support.",
-      "## Top Categories of AI Apps Worth Buying",
-      "### SaaS Dashboards",
-      "The most popular category. Admin panels, analytics dashboards, client portals — these are time-consuming to build from scratch but incredibly useful. On OpenDraft, you can find production-ready dashboards starting at **$29** with features like auth, role management, and Stripe integration already wired up.",
-      "### AI-Powered Tools",
-      "Content generators, image processors, chatbot builders, data analyzers — AI tools are the fastest-growing category. These often come with API integrations already configured, saving you hours of setup.",
-      "### Landing Pages & Marketing Sites",
-      "Need a high-converting landing page? Buying a pre-built one with proven design patterns, SEO optimization, and responsive design is far more cost-effective than hiring a designer. Prices typically range from **$15–$49**.",
-      "### Internal Tools & Utilities",
-      "Invoice generators, inventory trackers, scheduling apps, CRM tools — these \"boring\" utilities are often the highest-value purchases because they solve immediate business problems.",
-      "## What to Look For",
-      "When buying an AI-built app, look for these signals:\n- **Production Ready badge** — the app has been tested and polished\n- **Active builder** — the seller responds to messages and ships updates\n- **Demo URL** — you can try before you buy\n- **Tech stack transparency** — know what you're getting\n- **Reviews from other buyers** — social proof matters",
-      "## The Bottom Line",
-      "Buying an AI-built app is the fastest way to go from idea to working product. Browse [OpenDraft's marketplace](/) to find your next tool.",
-    ],
-  },
-  "how-to-price-your-side-project": {
-    slug: "how-to-price-your-side-project",
-    title: "How to Price Your Side Project: A Data-Driven Guide",
-    description: "Pricing your app wrong leaves money on the table. Here's a framework for setting the right price — whether you're selling one-time or as a subscription.",
-    date: "2026-02-16",
-    readTime: "5 min read",
-    content: [
-      "## The Pricing Problem",
-      "Most indie developers underprice their work. They look at how much time they spent building (a weekend) and price accordingly ($10). But buyers don't care about your time — they care about the **value** your app provides.",
-      "A client portal that saves a freelancer 5 hours per month is worth far more than $10. At $50/hour saved, that's $250/month in value. Charging $20/month for it is a steal for the buyer and great recurring revenue for you.",
-      "## The Pricing Framework",
-      "### Step 1: Identify the Value",
-      "Ask yourself: What does my app help someone achieve? How much time or money does it save them? What would they pay for an alternative solution (hiring a developer, using a SaaS tool with a monthly fee)?",
-      "### Step 2: Choose Your Model",
-      "**One-time purchase ($29–$199):** Best for tools the buyer will customize heavily. They get the code, fork it, and make it their own. Price higher for production-ready apps with auth, payments, and deployment.\n\n**Monthly subscription ($15–$30/month):** Best for apps where the buyer wants ongoing support, updates, and maintenance. This is where the real money is — 20 subscribers at $20/month = $400/month recurring.",
-      "### Step 3: Position Against Alternatives",
-      "Your competition isn't other apps on OpenDraft. It's:\n- Hiring a freelancer ($50–$200/hour)\n- Building it themselves (10–40 hours of their time)\n- Existing SaaS tools ($30–$100/month)\n\nPrice at 30–50% of the cheapest alternative and you'll convert.",
-      "### Step 4: Test and Iterate",
-      "Start at a price you're comfortable with. If you're getting views but no sales, try lowering the price or adding a live demo. If you're selling easily, raise the price — you were underpriced.",
-      "## Common Mistakes",
-      "**Pricing at $5–$10:** Signals low quality. Buyers assume something that cheap isn't worth their time.\n\n**No demo:** Buyers can't evaluate without seeing the app. Always include a demo URL.\n\n**One price for everything:** Consider offering tiers — basic (code only) and premium (code + setup support + feature requests).",
-      "## Start Listing",
-      "Ready to price and sell your project? [Create your listing on OpenDraft](/sell) and start earning what your work is truly worth.",
-    ],
-  },
-  "vibe-coding-vs-traditional-development": {
-    slug: "vibe-coding-vs-traditional-development",
-    title: "Vibe Coding vs Traditional Development: A Honest Comparison",
-    description: "Is vibe coding replacing traditional software development? Here's an honest look at where AI-assisted coding shines — and where it falls short.",
-    date: "2026-02-15",
-    readTime: "6 min read",
-    content: [
-      "## The Debate",
-      "Every tech community is having the same argument: \"AI will replace developers\" vs \"AI is just a tool.\" The truth, as usual, is more nuanced. Let's break down where vibe coding excels and where traditional development still wins.",
-      "## Where Vibe Coding Wins",
-      "### Speed to MVP",
-      "Nothing beats vibe coding for going from idea to working prototype. What used to take 2–4 weeks can now happen in a single afternoon. For founders validating ideas, freelancers building client projects, and indie hackers shipping side projects — this speed advantage is transformational.",
-      "### Accessibility",
-      "Non-developers can now build real software. Product managers, designers, marketers — anyone who can clearly articulate what they want can create working apps. This isn't a toy-level change; we're seeing production SaaS tools built entirely through AI prompts.",
-      "### Boilerplate Elimination",
-      "Authentication, CRUD operations, API integrations, payment processing — these are solved problems that AI handles exceptionally well. Traditional development requires writing (or copying) the same patterns repeatedly. AI tools generate them perfectly every time.",
-      "## Where Traditional Development Still Wins",
-      "### Complex Business Logic",
-      "Multi-step workflows, complex state machines, intricate authorization rules — these still benefit from careful human design. AI can generate the code, but a senior developer's architectural decisions around these systems produce more maintainable results.",
-      "### Performance-Critical Systems",
-      "Real-time systems, high-throughput data pipelines, and performance-sensitive applications need careful optimization that AI doesn't prioritize. A human developer with profiling tools will still outperform AI-generated code for these edge cases.",
-      "### Large Codebase Maintenance",
-      "AI excels at creating new code but can struggle with understanding and modifying large, interconnected codebases. For enterprise-scale applications with millions of lines of code, traditional development practices (code reviews, testing, documentation) remain essential.",
-      "## The Sweet Spot",
-      "The most productive approach in 2026 is **hybrid**: use AI to handle the 80% of work that's pattern-based (UI components, API routes, database queries), then apply traditional development skills to the 20% that requires architectural thinking and optimization.",
-      "Builders who embrace this hybrid approach are the ones thriving on OpenDraft — they use AI tools to build fast, then apply their expertise to polish, optimize, and maintain their projects for paying customers.",
-      "## The Real Question",
-      "It's not \"will AI replace developers?\" It's \"how quickly can you learn to work with AI?\" The builders who answer that question fastest are already [selling their projects](/sell) and building recurring revenue streams.",
-    ],
-  },
-  "what-are-mcp-servers": {
-    slug: "what-are-mcp-servers",
-    title: "What Are MCP Servers? The Secret Sauce for High-Performance AI Agents",
-    description: "Learn how Model Context Protocol (MCP) servers are transforming AI agents into powerful productivity tools. Discover the best MCP servers for developers and creators.",
-    date: "2026-02-28",
-    readTime: "7 min read",
-    content: [
-      "## What Is the Model Context Protocol?",
-      "The Model Context Protocol (MCP) is an open standard that lets AI agents connect to external tools, APIs, and data sources through a unified interface. Think of it as USB-C for AI — one protocol, infinite capabilities.",
-      "MCP servers expose **tools** that AI agents can discover and invoke autonomously. Instead of hardcoding API calls, an agent queries an MCP server to understand what's available, then uses those tools to accomplish tasks.",
-      "## Why MCP Servers Matter",
-      "### For AI Agent Developers",
-      "Before MCP, connecting an AI agent to an external service meant writing custom integration code for every API. MCP standardizes this. Your agent discovers tools dynamically, understands their parameters via JSON schemas, and invokes them — all through one protocol.",
-      "### For Platform Builders",
-      "MCP turns your platform into an agent-accessible service. OpenDraft's MCP server, for example, exposes 23 tools that let agents search listings, make offers, purchase apps, and even deploy them — all without a human in the loop.",
-      "### For the Ecosystem",
-      "MCP creates a network effect: more MCP servers → more capable agents → more demand for MCP-enabled platforms. We're still early, but the trajectory is clear — MCP is becoming the backbone of the autonomous economy.",
-      "## How MCP Servers Work",
-      "An MCP server exposes three core primitives:",
-      "**Tools** — Functions the agent can call (e.g., `search_listings`, `make_offer`, `purchase_listing`). Each tool has a name, description, and JSON schema for its parameters.",
-      "**Resources** — Read-only data the agent can access (e.g., listing details, marketplace stats).",
-      "**Prompts** — Pre-built prompt templates that guide the agent's behavior for specific workflows.",
-      "## Real-World Example: OpenDraft's MCP Server",
-      "OpenDraft's MCP server at `https://api.opendraft.co/mcp` gives AI agents full marketplace access. An agent can:",
-      "1. **Search** for apps matching specific criteria (category, price range, tech stack)\n2. **Evaluate** listings by reading descriptions, reviews, and completeness badges\n3. **Negotiate** by making offers and counter-offers\n4. **Purchase** autonomously using headless checkout\n5. **Deploy** purchased apps to Netlify or Vercel with one tool call",
-      "This entire pipeline — from discovery to deployment — happens without human intervention.",
-      "## Building Your Own MCP Server",
-      "If you're building a platform or API, adding an MCP server is one of the highest-leverage things you can do. It makes your service accessible to the growing fleet of autonomous AI agents.",
-      "The key registries to list your MCP server include **Smithery**, **Glama**, **MCP.so**, and **ClawHub**. Each increases your discoverability to agent developers.",
-      "## The Future of MCP",
-      "As AI agents become more autonomous, MCP servers will become essential infrastructure — like REST APIs were for the web era. The platforms that build MCP support now will have a massive head start when agent-driven traffic becomes the majority of internet commerce.",
-      "Ready to explore agent-native tools? [Browse OpenDraft's marketplace](/) or check out our [agent documentation](/agents).",
-    ],
-  },
-  "vibe-coding-multi-agent-workflows": {
-    slug: "vibe-coding-multi-agent-workflows",
-    title: "Vibe Coding: How to Build Your Next App with OpenDraft Multi-Agent Workflows",
-    description: "Explore OpenDraft's marketplace for the best 'Vibe Coding' tools and agentic templates. Build and deploy AI apps faster than ever using low-code agent frameworks.",
-    date: "2026-02-27",
-    readTime: "6 min read",
-    content: [
-      "## The Multi-Agent Revolution",
-      "Single AI agents are powerful. But the real magic happens when multiple agents work together — each specialized in a different domain, collaborating to accomplish complex tasks that no single agent could handle alone.",
-      "OpenDraft is built on this principle. Our platform runs a **swarm of autonomous agents** that handle SEO, outreach, product quality assurance, and deployment suggestions — all without human intervention.",
-      "## What Are Multi-Agent Workflows?",
-      "A multi-agent workflow chains specialized AI agents together, each handling a specific part of a larger task. For example:",
-      "**Product Agent** → Analyzes listing quality, suggests improvements to descriptions and screenshots\n**SEO Agent** → Scans for keyword opportunities, generates optimized blog content ideas\n**QA Agent** → Tests functionality, identifies broken links and UI issues\n**Outreach Agent** → Identifies potential buyers and generates personalized messaging",
-      "Each agent operates independently but shares context through a central orchestration layer.",
-      "## How OpenDraft Uses Multi-Agent Workflows",
-      "### The AI Board of Directors",
-      "Our most ambitious multi-agent system is the **AI Board of Directors** — five specialized AI agents (CEO, CFO, CMO, CTO, CPO) that convene a simulated board meeting. They analyze live platform metrics, debate priorities, and produce a **Board Resolution** with ranked initiatives and revenue impact projections.",
-      "The best part? Each initiative includes a **Copy Spec** button that generates a structured implementation prompt. Paste it into Lovable or Cursor, and the feature gets built. Strategy → Spec → Ship, with minimal human effort.",
-      "### The Operations Swarm",
-      "Running alongside the Board is a 4-agent operations swarm that continuously optimizes the platform:",
-      "- **SEO Agent** identifies content gaps, generates keyword-optimized blog post ideas, and audits meta tags\n- **Product Agent** reviews listing quality scores and suggests improvements to sellers\n- **QA Agent** performs automated testing sweeps and flags broken functionality\n- **Outreach Agent** monitors builder communities and identifies potential sellers to recruit",
-      "## Building Your Own Multi-Agent App",
-      "The templates and tools on OpenDraft are perfect starting points for building your own multi-agent systems. Look for listings tagged with **AI App** and check for MCP server integrations.",
-      "Key patterns to follow:\n1. **Specialize each agent** — give it one clear job with defined inputs and outputs\n2. **Share context, not control** — agents should read shared state but make independent decisions\n3. **Use MCP for tool access** — let agents discover and invoke tools dynamically\n4. **Log everything** — agent decisions should be auditable and debuggable",
-      "## The Vibe Coding Advantage",
-      "Multi-agent workflows used to require deep engineering expertise. With vibe coding tools like Lovable and Cursor, you can build sophisticated agent systems by describing what you want in natural language. The AI handles the orchestration code, API connections, and state management.",
-      "This is the future of software development: **humans design the architecture, agents execute the work, and AI tools bridge the gap.**",
-      "Start exploring agentic templates on [OpenDraft's marketplace](/) or read our [agent integration docs](/agents).",
-    ],
-  },
   "rise-of-ai-agent-marketplace": {
     slug: "rise-of-ai-agent-marketplace",
     title: "The Rise of the AI Agent Marketplace: How to Buy, Sell, and Profit",
     description: "Looking to buy or sell AI agents? Discover how marketplaces are creating a new economy for autonomous agents and SaaS tools.",
     date: "2026-02-26",
     readTime: "7 min read",
+    category: "Agent Economy",
     content: [
       "## A New Kind of Marketplace",
       "The software marketplace is undergoing its biggest transformation since the App Store launched in 2008. But this time, the buyers aren't just humans — they're AI agents.",
@@ -241,33 +217,49 @@ const POSTS: Record<string, BlogPost> = {
       "### Agents Need Tools",
       "An AI agent tasked with \"build me a customer support system\" needs components: a chat widget, a ticket management system, an analytics dashboard. Instead of building each from scratch, the agent can browse a marketplace, find pre-built solutions, and assemble them into a working system.",
       "### Agents Need Trust",
-      "Not all code is created equal. Marketplaces provide quality signals — completeness badges, reviews, sales counts, verified sellers — that help agents make informed purchasing decisions. An agent can prioritize **Production Ready** listings over **Prototypes** for mission-critical use cases.",
+      "Not all code is created equal. Marketplaces provide quality signals — completeness badges, reviews, sales counts, verified sellers — that help agents make informed purchasing decisions.",
       "### Agents Need Speed",
       "Autonomous workflows operate at machine speed. An agent shouldn't have to wait for a human to click \"Buy Now.\" Marketplaces with headless checkout and API-driven purchasing let agents transact in milliseconds.",
       "## How to Sell to AI Agents",
-      "If you're a builder, the agent economy is a massive opportunity. Here's how to optimize your listings for agent buyers:",
-      "### Optimize Your Metadata",
-      "Agents read structured data, not marketing copy. Make sure your listing has:\n- Clear, descriptive title (agents search by keywords)\n- Accurate tech stack tags (agents filter by technology)\n- Proper completeness badge (agents evaluate readiness)\n- Working demo URL (agents may verify functionality)",
-      "### Price for Volume",
-      "Agents make purchasing decisions faster and more frequently than humans. A $29 app that an agent buys 100 times generates $2,900 in revenue. Price competitively and optimize for volume.",
-      "### Support MCP Discovery",
-      "List your tool on MCP registries like Smithery and Glama. When agents search for tools to solve specific problems, your listing should appear in their results.",
-      "### Build Agent-Friendly Apps",
-      "Apps with APIs, webhooks, and programmatic configuration are more valuable to agents than apps that require manual setup. Consider adding:\n- REST API endpoints\n- Environment variable configuration\n- Automated deployment scripts\n- Health check endpoints",
-      "## How to Buy as an Agent Developer",
-      "If you're building AI agents, marketplaces like OpenDraft give your agents access to a growing catalog of pre-built tools:",
-      "1. **Register for API access** — get an API key from the [developers page](/developers)\n2. **Search programmatically** — use the REST API or MCP tools to find relevant listings\n3. **Evaluate listings** — check completeness badges, reviews, and demo URLs\n4. **Purchase autonomously** — use headless checkout for one-call purchasing\n5. **Deploy instantly** — use built-in Netlify/Vercel deployment tools",
-      "## The Market Opportunity",
-      "The AI agent software market is projected to reach **$120B by 2030**. Agent-driven commerce — where AI agents are the primary buyers — could represent **$50B** of that total. We're in the earliest innings of this transformation.",
-      "Builders who position their products for agent discovery now will have a massive advantage as this market explodes.",
+      "If you're a builder, the agent economy is a massive opportunity. Optimize your metadata, price for volume, support MCP discovery, and build agent-friendly apps with APIs and automated deployment.",
       "## Getting Started",
       "Whether you're looking to sell your AI-built apps to a global audience of agents and humans, or you're building agents that need tools — [OpenDraft is where the agent economy lives](/).",
-      "Start [browsing projects](/) or [list your own](/sell) today.",
+    ],
+  },
+  "vibe-coding-multi-agent-workflows": {
+    slug: "vibe-coding-multi-agent-workflows",
+    title: "Build Multi-Agent Workflows With Vibe Coding",
+    description: "Explore how to build sophisticated multi-agent AI systems using vibe coding tools. From swarm architecture to MCP integrations.",
+    date: "2026-02-27",
+    readTime: "6 min read",
+    category: "Technical Deep Dive",
+    content: [
+      "## The Multi-Agent Revolution",
+      "Single AI agents are powerful. But the real magic happens when multiple agents work together — each specialized in a different domain, collaborating to accomplish complex tasks that no single agent could handle alone.",
+      "## What Are Multi-Agent Workflows?",
+      "A multi-agent workflow chains specialized AI agents together, each handling a specific part of a larger task:",
+      "**Product Agent** → Analyzes listing quality, suggests improvements\n**SEO Agent** → Identifies keyword opportunities, generates content ideas\n**QA Agent** → Tests functionality, identifies broken links\n**Outreach Agent** → Identifies potential buyers, generates personalized messaging",
+      "## How OpenDraft Uses Multi-Agent Workflows",
+      "### The AI Board of Directors",
+      "Our most ambitious multi-agent system — five specialized AI agents (CEO, CFO, CMO, CTO, CPO) that convene a simulated board meeting. They analyze live platform metrics, debate priorities, and produce a Board Resolution with ranked initiatives.",
+      "### The Operations Swarm",
+      "A 4-agent operations swarm that continuously optimizes the platform: SEO, Product, QA, and Outreach agents running on scheduled triggers.",
+      "## Building Your Own Multi-Agent App",
+      "Key patterns:\n1. **Specialize each agent** — one clear job\n2. **Share context, not control** — agents read shared state independently\n3. **Use MCP for tool access** — dynamic tool discovery\n4. **Log everything** — agent decisions should be auditable",
+      "Start exploring agentic templates on [OpenDraft's marketplace](/) or read our [agent integration docs](/agents).",
     ],
   },
 };
 
 const POST_LIST = Object.values(POSTS).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+const CATEGORY_COLORS: Record<string, string> = {
+  "Behind the Build": "bg-primary/10 text-primary",
+  "Agent Economy": "bg-cyan-500/10 text-cyan-400",
+  "Engineering": "bg-emerald-500/10 text-emerald-400",
+  "Technical Deep Dive": "bg-amber-500/10 text-amber-400",
+  "Guides": "bg-pink-500/10 text-pink-400",
+};
 
 function BlogIndex() {
   return (
@@ -282,26 +274,51 @@ function BlogIndex() {
             Insights for Builders
           </h1>
           <p className="text-muted-foreground text-lg">
-            Guides, trends, and strategies for the vibe coding economy.
+            Behind-the-scenes engineering, agent economy insights, and guides for the vibe coding era.
           </p>
         </div>
       </section>
 
-      <section className="container mx-auto px-4 py-14 max-w-3xl">
-        <div className="space-y-6">
-          {POST_LIST.map((post) => (
+      {/* Featured post */}
+      {POST_LIST[0] && (
+        <section className="container mx-auto px-4 py-10 max-w-3xl">
+          <Link
+            to={`/blog/${POST_LIST[0].slug}`}
+            className="block rounded-2xl border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-transparent p-8 shadow-lg hover:shadow-xl hover:border-primary/50 transition-all"
+          >
+            <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
+              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${CATEGORY_COLORS[POST_LIST[0].category] || "bg-muted text-muted-foreground"}`}>
+                {POST_LIST[0].category}
+              </span>
+              <Calendar className="h-3.5 w-3.5" />
+              <span>{new Date(POST_LIST[0].date).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</span>
+              <span>·</span>
+              <span>{POST_LIST[0].readTime}</span>
+            </div>
+            <h2 className="text-2xl md:text-3xl font-black mb-3 leading-tight">{POST_LIST[0].title}</h2>
+            <p className="text-muted-foreground leading-relaxed">{POST_LIST[0].description}</p>
+          </Link>
+        </section>
+      )}
+
+      <section className="container mx-auto px-4 pb-14 max-w-3xl">
+        <div className="space-y-5">
+          {POST_LIST.slice(1).map((post) => (
             <Link
               key={post.slug}
               to={`/blog/${post.slug}`}
               className="block rounded-2xl border border-border/60 bg-card p-6 shadow-card hover:shadow-lg hover:border-primary/30 transition-all"
             >
               <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${CATEGORY_COLORS[post.category] || "bg-muted text-muted-foreground"}`}>
+                  {post.category}
+                </span>
                 <Calendar className="h-3.5 w-3.5" />
                 <span>{new Date(post.date).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</span>
                 <span>·</span>
                 <span>{post.readTime}</span>
               </div>
-              <h2 className="text-xl font-black mb-2 group-hover:text-primary transition-colors">{post.title}</h2>
+              <h2 className="text-xl font-black mb-2">{post.title}</h2>
               <p className="text-sm text-muted-foreground leading-relaxed">{post.description}</p>
             </Link>
           ))}
@@ -316,6 +333,12 @@ function BlogIndex() {
 function BlogPost() {
   const { slug } = useParams<{ slug: string }>();
   const post = slug ? POSTS[slug] : undefined;
+
+  const handleShare = () => {
+    const url = `https://opendraft.co/blog/${post?.slug}`;
+    navigator.clipboard.writeText(url);
+    toast.success("Link copied to clipboard!");
+  };
 
   if (!post) {
     return (
@@ -333,10 +356,14 @@ function BlogPost() {
     );
   }
 
+  const ogImageUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/blog-og-image?slug=${post.slug}&title=${encodeURIComponent(post.title)}&category=${encodeURIComponent(post.category)}`;
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
       <CanonicalTag path={`/blog/${post.slug}`} />
+
+      {/* OG meta tags via helmet-style approach */}
       <JsonLd data={{
         "@context": "https://schema.org",
         "@type": "Article",
@@ -346,15 +373,25 @@ function BlogPost() {
         author: { "@type": "Organization", name: "OpenDraft" },
         publisher: { "@type": "Organization", name: "OpenDraft", url: "https://opendraft.co" },
         url: `https://opendraft.co/blog/${post.slug}`,
+        image: ogImageUrl,
       }} />
 
       <article className="container mx-auto px-4 py-14 max-w-2xl">
-        <Link to="/blog" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-8">
-          <ArrowLeft className="h-4 w-4" />
-          Back to blog
-        </Link>
+        <div className="flex items-center justify-between mb-8">
+          <Link to="/blog" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <ArrowLeft className="h-4 w-4" />
+            Back to blog
+          </Link>
+          <Button variant="ghost" size="sm" onClick={handleShare} className="gap-1.5 text-muted-foreground">
+            <Share2 className="h-3.5 w-3.5" />
+            Share
+          </Button>
+        </div>
 
         <div className="flex items-center gap-3 text-xs text-muted-foreground mb-4">
+          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${CATEGORY_COLORS[post.category] || "bg-muted text-muted-foreground"}`}>
+            {post.category}
+          </span>
           <Calendar className="h-3.5 w-3.5" />
           <span>{new Date(post.date).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</span>
           <span>·</span>
@@ -363,6 +400,11 @@ function BlogPost() {
 
         <h1 className="text-3xl md:text-4xl font-black tracking-tight mb-4 leading-tight">{post.title}</h1>
         <p className="text-lg text-muted-foreground mb-10 leading-relaxed">{post.description}</p>
+
+        {/* OG Image preview */}
+        <div className="rounded-2xl overflow-hidden border border-border/40 mb-10">
+          <img src={ogImageUrl} alt={post.title} className="w-full" loading="lazy" />
+        </div>
 
         <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:font-black prose-headings:tracking-tight prose-a:text-primary prose-a:no-underline hover:prose-a:underline">
           {post.content.map((block, i) => {
@@ -374,7 +416,7 @@ function BlogPost() {
             }
             const parts = block.split(/(\*\*.*?\*\*|\[.*?\]\(.*?\))/g);
             return (
-              <p key={i} className="text-muted-foreground leading-relaxed mb-4">
+              <p key={i} className="text-muted-foreground leading-relaxed mb-4 whitespace-pre-line">
                 {parts.map((part, j) => {
                   if (part.startsWith("**") && part.endsWith("**")) {
                     return <strong key={j} className="text-foreground font-semibold">{part.slice(2, -2)}</strong>;

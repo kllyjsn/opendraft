@@ -90,8 +90,8 @@ export default function ListingDetail() {
   // Dynamic SEO meta tags
   useEffect(() => {
     if (!listing) return;
-    const price = listing.price === 0 ? "Free" : `$${(listing.price / 100).toFixed(2)}`;
-    const title = `${listing.title} — ${price} | OpenDraft`;
+    const price = "$15/mo";
+    const title = `${listing.title} — ${price} support | OpenDraft`;
     const desc = listing.description.slice(0, 155).replace(/\n/g, " ") + (listing.description.length > 155 ? "…" : "");
     const image = listing.screenshots?.[0] || "https://opendraft.co/og-image.png";
 
@@ -266,7 +266,7 @@ export default function ListingDetail() {
 
   const productSchema = useMemo(() => {
     if (!listing) return null;
-    const priceVal = (listing.price / 100).toFixed(2);
+    const priceVal = "15.00";
     const schema: Record<string, unknown> = {
       "@context": "https://schema.org",
       "@type": "Product",

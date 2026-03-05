@@ -205,6 +205,42 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ── Site Doctor: detect bug reports and auto-trigger diagnosis ──
+    const bugKeywords = ["broken", "not working", "error", "bug", "crash", "blank page", "404", "500", "white screen", "doesn't load", "won't load", "can't access", "down", "offline"];
+    const lowerContent = content.toLowerCase();
+    const isBugReport = bugKeywords.some(kw => lowerContent.includes(kw));
+
+    if (isBugReport && convo) {
+      try {
+        // Find the listing associated with this conversation
+        const { data: convoFull } = await serviceClient
+          .from("conversations")
+          .select("listing_id")
+          .eq("id", convoId)
+          .single();
+
+        if (convoFull?.listing_id) {
+          // Fire-and-forget site doctor
+          const doctorUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/site-doctor`;
+          fetch(doctorUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${Deno.env.get("SUPABASE_ANON_KEY") || ""}`,
+            },
+            body: JSON.stringify({
+              mode: "chat_report",
+              listing_id: convoFull.listing_id,
+              reported_issue: content.trim(),
+              reporter_id: user.id,
+            }),
+          }).catch(e => console.error("Site doctor trigger failed:", e));
+        }
+      } catch (e) {
+        console.error("Bug detection failed:", e);
+      }
+    }
+
     return new Response(
       JSON.stringify({ message, conversationId: convoId }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }

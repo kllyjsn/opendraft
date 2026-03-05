@@ -250,11 +250,24 @@ serve(async (req) => {
     }
 
     // Return immediately — frontend will poll status via check-netlify-deploy
-    await supabase.from("activity_log").insert({
-      event_type: "netlify_deploy",
-      user_id: user.id,
-      event_data: { listing_id: listingId, site_url: siteUrl, site_id: siteId, deploy_id: deployId },
-    });
+    // Log activity and track deployment for health monitoring
+    await Promise.all([
+      supabase.from("activity_log").insert({
+        event_type: "netlify_deploy",
+        user_id: user.id,
+        event_data: { listing_id: listingId, site_url: siteUrl, site_id: siteId, deploy_id: deployId },
+      }),
+      supabase.from("deployed_sites").upsert({
+        listing_id: listingId,
+        user_id: user.id,
+        provider: "netlify",
+        site_id: siteId,
+        site_url: siteUrl,
+        deploy_id: deployId,
+        netlify_token_hash: netlifyToken ? "set" : null,
+        status: "healthy",
+      }, { onConflict: "site_id" }),
+    ]);
 
     return new Response(JSON.stringify({
       success: true, siteUrl, siteId, deployId,

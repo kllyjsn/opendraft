@@ -439,6 +439,68 @@ export type Database = {
           },
         ]
       }
+      deployed_sites: {
+        Row: {
+          created_at: string
+          deploy_id: string | null
+          fix_count: number
+          health_log: Json
+          id: string
+          last_check_at: string | null
+          last_fix_at: string | null
+          listing_id: string
+          netlify_token_hash: string | null
+          provider: string
+          site_id: string
+          site_url: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          deploy_id?: string | null
+          fix_count?: number
+          health_log?: Json
+          id?: string
+          last_check_at?: string | null
+          last_fix_at?: string | null
+          listing_id: string
+          netlify_token_hash?: string | null
+          provider?: string
+          site_id: string
+          site_url: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          deploy_id?: string | null
+          fix_count?: number
+          health_log?: Json
+          id?: string
+          last_check_at?: string | null
+          last_fix_at?: string | null
+          listing_id?: string
+          netlify_token_hash?: string | null
+          provider?: string
+          site_id?: string
+          site_url?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deployed_sites_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       discount_code_usage: {
         Row: {
           buyer_id: string

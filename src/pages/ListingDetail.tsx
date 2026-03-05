@@ -511,8 +511,8 @@ export default function ListingDetail() {
                     </>
                   )}
                 </div>
-              ) : isSubscribed || isFree ? (
-                /* Subscribers and free listings use the claim flow */
+              ) : isSubscribed ? (
+                /* Subscribers use the claim flow */
                 user ? (
                   <Button
                     onClick={handleClaim}
@@ -520,7 +520,7 @@ export default function ListingDetail() {
                     className="w-full gradient-hero text-white border-0 shadow-glow hover:opacity-90 h-12 text-base font-bold transition-opacity"
                   >
                     <Gift className="h-4 w-4 mr-2" />
-                    {claiming ? "Claiming…" : isFree ? "Get for Free" : "Claim Project"}
+                    {claiming ? "Claiming…" : "Claim Project"}
                   </Button>
                 ) : (
                   <Link to="/login">
@@ -582,11 +582,9 @@ export default function ListingDetail() {
               )}
 
               {/* Trust line */}
-              {!isFree && (
-                <p className="mt-4 text-center text-[11px] text-muted-foreground">
-                  🔒 Secure checkout via Stripe
-                </p>
-              )}
+              <p className="mt-4 text-center text-[11px] text-muted-foreground">
+                🔒 Secure checkout via Stripe · Cancel anytime
+              </p>
 
               {/* Early Adopter Advantage */}
               {listing.sales_count <= 5 && (

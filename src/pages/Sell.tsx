@@ -191,7 +191,7 @@ export default function Sell() {
     setSubmitting(false);
   }
 
-  const isStep1Valid = form.title && form.description && form.price !== "" && parseFloat(form.price) >= 0;
+  const isStep1Valid = form.title && form.description;
   const isStep2Valid = form.completeness_badge && form.category && form.built_with;
 
   return (

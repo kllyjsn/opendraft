@@ -67,8 +67,8 @@ export default function Sell() {
   const [form, setForm] = useState({
     title: "",
     description: "",
-    price: "",
-    pricing_type: "one_time" as "one_time" | "monthly",
+    price: "15",
+    pricing_type: "monthly" as "one_time" | "monthly",
     completeness_badge: "prototype" as "prototype" | "mvp" | "production_ready",
     category: "other" as string,
     tech_stack: [] as string[],
@@ -274,24 +274,15 @@ export default function Sell() {
                   onChange={(e) => update("description", e.target.value)}
                 />
               </div>
-              <div>
-                <label className="block text-sm font-semibold mb-1.5">
-                  Price (USD) *
-                </label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-                  <Input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    placeholder="29.00"
-                    value={form.price}
-                    onChange={(e) => update("price", e.target.value)}
-                    className="pl-7"
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Set to $0.00 to offer it free · Paid out to you instantly on every sale
+              {/* Support pricing info — fixed at $15/mo */}
+              <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
+                <p className="text-sm font-bold text-primary mb-1">💰 $15/mo support pricing</p>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  All projects default to <strong className="text-foreground">$15/month</strong> for ongoing support (auto + human). 
+                  Buyers get the source code free — they pay for your maintenance, updates, and feature requests.
+                </p>
+                <p className="text-xs text-muted-foreground mt-1.5">
+                  You receive <strong className="text-foreground">$12/mo</strong> (80%) per active subscriber.
                 </p>
               </div>
             </>

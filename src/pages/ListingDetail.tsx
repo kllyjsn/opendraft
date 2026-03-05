@@ -380,8 +380,8 @@ export default function ListingDetail() {
     );
   }
 
-  const isFree = listing.price === 0;
-  const priceLabel = isFree ? "Free" : `$${(listing.price / 100).toFixed(2)}`;
+  const supportPrice = "$15/mo";
+  const isFree = false; // All listings now use the support model
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -462,10 +462,10 @@ export default function ListingDetail() {
             <div className="rounded-2xl border border-border/60 bg-card p-6 shadow-card sticky top-20 hover:shadow-card-hover transition-shadow duration-500">
               {/* Price */}
               <div className="mb-5">
-                <div className={`text-4xl font-black mb-0.5 ${isFree ? "text-primary" : ""}`}>{isFree ? "Free" : priceLabel}</div>
+                <div className="text-4xl font-black">{supportPrice}</div>
                 <p className="text-xs text-muted-foreground">
-                   {isFree ? "Free forever · Fork the full source code" : isSubscribed ? "Included with your subscription" : "Requires $20/mo subscription"}
-                 </p>
+                  Monthly support · Auto-fixes + human builder access
+                </p>
               </div>
 
               {purchased ? (
@@ -611,8 +611,8 @@ export default function ListingDetail() {
               <div className="mt-5 rounded-xl gradient-hero p-[1px]">
                 <div className="rounded-[11px] bg-card p-4 space-y-1.5 text-center">
                   <p className="text-xs font-black uppercase tracking-wide text-primary">What you get</p>
-                  <p className="text-[13px] font-semibold leading-snug">Full source code + lifetime access</p>
-                  <p className="text-[11px] text-muted-foreground leading-relaxed">Buy once, own forever. Want ongoing support & feature requests? Subscribe to the builder's support plan after purchase.</p>
+                  <p className="text-[13px] font-semibold leading-snug">Full source code + auto-healing deploys</p>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">$15/mo covers AI-powered site monitoring, automated bug fixes, and direct builder access for feature requests and support.</p>
                 </div>
               </div>
 

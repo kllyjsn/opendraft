@@ -4,7 +4,7 @@ import { Footer } from "@/components/Footer";
 import { CanonicalTag } from "@/components/CanonicalTag";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Lock, TrendingUp, Users, Zap, DollarSign, Globe, Bot, Shield, Rocket, Target, Brain, ArrowRight } from "lucide-react";
+import { Lock, TrendingUp, Users, Zap, DollarSign, Globe, Bot, Shield, Rocket, Target, Brain, ArrowRight, Activity, Radio, Wrench, CloudLightning } from "lucide-react";
 import { motion } from "framer-motion";
 
 const PITCH_PASSWORD = "opendraft2026";
@@ -55,6 +55,21 @@ function TableRow({ cells, header }: { cells: string[]; header?: boolean }) {
         </Tag>
       ))}
     </tr>
+  );
+}
+
+function FlywheelStep({ emoji, title, desc, arrow = true }: { emoji: string; title: string; desc: string; arrow?: boolean }) {
+  return (
+    <div className="flex items-center gap-3 rounded-xl border border-border/40 bg-muted/20 p-4">
+      <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+        <span className="text-lg">{emoji}</span>
+      </div>
+      <div className="flex-1">
+        <p className="font-bold text-foreground text-sm">{title}</p>
+        <p className="text-xs text-muted-foreground">{desc}</p>
+      </div>
+      {arrow && <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />}
+    </div>
   );
 }
 
@@ -123,7 +138,7 @@ export default function Pitch() {
               Open<span className="text-gradient">Draft</span>
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-3">
-              The first app store where AI agents autonomously discover, bid on, and purchase software.
+              The first app store where AI agents autonomously discover, purchase, deploy, and maintain software.
             </p>
             <p className="text-sm font-semibold text-gradient">Seed Round · 2026</p>
           </motion.div>
@@ -138,20 +153,20 @@ export default function Pitch() {
             <li className="flex gap-3"><span className="text-destructive font-bold">1.</span> AI agents need software tools but have no marketplace to buy from programmatically.</li>
             <li className="flex gap-3"><span className="text-destructive font-bold">2.</span> 2M+ vibe coders build apps with no distribution beyond manual marketing.</li>
             <li className="flex gap-3"><span className="text-destructive font-bold">3.</span> Existing marketplaces (Gumroad, LemonSqueezy) have zero agent-native infrastructure.</li>
-            <li className="flex gap-3"><span className="text-destructive font-bold">4.</span> No platform connects autonomous AI demand with human-built supply at scale.</li>
+            <li className="flex gap-3"><span className="text-destructive font-bold">4.</span> Deployed apps break silently — no platform monitors, diagnoses, or fixes post-sale.</li>
           </ul>
         </Slide>
 
         {/* Solution */}
         <Slide title="The Solution" icon={Zap} index={1}>
           <p className="text-muted-foreground mb-4">
-            A two-sided marketplace with full programmatic access — MCP server, REST API, webhooks — so both humans <strong className="text-foreground">and AI agents</strong> can browse, negotiate, and purchase autonomously.
+            A fully autonomous two-sided marketplace — MCP server, REST API, webhooks, automated social promotion, and post-sale infrastructure — so both humans <strong className="text-foreground">and AI agents</strong> can browse, purchase, deploy, and maintain software without human intervention.
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mt-6">
-            <MetricCard label="MCP Tools" value="23" sub="Full agent toolkit" />
-            <MetricCard label="REST Endpoints" value="12+" sub="Including bidding" />
-            <MetricCard label="Webhook Events" value="Real-time" sub="Agent subscriptions" />
-            <MetricCard label="Live Listings" value="92" sub="Across 5 categories" />
+            <MetricCard label="MCP Tools" value="26" sub="Full agent toolkit" />
+            <MetricCard label="REST Endpoints" value="12+" sub="Programmatic access" />
+            <MetricCard label="Live Listings" value="95+" sub="Across 6 categories" />
+            <MetricCard label="Automation" value="100%" sub="Zero-touch operations" />
           </div>
         </Slide>
 
@@ -164,12 +179,102 @@ export default function Pitch() {
             <MetricCard label="SOM Y1" value="$2M" sub="Year 1 GMV target" />
           </div>
           <p className="text-sm text-muted-foreground">
-            Gartner projects 15B+ autonomous agent instances by 2030. <strong className="text-foreground">Market validation:</strong> TrustMRR — a simple revenue-verification directory — already facilitates $30M+/mo across 125 OpenClaw startups. A full transactional marketplace with agent-native infrastructure captures significantly more value. OpenDraft is the first-mover building this layer.
+            Gartner projects 15B+ autonomous agent instances by 2030. <strong className="text-foreground">Market validation:</strong> TrustMRR — a simple revenue-verification directory — already facilitates $30M+/mo across 125 OpenClaw startups. A full transactional marketplace with agent-native infrastructure and autonomous operations captures significantly more value. OpenDraft is the first-mover building this layer.
           </p>
         </Slide>
 
+        {/* Automated Revenue Flywheel — NEW */}
+        <Slide title="Automated Revenue Flywheel" icon={Radio} index={3}>
+          <p className="text-muted-foreground mb-6">
+            Every listing generates revenue <strong className="text-foreground">without human intervention</strong>. The platform auto-approves, auto-promotes, auto-monitors, and auto-fixes — creating a compounding growth loop.
+          </p>
+          <div className="space-y-3 mb-6">
+            <FlywheelStep emoji="📝" title="Builder submits listing" desc="Quality gate: title, description, price → auto-approved in ≤30 minutes" />
+            <FlywheelStep emoji="🐦" title="Auto-posted to X/Twitter" desc="Randomized templates for new listings, sales milestones (5/10/25/50/100), daily trending, weekly stats" />
+            <FlywheelStep emoji="🤖" title="Agents discover via MCP/API" desc="26 MCP tools + REST API → autonomous search, evaluate, purchase" />
+            <FlywheelStep emoji="☁️" title="One-click cloud deploy" desc="Netlify & Vercel deployment from source ZIP or GitHub — mobile-safe, no OAuth required" />
+            <FlywheelStep emoji="⚕️" title="Site Doctor monitors 24/7" desc="Hourly health checks, AI-powered diagnosis, auto-fix attempts, chat-triggered bug reports" arrow={false} />
+          </div>
+          <div className="rounded-xl border border-primary/30 bg-primary/5 p-5">
+            <p className="text-sm text-muted-foreground">
+              <strong className="text-foreground">Operational leverage:</strong> This flywheel runs on 4 cron jobs and 0 human operators. Every new listing automatically enters the promotion → discovery → deployment → monitoring pipeline. Traditional marketplaces require content moderation teams, social media managers, and support staff. <strong className="text-foreground">We require none.</strong>
+            </p>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mt-6">
+            <MetricCard label="Cron Jobs" value="4" sub="Fully automated" />
+            <MetricCard label="X Posts/Week" value="20+" sub="Auto-generated" />
+            <MetricCard label="Approval Time" value="<30m" sub="Zero manual review" />
+            <MetricCard label="Site Checks" value="24/day" sub="Per deployed site" />
+          </div>
+        </Slide>
+
+        {/* Post-Sale Infrastructure — NEW */}
+        <Slide title="Post-Sale Infrastructure" icon={Wrench} index={4}>
+          <p className="text-muted-foreground mb-6">
+            No marketplace monitors what happens <em>after</em> the sale. OpenDraft does. Our Site Doctor autonomously ensures deployed apps stay healthy — a critical differentiator that increases buyer confidence and repeat purchases.
+          </p>
+          <div className="grid md:grid-cols-2 gap-4 mb-6">
+            <div className="rounded-xl border border-border/40 bg-muted/20 p-5">
+              <h3 className="font-bold text-foreground mb-2 flex items-center gap-2">
+                <Activity className="h-4 w-4 text-primary" /> Autonomous Health Monitoring
+              </h3>
+              <ul className="space-y-1.5 text-sm text-muted-foreground">
+                <li>• Hourly HTTP health checks on all deployed sites</li>
+                <li>• SPA routing validation (deep route testing)</li>
+                <li>• Blank page / missing module detection</li>
+                <li>• Runtime JavaScript error scanning</li>
+                <li>• Rolling 50-entry health log per site</li>
+              </ul>
+            </div>
+            <div className="rounded-xl border border-border/40 bg-muted/20 p-5">
+              <h3 className="font-bold text-foreground mb-2 flex items-center gap-2">
+                <Brain className="h-4 w-4 text-primary" /> AI-Powered Diagnosis & Fix
+              </h3>
+              <ul className="space-y-1.5 text-sm text-muted-foreground">
+                <li>• Gemini Flash analyzes issues + buyer reports</li>
+                <li>• Auto-triggers Netlify rebuilds when possible</li>
+                <li>• Chat-triggered: buyer says "broken" → doctor runs</li>
+                <li>• Builder notified with diagnosis + fix suggestions</li>
+                <li>• Tracks fix count and success rate per site</li>
+              </ul>
+            </div>
+          </div>
+          <div className="rounded-xl border border-primary/30 bg-primary/5 p-5">
+            <p className="text-sm text-muted-foreground">
+              <strong className="text-foreground">Why this matters for revenue:</strong> Post-sale support is the #1 reason buyers leave negative reviews and request refunds on digital marketplaces. By automating monitoring and fixes, we reduce churn, increase Net Promoter Score, and build trust that drives repeat purchases and higher ASP (average selling price).
+            </p>
+          </div>
+        </Slide>
+
+        {/* Cloud Deployments — NEW */}
+        <Slide title="One-Click Cloud Deployment" icon={CloudLightning} index={5}>
+          <p className="text-muted-foreground mb-4">
+            Buyers deploy purchased apps to production in under 60 seconds — no Git, no CLI, no DevOps. This removes the biggest friction point in digital product sales: <strong className="text-foreground">"I bought it, now what?"</strong>
+          </p>
+          <div className="grid sm:grid-cols-3 gap-3 mb-6">
+            <div className="rounded-xl border border-border/40 bg-muted/20 p-5 text-center">
+              <p className="text-3xl font-black text-gradient mb-1">Netlify</p>
+              <p className="text-xs text-muted-foreground">Source build + SPA routing</p>
+            </div>
+            <div className="rounded-xl border border-border/40 bg-muted/20 p-5 text-center">
+              <p className="text-3xl font-black text-gradient mb-1">Vercel</p>
+              <p className="text-xs text-muted-foreground">Zero-config deploy</p>
+            </div>
+            <div className="rounded-xl border border-border/40 bg-muted/20 p-5 text-center">
+              <p className="text-3xl font-black text-gradient mb-1">GitHub</p>
+              <p className="text-xs text-muted-foreground">Server-side ZIP fetch</p>
+            </div>
+          </div>
+          <div className="space-y-2 text-sm text-muted-foreground">
+            <p>• <strong className="text-foreground">Mobile-safe pipeline:</strong> Token-based auth bypasses OAuth redirect failures in mobile browsers</p>
+            <p>• <strong className="text-foreground">Auto-configures:</strong> Injects _redirects, netlify.toml, vercel.json for SPA routing</p>
+            <p>• <strong className="text-foreground">Auto-tracks:</strong> Every deployment registered for Site Doctor health monitoring</p>
+            <p>• <strong className="text-foreground">Full lifecycle:</strong> Purchase → Deploy → Monitor → Fix — entirely autonomous</p>
+          </div>
+        </Slide>
+
         {/* Revenue Model */}
-        <Slide title="Revenue Model" icon={DollarSign} index={3}>
+        <Slide title="Revenue Model" icon={DollarSign} index={6}>
           <div className="grid md:grid-cols-3 gap-6">
             <div>
               <h3 className="font-bold text-foreground mb-2">Platform Fee</h3>
@@ -186,15 +291,16 @@ export default function Pitch() {
             <div>
               <h3 className="font-bold text-foreground mb-2">Future Streams</h3>
               <div className="space-y-2 text-sm text-muted-foreground">
-                <p><span className="font-semibold text-foreground">Featured Placements</span> — Promoted listings</p>
+                <p><span className="font-semibold text-foreground">Featured Placements</span> — Promoted listings on X feed</p>
                 <p><span className="font-semibold text-foreground">Enterprise API</span> — Agent fleet licensing</p>
+                <p><span className="font-semibold text-foreground">Managed Deploys</span> — Premium hosting tier</p>
               </div>
             </div>
           </div>
         </Slide>
 
         {/* Forecasts */}
-        <Slide title="Financial Projections" icon={TrendingUp} index={4}>
+        <Slide title="Financial Projections" icon={TrendingUp} index={7}>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -208,15 +314,16 @@ export default function Pitch() {
               </tbody>
             </table>
           </div>
-          <div className="grid grid-cols-3 gap-2 sm:gap-3 mt-6">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mt-6">
             <MetricCard label="Year 1 GMV" value="$2.2M" />
             <MetricCard label="Year 1 Revenue" value="$436K" />
             <MetricCard label="LTV:CAC" value="18:1" />
+            <MetricCard label="Op. Headcount" value="0" sub="Fully automated" />
           </div>
         </Slide>
 
         {/* 3-Year */}
-        <Slide title="3-Year Trajectory" icon={Rocket} index={5}>
+        <Slide title="3-Year Trajectory" icon={Rocket} index={8}>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -229,66 +336,36 @@ export default function Pitch() {
               </tbody>
             </table>
           </div>
+          <div className="rounded-xl border border-primary/30 bg-primary/5 p-5 mt-6">
+            <p className="text-sm text-muted-foreground">
+              <strong className="text-foreground">Key driver:</strong> The automated flywheel means each new listing adds revenue capacity with zero marginal cost. Auto-promotion on X, auto-deployment, and auto-monitoring create a self-reinforcing growth loop that compounds — traditional marketplaces scale headcount linearly with GMV.
+            </p>
+          </div>
         </Slide>
 
-        {/* AI Boardroom → Spec Pipeline (NEW) */}
-        <Slide title="Autonomous Strategy Engine" icon={Brain} index={6}>
+        {/* Autonomous Strategy Engine */}
+        <Slide title="Autonomous Operations Stack" icon={Brain} index={9}>
           <p className="text-muted-foreground mb-6">
-            OpenDraft runs itself. An AI Board of Directors analyzes live platform metrics and generates strategic resolutions — then converts them into implementation-ready specs with one click.
+            OpenDraft doesn't just sell software — it <strong className="text-foreground">runs itself</strong>. From strategic planning to daily operations, every layer is automated.
           </p>
           <div className="space-y-3 mb-6">
-            <div className="flex items-center gap-3 rounded-xl border border-border/40 bg-muted/20 p-4">
-              <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                <span className="text-lg">📊</span>
-              </div>
-              <div className="flex-1">
-                <p className="font-bold text-foreground text-sm">Live Metrics Ingestion</p>
-                <p className="text-xs text-muted-foreground">Revenue, listings, agent traffic, conversion rates pulled in real-time</p>
-              </div>
-              <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
-            </div>
-            <div className="flex items-center gap-3 rounded-xl border border-border/40 bg-muted/20 p-4">
-              <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                <span className="text-lg">🧠</span>
-              </div>
-              <div className="flex-1">
-                <p className="font-bold text-foreground text-sm">5 AI Directors Deliberate</p>
-                <p className="text-xs text-muted-foreground">CEO, CFO, CMO, CTO, CPO — each with specialized perspectives and KPIs</p>
-              </div>
-              <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
-            </div>
-            <div className="flex items-center gap-3 rounded-xl border border-border/40 bg-muted/20 p-4">
-              <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                <span className="text-lg">📋</span>
-              </div>
-              <div className="flex-1">
-                <p className="font-bold text-foreground text-sm">Prioritized Board Resolution</p>
-                <p className="text-xs text-muted-foreground">P0–P2 initiatives with revenue impact projections and ownership assignments</p>
-              </div>
-              <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
-            </div>
-            <div className="flex items-center gap-3 rounded-xl border border-primary/30 bg-primary/5 p-4">
-              <div className="h-9 w-9 rounded-lg gradient-hero flex items-center justify-center shrink-0">
-                <span className="text-lg">⚡</span>
-              </div>
-              <div className="flex-1">
-                <p className="font-bold text-foreground text-sm">One-Click Implementation Spec</p>
-                <p className="text-xs text-muted-foreground">Each initiative generates a structured Markdown prompt → paste into Lovable/Cursor → built</p>
-              </div>
-            </div>
+            <FlywheelStep emoji="📊" title="AI Board of Directors" desc="5 AI directors (CEO, CFO, CMO, CTO, CPO) analyze live metrics and generate prioritized strategic resolutions" />
+            <FlywheelStep emoji="🐝" title="4-Agent Operations Swarm" desc="SEO, QA, Outreach, and Product agents execute autonomous scans and generate implementation specs" />
+            <FlywheelStep emoji="🔄" title="Revenue Automation Engine" desc="Cron-driven: auto-approve listings, post to X, check milestones, transfer payouts — every 30 minutes" />
+            <FlywheelStep emoji="⚕️" title="Site Doctor" desc="Hourly health checks, AI diagnosis, auto-fix, chat-triggered bug detection — zero human involvement" arrow={false} />
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
-            <MetricCard label="AI Directors" value="5" sub="Specialized agents" />
-            <MetricCard label="Swarm Agents" value="4" sub="SEO, QA, Outreach, Product" />
-            <MetricCard label="Automation" value="90%+" sub="Strategy-to-spec pipeline" />
-            <MetricCard label="Human Input" value="1 click" sub="Approve & implement" />
+            <MetricCard label="AI Directors" value="5" sub="Strategic planning" />
+            <MetricCard label="Swarm Agents" value="4" sub="Operations execution" />
+            <MetricCard label="Cron Jobs" value="7" sub="Continuous automation" />
+            <MetricCard label="Human Input" value="0" sub="Fully autonomous" />
           </div>
         </Slide>
 
         {/* Competitive Landscape */}
-        <Slide title="Competitive Landscape" icon={Globe} index={7}>
+        <Slide title="Competitive Landscape" icon={Globe} index={10}>
           <p className="text-muted-foreground mb-6">
-            TrustMRR — the largest comparable today — facilitates <strong className="text-foreground">$30M+/mo in GMV</strong> across 125 OpenClaw startups as a revenue verification directory. But no platform handles end-to-end transactions <em>and</em> agent-native infrastructure.
+            TrustMRR facilitates <strong className="text-foreground">$30M+/mo in GMV</strong> as a verification directory. But no platform handles the full lifecycle: list → promote → sell → deploy → monitor → fix.
           </p>
           <div className="overflow-x-auto mb-6">
             <table className="w-full text-sm">
@@ -296,31 +373,35 @@ export default function Pitch() {
                 <TableRow header cells={["Feature", "OpenDraft", "TrustMRR", "Gumroad", "LemonSqueezy"]} />
               </thead>
               <tbody>
-                <TableRow cells={["Agent API (MCP)", "✅ 23 tools", "❌", "❌", "❌"]} />
-                <TableRow cells={["Autonomous Bidding", "✅", "❌", "❌", "❌"]} />
+                <TableRow cells={["Agent API (MCP)", "✅ 26 tools", "❌", "❌", "❌"]} />
                 <TableRow cells={["Built-in Checkout", "✅ Stripe", "❌ External", "✅", "✅"]} />
-                <TableRow cells={["Webhook Subscriptions", "✅ Real-time", "❌", "✅", "✅"]} />
+                <TableRow cells={["Auto Social Promotion", "✅ X/Twitter", "❌", "❌", "❌"]} />
+                <TableRow cells={["Cloud Deployment", "✅ Netlify/Vercel", "❌", "❌", "❌"]} />
+                <TableRow cells={["Post-Sale Monitoring", "✅ Site Doctor", "❌", "❌", "❌"]} />
+                <TableRow cells={["AI Auto-Fix", "✅ Gemini Flash", "❌", "❌", "❌"]} />
                 <TableRow cells={["AI-Generated Supply", "✅", "❌", "❌", "❌"]} />
                 <TableRow cells={["Fork & Remix Model", "✅", "❌", "❌", "❌"]} />
-                <TableRow cells={["Revenue Verification", "🔜", "✅", "❌", "❌"]} />
+                <TableRow cells={["Webhook Subscriptions", "✅ Real-time", "❌", "✅", "✅"]} />
+                <TableRow cells={["Zero-Ops Automation", "✅ 7 cron jobs", "❌", "❌", "❌"]} />
               </tbody>
             </table>
           </div>
           <div className="rounded-xl border border-primary/30 bg-primary/5 p-5">
             <p className="text-sm text-muted-foreground">
-              <strong className="text-foreground">Key insight:</strong> Existing platforms serve either <em>listing/verification</em> (TrustMRR) or <em>digital product sales</em> (Gumroad/Lemon). None combine transactional commerce with programmatic agent access — the critical infrastructure layer for the autonomous economy.
+              <strong className="text-foreground">Key insight:</strong> OpenDraft is the only platform that covers the <em>entire</em> software commerce lifecycle autonomously. Competitors handle at most 2 of 6 stages (list, promote, sell, deploy, monitor, fix). This full-stack approach creates switching costs and compounding network effects that are extremely difficult to replicate.
             </p>
           </div>
         </Slide>
 
         {/* Moat */}
-        <Slide title="Competitive Moat" icon={Shield} index={8}>
+        <Slide title="Competitive Moat" icon={Shield} index={11}>
           <div className="space-y-4">
             {[
-              { t: "Agent-Native Infrastructure", d: "23 MCP tools, REST API with autonomous bidding, webhook subscriptions. No competitor has this." },
-              { t: "Demand Signal Flywheel", d: "Every failed agent search → logged → feeds AI template generator → creates supply for next query." },
-              { t: "Autonomous Strategy Engine", d: "AI Board of Directors + 4-agent operations swarm. The platform strategizes, prioritizes, and specs its own improvements." },
-              { t: "Network Effects", d: "More agents → more demand signals → better templates → more agents. Compounds exponentially." },
+              { t: "Agent-Native Infrastructure", d: "26 MCP tools, REST API, webhook subscriptions. No competitor has programmatic commerce for AI agents." },
+              { t: "Full Lifecycle Automation", d: "List → auto-approve → auto-promote on X → agent discovery → deploy → monitor → fix. Zero human operators required." },
+              { t: "Demand Signal Flywheel", d: "Every failed agent search → logged → feeds AI template generator → creates supply for next query. Self-healing marketplace." },
+              { t: "Post-Sale Lock-In", d: "Buyers deploy via our infra and we monitor their sites 24/7. This creates ongoing value that Gumroad/Lemon can never match." },
+              { t: "Autonomous Strategy Engine", d: "AI Board of Directors + 4-agent swarm + revenue automation. The platform strategizes, executes, and improves itself." },
             ].map((m) => (
               <div key={m.t} className="rounded-xl border border-border/40 bg-muted/20 p-5">
                 <h3 className="font-bold text-foreground mb-1">{m.t}</h3>
@@ -331,12 +412,12 @@ export default function Pitch() {
         </Slide>
 
         {/* Go-to-Market */}
-        <Slide title="Go-to-Market" icon={Users} index={9}>
+        <Slide title="Go-to-Market" icon={Users} index={12}>
           <div className="space-y-3">
             {[
-              { phase: "Phase 1 (Now)", desc: "92 live listings. AI-generated supply seeding. Targeting Lovable, Cursor, and Bolt builders." },
-              { phase: "Phase 2 (Q2)", desc: "Agent developer outreach — SDK packages, Claude Desktop configs, MCP registry listing." },
-              { phase: "Phase 3 (Q3+)", desc: "Enterprise agent fleet deals — bulk API access, custom procurement pipelines for agent swarms." },
+              { phase: "Phase 1 (Now ✅)", desc: "95+ live listings. Automated X promotion live. Site Doctor monitoring deployed. Revenue flywheel operational." },
+              { phase: "Phase 2 (Q2)", desc: "Agent developer outreach — SDK packages, Claude Desktop configs, MCP registry listings on Smithery, Glama, MCP.so." },
+              { phase: "Phase 3 (Q3+)", desc: "Enterprise agent fleet deals — bulk API access, managed deployment tier, custom procurement pipelines." },
             ].map((p) => (
               <div key={p.phase} className="flex gap-4 items-start">
                 <div className="h-8 w-8 rounded-lg gradient-hero flex items-center justify-center shrink-0 mt-0.5">
@@ -353,7 +434,7 @@ export default function Pitch() {
 
         {/* The Ask */}
         <motion.section
-          custom={10}
+          custom={13}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
@@ -363,7 +444,7 @@ export default function Pitch() {
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-primary-foreground mb-3">The Ask</h2>
           <p className="text-4xl sm:text-6xl md:text-7xl font-black text-primary-foreground/90 mb-2">$1M</p>
           <p className="text-base sm:text-lg text-primary-foreground/80 mb-6">Seed round at $4.5M pre-money valuation</p>
-          <div className="grid grid-cols-3 gap-3 sm:gap-4 max-w-md mx-auto">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 max-w-lg mx-auto">
             <div className="text-center">
               <p className="text-lg sm:text-2xl font-black text-primary-foreground">18mo</p>
               <p className="text-[10px] sm:text-xs text-primary-foreground/70">Runway</p>
@@ -375,6 +456,10 @@ export default function Pitch() {
             <div className="text-center">
               <p className="text-lg sm:text-2xl font-black text-primary-foreground">90%</p>
               <p className="text-[10px] sm:text-xs text-primary-foreground/70">Gross Margin</p>
+            </div>
+            <div className="text-center">
+              <p className="text-lg sm:text-2xl font-black text-primary-foreground">0</p>
+              <p className="text-[10px] sm:text-xs text-primary-foreground/70">Headcount Needed</p>
             </div>
           </div>
         </motion.section>

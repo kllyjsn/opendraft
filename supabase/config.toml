@@ -86,6 +86,14 @@ verify_jwt = false
 [functions.verify-listing]
 verify_jwt = false
 
+# Post to X — internal automation
+[functions.post-to-x]
+verify_jwt = false
+
+# Revenue automation — cron-triggered
+[functions.revenue-automation]
+verify_jwt = false
+
 # Notify follow — internal
 [functions.notify-follow]
 verify_jwt = false

@@ -211,6 +211,34 @@ function blogPostTweet(entry: BlogEntry): string {
   return pick(templates);
 }
 
+// ---------------------------------------------------------------
+// VIBE CODING STATE OF THE MARKET — Daily rotating insights
+// ---------------------------------------------------------------
+
+const VIBE_REPORTS: string[] = [
+  `Vibe Coding: State of the Market 🧵\n\n2M+ people are now building software with AI prompts instead of writing code.\n\nThe tools: Lovable, Cursor, Bolt, Claude Code, Replit, Windsurf.\n\nThe shift: from "learn to code" to "learn to describe what you want."\n\nThis is the biggest change in software since open source.`,
+
+  `Vibe Coding: State of the Market 🧵\n\nThe average time from idea to deployed app has dropped from 6 weeks to 6 hours.\n\nVibe coders are shipping SaaS tools, marketplaces, and AI apps — all built through conversation with AI.\n\nThe barrier to entry for software just collapsed.`,
+
+  `Vibe Coding: State of the Market 🧵\n\nThree trends defining 2026:\n\n1. AI-built apps are indistinguishable from hand-coded ones\n2. Non-technical founders are shipping production software\n3. The supply of software is about to 10x\n\nMarketplaces like OpenDraft exist because of this shift.`,
+
+  `Vibe Coding: State of the Market 🧵\n\nThe creator economy met software development.\n\nWriters became bloggers. Designers became YouTubers. Now everyone is becoming a software builder.\n\nVibe coding tools turned "I have an app idea" into "I shipped an app today."`,
+
+  `Vibe Coding: State of the Market 🧵\n\nForgotten stat: 95% of side projects never launch.\n\nWith vibe coding, builders go from prompt to production in a single session. No setup. No boilerplate. No excuses.\n\nThe launch rate is about to flip.`,
+
+  `Vibe Coding: State of the Market 🧵\n\nThe talent gap is closing — but not how anyone expected.\n\nCompanies don't need 10 developers. They need 2 developers with AI tools.\n\nVibe coding isn't replacing engineers. It's making every engineer 5x more productive.`,
+
+  `Vibe Coding: State of the Market 🧵\n\nWhat changed in the last 90 days:\n\n• Lovable added full backend generation\n• Cursor hit 1M+ users\n• Claude Code ships production-grade apps\n• Bolt added team collaboration\n\nThe tools are ready. The question is: what will you build?`,
+];
+
+function vibeCodeReportTweet(): string {
+  // Rotate by day of year for daily variety
+  const now = new Date();
+  const startOfYear = new Date(now.getFullYear(), 0, 0);
+  const dayOfYear = Math.floor((now.getTime() - startOfYear.getTime()) / (1000 * 60 * 60 * 24));
+  return VIBE_REPORTS[dayOfYear % VIBE_REPORTS.length];
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -301,6 +329,9 @@ Deno.serve(async (req) => {
       } else {
         throw new Error("blog_post requires rotate:true, slug, or title+custom_slug");
       }
+
+    } else if (postType === "vibe_coding_report") {
+      tweetText = vibeCodeReportTweet();
 
     } else if (postType === "custom" && body.text) {
       tweetText = body.text;

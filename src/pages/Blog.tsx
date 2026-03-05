@@ -389,7 +389,10 @@ function BlogPost() {
     );
   }
 
-  const ogImageUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/blog-og-image?slug=${post.slug}&title=${encodeURIComponent(post.title)}&category=${encodeURIComponent(post.category)}`;
+  // Use custom OG image for vibe coding report, dynamic OG for others
+  const ogImageUrl = post.slug === "vibe-coding-state-of-the-market"
+    ? "https://opendraft.co/og-vibe-coding-report.png"
+    : `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/blog-og-image?slug=${post.slug}&title=${encodeURIComponent(post.title)}&category=${encodeURIComponent(post.category)}`;
 
   return (
     <div className="min-h-screen flex flex-col">

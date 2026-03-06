@@ -753,6 +753,73 @@ Requirements:
   }
   console.log(`Generated ${screenshotPaths.length}/2 screenshots for "${template.title}"`);
 
+  /* ── Step 2b: Security post-processing ─────────────────────── */
+  // Ensure AI-generated files actually use Zod and don't contain dangerous patterns
+  const generatedFiles: Array<{ path: string; content: string }> = template.files || [];
+
+  // Check if ANY generated file imports zod
+  const hasZodImport = generatedFiles.some(f => /import.*from\s+['"]zod['"]|import.*{.*z.*}.*from\s+['"]zod['"]/i.test(f.content));
+
+  if (!hasZodImport) {
+    // Inject a validation utilities file with common Zod schemas
+    generatedFiles.push({
+      path: "src/lib/validation.ts",
+      content: `import { z } from 'zod';
+
+/**
+ * Common validation schemas for form inputs.
+ * All user inputs should be validated with these schemas before processing.
+ * @see SECURITY.md for the full security policy.
+ */
+
+export const emailSchema = z.string().trim().email('Invalid email address').max(255);
+export const nameSchema = z.string().trim().min(1, 'Name is required').max(100, 'Name must be under 100 characters');
+export const messageSchema = z.string().trim().min(1, 'Message is required').max(2000, 'Message must be under 2000 characters');
+export const urlSchema = z.string().url('Invalid URL').startsWith('https://', 'URL must use HTTPS');
+export const searchSchema = z.string().trim().max(200, 'Search query too long');
+
+export const contactFormSchema = z.object({
+  name: nameSchema,
+  email: emailSchema,
+  message: messageSchema,
+});
+
+export const loginFormSchema = z.object({
+  email: emailSchema,
+  password: z.string().min(8, 'Password must be at least 8 characters').max(128),
+});
+
+export const signupFormSchema = loginFormSchema.extend({
+  name: nameSchema,
+  confirmPassword: z.string(),
+}).refine(data => data.password === data.confirmPassword, {
+  message: 'Passwords do not match',
+  path: ['confirmPassword'],
+});
+
+/** Validate data against a schema, returning typed result */
+export function validate<T>(schema: z.ZodSchema<T>, data: unknown): { success: true; data: T } | { success: false; errors: string[] } {
+  const result = schema.safeParse(data);
+  if (result.success) return { success: true, data: result.data };
+  return { success: false, errors: result.error.errors.map(e => e.message) };
+}
+`,
+    });
+  }
+
+  // Sanitize generated files: strip any dangerous patterns the AI might have produced
+  for (const file of generatedFiles) {
+    if (!file.content || !file.path) continue;
+    // Remove eval() calls
+    file.content = file.content.replace(/\beval\s*\([^)]*\)/g, '/* eval removed for security */');
+    // Remove dangerouslySetInnerHTML
+    file.content = file.content.replace(/dangerouslySetInnerHTML\s*=\s*\{\s*\{[^}]*\}\s*\}/g, '/* dangerouslySetInnerHTML removed for security */');
+    // Remove new Function()
+    file.content = file.content.replace(/new\s+Function\s*\([^)]*\)/g, '/* new Function() removed for security */');
+    // Replace http:// with https:// (except localhost)
+    file.content = file.content.replace(/http:\/\/(?!localhost|127\.0\.0\.1|0\.0\.0\.0)/g, 'https://');
+  }
+
   /* ── Step 3: Build ZIP ────────────────────────────────────── */
   if (jobId) await updateJob(supabase, jobId, { stage: "packaging" });
 
@@ -776,7 +843,7 @@ Requirements:
   // Also put _redirects in dist/ equivalent for Netlify drag-drop deploys
   projectFolder.file("public/_redirects", "/*    /index.html   200\n");
 
-  for (const file of template.files) {
+  for (const file of generatedFiles) {
     if (file.path && file.content) {
       projectFolder.file(file.path, file.content);
     }

@@ -314,26 +314,14 @@ Deno.serve(async (req) => {
       tweetText = weeklyStatsTweet({ listings: listingsCount, sales: salesCount, builders: buildersCount });
 
     } else if (postType === "blog_post") {
-      if (body.rotate) {
-        // Rotate through blog catalog by hour — ensures variety across the day
-        const hourOfDay = new Date().getUTCHours();
-        const entry = BLOG_CATALOG[hourOfDay % BLOG_CATALOG.length];
-        tweetText = blogPostTweet(entry);
-      } else if (body.slug) {
-        // Post a specific blog entry by slug
-        const entry = BLOG_CATALOG.find(e => e.slug === body.slug);
-        if (!entry) throw new Error(`Blog slug "${body.slug}" not found in catalog`);
-        tweetText = blogPostTweet(entry);
-      } else if (body.title && body.custom_slug) {
-        // Fully custom blog post tweet
-        tweetText = blogPostTweet({
-          title: body.title,
-          slug: body.custom_slug,
-          hook: body.hook || body.description || "",
-          hashtags: body.hashtags || "#opendraft",
-        });
+      if (body.rotate || !body.text) {
+        // AI-generate a fresh, market-aware tweet every time
+        tweetText = await generateBlogTweet(supabaseUrl, supabaseKey);
+      } else if (body.text) {
+        // Allow custom override
+        tweetText = body.text;
       } else {
-        throw new Error("blog_post requires rotate:true, slug, or title+custom_slug");
+        throw new Error("blog_post: pass rotate:true for AI-generated tweets or text for custom");
       }
 
     } else if (postType === "vibe_coding_report") {

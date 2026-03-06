@@ -945,7 +945,7 @@ export function validate<T>(schema: z.ZodSchema<T>, data: unknown): { success: t
     description: template.description,
     category: template.category,
     price: 1500,
-    file_count: template.files.length + Object.keys(BASE_FILES).length,
+    file_count: generatedFiles.length + Object.keys(BASE_FILES).length,
     zip_size_kb: Math.round(zipBlob.length / 1024),
   };
 }

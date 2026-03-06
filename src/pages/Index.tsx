@@ -77,6 +77,18 @@ export default function Index() {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [ownedIds, setOwnedIds] = useState<Set<string>>(new Set());
   const [page, setPage] = useState(0);
+  const [showStickyBar, setShowStickyBar] = useState(false);
+  const [stickyDismissed, setStickyDismissed] = useState(false);
+
+  // Show sticky bar after scroll for non-authenticated visitors
+  useEffect(() => {
+    if (user || stickyDismissed) return;
+    const onScroll = () => {
+      setShowStickyBar(window.scrollY > 400);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [user, stickyDismissed]);
 
   // Reset page when filters change
   useEffect(() => {
@@ -437,6 +449,42 @@ export default function Index() {
       </section>
 
       <Footer />
+
+      {/* Sticky sign-up bar for visitors */}
+      <AnimatePresence>
+        {showStickyBar && !user && !stickyDismissed && (
+          <motion.div
+            initial={{ y: 80, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 80, opacity: 0 }}
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            className="fixed bottom-0 inset-x-0 z-50 border-t border-border/40 bg-card/95 backdrop-blur-xl shadow-lg"
+          >
+            <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-3">
+              <p className="text-sm font-medium text-foreground hidden sm:block">
+                Sign up free to claim apps and message builders
+              </p>
+              <p className="text-sm font-medium text-foreground sm:hidden">
+                Sign up free to get started
+              </p>
+              <div className="flex items-center gap-2 shrink-0">
+                <Link to="/login">
+                  <Button size="sm" className="gradient-hero text-white border-0 shadow-glow hover:opacity-90 font-bold gap-1.5">
+                    Sign up free
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Button>
+                </Link>
+                <button
+                  onClick={() => setStickyDismissed(true)}
+                  className="text-muted-foreground hover:text-foreground transition-colors p-1"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

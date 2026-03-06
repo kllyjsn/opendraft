@@ -73,7 +73,7 @@ export default function BuiltWith() {
     setLoading(true);
     supabase
       .from("listings")
-      .select("id,title,description,price,completeness_badge,tech_stack,screenshots,sales_count,view_count,built_with,seller_id")
+      .select("id,title,description,price,completeness_badge,tech_stack,screenshots,sales_count,view_count,built_with,seller_id,security_score")
       .eq("status", "live")
       .eq("built_with", dbValue)
       .order("created_at", { ascending: false })

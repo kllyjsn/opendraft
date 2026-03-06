@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { CompletenessBadge } from "@/components/CompletenessBadge";
+import { SecurityBadge } from "@/components/SecurityBadge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -46,6 +47,7 @@ interface Listing {
   seller_id: string;
   created_at: string;
   built_with: string | null;
+  security_score: number | null;
 }
 
 interface Review {
@@ -412,6 +414,7 @@ export default function ListingDetail() {
               <h1 className="text-3xl md:text-4xl font-black leading-tight">{listing.title}</h1>
               <div className="flex flex-wrap items-center gap-3">
                 <CompletenessBadge level={listing.completeness_badge} />
+                <SecurityBadge score={listing.security_score} />
                 {avgRating !== null && (
                   <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
                     <Star className="h-4 w-4 fill-accent text-accent" />

@@ -79,7 +79,7 @@ export default function Category() {
     setLoading(true);
     supabase
       .from("listings")
-      .select("id,title,description,price,completeness_badge,tech_stack,screenshots,sales_count,view_count,built_with,seller_id")
+      .select("id,title,description,price,completeness_badge,tech_stack,screenshots,sales_count,view_count,built_with,seller_id,security_score")
       .eq("status", "live")
       .eq("category", meta.dbValue as "saas_tool" | "ai_app" | "landing_page" | "utility" | "game" | "other")
       .order("created_at", { ascending: false })

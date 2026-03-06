@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { CompletenessBadge } from "./CompletenessBadge";
+import { SecurityBadge } from "./SecurityBadge";
 import { Star, Eye, CheckCircle } from "lucide-react";
 
 interface ListingCardProps {
@@ -19,6 +20,7 @@ interface ListingCardProps {
   built_with?: string | null;
   seller_id?: string;
   seller_username?: string;
+  security_score?: number | null;
 }
 
 export type { ListingCardProps };
@@ -35,7 +37,7 @@ const BUILT_WITH_LABELS: Record<string, string> = {
 export function ListingCard({
   id, title, description, price, pricing_type, completeness_badge,
   tech_stack, screenshots, sales_count, view_count, avg_rating, owned, built_with,
-  seller_id, seller_username,
+  seller_id, seller_username, security_score,
 }: ListingCardProps) {
   const navigate = useNavigate();
   const thumbnail = screenshots?.[0];
@@ -107,6 +109,11 @@ export function ListingCard({
             {built_with && BUILT_WITH_LABELS[built_with] && (
               <span className="inline-flex items-center gap-1 mt-1.5 rounded-md bg-accent/10 border border-accent/20 px-1.5 py-0.5 text-[10px] text-accent font-semibold tracking-tight">
                 🛠 {BUILT_WITH_LABELS[built_with]}
+              </span>
+            )}
+            {security_score !== null && security_score !== undefined && (
+              <span className="ml-1 mt-1.5 inline-block">
+                <SecurityBadge score={security_score} compact />
               </span>
             )}
           </div>

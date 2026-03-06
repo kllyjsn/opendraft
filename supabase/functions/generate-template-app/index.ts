@@ -971,16 +971,16 @@ serve(async (req) => {
 
     const AUTO_GEN_EMAIL = "kllyjsn@gmail.com";
     let isAdmin = false;
-    if (token === SUPABASE_SERVICE_ROLE_KEY) {
+    const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_PUBLISHABLE_KEY") || "";
+
+    // Service role key OR anon/publishable key = internal/admin call
+    if (token === SUPABASE_SERVICE_ROLE_KEY || token === ANON_KEY) {
       const { data: authUsers } = await supabase.auth.admin.listUsers();
       const targetUser = authUsers?.users?.find((u: any) => u.email === AUTO_GEN_EMAIL);
       if (targetUser) sellerId = targetUser.id;
       isAdmin = true;
     } else if (token) {
-      const supabaseAnon = createClient(
-        SUPABASE_URL,
-        Deno.env.get("SUPABASE_ANON_KEY") || ""
-      );
+      const supabaseAnon = createClient(SUPABASE_URL, ANON_KEY);
       const {
         data: { user },
       } = await supabaseAnon.auth.getUser(token);

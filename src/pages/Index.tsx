@@ -9,7 +9,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Search, TrendingUp, SlidersHorizontal, X, Loader2, ChevronDown, ArrowRight, Code2, Rocket, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { BuildSearch } from "@/components/BuildSearch";
 import { FeaturedListings } from "@/components/FeaturedListings";
 import { BrandMascot } from "@/components/BrandMascot";
 

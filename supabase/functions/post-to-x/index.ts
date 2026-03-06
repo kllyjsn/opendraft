@@ -271,10 +271,15 @@ RULES:
 
     if (aiRes.ok) {
       const aiData = await aiRes.json();
-      const text = aiData?.choices?.[0]?.message?.content?.trim();
-      if (text && text.length > 20 && text.length <= 280) {
+      let text = aiData?.choices?.[0]?.message?.content?.trim();
+      if (text) text = text.replace(/^["'`]+|["'`]+$/g, "").trim();
+      if (text && text.length > 20) {
+        if (text.length > 280) text = text.substring(0, 277) + "...";
         return text;
       }
+      console.log("AI vibe tweet unusable:", text?.length);
+    } else {
+      console.error("AI gateway returned", aiRes.status, await aiRes.text());
     }
   } catch (e) {
     console.error("AI vibe report tweet failed, using fallback:", e);

@@ -23,6 +23,7 @@ const BASE_FILES: Record<string, string> = {
         "react-dom": "^18.3.1",
         "lucide-react": "^0.462.0",
         "framer-motion": "^12.0.0",
+        zod: "^3.23.0",
       },
       devDependencies: {
         "@types/node": "^22.0.0",
@@ -104,6 +105,7 @@ export default {
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https:;" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />

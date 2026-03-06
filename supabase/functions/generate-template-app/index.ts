@@ -971,16 +971,27 @@ serve(async (req) => {
 
     const AUTO_GEN_EMAIL = "kllyjsn@gmail.com";
     let isAdmin = false;
-    const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_PUBLISHABLE_KEY") || "";
+    const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") || "";
+    const PUBLISHABLE_KEY = Deno.env.get("SUPABASE_PUBLISHABLE_KEY") || "";
 
-    // Service role key OR anon/publishable key = internal/admin call
-    if (token === SUPABASE_SERVICE_ROLE_KEY || token === ANON_KEY) {
+    console.log("Auth debug:", {
+      hasToken: !!token,
+      tokenPrefix: token.substring(0, 20),
+      matchesServiceRole: token === SUPABASE_SERVICE_ROLE_KEY,
+      matchesAnon: token === ANON_KEY,
+      matchesPublishable: token === PUBLISHABLE_KEY,
+    });
+
+    // Service role key, anon key, or publishable key = internal/admin call
+    const isInternalCall = token === SUPABASE_SERVICE_ROLE_KEY || token === ANON_KEY || token === PUBLISHABLE_KEY;
+    if (isInternalCall) {
       const { data: authUsers } = await supabase.auth.admin.listUsers();
       const targetUser = authUsers?.users?.find((u: any) => u.email === AUTO_GEN_EMAIL);
       if (targetUser) sellerId = targetUser.id;
       isAdmin = true;
+      console.log("Internal call, sellerId:", sellerId ? "found" : "NOT FOUND");
     } else if (token) {
-      const supabaseAnon = createClient(SUPABASE_URL, ANON_KEY);
+      const supabaseAnon = createClient(SUPABASE_URL, PUBLISHABLE_KEY || ANON_KEY);
       const {
         data: { user },
       } = await supabaseAnon.auth.getUser(token);

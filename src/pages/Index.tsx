@@ -199,17 +199,16 @@ export default function Index() {
       <Navbar />
 
       {/* ── HERO ── */}
-      <section className="relative overflow-hidden py-16 md:py-28 grain-overlay">
+      <section className="relative overflow-hidden py-10 md:py-16 grain-overlay">
         <div className="absolute -top-60 -right-60 h-[700px] w-[700px] rounded-full bg-primary/20 blur-[140px] animate-pulse-glow pointer-events-none" />
-        <div className="absolute -bottom-60 -left-60 h-[600px] w-[600px] rounded-full bg-accent/20 blur-[120px] animate-pulse-glow pointer-events-none" style={{ animationDelay: "2s" }} />
 
         <div className="container mx-auto px-4 text-center relative z-10">
           <motion.div initial="hidden" animate="visible" variants={staggerContainer}>
-            <motion.div variants={fadeUp} custom={0} className="flex justify-center mb-4">
-              <BrandMascot size={90} variant="wave" />
+            <motion.div variants={fadeUp} custom={0} className="flex justify-center mb-3">
+              <BrandMascot size={64} variant="wave" />
             </motion.div>
 
-            <motion.h1 variants={fadeUp} custom={0} className="text-5xl md:text-8xl font-black tracking-tighter mb-5 md:mb-6 leading-[0.95]">
+            <motion.h1 variants={fadeUp} custom={0} className="text-4xl md:text-7xl font-black tracking-tighter mb-3 md:mb-4 leading-[0.95]">
               Any app.
               <br />
               <span className="text-gradient animate-gradient-shift inline-block"
@@ -219,48 +218,32 @@ export default function Index() {
               </span>
             </motion.h1>
 
-            <motion.p variants={fadeUp} custom={1} className="text-sm md:text-lg text-muted-foreground max-w-lg mx-auto mb-6 leading-relaxed">
+            <motion.p variants={fadeUp} custom={1} className="text-sm md:text-base text-muted-foreground max-w-md mx-auto mb-5 leading-relaxed">
               Every project rebuilt with clean code and deploy configs.
-              <span className="hidden md:inline"> Claim the source, launch on your own infra, make it yours.</span>
+              <span className="hidden md:inline"> Claim the source, launch on your own infra.</span>
             </motion.p>
 
-            {/* Social proof stats */}
-            <motion.div variants={fadeUp} custom={1.5} className="flex items-center justify-center gap-6 md:gap-10 mb-8">
-              <div className="flex flex-col items-center">
-                <div className="flex items-center gap-1.5 text-foreground">
-                  <Code2 className="h-4 w-4 text-primary" />
-                  <span className="text-lg md:text-xl font-black">{totalCount || '—'}</span>
-                </div>
-                <span className="text-[10px] md:text-xs text-muted-foreground font-medium">Apps</span>
-              </div>
-              <div className="h-6 w-px bg-border/50" />
-              <div className="flex flex-col items-center">
-                <div className="flex items-center gap-1.5 text-foreground">
-                  <Rocket className="h-4 w-4 text-accent" />
-                  <span className="text-lg md:text-xl font-black">1-click</span>
-                </div>
-                <span className="text-[10px] md:text-xs text-muted-foreground font-medium">Deploy</span>
-              </div>
-              <div className="h-6 w-px bg-border/50" />
-              <div className="flex flex-col items-center">
-                <div className="flex items-center gap-1.5 text-foreground">
-                  <Users className="h-4 w-4 text-primary" />
-                  <span className="text-lg md:text-xl font-black">100%</span>
-                </div>
-                <span className="text-[10px] md:text-xs text-muted-foreground font-medium">Source code</span>
-              </div>
-            </motion.div>
-
-            <motion.div variants={fadeUp} custom={2}>
-              <BuildSearch />
-            </motion.div>
-
-            <motion.div variants={fadeUp} custom={3} className="mt-6 flex items-center justify-center gap-3 text-xs text-muted-foreground">
-              <a href="#browse" className="underline underline-offset-4 hover:text-foreground transition-colors">browse apps</a>
-              <span>·</span>
-              <Link to={user ? "/sell" : "/login"} className="underline underline-offset-4 hover:text-foreground transition-colors">
-                sell your code
+            <motion.div variants={fadeUp} custom={1.5} className="flex items-center justify-center gap-3 mb-5">
+              <a href="#browse">
+                <Button size="lg" className="gradient-hero text-white border-0 shadow-glow hover:opacity-90 font-bold gap-2 h-11 px-6">
+                  Browse {totalCount > 0 ? totalCount : ''} apps
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </a>
+              <Link to={user ? "/sell" : "/login"}>
+                <Button size="lg" variant="outline" className="border-border/60 hover:border-primary/50 h-11 px-6 font-semibold">
+                  Sell your code
+                </Button>
               </Link>
+            </motion.div>
+
+            {/* Compact social proof */}
+            <motion.div variants={fadeUp} custom={2} className="flex items-center justify-center gap-5 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1.5"><Code2 className="h-3.5 w-3.5 text-primary" /><strong className="text-foreground">{totalCount || '—'}</strong> apps</span>
+              <span className="h-3 w-px bg-border/50" />
+              <span className="flex items-center gap-1.5"><Rocket className="h-3.5 w-3.5 text-accent" /><strong className="text-foreground">1-click</strong> deploy</span>
+              <span className="h-3 w-px bg-border/50" />
+              <span className="flex items-center gap-1.5"><Users className="h-3.5 w-3.5 text-primary" /><strong className="text-foreground">100%</strong> source</span>
             </motion.div>
           </motion.div>
         </div>

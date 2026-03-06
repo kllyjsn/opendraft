@@ -59,6 +59,17 @@ Deno.serve(async (req) => {
         approvedCount++;
         newlyApproved.push(listing);
 
+        // Run security scan on approved listing
+        try {
+          await fetch(`${supabaseUrl}/functions/v1/scan-security`, {
+            method: "POST",
+            headers: { ...headers },
+            body: JSON.stringify({ listing_id: listing.id }),
+          });
+        } catch (scanErr) {
+          console.error(`Security scan failed for ${listing.id}:`, scanErr);
+        }
+
         // Notify the seller
         await fetch(`${supabaseUrl}/rest/v1/notifications`, {
           method: "POST",

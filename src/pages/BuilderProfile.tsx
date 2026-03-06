@@ -59,7 +59,7 @@ export default function BuilderProfile() {
           .single(),
         supabase
           .from("listings")
-          .select("id, title, description, price, completeness_badge, category, tech_stack, screenshots, sales_count, view_count, pricing_type, demo_url, seller_id")
+          .select("id, title, description, price, completeness_badge, category, tech_stack, screenshots, sales_count, view_count, pricing_type, demo_url, seller_id, security_score")
           .eq("seller_id", userId)
           .eq("status", "live")
           .order("created_at", { ascending: false }),

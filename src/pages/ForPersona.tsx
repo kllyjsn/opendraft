@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { BrandMascot } from "@/components/BrandMascot";
 import { FeaturedListings } from "@/components/FeaturedListings";
 import { HowItWorks } from "@/components/HowItWorks";
-import { CtaBanner } from "@/components/CtaBanner";
+
 import { CanonicalTag } from "@/components/CanonicalTag";
 import { JsonLd } from "@/components/JsonLd";
 import { Code, Building2, Zap, Rocket, Shield, Users, ArrowRight } from "lucide-react";
@@ -144,8 +144,6 @@ export default function ForPersona() {
       {/* How it works */}
       <HowItWorks />
 
-      {/* CTA */}
-      <CtaBanner />
 
       <Footer />
     </div>

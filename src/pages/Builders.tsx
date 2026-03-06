@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { FollowButton } from "@/components/FollowButton";
 import { ChatDrawer } from "@/components/ChatDrawer";
 import { BrandMascot } from "@/components/BrandMascot";
-import { CtaBanner } from "@/components/CtaBanner";
+
 import { useAuth } from "@/hooks/useAuth";
 import { Search, Users, MessageCircle, ArrowRight, Sparkles, TrendingUp, Package } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -291,8 +291,6 @@ export default function Builders() {
         )}
       </main>
 
-      {/* Bottom CTA */}
-      <CtaBanner />
 
       <ChatDrawer
         open={chatOpen}

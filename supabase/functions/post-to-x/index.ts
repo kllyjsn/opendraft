@@ -127,88 +127,93 @@ function weeklyStatsTweet(stats: { listings: number; sales: number; builders: nu
 }
 
 // ---------------------------------------------------------------
-// BLOG POST TEMPLATES — High-quality, varied hooks
-// Each post gets multiple unique tweet angles
+// AI-GENERATED BLOG TWEETS — Fresh, market-aware content every time
+// Uses Lovable AI to generate unique tweets based on current
+// marketplace trends, recent listings, and demand signals.
 // ---------------------------------------------------------------
 
-interface BlogEntry {
-  title: string;
-  slug: string;
-  hook: string;      // Short punchy hook for the tweet body
-  hashtags: string;   // 1-2 relevant hashtags
-}
-
-const BLOG_CATALOG: BlogEntry[] = [
-  {
-    title: "We Hit $10K ARR With Zero Employees — Here's How",
-    slug: "autonomous-revenue-zero-employees",
-    hook: "No support team. No marketing dept. No ops staff.\n\nJust AI agents, cron jobs, and edge functions running a profitable marketplace.",
-    hashtags: "#buildinpublic #AI",
-  },
-  {
-    title: "AI Agents Are Now Buying Software",
-    slug: "ai-agents-buying-software",
-    hook: "Last month, an AI agent discovered a template, negotiated 15% off, paid, and deployed it — in under 90 seconds.\n\nNo human involved.",
-    hashtags: "#AIagents #MCP",
-  },
-  {
-    title: "Self-Healing Deployments: How Our AI Fixes Broken Sites",
-    slug: "site-doctor-self-healing-deploys",
-    hook: "Your deployed site breaks at 3 AM.\n\nOur Site Doctor detects it, diagnoses the issue, and rebuilds — before you wake up.",
-    hashtags: "#DevOps #AI",
-  },
-  {
-    title: "The Complete Guide to MCP Servers in 2026",
-    slug: "mcp-servers-complete-guide-2026",
-    hook: "MCP is the new REST.\n\nIf you want AI agents to use your product, you need an MCP server. Here's everything you need to know.",
-    hashtags: "#MCP #AIagents",
-  },
-  {
-    title: "What Is Vibe Coding? The Complete Guide",
-    slug: "what-is-vibe-coding",
-    hook: "Describe what you want. AI writes the code.\n\nVibe coding is how 2M+ people are building software in 2026.",
-    hashtags: "#vibecoding #AI",
-  },
-  {
-    title: "The 6 Best AI Coding Tools in 2026",
-    slug: "best-ai-coding-tools-2026",
-    hook: "Lovable, Cursor, Claude Code, Bolt, Replit, Windsurf — which one should you actually use?\n\nWe compared them all.",
-    hashtags: "#AIcoding #devtools",
-  },
-  {
-    title: "How to Monetize Your Side Project in 2026",
-    slug: "monetize-side-project",
-    hook: "You built something cool over the weekend.\n\nNow it's sitting on GitHub collecting dust.\n\nHere's how to turn it into $200/mo recurring revenue.",
-    hashtags: "#indiehackers #buildinpublic",
-  },
-  {
-    title: "The Rise of the AI Agent Marketplace",
-    slug: "rise-of-ai-agent-marketplace",
-    hook: "The buyers aren't just humans anymore.\n\nAI agents are discovering, evaluating, and purchasing software — programmatically.",
-    hashtags: "#AIagents #marketplace",
-  },
-  {
-    title: "Build Multi-Agent Workflows With Vibe Coding",
-    slug: "vibe-coding-multi-agent-workflows",
-    hook: "Single AI agents are powerful.\n\nBut chain 4-5 specialized agents together? That's where the real magic happens.",
-    hashtags: "#multiagent #vibecoding",
-  },
+const BLOG_TOPICS = [
+  "vibe coding", "AI agents", "MCP servers", "monetizing side projects",
+  "no-code to pro-code", "AI-built SaaS", "template marketplaces",
+  "shipping faster with AI", "autonomous software", "multi-agent workflows",
+  "indie hacking in 2026", "AI coding tools", "developer productivity",
+  "self-healing deployments", "agent commerce", "security-hardened templates",
 ];
 
-function blogPostTweet(entry: BlogEntry): string {
-  const url = `${SITE_URL}/blog/${entry.slug}`;
+async function generateBlogTweet(supabaseUrl: string, supabaseKey: string): Promise<string> {
+  const headers = { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` };
 
-  const templates = [
-    // Hook-first format (best engagement)
-    `${entry.hook}\n\n${url}\n\n${entry.hashtags}`,
+  // Fetch fresh marketplace context in parallel
+  const [trendingRes, demandRes, recentRes] = await Promise.all([
+    fetch(`${supabaseUrl}/rest/v1/listings?status=eq.live&order=sales_count.desc.nullslast&limit=3&select=title,category,tech_stack`, { headers }),
+    fetch(`${supabaseUrl}/rest/v1/agent_demand_signals?order=created_at.desc&limit=5&select=query,category`, { headers }),
+    fetch(`${supabaseUrl}/rest/v1/listings?status=eq.live&order=created_at.desc&limit=3&select=title,category`, { headers }),
+  ]);
 
-    // Title-led with curiosity gap
-    `${entry.title}\n\n${entry.hook.split("\n")[0]}\n\nRead → ${url}`,
+  const [trending, demand, recent] = await Promise.all([
+    trendingRes.json().catch(() => []),
+    demandRes.json().catch(() => []),
+    recentRes.json().catch(() => []),
+  ]);
 
-    // Thread-starter style
-    `New on the OpenDraft blog:\n\n${entry.title}\n\n${entry.hook.split("\n\n")[0]}\n\n${url}`,
+  const trendingTitles = (trending || []).map((l: any) => l.title).join(", ");
+  const demandQueries = (demand || []).map((d: any) => d.query).join(", ");
+  const recentTitles = (recent || []).map((l: any) => l.title).join(", ");
+
+  // Pick a random topic angle
+  const topic = pick(BLOG_TOPICS);
+  const now = new Date();
+  const dateContext = `${now.toLocaleString("en-US", { month: "long", year: "numeric" })}`;
+
+  const prompt = `You are the social media voice of OpenDraft (opendraft.co) — the app store for AI-built software and AI agents. Write ONE tweet (max 270 chars) that feels like a fresh, original thought about "${topic}".
+
+CONTEXT (use to make it timely & relevant):
+- Date: ${dateContext}
+- Trending apps on our marketplace: ${trendingTitles || "various AI tools and SaaS apps"}
+- What AI agents are searching for: ${demandQueries || "AI tools, automation, MCP servers"}
+- Recently listed: ${recentTitles || "new AI-built apps"}
+
+RULES:
+- Write as if you're a sharp founder sharing an insight, NOT a brand account
+- Hook-first: the first line must stop the scroll
+- No emojis in the first line
+- Include 1-2 relevant hashtags at the end
+- Include the URL ${SITE_URL} naturally (not as the first thing)
+- Reference real trends (vibe coding, AI agents, MCP, etc.)
+- NEVER start with "Just published" or "New blog post" — be original
+- Sound human, opinionated, and slightly provocative
+- Output ONLY the tweet text, nothing else`;
+
+  try {
+    const aiRes = await fetch(`${supabaseUrl}/functions/v1/ai-proxy`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${supabaseKey}` },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [{ role: "user", content: prompt }],
+        max_tokens: 300,
+        temperature: 0.9,
+      }),
+    });
+
+    if (aiRes.ok) {
+      const aiData = await aiRes.json();
+      const text = aiData?.choices?.[0]?.message?.content?.trim();
+      if (text && text.length > 20 && text.length <= 280) {
+        return text;
+      }
+    }
+  } catch (e) {
+    console.error("AI blog tweet generation failed, using fallback:", e);
+  }
+
+  // Fallback: generate a solid tweet from context without AI
+  const fallbacks = [
+    `The barrier to building software just collapsed.\n\nAI agents are now discovering, buying, and deploying apps autonomously on OpenDraft.\n\n${SITE_URL}\n\n#vibecoding #AIagents`,
+    `Every week, new builders ship production apps in hours — not months.\n\nThe marketplace for AI-built software is here.\n\n${SITE_URL}\n\n#buildinpublic #AI`,
+    `What if the next great SaaS tool wasn't built by a dev team — but by a single person with an AI coding tool?\n\nThat's already happening.\n\n${SITE_URL}\n\n#vibecoding #indiehackers`,
   ];
-  return pick(templates);
+  return pick(fallbacks);
 }
 
 // ---------------------------------------------------------------

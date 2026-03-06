@@ -11,7 +11,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { BuildSearch } from "@/components/BuildSearch";
 import { FeaturedListings } from "@/components/FeaturedListings";
-import { CtaBanner } from "@/components/CtaBanner";
+
 import { BrandMascot } from "@/components/BrandMascot";
 
 const CATEGORIES = ["All", "SaaS Tool", "AI App", "Landing Page", "Utility", "Game", "Other"];
@@ -425,7 +425,6 @@ export default function Index() {
         )}
       </section>
 
-      <CtaBanner />
       <Footer />
     </div>
   );

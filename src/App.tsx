@@ -47,6 +47,7 @@ import Founders from "./pages/Founders";
 import CreatorHandbook from "./pages/CreatorHandbook";
 import Credits from "./pages/Credits";
 import Onboarding from "./pages/Onboarding";
+import Security from "./pages/Security";
 
 const queryClient = new QueryClient();
 
@@ -95,6 +96,7 @@ const App = () => (
           <Route path="/founders" element={<Founders />} />
           <Route path="/credits" element={<Credits />} />
           <Route path="/onboarding" element={<Onboarding />} />
+          <Route path="/security" element={<Security />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

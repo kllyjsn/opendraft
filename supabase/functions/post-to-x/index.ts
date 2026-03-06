@@ -348,7 +348,7 @@ Deno.serve(async (req) => {
       }
 
     } else if (postType === "vibe_coding_report") {
-      tweetText = vibeCodeReportTweet();
+      tweetText = await generateVibeReportTweet(supabaseUrl, supabaseKey);
 
     } else if (postType === "custom" && body.text) {
       tweetText = body.text;

@@ -217,32 +217,55 @@ RULES:
 }
 
 // ---------------------------------------------------------------
-// VIBE CODING STATE OF THE MARKET — Daily rotating insights
+// VIBE CODING STATE OF THE MARKET — AI-generated daily insights
 // ---------------------------------------------------------------
 
 const REPORT_URL = `${SITE_URL}/blog/vibe-coding-state-of-the-market`;
 
-const VIBE_REPORTS: string[] = [
-  `Vibe Coding: State of the Market\n\n2M+ people are now building software with AI prompts instead of writing code.\n\nThe tools: Lovable, Cursor, Bolt, Claude Code, Replit, Windsurf.\n\nThe shift: from "learn to code" to "learn to describe what you want."\n\nFull report 👇\n${REPORT_URL}`,
-
-  `Vibe Coding: State of the Market\n\nThe average time from idea to deployed app has dropped from 6 weeks to 6 hours.\n\nVibe coders are shipping SaaS tools, marketplaces, and AI apps — all built through conversation with AI.\n\nThe barrier to entry for software just collapsed.\n\n${REPORT_URL}`,
-
-  `Vibe Coding: State of the Market\n\nThree trends defining 2026:\n\n1. AI-built apps are indistinguishable from hand-coded ones\n2. Non-technical founders are shipping production software\n3. The supply of software is about to 10x\n\nFull breakdown → ${REPORT_URL}`,
-
-  `Vibe Coding: State of the Market\n\nThe creator economy met software development.\n\nWriters became bloggers. Designers became YouTubers. Now everyone is becoming a software builder.\n\nVibe coding tools turned "I have an app idea" into "I shipped an app today."\n\n${REPORT_URL}`,
-
-  `Vibe Coding: State of the Market\n\n95% of side projects never launch.\n\nWith vibe coding, builders go from prompt to production in a single session. No setup. No boilerplate. No excuses.\n\nThe launch rate is about to flip.\n\n${REPORT_URL}`,
-
-  `Vibe Coding: State of the Market\n\nThe talent gap is closing — but not how anyone expected.\n\nCompanies don't need 10 developers. They need 2 developers with AI tools.\n\nVibe coding isn't replacing engineers. It's making every engineer 5x more productive.\n\n${REPORT_URL}`,
-
-  `Vibe Coding: State of the Market\n\nWhat changed in the last 90 days:\n\n• Lovable added full backend generation\n• Cursor hit 1M+ users\n• Claude Code ships production-grade apps\n• Bolt added team collaboration\n\nThe tools are ready. What will you build?\n\n${REPORT_URL}`,
-];
-
-function vibeCodeReportTweet(): string {
+async function generateVibeReportTweet(supabaseUrl: string, supabaseKey: string): Promise<string> {
   const now = new Date();
-  const startOfYear = new Date(now.getFullYear(), 0, 0);
-  const dayOfYear = Math.floor((now.getTime() - startOfYear.getTime()) / (1000 * 60 * 60 * 24));
-  return VIBE_REPORTS[dayOfYear % VIBE_REPORTS.length];
+  const dateContext = `${now.toLocaleString("en-US", { month: "long", day: "numeric", year: "numeric" })}`;
+
+  const prompt = `You are the social media voice of OpenDraft — the marketplace for AI-built software. Write ONE tweet (max 270 chars) promoting our "Vibe Coding: State of the Market" report.
+
+DATE: ${dateContext}
+REPORT URL: ${REPORT_URL}
+
+The report covers how 2M+ people now build software using AI coding tools (Lovable, Cursor, Claude Code, Bolt, Replit, Windsurf). Key themes: non-technical founders shipping production apps, AI agents buying software autonomously, the supply of software 10x-ing.
+
+RULES:
+- Lead with a provocative insight or surprising stat — NOT "Check out our report"
+- Sound like a sharp VC or founder sharing a market observation
+- Include ${REPORT_URL} naturally
+- 1-2 hashtags at end (#vibecoding always)
+- No emojis in the first line
+- Output ONLY the tweet text`;
+
+  try {
+    const aiRes = await fetch(`${supabaseUrl}/functions/v1/ai-proxy`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${supabaseKey}` },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash-lite",
+        messages: [{ role: "user", content: prompt }],
+        max_tokens: 300,
+        temperature: 0.9,
+      }),
+    });
+
+    if (aiRes.ok) {
+      const aiData = await aiRes.json();
+      const text = aiData?.choices?.[0]?.message?.content?.trim();
+      if (text && text.length > 20 && text.length <= 280) {
+        return text;
+      }
+    }
+  } catch (e) {
+    console.error("AI vibe report tweet failed, using fallback:", e);
+  }
+
+  // Fallback
+  return `Vibe Coding: State of the Market\n\nThe barrier to building software just collapsed. 2M+ people now ship production apps using AI.\n\nFull report → ${REPORT_URL}\n\n#vibecoding #AI`;
 }
 
 Deno.serve(async (req) => {

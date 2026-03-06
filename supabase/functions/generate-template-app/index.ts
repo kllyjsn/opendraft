@@ -931,7 +931,7 @@ export function validate<T>(schema: z.ZodSchema<T>, data: unknown): { success: t
       title: template.title,
       tagline: template.tagline,
       color_palette: template.color_palette,
-      file_count: template.files.length,
+      file_count: generatedFiles.length,
       zip_size_kb: Math.round(zipBlob.length / 1024),
       has_screenshot: screenshotPaths.length > 0,
       screenshot_count: screenshotPaths.length,

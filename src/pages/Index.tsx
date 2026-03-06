@@ -1,17 +1,16 @@
 import { useState, useEffect, useCallback } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { ListingCard } from "@/components/ListingCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, TrendingUp, SlidersHorizontal, X, Loader2, ChevronDown, Sparkles, ArrowRight } from "lucide-react";
+import { Search, TrendingUp, SlidersHorizontal, X, Loader2, ChevronDown, ArrowRight, Code2, Rocket, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { BuildSearch } from "@/components/BuildSearch";
 import { FeaturedListings } from "@/components/FeaturedListings";
-
 import { BrandMascot } from "@/components/BrandMascot";
 
 const CATEGORIES = ["All", "SaaS Tool", "AI App", "Landing Page", "Utility", "Game", "Other"];
@@ -200,29 +199,45 @@ export default function Index() {
             </motion.div>
 
             <motion.h1 variants={fadeUp} custom={0} className="text-5xl md:text-8xl font-black tracking-tighter mb-5 md:mb-6 leading-[0.95]">
-              Create anything.
+              Any app.
               <br />
               <span className="text-gradient animate-gradient-shift inline-block"
                 style={{ backgroundImage: 'linear-gradient(135deg, hsl(265 85% 58%), hsl(330 90% 60%), hsl(185 90% 45%), hsl(265 85% 58%))', backgroundSize: '200% 200%' }}
               >
-                Ship today.
+                Ready to ship.
               </span>
             </motion.h1>
 
-            <motion.p variants={fadeUp} custom={1} className="text-sm md:text-lg text-muted-foreground max-w-md mx-auto mb-4 leading-relaxed">
-              Describe what you want — or fork an existing app. Full source code, deploy anywhere.
+            <motion.p variants={fadeUp} custom={1} className="text-sm md:text-lg text-muted-foreground max-w-lg mx-auto mb-6 leading-relaxed">
+              Every project rebuilt with clean code and deploy configs.
+              <span className="hidden md:inline"> Claim the source, launch on your own infra, make it yours.</span>
             </motion.p>
 
-            {/* Subscription promo */}
-            <motion.div variants={fadeUp} custom={1.5} className="mb-8">
-              <Link
-                to="/credits"
-                className="inline-flex items-center gap-2 rounded-full bg-primary/10 border border-primary/20 px-5 py-2 text-sm font-semibold text-primary hover:bg-primary/15 hover:border-primary/30 transition-all duration-200 group"
-              >
-                <Sparkles className="h-4 w-4" />
-                <span><span className="font-black">$20/mo</span> — unlimited access to every app</span>
-                <ArrowRight className="h-3.5 w-3.5 opacity-60 group-hover:translate-x-0.5 transition-transform" />
-              </Link>
+            {/* Social proof stats */}
+            <motion.div variants={fadeUp} custom={1.5} className="flex items-center justify-center gap-6 md:gap-10 mb-8">
+              <div className="flex flex-col items-center">
+                <div className="flex items-center gap-1.5 text-foreground">
+                  <Code2 className="h-4 w-4 text-primary" />
+                  <span className="text-lg md:text-xl font-black">{totalCount || '—'}</span>
+                </div>
+                <span className="text-[10px] md:text-xs text-muted-foreground font-medium">Apps</span>
+              </div>
+              <div className="h-6 w-px bg-border/50" />
+              <div className="flex flex-col items-center">
+                <div className="flex items-center gap-1.5 text-foreground">
+                  <Rocket className="h-4 w-4 text-accent" />
+                  <span className="text-lg md:text-xl font-black">1-click</span>
+                </div>
+                <span className="text-[10px] md:text-xs text-muted-foreground font-medium">Deploy</span>
+              </div>
+              <div className="h-6 w-px bg-border/50" />
+              <div className="flex flex-col items-center">
+                <div className="flex items-center gap-1.5 text-foreground">
+                  <Users className="h-4 w-4 text-primary" />
+                  <span className="text-lg md:text-xl font-black">100%</span>
+                </div>
+                <span className="text-[10px] md:text-xs text-muted-foreground font-medium">Source code</span>
+              </div>
             </motion.div>
 
             <motion.div variants={fadeUp} custom={2}>
@@ -231,10 +246,6 @@ export default function Index() {
 
             <motion.div variants={fadeUp} custom={3} className="mt-6 flex items-center justify-center gap-3 text-xs text-muted-foreground">
               <a href="#browse" className="underline underline-offset-4 hover:text-foreground transition-colors">browse apps</a>
-              <span>·</span>
-              <Link to="/credits" className="underline underline-offset-4 hover:text-foreground transition-colors">
-                pricing
-              </Link>
               <span>·</span>
               <Link to={user ? "/sell" : "/login"} className="underline underline-offset-4 hover:text-foreground transition-colors">
                 sell your code

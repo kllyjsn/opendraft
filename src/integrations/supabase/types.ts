@@ -780,6 +780,7 @@ export type Database = {
           sales_count: number | null
           screenshots: string[] | null
           search_vector: unknown
+          security_score: number | null
           seller_id: string
           status: Database["public"]["Enums"]["listing_status"]
           tech_stack: string[] | null
@@ -805,6 +806,7 @@ export type Database = {
           sales_count?: number | null
           screenshots?: string[] | null
           search_vector?: unknown
+          security_score?: number | null
           seller_id: string
           status?: Database["public"]["Enums"]["listing_status"]
           tech_stack?: string[] | null
@@ -830,6 +832,7 @@ export type Database = {
           sales_count?: number | null
           screenshots?: string[] | null
           search_vector?: unknown
+          security_score?: number | null
           seller_id?: string
           status?: Database["public"]["Enums"]["listing_status"]
           tech_stack?: string[] | null

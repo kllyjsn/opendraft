@@ -165,7 +165,7 @@ async function generateBlogTweet(supabaseUrl: string, supabaseKey: string): Prom
   const now = new Date();
   const dateContext = `${now.toLocaleString("en-US", { month: "long", year: "numeric" })}`;
 
-  const prompt = `You are the social media voice of OpenDraft (opendraft.co) — the app store for AI-built software and AI agents. Write ONE tweet (max 270 chars) that feels like a fresh, original thought about "${topic}".
+  const prompt = `You are the social media voice of OpenDraft (opendraft.co) — the app store for AI-built software and AI agents. Write ONE tweet that feels like a fresh, original thought about "${topic}". CRITICAL: The tweet MUST be under 260 characters total including URL and hashtags. Count carefully.
 
 CONTEXT (use to make it timely & relevant):
 - Date: ${dateContext}
@@ -201,10 +201,20 @@ RULES:
 
     if (aiRes.ok) {
       const aiData = await aiRes.json();
-      const text = aiData?.choices?.[0]?.message?.content?.trim();
-      if (text && text.length > 20 && text.length <= 280) {
+      let text = aiData?.choices?.[0]?.message?.content?.trim();
+      // Strip markdown quotes if model wraps in backticks
+      if (text) text = text.replace(/^```[\s\S]*?```$/gm, "").replace(/^["'`]+|["'`]+$/g, "").trim();
+      if (text && text.length > 20) {
+        // Truncate to 280 if slightly over
+        if (text.length > 280) {
+          console.log(`AI tweet was ${text.length} chars, truncating`);
+          text = text.substring(0, 277) + "...";
+        }
         return text;
       }
+      console.log("AI returned unusable text:", text?.length, text?.substring(0, 50));
+    } else {
+      console.error("AI gateway returned", aiRes.status, await aiRes.text());
     }
   } catch (e) {
     console.error("AI blog tweet generation failed, using fallback:", e);

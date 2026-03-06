@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { CompletenessBadge } from "./CompletenessBadge";
 import { SecurityBadge } from "./SecurityBadge";
-import { Star, Eye, CheckCircle } from "lucide-react";
+import { Star, Eye, CheckCircle, Rocket } from "lucide-react";
 
 interface ListingCardProps {
   id: string;
@@ -93,8 +93,9 @@ export function ListingCard({
           <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-end justify-between gap-1">
             <CompletenessBadge level={completeness_badge} showTooltip={false} />
             {!owned && (
-              <span className="rounded-full bg-black/70 text-white px-2.5 py-0.5 text-xs md:text-sm font-bold backdrop-blur-md tracking-tight shrink-0 border border-white/10">
-                $15/mo
+              <span className="inline-flex items-center gap-1 rounded-full bg-black/70 text-white px-2.5 py-0.5 text-xs md:text-sm font-bold backdrop-blur-md tracking-tight shrink-0 border border-white/10">
+                <Rocket className="h-3 w-3" />
+                Deploy
               </span>
             )}
           </div>

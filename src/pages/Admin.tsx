@@ -177,15 +177,15 @@ function PatchDeployConfigsPanel() {
 function GenerateScreenshotsPanel() {
   const { toast } = useToast();
   const [running, setRunning] = useState(false);
-  const [mode, setMode] = useState<"all" | "duplicates_only">("duplicates_only");
+  const [mode, setMode] = useState<"all" | "duplicates_only" | "missing_only">("duplicates_only");
   const [progress, setProgress] = useState<{ processed: number; updated: number; errors: number; total: number }>({ processed: 0, updated: 0, errors: 0, total: 0 });
 
   async function runGenerate() {
     setRunning(true);
-    const estimatedTotal = mode === "duplicates_only" ? 181 : 1000;
+    const estimatedTotal = mode === "missing_only" ? 100 : mode === "duplicates_only" ? 500 : 1000;
     setProgress({ processed: 0, updated: 0, errors: 0, total: estimatedTotal });
     let offset = 0;
-    const batchSize = 50;
+    const batchSize = 5; // AI generation is slow, small batches
     let totalUpdated = 0;
     let totalErrors = 0;
     let totalProcessed = 0;
@@ -212,7 +212,7 @@ function GenerateScreenshotsPanel() {
         if ((data.processed || 0) < batchSize) break;
         offset = data.next_offset || offset + batchSize;
       }
-      toast({ title: "Screenshots generated!", description: `${totalUpdated} listings updated` });
+      toast({ title: "AI Screenshots generated!", description: `${totalUpdated} listings updated with unique AI-generated previews` });
     } catch (e) {
       toast({ title: "Generation failed", description: e instanceof Error ? e.message : "Unknown error", variant: "destructive" });
     } finally {
@@ -226,20 +226,21 @@ function GenerateScreenshotsPanel() {
         <div>
           <h3 className="text-lg font-bold flex items-center gap-2">
             <ImageIcon className="h-5 w-5 text-primary" />
-            Generate Unique Screenshots
+            Generate AI Screenshots
           </h3>
           <p className="text-sm text-muted-foreground mt-1">
-            Replace shared pool images with unique, per-listing app previews. <strong className="text-destructive">181 listings</strong> still use duplicate pool screenshots.
+            Generate unique, AI-powered app preview images for each listing based on its title, description, and category. Replaces SVG mockups and shared pool images.
           </p>
         </div>
         <div className="flex items-center gap-2">
           <select
             value={mode}
-            onChange={(e) => setMode(e.target.value as "all" | "duplicates_only")}
+            onChange={(e) => setMode(e.target.value as "all" | "duplicates_only" | "missing_only")}
             disabled={running}
             className="rounded-lg border border-border bg-card px-3 py-2 text-sm"
           >
-            <option value="duplicates_only">Fix Duplicates Only (181)</option>
+            <option value="duplicates_only">Fix Duplicates & SVGs</option>
+            <option value="missing_only">Missing Only</option>
             <option value="all">Regenerate All</option>
           </select>
           <Button onClick={runGenerate} disabled={running} className="gradient-hero text-white border-0 shadow-glow">

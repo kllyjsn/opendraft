@@ -591,16 +591,39 @@ function SuccessView({ result, showConfetti }: { result: { siteUrl: string; admi
 }
 
 function ErrorView({ error, buildLog, provider, onRetry }: { error: string | null; buildLog: string | null; provider: string; onRetry: () => void }) {
+  const isAuthError = error?.toLowerCase().includes("token") || error?.toLowerCase().includes("auth") || error?.toLowerCase().includes("401");
+  const errorTitle = isAuthError ? "Authentication Failed" : `${provider} Deploy Failed`;
+  const errorHint = isAuthError
+    ? `Your ${provider} token appears to be invalid or expired. Please generate a new Personal Access Token and try again.`
+    : null;
+
   return (
     <motion.div key="error" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4 py-2">
       <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 space-y-3">
         <div className="flex items-start gap-2">
           <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
           <div>
-            <h4 className="font-semibold text-sm text-destructive">{provider} Build Failed</h4>
+            <h4 className="font-semibold text-sm text-destructive">{errorTitle}</h4>
             <p className="text-xs text-destructive/80 mt-0.5">{error}</p>
           </div>
         </div>
+        {errorHint && (
+          <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
+            <p className="text-xs text-amber-700 dark:text-amber-400">
+              💡 {errorHint}
+            </p>
+            {provider === "Netlify" && (
+              <a href="https://app.netlify.com/user/applications#personal-access-tokens" target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline font-medium mt-1 inline-block">
+                Get a new Netlify token →
+              </a>
+            )}
+            {provider === "Vercel" && (
+              <a href="https://vercel.com/account/tokens" target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline font-medium mt-1 inline-block">
+                Get a new Vercel token →
+              </a>
+            )}
+          </div>
+        )}
         {buildLog && (
           <div className="space-y-1.5">
             <p className="text-[11px] font-medium text-muted-foreground">Build Log (last lines):</p>

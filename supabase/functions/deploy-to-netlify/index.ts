@@ -222,20 +222,20 @@ serve(async (req) => {
     const siteId = siteData.id;
     const siteUrl = siteData.ssl_url || siteData.url;
 
-    // Trigger a Netlify BUILD from source ZIP (not a static zip deploy)
-    const buildForm = new FormData();
-    buildForm.append("zip", new Blob([cleanZipBlob], { type: "application/zip" }), "source.zip");
-
-    const deployRes = await fetch(`https://api.netlify.com/api/v1/sites/${siteId}/builds`, {
+    // Deploy the ZIP directly to Netlify (static file deploy)
+    const deployRes = await fetch(`https://api.netlify.com/api/v1/sites/${siteId}/deploys`, {
       method: "POST",
-      headers: { Authorization: `Bearer ${netlifyToken}` },
-      body: buildForm,
+      headers: {
+        Authorization: `Bearer ${netlifyToken}`,
+        "Content-Type": "application/zip",
+      },
+      body: cleanZipBlob,
     });
 
     if (!deployRes.ok) {
       const errText = await deployRes.text();
-      console.error("Netlify build trigger error:", deployRes.status, errText);
-      return new Response(JSON.stringify({ error: "Failed to trigger Netlify build" }), {
+      console.error("Netlify deploy error:", deployRes.status, errText);
+      return new Response(JSON.stringify({ error: "Failed to deploy to Netlify" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -244,7 +244,7 @@ serve(async (req) => {
     const deployId = deployData.deploy_id || deployData.id;
 
     if (!deployId) {
-      return new Response(JSON.stringify({ error: "Netlify build started but no deploy ID was returned" }), {
+      return new Response(JSON.stringify({ error: "Netlify deploy started but no deploy ID was returned" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -272,8 +272,8 @@ serve(async (req) => {
     return new Response(JSON.stringify({
       success: true, siteUrl, siteId, deployId,
       adminUrl: `https://app.netlify.com/sites/${siteData.name}`,
-      method: "source_build",
-      deployState: "building",
+      method: "zip_deploy",
+      deployState: "processing",
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
     console.error("deploy-to-netlify error:", e);

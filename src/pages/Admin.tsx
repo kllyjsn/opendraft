@@ -182,10 +182,9 @@ function GenerateScreenshotsPanel() {
 
   async function runGenerate() {
     setRunning(true);
-    const estimatedTotal = mode === "missing_only" ? 100 : mode === "duplicates_only" ? 500 : 1000;
-    setProgress({ processed: 0, updated: 0, errors: 0, total: estimatedTotal });
+    setProgress({ processed: 0, updated: 0, errors: 0, total: 1020 });
     let offset = 0;
-    const batchSize = 5; // AI generation is slow, small batches
+    const batchSize = 1; // AI generation is slow - 1 at a time to avoid timeouts
     let totalUpdated = 0;
     let totalErrors = 0;
     let totalProcessed = 0;
@@ -207,14 +206,17 @@ function GenerateScreenshotsPanel() {
         totalProcessed += data.processed || 0;
         totalUpdated += data.updated || 0;
         totalErrors += data.errors || 0;
-        setProgress({ processed: totalProcessed, updated: totalUpdated, errors: totalErrors, total: estimatedTotal });
+        setProgress({ processed: totalProcessed, updated: totalUpdated, errors: totalErrors, total: 1020 });
 
         if ((data.processed || 0) < batchSize) break;
         offset = data.next_offset || offset + batchSize;
+
+        // Small delay to avoid rate limiting
+        await new Promise(r => setTimeout(r, 500));
       }
       toast({ title: "AI Screenshots generated!", description: `${totalUpdated} listings updated with unique AI-generated previews` });
     } catch (e) {
-      toast({ title: "Generation failed", description: e instanceof Error ? e.message : "Unknown error", variant: "destructive" });
+      toast({ title: "Generation paused", description: `${totalUpdated} updated so far. ${e instanceof Error ? e.message : "Error"} — you can resume later.`, variant: "destructive" });
     } finally {
       setRunning(false);
     }

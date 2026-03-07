@@ -272,8 +272,8 @@ serve(async (req) => {
     return new Response(JSON.stringify({
       success: true, siteUrl, siteId, deployId,
       adminUrl: `https://app.netlify.com/sites/${siteData.name}`,
-      method: "source_build",
-      deployState: "building",
+      method: "zip_deploy",
+      deployState: "processing",
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
     console.error("deploy-to-netlify error:", e);

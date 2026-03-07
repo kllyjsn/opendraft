@@ -31,18 +31,16 @@ async function generateAIScreenshot(
   title: string,
   description: string,
   category: string,
-  variant: number,
   apiKey: string
 ): Promise<Uint8Array | null> {
   const categoryVisual = CATEGORY_PROMPTS[category] || CATEGORY_PROMPTS.other;
-  const angle = SCREENSHOT_ANGLES[variant];
 
   const prompt = `Generate a high-fidelity UI screenshot of a web application called "${title}". 
 The app is: ${description.slice(0, 200)}.
-It should look like ${categoryVisual}, ${angle}.
+It should look like ${categoryVisual}, showing the main dashboard/home view with realistic content and navigation.
 The screenshot must look like a real, polished web application with realistic UI components, actual text content, buttons, navigation, and data. 
 Professional quality, 16:9 aspect ratio, photorealistic web UI screenshot. No browser chrome, just the app content.
-Make it visually distinct and unique to this specific application.`;
+Make it visually distinct and unique - use the app name "${title}" in the UI header/navbar.`;
 
   const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
@@ -70,7 +68,6 @@ Make it visually distinct and unique to this specific application.`;
     return null;
   }
 
-  // Extract base64 and convert to binary
   const base64Data = imageUrl.replace(/^data:image\/\w+;base64,/, "");
   return Uint8Array.from(atob(base64Data), (c) => c.charCodeAt(0));
 }
@@ -93,8 +90,8 @@ serve(async (req) => {
     }
 
     const body = await req.json().catch(() => ({}));
-    // AI generation is slower, so smaller default batch
-    const batchSize = Math.min(body.batch_size || 5, 10);
+    // AI generation is slow - process 1 at a time to avoid timeouts
+    const batchSize = Math.min(body.batch_size || 1, 3);
     const offset = body.offset || 0;
     const mode = body.mode || "all"; // "all" | "duplicates_only" | "missing_only"
 
@@ -146,50 +143,48 @@ serve(async (req) => {
 
     for (const listing of listings) {
       try {
-        const screenshots: string[] = [];
         const safeName = listing.title
           .toLowerCase()
           .replace(/[^a-z0-9]+/g, "-")
           .slice(0, 30);
         const ts = Date.now();
 
-        // Generate 2 unique AI screenshots per listing
-        for (let i = 0; i < 2; i++) {
-          console.log(`Generating screenshot ${i + 1}/2 for "${listing.title}"...`);
+        console.log(`Generating AI screenshot for "${listing.title}"...`);
 
-          const imageData = await generateAIScreenshot(
-            listing.title,
-            listing.description || listing.title,
-            listing.category,
-            i,
-            LOVABLE_API_KEY
-          );
+        const imageData = await generateAIScreenshot(
+          listing.title,
+          listing.description || listing.title,
+          listing.category,
+          LOVABLE_API_KEY
+        );
 
-          if (!imageData) {
-            console.error(`Failed to generate screenshot ${i + 1} for "${listing.title}"`);
-            continue;
-          }
-
-          const filePath = `ai-generated/${safeName}-${i + 1}-${ts}.png`;
-
-          const { error: uploadErr } = await supabase.storage
-            .from("listing-screenshots")
-            .upload(filePath, imageData, {
-              contentType: "image/png",
-              upsert: false,
-            });
-
-          if (uploadErr) {
-            console.error(`Upload error for ${listing.title}:`, uploadErr);
-            continue;
-          }
-
-          const { data: urlData } = supabase.storage
-            .from("listing-screenshots")
-            .getPublicUrl(filePath);
-
-          screenshots.push(urlData.publicUrl);
+        if (!imageData) {
+          errors++;
+          results.push({ id: listing.id, title: listing.title, status: "no_image_generated" });
+          continue;
         }
+
+        const filePath = `ai-generated/${safeName}-${ts}.png`;
+
+        const { error: uploadErr } = await supabase.storage
+          .from("listing-screenshots")
+          .upload(filePath, imageData, {
+            contentType: "image/png",
+            upsert: false,
+          });
+
+        if (uploadErr) {
+          console.error(`Upload error for ${listing.title}:`, uploadErr);
+          errors++;
+          results.push({ id: listing.id, title: listing.title, status: "upload_error" });
+          continue;
+        }
+
+        const { data: urlData } = supabase.storage
+          .from("listing-screenshots")
+          .getPublicUrl(filePath);
+
+        const screenshots = [urlData.publicUrl];
 
         if (screenshots.length > 0) {
           const { error: updateErr } = await supabase

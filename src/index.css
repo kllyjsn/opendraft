@@ -276,4 +276,12 @@
     height: 1px;
     background: linear-gradient(90deg, transparent, hsl(var(--border)), transparent);
   }
+  /* Hide scrollbar for horizontal scroll */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 }

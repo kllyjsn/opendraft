@@ -307,6 +307,9 @@ function SuccessView({ result, showConfetti }: { result: { siteUrl: string; admi
 }
 
 function ErrorView({ error, buildLog, onRetry }: { error: string | null; buildLog: string | null; onRetry: () => void }) {
+  const isAuthError = error?.toLowerCase().includes("token") || error?.toLowerCase().includes("auth") || error?.toLowerCase().includes("401");
+  const errorTitle = isAuthError ? "Authentication Failed" : "Netlify Build Failed";
+
   return (
     <motion.div
       key="error"
@@ -318,10 +321,21 @@ function ErrorView({ error, buildLog, onRetry }: { error: string | null; buildLo
         <div className="flex items-start gap-2">
           <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
           <div>
-            <h4 className="font-semibold text-sm text-destructive">Build Failed</h4>
+            <h4 className="font-semibold text-sm text-destructive">{errorTitle}</h4>
             <p className="text-xs text-destructive/80 mt-0.5">{error}</p>
           </div>
         </div>
+
+        {isAuthError && (
+          <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
+            <p className="text-xs text-amber-700 dark:text-amber-400">
+              💡 Your Netlify token appears to be invalid or expired. Please generate a new Personal Access Token.
+            </p>
+            <a href="https://app.netlify.com/user/applications#personal-access-tokens" target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline font-medium mt-1 inline-block">
+              Get a new Netlify token →
+            </a>
+          </div>
+        )}
 
         {buildLog && (
           <div className="space-y-1.5">

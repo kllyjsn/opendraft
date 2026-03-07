@@ -5,12 +5,12 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 const categories = [
-  { icon: Bot, label: "AI Apps", slug: "ai_app" },
-  { icon: LayoutDashboard, label: "SaaS Tools", slug: "saas_tool" },
-  { icon: Globe, label: "Landing Pages", slug: "landing_page" },
-  { icon: Wrench, label: "Utilities", slug: "utility" },
-  { icon: Gamepad2, label: "Games", slug: "game" },
-  { icon: Sparkles, label: "Other", slug: "other" },
+  { icon: Bot, label: "AI Apps", slug: "ai_app", urlSlug: "ai-app" },
+  { icon: LayoutDashboard, label: "SaaS Tools", slug: "saas_tool", urlSlug: "saas-tool" },
+  { icon: Globe, label: "Landing Pages", slug: "landing_page", urlSlug: "landing-page" },
+  { icon: Wrench, label: "Utilities", slug: "utility", urlSlug: "utility" },
+  { icon: Gamepad2, label: "Games", slug: "game", urlSlug: "game" },
+  { icon: Sparkles, label: "Other", slug: "other", urlSlug: "other" },
 ];
 
 interface CategoryListing {
@@ -105,7 +105,7 @@ export function CategoryShowcase() {
                     </span>
                   </div>
                   <Link
-                    to={`/category/${catData.slug}`}
+                    to={`/category/${catMeta.urlSlug}`}
                     className="flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
                   >
                     See all <ArrowRight className="h-3.5 w-3.5" />

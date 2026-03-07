@@ -210,6 +210,13 @@ export function DeployPanel({ listingId, listingTitle, hasFile, githubUrl }: Dep
   async function handleDeploy() {
     const currentToken = activeTab === "netlify" ? netlifyToken : vercelToken;
     if (!currentToken.trim()) return;
+
+    // Client-side token format validation
+    if (activeTab === "netlify" && !currentToken.trim().startsWith("nfp_")) {
+      setError("Invalid Netlify token format. Personal access tokens start with \"nfp_\". Generate one at Netlify → User Settings → Applications → Personal access tokens.");
+      return;
+    }
+
     setDeployState("submitting");
     setError(null);
     setResult(null);

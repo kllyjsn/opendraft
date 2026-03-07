@@ -10,6 +10,8 @@ import { Search, TrendingUp, SlidersHorizontal, X, Loader2, ChevronDown, ArrowRi
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { FeaturedListings } from "@/components/FeaturedListings";
+import { CategoryShowcase } from "@/components/CategoryShowcase";
+import { HowItWorks } from "@/components/HowItWorks";
 import { BrandMascot } from "@/components/BrandMascot";
 
 const CATEGORIES = ["All", "SaaS Tool", "AI App", "Landing Page", "Utility", "Game", "Other"];

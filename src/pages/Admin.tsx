@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { CompletenessBadge } from "@/components/CompletenessBadge";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle, XCircle, Eye, Loader2, ShieldCheck, Clock, BarChart3, Flag, Archive, Bot, Globe, Crown } from "lucide-react";
+import { CheckCircle, XCircle, Eye, Loader2, ShieldCheck, Clock, BarChart3, Flag, Archive, Bot, Globe, Crown, ImageIcon } from "lucide-react";
 import { AdminDiscountCodes } from "@/components/AdminDiscountCodes";
 import { AdminFlagReview } from "@/components/AdminFlagReview";
 import { AdminConceptGenerator } from "@/components/AdminConceptGenerator";
@@ -168,6 +168,85 @@ function PatchDeployConfigsPanel() {
               ))}
             </div>
           )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function GenerateScreenshotsPanel() {
+  const { toast } = useToast();
+  const [running, setRunning] = useState(false);
+  const [progress, setProgress] = useState<{ processed: number; updated: number; errors: number; total: number }>({ processed: 0, updated: 0, errors: 0, total: 0 });
+
+  async function runGenerate() {
+    setRunning(true);
+    setProgress({ processed: 0, updated: 0, errors: 0, total: 1000 });
+    let offset = 0;
+    const batchSize = 50;
+    let totalUpdated = 0;
+    let totalErrors = 0;
+    let totalProcessed = 0;
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      while (true) {
+        const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-unique-screenshots`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session?.access_token}`,
+          },
+          body: JSON.stringify({ batch_size: batchSize, offset }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed");
+
+        totalProcessed += data.processed || 0;
+        totalUpdated += data.updated || 0;
+        totalErrors += data.errors || 0;
+        setProgress({ processed: totalProcessed, updated: totalUpdated, errors: totalErrors, total: 1000 });
+
+        if ((data.processed || 0) < batchSize) break;
+        offset = data.next_offset || offset + batchSize;
+      }
+      toast({ title: "Screenshots generated!", description: `${totalUpdated} listings updated` });
+    } catch (e) {
+      toast({ title: "Generation failed", description: e instanceof Error ? e.message : "Unknown error", variant: "destructive" });
+    } finally {
+      setRunning(false);
+    }
+  }
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h3 className="text-lg font-bold flex items-center gap-2">
+            <ImageIcon className="h-5 w-5 text-primary" />
+            Generate Unique Screenshots
+          </h3>
+          <p className="text-sm text-muted-foreground mt-1">
+            Replace identical pool images with unique, category-appropriate app previews for every listing.
+          </p>
+        </div>
+        <Button onClick={runGenerate} disabled={running} className="gradient-hero text-white border-0 shadow-glow">
+          {running ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> {progress.processed}/{progress.total}</> : "Generate All"}
+        </Button>
+      </div>
+      {(running || progress.processed > 0) && (
+        <div className="rounded-xl border border-border/60 bg-card p-4 space-y-2">
+          <div className="flex items-center gap-4 text-sm">
+            <span>Processed: <strong>{progress.processed}</strong></span>
+            <span className="text-primary">Updated: <strong>{progress.updated}</strong></span>
+            <span className="text-destructive">Errors: <strong>{progress.errors}</strong></span>
+          </div>
+          <div className="w-full bg-muted rounded-full h-2">
+            <div
+              className="gradient-hero h-2 rounded-full transition-all duration-300"
+              style={{ width: `${Math.min(100, (progress.processed / progress.total) * 100)}%` }}
+            />
+          </div>
         </div>
       )}
     </div>
@@ -447,6 +526,11 @@ export default function Admin() {
         {/* Patch Deploy Configs */}
         <div className="mt-12 pt-8 border-t border-border">
           <PatchDeployConfigsPanel />
+        </div>
+
+        {/* Generate Unique Screenshots */}
+        <div className="mt-12 pt-8 border-t border-border">
+          <GenerateScreenshotsPanel />
         </div>
 
         {/* Discount Codes Section */}

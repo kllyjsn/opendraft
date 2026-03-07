@@ -1,0 +1,1 @@
+DELETE FROM listings WHERE id = '7597c916-ada1-4977-902f-bb58ae1257dd';

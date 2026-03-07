@@ -807,14 +807,14 @@ serve(async (req) => {
 
     for (const listing of listings) {
       try {
-        const seed = hashStr(listing.title);
+        // Use listing ID + title for a truly unique seed per listing
+        const seed = hashStr(listing.id + listing.title);
         const variants = LAYOUTS[listing.category] || LAYOUTS.other;
-        // Pick layout variant based on seed - gives each listing a structurally different look
         const layoutIdx = seed % variants.length;
         const layoutIdx2 = (seed + 2) % variants.length;
 
         const svg1 = variants[layoutIdx](listing.title, seed, listing.description || "");
-        // Second screenshot uses a DIFFERENT layout variant
+        // Second screenshot uses a DIFFERENT layout variant + offset seed
         const svg2 = variants[layoutIdx2](listing.title + "-alt", seed + 777, listing.description || "");
 
         const safeName = listing.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 30);

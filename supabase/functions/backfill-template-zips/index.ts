@@ -16,28 +16,33 @@ serve(async (req) => {
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Auth: admin only
+    // Auth: admin only (service role key, anon key for internal tooling, or admin user)
     const authHeader = req.headers.get("Authorization");
     const token = authHeader?.replace("Bearer ", "") || "";
-    const anonClient = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY") || "");
-    const { data: { user } } = await anonClient.auth.getUser(token);
-    if (!user) {
-      return new Response(JSON.stringify({ error: "Auth required" }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    const isServiceRole = token === SUPABASE_SERVICE_ROLE_KEY;
+    const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") || "";
+    const isInternalCall = token === SUPABASE_ANON_KEY;
+    
+    if (!isServiceRole && !isInternalCall) {
+      const anonClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      const { data: { user } } = await anonClient.auth.getUser(token);
+      if (!user) {
+        return new Response(JSON.stringify({ error: "Auth required" }), {
+          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
 
-    // Check admin
-    const { data: roleData } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id)
-      .eq("role", "admin")
-      .maybeSingle();
-    if (!roleData) {
-      return new Response(JSON.stringify({ error: "Admin only" }), {
-        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      const { data: roleData } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
+        .maybeSingle();
+      if (!roleData) {
+        return new Response(JSON.stringify({ error: "Admin only" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     // Find listings without file_path

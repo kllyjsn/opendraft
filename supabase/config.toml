@@ -121,3 +121,11 @@ verify_jwt = false
 # Security scanner — internal automation
 [functions.scan-security]
 verify_jwt = false
+
+# Backfill template ZIPs — admin-only, auth checked in code
+[functions.backfill-template-zips]
+verify_jwt = false
+
+# Patch deploy configs — admin-only, auth checked in code
+[functions.patch-deploy-configs]
+verify_jwt = false

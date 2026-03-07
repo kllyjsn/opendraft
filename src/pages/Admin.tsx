@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { CompletenessBadge } from "@/components/CompletenessBadge";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle, XCircle, Eye, Loader2, ShieldCheck, Clock, BarChart3, Flag, Archive, Bot, Globe, Crown } from "lucide-react";
+import { CheckCircle, XCircle, Eye, Loader2, ShieldCheck, Clock, BarChart3, Flag, Archive, Bot, Globe, Crown, ImageIcon } from "lucide-react";
 import { AdminDiscountCodes } from "@/components/AdminDiscountCodes";
 import { AdminFlagReview } from "@/components/AdminFlagReview";
 import { AdminConceptGenerator } from "@/components/AdminConceptGenerator";
@@ -447,6 +447,11 @@ export default function Admin() {
         {/* Patch Deploy Configs */}
         <div className="mt-12 pt-8 border-t border-border">
           <PatchDeployConfigsPanel />
+        </div>
+
+        {/* Generate Unique Screenshots */}
+        <div className="mt-12 pt-8 border-t border-border">
+          <GenerateScreenshotsPanel />
         </div>
 
         {/* Discount Codes Section */}

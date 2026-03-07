@@ -105,7 +105,7 @@ export function CategoryShowcase() {
                     </span>
                   </div>
                   <Link
-                    to={`/category/${catData.slug}`}
+                    to={`/category/${catMeta.urlSlug}`}
                     className="flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
                   >
                     See all <ArrowRight className="h-3.5 w-3.5" />

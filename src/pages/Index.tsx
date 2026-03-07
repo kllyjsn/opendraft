@@ -173,7 +173,13 @@ export default function Index() {
       profileMap = Object.fromEntries((profiles ?? []).map((p) => [p.user_id, p.username ?? "Anonymous"]));
     }
 
-    const enriched = listingsData.map((l) => ({ ...l, seller_username: profileMap[l.seller_id] }));
+    const enriched = listingsData
+      .map((l) => ({ ...l, seller_username: profileMap[l.seller_id] }))
+      .sort((a, b) => {
+        const aHasImg = a.screenshots && a.screenshots.length > 0 && a.screenshots[0] !== "" ? 1 : 0;
+        const bHasImg = b.screenshots && b.screenshots.length > 0 && b.screenshots[0] !== "" ? 1 : 0;
+        return bHasImg - aHasImg; // screenshots first
+      });
 
     if (reset) {
       setListings(enriched);

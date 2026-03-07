@@ -10,6 +10,8 @@ import { Search, TrendingUp, SlidersHorizontal, X, Loader2, ChevronDown, ArrowRi
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { FeaturedListings } from "@/components/FeaturedListings";
+import { CategoryShowcase } from "@/components/CategoryShowcase";
+import { HowItWorks } from "@/components/HowItWorks";
 import { BrandMascot } from "@/components/BrandMascot";
 
 const CATEGORIES = ["All", "SaaS Tool", "AI App", "Landing Page", "Utility", "Game", "Other"];
@@ -255,9 +257,19 @@ export default function Index() {
         </div>
       </section>
 
+      {/* ── CATEGORIES ── */}
+      <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}>
+        <CategoryShowcase />
+      </motion.div>
+
       {/* ── TRENDING ── */}
       <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}>
         <FeaturedListings />
+      </motion.div>
+
+      {/* ── HOW IT WORKS ── */}
+      <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}>
+        <HowItWorks />
       </motion.div>
 
       {/* ── BROWSE ── */}

@@ -99,7 +99,7 @@ serve(async (req) => {
       .from("listings")
       .select("id, title, category, description, screenshots")
       .eq("status", "live")
-      .order("created_at", { ascending: true });
+      .order("created_at", { ascending: false });
 
     if (mode === "missing_only") {
       // Only listings with no screenshots at all

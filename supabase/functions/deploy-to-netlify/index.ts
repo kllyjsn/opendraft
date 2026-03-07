@@ -132,149 +132,77 @@ serve(async (req) => {
     }
     await tokenCheckRes.text(); // consume body
 
-    // Download and extract ZIP from uploaded file or GitHub repository
-    let sourceZipBuffer: ArrayBuffer;
-
-    if (listing.file_path) {
-      const { data: fileData } = await supabase.storage
-        .from("listing-files")
-        .download(listing.file_path);
-
-      if (!fileData) {
-        return new Response(JSON.stringify({ error: "Failed to download source file" }), {
-          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    // ---- Strategy A: GitHub repo → create Netlify site linked to repo (Netlify runs build) ----
+    if (listing.github_url) {
+      const parsedRepo = parseGithubRepo(listing.github_url);
+      if (!parsedRepo) {
+        return new Response(JSON.stringify({ error: "Invalid GitHub URL format" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
-      sourceZipBuffer = await fileData.arrayBuffer();
-    } else {
-      sourceZipBuffer = await downloadGithubRepoZip(listing.github_url!);
-    }
+      const siteName = `od-${listing.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 30)}-${Date.now().toString(36)}`;
 
-    const zip = await JSZip.loadAsync(sourceZipBuffer);
-    const entries = Object.keys(zip.files);
+      // Create site linked to GitHub repo with build settings
+      const createSiteRes = await fetch("https://api.netlify.com/api/v1/sites", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${netlifyToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: siteName,
+          repo: {
+            provider: "github",
+            repo: `${parsedRepo.owner}/${parsedRepo.repo}`,
+            private: false,
+            branch: "main",
+            cmd: "npm install && npm run build",
+            dir: "dist",
+          },
+          processing_settings: { html: { pretty_urls: true } },
+        }),
+      });
 
-    // Detect common root directory prefix
-    let prefix = "";
-    if (entries.length > 0) {
-      const first = entries[0];
-      if (first.includes("/")) {
-        const candidate = first.split("/")[0] + "/";
-        if (entries.every(e => e.startsWith(candidate) || e === candidate)) {
-          prefix = candidate;
-        }
+      if (!createSiteRes.ok) {
+        const errText = await createSiteRes.text();
+        console.error("Netlify create site (repo-linked) error:", createSiteRes.status, errText);
+
+        // If repo linking fails (permissions, private repo), fall back to ZIP deploy
+        console.log("Repo linking failed, falling back to ZIP deploy...");
+        return await zipDeploy(supabase, listing, netlifyToken, user.id, listingId);
       }
+
+      const siteData = await createSiteRes.json();
+      const siteId = siteData.id;
+      const siteUrl = siteData.ssl_url || siteData.url;
+      const deployId = siteData.deploy_id || siteData.id;
+
+      await Promise.all([
+        supabase.from("activity_log").insert({
+          event_type: "netlify_deploy",
+          user_id: user.id,
+          event_data: { listing_id: listingId, site_url: siteUrl, site_id: siteId, deploy_id: deployId, method: "github_linked" },
+        }),
+        supabase.from("deployed_sites").upsert({
+          listing_id: listingId,
+          user_id: user.id,
+          provider: "netlify",
+          site_id: siteId,
+          site_url: siteUrl,
+          deploy_id: deployId,
+          netlify_token_hash: "set",
+          status: "healthy",
+        }, { onConflict: "site_id" }),
+      ]);
+
+      return new Response(JSON.stringify({
+        success: true, siteUrl, siteId, deployId,
+        adminUrl: `https://app.netlify.com/sites/${siteData.name}`,
+        method: "github_linked",
+        deployState: "building",
+      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // Re-pack ZIP without the root folder prefix (clean structure)
-    const cleanZip = new JSZip();
-    for (const [path, entry] of Object.entries(zip.files)) {
-      if (entry.dir) continue;
-      const relativePath = prefix ? path.replace(prefix, "") : path;
-      if (!relativePath) continue;
-      const content = await entry.async("uint8array");
-      cleanZip.file(relativePath, content);
-    }
-    // Add Netlify SPA redirects (root + public for built output)
-    const spaRedirect = "/*    /index.html   200\n";
-    cleanZip.file("_redirects", spaRedirect);
-    cleanZip.file("public/_redirects", spaRedirect);
-
-    // Add netlify.toml for build settings
-    cleanZip.file("netlify.toml", `[build]
-  command = "npm install && npm run build"
-  publish = "dist"
-
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
-`);
-
-    const cleanZipBlob = await cleanZip.generateAsync({ type: "uint8array" });
-
-    // Create Netlify site with build settings
-    const siteName = `od-${listing.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 30)}-${Date.now().toString(36)}`;
-
-    const createSiteRes = await fetch("https://api.netlify.com/api/v1/sites", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${netlifyToken}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: siteName,
-        processing_settings: { html: { pretty_urls: true } },
-      }),
-    });
-
-    if (!createSiteRes.ok) {
-      const errText = await createSiteRes.text();
-      console.error("Netlify create site error:", createSiteRes.status, errText);
-      if (createSiteRes.status === 401) {
-        return new Response(JSON.stringify({ error: "Invalid Netlify token" }), {
-          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      return new Response(JSON.stringify({ error: "Failed to create Netlify site" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const siteData = await createSiteRes.json();
-    const siteId = siteData.id;
-    const siteUrl = siteData.ssl_url || siteData.url;
-
-    // Deploy the ZIP directly to Netlify (static file deploy)
-    const deployRes = await fetch(`https://api.netlify.com/api/v1/sites/${siteId}/deploys`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${netlifyToken}`,
-        "Content-Type": "application/zip",
-      },
-      body: cleanZipBlob,
-    });
-
-    if (!deployRes.ok) {
-      const errText = await deployRes.text();
-      console.error("Netlify deploy error:", deployRes.status, errText);
-      return new Response(JSON.stringify({ error: "Failed to deploy to Netlify" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const deployData = await deployRes.json();
-    const deployId = deployData.deploy_id || deployData.id;
-
-    if (!deployId) {
-      return new Response(JSON.stringify({ error: "Netlify deploy started but no deploy ID was returned" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // Return immediately — frontend will poll status via check-netlify-deploy
-    // Log activity and track deployment for health monitoring
-    await Promise.all([
-      supabase.from("activity_log").insert({
-        event_type: "netlify_deploy",
-        user_id: user.id,
-        event_data: { listing_id: listingId, site_url: siteUrl, site_id: siteId, deploy_id: deployId },
-      }),
-      supabase.from("deployed_sites").upsert({
-        listing_id: listingId,
-        user_id: user.id,
-        provider: "netlify",
-        site_id: siteId,
-        site_url: siteUrl,
-        deploy_id: deployId,
-        netlify_token_hash: netlifyToken ? "set" : null,
-        status: "healthy",
-      }, { onConflict: "site_id" }),
-    ]);
-
-    return new Response(JSON.stringify({
-      success: true, siteUrl, siteId, deployId,
-      adminUrl: `https://app.netlify.com/sites/${siteData.name}`,
-      method: "zip_deploy",
-      deployState: "processing",
-    }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    // ---- Strategy B: ZIP file → download, build-inject, deploy ----
+    return await zipDeploy(supabase, listing, netlifyToken, user.id, listingId);
   } catch (e) {
     console.error("deploy-to-netlify error:", e);
     return new Response(
@@ -283,3 +211,194 @@ serve(async (req) => {
     );
   }
 });
+
+// ZIP deploy: downloads file from storage, injects build configs, uploads to Netlify
+// Note: This is a static file deploy. For source-code ZIPs (not pre-built), the user
+// should use the GitHub-linked approach or build locally first.
+async function zipDeploy(
+  supabase: ReturnType<typeof createClient>,
+  listing: { id: string; title: string; file_path: string | null; github_url: string | null; seller_id: string },
+  netlifyToken: string,
+  userId: string,
+  listingId: string,
+) {
+  let sourceZipBuffer: ArrayBuffer;
+
+  if (listing.file_path) {
+    const { data: fileData } = await supabase.storage
+      .from("listing-files")
+      .download(listing.file_path);
+
+    if (!fileData) {
+      return new Response(JSON.stringify({ error: "Failed to download source file" }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    sourceZipBuffer = await fileData.arrayBuffer();
+  } else if (listing.github_url) {
+    sourceZipBuffer = await downloadGithubRepoZip(listing.github_url);
+  } else {
+    return new Response(JSON.stringify({ error: "No deployable source" }), {
+      status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  const zip = await JSZip.loadAsync(sourceZipBuffer);
+  const entries = Object.keys(zip.files);
+
+  // Detect common root directory prefix
+  let prefix = "";
+  if (entries.length > 0) {
+    const first = entries[0];
+    if (first.includes("/")) {
+      const candidate = first.split("/")[0] + "/";
+      if (entries.every(e => e.startsWith(candidate) || e === candidate)) {
+        prefix = candidate;
+      }
+    }
+  }
+
+  // Check if this ZIP is already built (contains index.html at root or dist/)
+  const hasIndexHtml = entries.some(e => {
+    const rel = prefix ? e.replace(prefix, "") : e;
+    return rel === "index.html" || rel === "dist/index.html";
+  });
+  const hasDistFolder = entries.some(e => {
+    const rel = prefix ? e.replace(prefix, "") : e;
+    return rel.startsWith("dist/");
+  });
+
+  // If there's a dist/ folder, deploy only that
+  if (hasDistFolder) {
+    const distZip = new JSZip();
+    const distPrefix = prefix + "dist/";
+    for (const [path, entry] of Object.entries(zip.files)) {
+      if (entry.dir) continue;
+      if (!path.startsWith(distPrefix)) continue;
+      const relativePath = path.replace(distPrefix, "");
+      if (!relativePath) continue;
+      const content = await entry.async("uint8array");
+      distZip.file(relativePath, content);
+    }
+    // Add SPA redirects
+    const spaRedirect = "/*    /index.html   200\n";
+    distZip.file("_redirects", spaRedirect);
+
+    const distZipBlob = await distZip.generateAsync({ type: "uint8array" });
+    return await createAndDeploySite(supabase, listing, netlifyToken, distZipBlob, userId, listingId);
+  }
+
+  // If it has index.html at root, deploy as-is (already built)
+  if (hasIndexHtml) {
+    const cleanZip = new JSZip();
+    for (const [path, entry] of Object.entries(zip.files)) {
+      if (entry.dir) continue;
+      const relativePath = prefix ? path.replace(prefix, "") : path;
+      if (!relativePath) continue;
+      const content = await entry.async("uint8array");
+      cleanZip.file(relativePath, content);
+    }
+    const spaRedirect = "/*    /index.html   200\n";
+    cleanZip.file("_redirects", spaRedirect);
+
+    const cleanZipBlob = await cleanZip.generateAsync({ type: "uint8array" });
+    return await createAndDeploySite(supabase, listing, netlifyToken, cleanZipBlob, userId, listingId);
+  }
+
+  // Source code ZIP without dist/ — this won't work as a static deploy
+  // Return an error telling the user to use the GitHub-linked approach
+  return new Response(JSON.stringify({
+    error: "This ZIP contains source code that needs to be built. Please link the GitHub repository instead, or upload a pre-built ZIP containing the dist/ folder.",
+  }), {
+    status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
+async function createAndDeploySite(
+  supabase: ReturnType<typeof createClient>,
+  listing: { id: string; title: string },
+  netlifyToken: string,
+  zipBlob: Uint8Array,
+  userId: string,
+  listingId: string,
+) {
+  const siteName = `od-${listing.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 30)}-${Date.now().toString(36)}`;
+
+  const createSiteRes = await fetch("https://api.netlify.com/api/v1/sites", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${netlifyToken}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      name: siteName,
+      processing_settings: { html: { pretty_urls: true } },
+    }),
+  });
+
+  if (!createSiteRes.ok) {
+    const errText = await createSiteRes.text();
+    console.error("Netlify create site error:", createSiteRes.status, errText);
+    if (createSiteRes.status === 401) {
+      return new Response(JSON.stringify({ error: "Invalid Netlify token" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    return new Response(JSON.stringify({ error: "Failed to create Netlify site" }), {
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  const siteData = await createSiteRes.json();
+  const siteId = siteData.id;
+  const siteUrl = siteData.ssl_url || siteData.url;
+
+  // Deploy the pre-built ZIP
+  const deployRes = await fetch(`https://api.netlify.com/api/v1/sites/${siteId}/deploys`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${netlifyToken}`,
+      "Content-Type": "application/zip",
+    },
+    body: zipBlob,
+  });
+
+  if (!deployRes.ok) {
+    const errText = await deployRes.text();
+    console.error("Netlify deploy error:", deployRes.status, errText);
+    return new Response(JSON.stringify({ error: "Failed to deploy to Netlify" }), {
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  const deployData = await deployRes.json();
+  const deployId = deployData.deploy_id || deployData.id;
+
+  if (!deployId) {
+    return new Response(JSON.stringify({ error: "Netlify deploy started but no deploy ID was returned" }), {
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  await Promise.all([
+    supabase.from("activity_log").insert({
+      event_type: "netlify_deploy",
+      user_id: userId,
+      event_data: { listing_id: listingId, site_url: siteUrl, site_id: siteId, deploy_id: deployId, method: "zip_deploy" },
+    }),
+    supabase.from("deployed_sites").upsert({
+      listing_id: listingId,
+      user_id: userId,
+      provider: "netlify",
+      site_id: siteId,
+      site_url: siteUrl,
+      deploy_id: deployId,
+      netlify_token_hash: "set",
+      status: "healthy",
+    }, { onConflict: "site_id" }),
+  ]);
+
+  return new Response(JSON.stringify({
+    success: true, siteUrl, siteId, deployId,
+    adminUrl: `https://app.netlify.com/sites/${siteData.name}`,
+    method: "zip_deploy",
+    deployState: "processing",
+  }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+}

@@ -16,14 +16,15 @@ serve(async (req) => {
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Auth: admin only — service role key, anon key, or admin user
+    // Auth: service role key in header or body
     const authHeader = req.headers.get("Authorization");
     const token = authHeader?.replace("Bearer ", "") || "";
-    const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_PUBLISHABLE_KEY") || "";
-    const isServiceRole = token === SUPABASE_SERVICE_ROLE_KEY;
-    const isInternalCall = token === SUPABASE_ANON_KEY || token.startsWith("eyJ");
+    const bodyRaw = await req.text();
+    const body = bodyRaw ? JSON.parse(bodyRaw) : {};
+    const adminKey = body.admin_key || "";
+    const isAuthorized = token === SUPABASE_SERVICE_ROLE_KEY || adminKey === SUPABASE_SERVICE_ROLE_KEY || token.startsWith("eyJ");
     
-    if (!isServiceRole && !isInternalCall) {
+    if (!isAuthorized) {
       return new Response(JSON.stringify({ error: "Auth required" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

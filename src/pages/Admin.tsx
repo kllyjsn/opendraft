@@ -177,11 +177,13 @@ function PatchDeployConfigsPanel() {
 function GenerateScreenshotsPanel() {
   const { toast } = useToast();
   const [running, setRunning] = useState(false);
+  const [mode, setMode] = useState<"all" | "duplicates_only">("duplicates_only");
   const [progress, setProgress] = useState<{ processed: number; updated: number; errors: number; total: number }>({ processed: 0, updated: 0, errors: 0, total: 0 });
 
   async function runGenerate() {
     setRunning(true);
-    setProgress({ processed: 0, updated: 0, errors: 0, total: 1000 });
+    const estimatedTotal = mode === "duplicates_only" ? 181 : 1000;
+    setProgress({ processed: 0, updated: 0, errors: 0, total: estimatedTotal });
     let offset = 0;
     const batchSize = 50;
     let totalUpdated = 0;
@@ -197,7 +199,7 @@ function GenerateScreenshotsPanel() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${session?.access_token}`,
           },
-          body: JSON.stringify({ batch_size: batchSize, offset }),
+          body: JSON.stringify({ batch_size: batchSize, offset, mode }),
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || "Failed");
@@ -205,7 +207,7 @@ function GenerateScreenshotsPanel() {
         totalProcessed += data.processed || 0;
         totalUpdated += data.updated || 0;
         totalErrors += data.errors || 0;
-        setProgress({ processed: totalProcessed, updated: totalUpdated, errors: totalErrors, total: 1000 });
+        setProgress({ processed: totalProcessed, updated: totalUpdated, errors: totalErrors, total: estimatedTotal });
 
         if ((data.processed || 0) < batchSize) break;
         offset = data.next_offset || offset + batchSize;
@@ -227,12 +229,23 @@ function GenerateScreenshotsPanel() {
             Generate Unique Screenshots
           </h3>
           <p className="text-sm text-muted-foreground mt-1">
-            Replace identical pool images with unique, category-appropriate app previews for every listing.
+            Replace shared pool images with unique, per-listing app previews. <strong className="text-destructive">181 listings</strong> still use duplicate pool screenshots.
           </p>
         </div>
-        <Button onClick={runGenerate} disabled={running} className="gradient-hero text-white border-0 shadow-glow">
-          {running ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> {progress.processed}/{progress.total}</> : "Generate All"}
-        </Button>
+        <div className="flex items-center gap-2">
+          <select
+            value={mode}
+            onChange={(e) => setMode(e.target.value as "all" | "duplicates_only")}
+            disabled={running}
+            className="rounded-lg border border-border bg-card px-3 py-2 text-sm"
+          >
+            <option value="duplicates_only">Fix Duplicates Only (181)</option>
+            <option value="all">Regenerate All</option>
+          </select>
+          <Button onClick={runGenerate} disabled={running} className="gradient-hero text-white border-0 shadow-glow">
+            {running ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> {progress.processed}/{progress.total}</> : mode === "duplicates_only" ? "Fix Duplicates" : "Generate All"}
+          </Button>
+        </div>
       </div>
       {(running || progress.processed > 0) && (
         <div className="rounded-xl border border-border/60 bg-card p-4 space-y-2">

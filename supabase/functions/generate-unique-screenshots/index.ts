@@ -766,13 +766,34 @@ serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const batchSize = Math.min(body.batch_size || 50, 200);
     const offset = body.offset || 0;
+    const mode = body.mode || "all"; // "all" | "duplicates_only"
 
-    const { data: listings, error: fetchErr } = await supabase
+    let query = supabase
       .from("listings")
-      .select("id, title, category, description")
+      .select("id, title, category, description, screenshots")
       .eq("status", "live")
-      .order("created_at", { ascending: true })
-      .range(offset, offset + batchSize - 1);
+      .order("created_at", { ascending: true });
+
+    if (mode === "duplicates_only") {
+      // We'll fetch more and filter client-side for pool URLs
+      query = query.range(offset, offset + batchSize * 2 - 1);
+    } else {
+      query = query.range(offset, offset + batchSize - 1);
+    }
+
+    const { data: rawListings, error: fetchErr } = await query;
+
+    if (fetchErr) throw fetchErr;
+
+    // Filter to only listings with pool/shared screenshots if in duplicates mode
+    let listings = rawListings;
+    if (mode === "duplicates_only" && listings) {
+      listings = listings.filter((l: any) => {
+        const ss = l.screenshots as string[] | null;
+        if (!ss || ss.length === 0) return true; // no screenshots = needs generation
+        return ss.some((url: string) => url.includes("/pool/"));
+      }).slice(0, batchSize);
+    }
 
     if (fetchErr) throw fetchErr;
     if (!listings?.length) {

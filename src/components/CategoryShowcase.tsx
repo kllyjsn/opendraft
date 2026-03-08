@@ -75,7 +75,7 @@ export function CategoryShowcase() {
         <div className="text-center mb-10">
           <p className="text-xs font-bold uppercase tracking-widest text-primary mb-3">Explore by category</p>
           <h2 className="text-2xl md:text-4xl font-black tracking-tighter">
-            What are you looking for?
+            What kind of app do you need?
           </h2>
         </div>
 

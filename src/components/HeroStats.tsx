@@ -1,9 +1,9 @@
-import { GitFork, Rocket, Bot } from "lucide-react";
+import { Zap, ShieldCheck, Clock } from "lucide-react";
 
 const items = [
-  { icon: GitFork, label: "Full source code — yours forever", value: "Fork" },
-  { icon: Rocket, label: "Deploy anywhere, no lock-in", value: "Day 1" },
-  { icon: Bot, label: "AI agents can buy too", value: "MCP" },
+  { icon: Zap, label: "Launch in minutes, not months", value: "Instant" },
+  { icon: ShieldCheck, label: "Tested & production-ready", value: "Vetted" },
+  { icon: Clock, label: "Ongoing updates from builders", value: "Supported" },
 ];
 
 export function HeroStats() {

@@ -107,7 +107,7 @@ serve(async (req) => {
     }
 
     // Fetch more than needed for client-side filtering
-    const fetchSize = mode === "duplicates_only" ? batchSize * 3 : batchSize;
+    const fetchSize = mode === "duplicates_only" ? Math.max(batchSize * 50, 100) : batchSize;
     query = query.range(offset, offset + fetchSize - 1);
 
     const { data: rawListings, error: fetchErr } = await query;

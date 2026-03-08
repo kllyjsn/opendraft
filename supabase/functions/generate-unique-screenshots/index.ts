@@ -107,7 +107,7 @@ serve(async (req) => {
     }
 
     // Fetch more than needed for client-side filtering
-    const fetchSize = mode === "duplicates_only" ? batchSize * 3 : batchSize;
+    const fetchSize = mode === "duplicates_only" ? Math.max(batchSize * 50, 100) : batchSize;
     query = query.range(offset, offset + fetchSize - 1);
 
     const { data: rawListings, error: fetchErr } = await query;
@@ -120,12 +120,14 @@ serve(async (req) => {
       listings = listings.filter((l: any) => {
         const ss = l.screenshots as string[] | null;
         if (!ss || ss.length === 0) return true;
-        return ss.some(
+      return ss.some(
           (url: string) =>
             url.includes("/pool/") ||
+            url.includes("/unique/") ||
             url.includes("/unique-v2/") ||
             url.includes(".svg") ||
-            url.includes("data:image/svg")
+            url.includes("data:image/svg") ||
+            !url.includes("/ai-generated/")
         );
       }).slice(0, batchSize);
     }

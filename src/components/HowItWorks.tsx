@@ -1,27 +1,27 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { GitFork, Code, RefreshCw } from "lucide-react";
+import { Search, Rocket, HeartHandshake } from "lucide-react";
 
 const steps = [
   {
-    icon: GitFork,
+    icon: Search,
     number: "01",
-    title: "Fork the Code",
-    description: "Find an AI-built app you like and buy the fork. You get the full source code — yours to own, modify, and deploy forever.",
+    title: "Pick Your App",
+    description: "Browse 1,000+ ready-made apps — from SaaS dashboards to AI tools. Find the one that fits your idea, no coding knowledge required.",
     gradient: "from-primary to-accent",
   },
   {
-    icon: Code,
+    icon: Rocket,
     number: "02",
-    title: "Ship on Day One",
-    description: "Deploy to Vercel, Netlify, or your own infra. No lock-in, no proprietary runtime. It's a standard React + Supabase stack.",
+    title: "Launch Instantly",
+    description: "One click and your app is live. We handle hosting, deployment, and all the technical setup so you can focus on your business.",
     gradient: "from-accent to-secondary",
   },
   {
-    icon: RefreshCw,
+    icon: HeartHandshake,
     number: "03",
-    title: "Subscribe for Updates",
-    description: "Optionally subscribe to maintenance. Your builder ships new features, bug fixes, and improvements — merged directly into your fork.",
+    title: "Get Ongoing Support",
+    description: "Optionally subscribe for updates. Your builder ships new features, bug fixes, and improvements — you stay focused on growth.",
     gradient: "from-secondary to-primary",
   },
 ];
@@ -45,9 +45,9 @@ export function HowItWorks() {
         <div className="text-center mb-14">
           <p className="text-xs font-bold uppercase tracking-widest text-primary mb-3">How it works</p>
           <h2 className="text-3xl md:text-5xl font-black tracking-tighter leading-[1.05]">
-            Fork it. Ship it.
+            Pick it. Launch it.
             <br className="hidden md:block" />
-            <span className="text-gradient"> We keep building.</span>
+            <span className="text-gradient"> We handle the rest.</span>
           </h2>
         </div>
 
@@ -95,7 +95,7 @@ export function HowItWorks() {
             to="/faq"
             className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground transition-colors"
           >
-            Learn more about forks & maintenance →
+            Learn more about how it works →
           </Link>
         </div>
       </div>

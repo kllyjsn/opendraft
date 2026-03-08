@@ -461,10 +461,10 @@ export default function Index() {
           >
             <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-3">
               <p className="text-sm font-medium text-foreground hidden sm:block">
-                Sign up free to claim apps and message builders
+                Join free — grab an app and launch your business today
               </p>
               <p className="text-sm font-medium text-foreground sm:hidden">
-                Sign up free to get started
+                Join free to get your app
               </p>
               <div className="flex items-center gap-2 shrink-0">
                 <Link to="/login">

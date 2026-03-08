@@ -1,9 +1,9 @@
-import { Shield, Code, HeartHandshake } from "lucide-react";
+import { Shield, Zap, HeartHandshake } from "lucide-react";
 
 const badges = [
-  { icon: Code, text: "You own the code — no lock-in" },
-  { icon: Shield, text: "AI-built, human-maintained" },
-  { icon: HeartHandshake, text: "Optional maintenance subscriptions" },
+  { icon: Zap, text: "Launch without writing a line of code" },
+  { icon: Shield, text: "Professionally built & tested" },
+  { icon: HeartHandshake, text: "Optional ongoing maintenance" },
 ];
 
 export function SocialProof() {

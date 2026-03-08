@@ -217,41 +217,40 @@ export default function Index() {
             </motion.div>
 
             <motion.h1 variants={fadeUp} custom={0} className="text-4xl md:text-7xl font-black tracking-tighter mb-3 md:mb-4 leading-[0.95]">
-              Any app.
+              Your idea.
               <br />
               <span className="text-gradient animate-gradient-shift inline-block"
                 style={{ backgroundImage: 'linear-gradient(135deg, hsl(265 85% 58%), hsl(330 90% 60%), hsl(185 90% 45%), hsl(265 85% 58%))', backgroundSize: '200% 200%' }}
               >
-                Ready to ship.
+                Already built.
               </span>
             </motion.h1>
 
             <motion.p variants={fadeUp} custom={1} className="text-sm md:text-base text-muted-foreground max-w-md mx-auto mb-5 leading-relaxed">
-              Every project rebuilt with clean code and deploy configs.
-              <span className="hidden md:inline"> Claim the source, launch on your own infra.</span>
+              Skip months of development. Pick a ready-made app, customize it, and launch your business today.
             </motion.p>
 
             <motion.div variants={fadeUp} custom={1.5} className="flex items-center justify-center gap-3 mb-5">
               <a href="#browse">
                 <Button size="lg" className="gradient-hero text-white border-0 shadow-glow hover:opacity-90 font-bold gap-2 h-11 px-6">
-                  Browse {totalCount > 0 ? totalCount : ''} apps
+                  Find your app
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               </a>
               <Link to={user ? "/sell" : "/login"}>
                 <Button size="lg" variant="outline" className="border-border/60 hover:border-primary/50 h-11 px-6 font-semibold">
-                  Sell your code
+                  List & sell
                 </Button>
               </Link>
             </motion.div>
 
             {/* Compact social proof */}
             <motion.div variants={fadeUp} custom={2} className="flex items-center justify-center gap-5 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1.5"><Code2 className="h-3.5 w-3.5 text-primary" /><strong className="text-foreground">{totalCount || '—'}</strong> apps</span>
+              <span className="flex items-center gap-1.5"><Code2 className="h-3.5 w-3.5 text-primary" /><strong className="text-foreground">{totalCount || '—'}</strong> ready-made apps</span>
               <span className="h-3 w-px bg-border/50" />
-              <span className="flex items-center gap-1.5"><Rocket className="h-3.5 w-3.5 text-accent" /><strong className="text-foreground">1-click</strong> deploy</span>
+              <span className="flex items-center gap-1.5"><Rocket className="h-3.5 w-3.5 text-accent" /><strong className="text-foreground">Instant</strong> launch</span>
               <span className="h-3 w-px bg-border/50" />
-              <span className="flex items-center gap-1.5"><Users className="h-3.5 w-3.5 text-primary" /><strong className="text-foreground">100%</strong> source</span>
+              <span className="flex items-center gap-1.5"><Users className="h-3.5 w-3.5 text-primary" /><strong className="text-foreground">No coding</strong> needed</span>
             </motion.div>
           </motion.div>
         </div>

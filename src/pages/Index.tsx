@@ -476,10 +476,7 @@ export default function Index() {
           >
             <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-3">
               <div className="hidden sm:flex items-center gap-3">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
-                </span>
+                <BrandMascot size={32} variant="wave" />
                 <p className="text-sm font-medium text-foreground">
                   <span className="font-bold">127 people</span> browsing apps right now — join free and launch yours
                 </p>

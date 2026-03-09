@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
-import { Package, Users, ShoppingBag, Star } from "lucide-react";
+import { Package, Users, ShoppingBag, Star, Bot } from "lucide-react";
 
 interface StatItem {
   icon: typeof Package;
@@ -46,7 +46,7 @@ export function LiveStatsBar() {
       const items: StatItem[] = [
         { icon: Package, value: String(appCount), label: "Ready-to-launch apps" },
         ...(salesCount > 0 ? [{ icon: ShoppingBag, value: String(salesCount), label: "Apps sold" }] : []),
-        { icon: Users, value: String(builderCount), label: "Entrepreneurs joined" },
+        { icon: Bot, value: "6", label: "Gremlins™ working 24/7" },
         { icon: Star, value: "4.8", label: "Avg satisfaction" },
       ];
 

@@ -250,8 +250,11 @@ export default function SwarmPage() {
         </div>
 
         {/* Results Tabs */}
-        <Tabs defaultValue="product" className="mt-8">
+        <Tabs defaultValue="b2b" className="mt-8">
           <TabsList className="flex-wrap h-auto gap-1">
+            <TabsTrigger value="b2b" className="gap-1.5">
+              <Building2 className="h-3.5 w-3.5" /> B2B Outreach
+            </TabsTrigger>
             <TabsTrigger value="product" className="gap-1.5">
               <Lightbulb className="h-3.5 w-3.5" /> Product
             </TabsTrigger>
@@ -262,15 +265,16 @@ export default function SwarmPage() {
               <TrendingUp className="h-3.5 w-3.5" /> SEO
             </TabsTrigger>
             <TabsTrigger value="outreach" className="gap-1.5">
-              <Globe className="h-3.5 w-3.5" /> Outreach
-            </TabsTrigger>
-            <TabsTrigger value="deploys" className="gap-1.5">
-              <Code className="h-3.5 w-3.5" /> Deploy Suggestions
+              <Globe className="h-3.5 w-3.5" /> Directories
             </TabsTrigger>
             <TabsTrigger value="all" className="gap-1.5">
               <Zap className="h-3.5 w-3.5" /> All
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="b2b" className="mt-4">
+            <OutreachDashboard />
+          </TabsContent>
 
           <TabsContent value="product" className="space-y-4 mt-4">
             {tasksByType("product_improvement").length === 0 ? (
@@ -296,16 +300,8 @@ export default function SwarmPage() {
 
           <TabsContent value="outreach" className="space-y-4 mt-4">
             {tasksByType("outreach_growth").length === 0 ? (
-              <EmptyState text="No outreach runs yet." />
+              <EmptyState text="No directory outreach runs yet." />
             ) : tasksByType("outreach_growth").map(task => <TaskResultCard key={task.id} task={task} />)}
-          </TabsContent>
-
-          <TabsContent value="deploys" className="space-y-4 mt-4">
-            {tasksByType("deploy_suggestion").length === 0 ? (
-              <EmptyState text="No spec history yet. Run a Product or QA scan, then click 'Copy Spec' on a suggestion." />
-            ) : tasksByType("deploy_suggestion").map(task => (
-              <DeployTaskCard key={task.id} task={task} />
-            ))}
           </TabsContent>
 
           <TabsContent value="all" className="space-y-4 mt-4">

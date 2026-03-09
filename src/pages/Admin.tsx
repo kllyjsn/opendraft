@@ -360,6 +360,11 @@ export default function Admin() {
                 <Crown className="h-3.5 w-3.5" /> Board Room
               </Button>
             </Link>
+            <Link to="/admin/outreach">
+              <Button variant="outline" size="sm" className="gap-1.5">
+                <Mail className="h-3.5 w-3.5" /> Outreach
+              </Button>
+            </Link>
             <Link to="/swarm">
               <Button variant="outline" size="sm" className="gap-1.5">
                 <Bot className="h-3.5 w-3.5" /> AI Swarm

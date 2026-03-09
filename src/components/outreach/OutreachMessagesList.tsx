@@ -89,6 +89,38 @@ export function OutreachMessagesList({ campaignId, onStatsChange }: Props) {
     setLoading(false);
   };
 
+  const simulateInboundReply = async (msg: OutreachMessage) => {
+    const lead = leads[msg.lead_id];
+    if (!lead?.contact_email) {
+      toast.error("Lead has no email to simulate from");
+      return;
+    }
+    setSimulatingReply(msg.id);
+    try {
+      const mockPayload = {
+        type: "email.received",
+        from: { email: lead.contact_email },
+        to: ["outreach@opendraft.co"],
+        subject: `Re: ${msg.subject || "Your message"}`,
+        text: `Hi there,\n\nThanks for reaching out! We're interested in learning more about what you offer. Could you send over some pricing details?\n\nBest regards,\n${lead.contact_name || lead.business_name}`,
+      };
+
+      const { error } = await supabase.functions.invoke("outreach-inbound", {
+        body: mockPayload,
+      });
+
+      if (error) throw error;
+      toast.success(`Simulated reply from ${lead.business_name}`);
+      await fetchData();
+      onStatsChange?.();
+      setFilter("inbox");
+    } catch (e: any) {
+      toast.error(`Simulate failed: ${e.message}`);
+    } finally {
+      setSimulatingReply(null);
+    }
+  };
+
   const inboundMessages = messages.filter(m => m.direction === "inbound");
   const draftedMessages = messages.filter(m => m.message_status === "drafted");
   const sentMessages = messages.filter(m => m.direction !== "inbound" && m.message_status !== "drafted");

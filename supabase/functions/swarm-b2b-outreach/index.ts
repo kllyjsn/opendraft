@@ -96,6 +96,12 @@ serve(async (req) => {
         case "send_emails":
           result = await sendOutreachEmails(supabase, RESEND_API_KEY, campaignId);
           break;
+        case "send_single":
+          result = await sendSingleEmail(supabase, RESEND_API_KEY, body.message_id);
+          break;
+        case "reply_to_lead":
+          result = await replyToLead(supabase, RESEND_API_KEY, body.lead_id, body.campaign_id, body.subject, body.body);
+          break;
         case "send_follow_ups":
           result = await sendFollowUpEmails(supabase, LOVABLE_API_KEY, RESEND_API_KEY, campaignId);
           break;

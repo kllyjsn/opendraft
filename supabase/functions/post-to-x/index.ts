@@ -1,11 +1,18 @@
 /**
  * post-to-x Edge Function
  * -----------------------
- * Automatically posts to X/Twitter with media support.
- * Supports: new_listing, sale_milestone, trending, weekly_stats,
- *           blog_post, vibe_coding_report, custom
- *
- * Uses OAuth 1.0a for X API v2 + v1.1 media upload
+ * AGGRESSIVE CONVERSION-FOCUSED Twitter/X strategy.
+ * 
+ * New post types for driving signups:
+ * - engagement_hook: Curiosity-driven hooks
+ * - fomo: Urgency and social proof
+ * - pain_point: Problem agitation
+ * - gremlin_update: Behind-the-scenes AI personality
+ * - question: Engagement drivers
+ * - success_story: Social proof
+ * - direct_cta: Direct conversion
+ * 
+ * Plus original types: new_listing, sale_milestone, trending, weekly_stats, blog_post, vibe_coding_report, custom
  */
 
 import { createOAuthHeader } from "./oauth.ts";
@@ -15,6 +22,13 @@ import {
   saleMilestoneTweet,
   trendingDigestTweet,
   weeklyStatsTweet,
+  engagementHookTweet,
+  fomoTweet,
+  painPointTweet,
+  gremlinTweet,
+  questionTweet,
+  successStoryTweet,
+  directCtaTweet,
 } from "./templates.ts";
 import { generateBlogTweet, generateVibeReportTweet } from "./ai-tweets.ts";
 
@@ -46,7 +60,60 @@ Deno.serve(async (req) => {
     let tweetText = "";
     let screenshotUrl: string | null = null;
 
-    if (postType === "new_listing" && body.listing_id) {
+    // ─────────────────────────────────────────────────────────────
+    // NEW CONVERSION-FOCUSED POST TYPES
+    // ─────────────────────────────────────────────────────────────
+    
+    if (postType === "engagement_hook") {
+      tweetText = engagementHookTweet();
+      
+    } else if (postType === "fomo") {
+      // Get live stats for FOMO tweet
+      const [listingsRes, profilesRes] = await Promise.all([
+        fetch(`${supabaseUrl}/rest/v1/listings?status=eq.live&select=id`, {
+          headers: { ...headers, Prefer: "count=exact" },
+        }),
+        fetch(`${supabaseUrl}/rest/v1/profiles?select=id`, {
+          headers: { ...headers, Prefer: "count=exact" },
+        }),
+      ]);
+      const appsCount = parseInt(listingsRes.headers.get("content-range")?.split("/")?.[1] || "1000");
+      tweetText = fomoTweet({ apps: appsCount, browsing: 80 + Math.floor(Math.random() * 100) });
+      
+    } else if (postType === "pain_point") {
+      tweetText = painPointTweet();
+      
+    } else if (postType === "gremlin_update") {
+      tweetText = gremlinTweet();
+      
+    } else if (postType === "question") {
+      tweetText = questionTweet();
+      
+    } else if (postType === "success_story") {
+      tweetText = successStoryTweet();
+      
+    } else if (postType === "direct_cta") {
+      tweetText = directCtaTweet();
+      
+    } else if (postType === "random_conversion") {
+      // Pick a random conversion-focused tweet type
+      const types = [
+        engagementHookTweet,
+        () => fomoTweet({ browsing: 80 + Math.floor(Math.random() * 100) }),
+        painPointTweet,
+        gremlinTweet,
+        questionTweet,
+        successStoryTweet,
+        directCtaTweet,
+      ];
+      const randomFn = types[Math.floor(Math.random() * types.length)];
+      tweetText = randomFn();
+
+    // ─────────────────────────────────────────────────────────────
+    // ORIGINAL POST TYPES
+    // ─────────────────────────────────────────────────────────────
+    
+    } else if (postType === "new_listing" && body.listing_id) {
       const res = await fetch(
         `${supabaseUrl}/rest/v1/listings?id=eq.${body.listing_id}&select=*`,
         { headers }
@@ -74,7 +141,6 @@ Deno.serve(async (req) => {
       const listings = await res.json();
       if (!listings?.length) throw new Error("No trending listings");
       tweetText = trendingDigestTweet(listings);
-      // Use the top trending listing's screenshot
       screenshotUrl = listings[0]?.screenshots?.[0] || null;
 
     } else if (postType === "weekly_stats") {
@@ -112,7 +178,7 @@ Deno.serve(async (req) => {
       screenshotUrl = body.image_url || null;
 
     } else {
-      throw new Error("Invalid post type. Use: new_listing, sale_milestone, trending, weekly_stats, blog_post, vibe_coding_report, or custom");
+      throw new Error("Invalid post type. Use: engagement_hook, fomo, pain_point, gremlin_update, question, success_story, direct_cta, random_conversion, new_listing, sale_milestone, trending, weekly_stats, blog_post, vibe_coding_report, or custom");
     }
 
     // Upload media if we have a screenshot
@@ -158,6 +224,7 @@ Deno.serve(async (req) => {
       tweet_id: tweetData.data?.id,
       text: tweetText,
       has_media: !!mediaId,
+      type: postType,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

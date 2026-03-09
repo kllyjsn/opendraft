@@ -50,7 +50,13 @@ export function Navbar() {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2.5 font-black text-xl tracking-tight shrink-0 group">
-          <img src="/mascot-icon.png" alt="OpenDraft mascot" className="h-8 w-8 rounded-lg group-hover:scale-110 transition-transform duration-300" />
+          <motion.img
+            src="/mascot-icon.png"
+            alt="OpenDraft mascot"
+            className="h-8 w-8 rounded-lg"
+            whileHover={{ scale: 1.15, rotate: [0, -8, 8, -4, 0] }}
+            transition={{ duration: 0.5, ease: "easeInOut" }}
+          />
           <span className="text-gradient">OpenDraft</span>
         </Link>
 

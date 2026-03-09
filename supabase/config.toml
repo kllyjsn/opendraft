@@ -129,3 +129,7 @@ verify_jwt = false
 # Patch deploy configs — admin-only, auth checked in code
 [functions.patch-deploy-configs]
 verify_jwt = false
+
+# B2B Outreach agent — autonomous small business outreach
+[functions.swarm-b2b-outreach]
+verify_jwt = false

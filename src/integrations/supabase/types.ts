@@ -974,6 +974,185 @@ export type Database = {
           },
         ]
       }
+      outreach_campaigns: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          goals: Json
+          id: string
+          industries: string[]
+          name: string
+          niche: string
+          services: Json
+          status: string
+          target_regions: string[]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          goals?: Json
+          id?: string
+          industries?: string[]
+          name: string
+          niche: string
+          services?: Json
+          status?: string
+          target_regions?: string[]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          goals?: Json
+          id?: string
+          industries?: string[]
+          name?: string
+          niche?: string
+          services?: Json
+          status?: string
+          target_regions?: string[]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      outreach_leads: {
+        Row: {
+          business_name: string
+          campaign_id: string
+          city: string | null
+          contact_email: string | null
+          contact_name: string | null
+          country: string | null
+          created_at: string
+          id: string
+          industry: string
+          last_contacted_at: string | null
+          lead_status: string
+          metadata: Json
+          next_follow_up_at: string | null
+          notes: string | null
+          score: number
+          source: string
+          state: string | null
+          updated_at: string
+          website_url: string | null
+        }
+        Insert: {
+          business_name: string
+          campaign_id: string
+          city?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          country?: string | null
+          created_at?: string
+          id?: string
+          industry: string
+          last_contacted_at?: string | null
+          lead_status?: string
+          metadata?: Json
+          next_follow_up_at?: string | null
+          notes?: string | null
+          score?: number
+          source?: string
+          state?: string | null
+          updated_at?: string
+          website_url?: string | null
+        }
+        Update: {
+          business_name?: string
+          campaign_id?: string
+          city?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          country?: string | null
+          created_at?: string
+          id?: string
+          industry?: string
+          last_contacted_at?: string | null
+          lead_status?: string
+          metadata?: Json
+          next_follow_up_at?: string | null
+          notes?: string | null
+          score?: number
+          source?: string
+          state?: string | null
+          updated_at?: string
+          website_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "outreach_leads_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      outreach_messages: {
+        Row: {
+          ai_generated: boolean
+          body: string
+          campaign_id: string
+          channel: string
+          created_at: string
+          direction: string
+          id: string
+          lead_id: string
+          message_status: string
+          metadata: Json
+          replied_at: string | null
+          sent_at: string | null
+          subject: string | null
+        }
+        Insert: {
+          ai_generated?: boolean
+          body: string
+          campaign_id: string
+          channel?: string
+          created_at?: string
+          direction?: string
+          id?: string
+          lead_id: string
+          message_status?: string
+          metadata?: Json
+          replied_at?: string | null
+          sent_at?: string | null
+          subject?: string | null
+        }
+        Update: {
+          ai_generated?: boolean
+          body?: string
+          campaign_id?: string
+          channel?: string
+          created_at?: string
+          direction?: string
+          id?: string
+          lead_id?: string
+          message_status?: string
+          metadata?: Json
+          replied_at?: string | null
+          sent_at?: string | null
+          subject?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "outreach_messages_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "outreach_messages_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null

@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
-import { Mail, Copy, Loader2, Send, Clock, Pencil, Save, X, CheckCircle, Sparkles } from "lucide-react";
+import { Mail, Copy, Loader2, Send, Clock, Pencil, Save, X, CheckCircle, Sparkles, Reply, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
@@ -24,6 +24,7 @@ interface OutreachMessage {
   ai_generated: boolean;
   sent_at: string | null;
   created_at: string;
+  direction: string;
   metadata: any;
 }
 
@@ -50,6 +51,12 @@ export function OutreachMessagesList({ campaignId, onStatsChange }: Props) {
   const [sendConfirmId, setSendConfirmId] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const [filter, setFilter] = useState<"all" | "drafted" | "sent">("drafted");
+
+  // Reply state
+  const [replyingTo, setReplyingTo] = useState<{ leadId: string; campaignId: string; originalSubject: string } | null>(null);
+  const [replySubject, setReplySubject] = useState("");
+  const [replyBody, setReplyBody] = useState("");
+  const [replySending, setReplySending] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -122,6 +129,7 @@ export function OutreachMessagesList({ campaignId, onStatsChange }: Props) {
         body: { action: "send_single", message_id: sendConfirmId, triggered_by: "manual" },
       });
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
       toast.success("📧 Email sent!");
       setMessages(prev => prev.map(m => m.id === sendConfirmId ? { ...m, message_status: "sent", sent_at: new Date().toISOString() } : m));
       onStatsChange?.();
@@ -130,6 +138,65 @@ export function OutreachMessagesList({ campaignId, onStatsChange }: Props) {
     } finally {
       setSending(false);
       setSendConfirmId(null);
+    }
+  };
+
+  const startReply = (msg: OutreachMessage) => {
+    const lead = leads[msg.lead_id];
+    setReplyingTo({
+      leadId: msg.lead_id,
+      campaignId: msg.campaign_id,
+      originalSubject: msg.subject || "",
+    });
+    setReplySubject(`Re: ${msg.subject || ""}`);
+    setReplyBody("");
+  };
+
+  const cancelReply = () => {
+    setReplyingTo(null);
+    setReplySubject("");
+    setReplyBody("");
+  };
+
+  const executeReply = async () => {
+    if (!replyingTo || !replyBody.trim()) return;
+    setReplySending(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("swarm-b2b-outreach", {
+        body: {
+          action: "reply_to_lead",
+          lead_id: replyingTo.leadId,
+          campaign_id: replyingTo.campaignId,
+          subject: replySubject,
+          body: replyBody.trim(),
+          triggered_by: "manual",
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success("📧 Reply sent!");
+      // Add the new message to the list
+      const lead = leads[replyingTo.leadId];
+      setMessages(prev => [{
+        id: data.message_id || crypto.randomUUID(),
+        lead_id: replyingTo.leadId,
+        campaign_id: replyingTo.campaignId,
+        subject: replySubject,
+        body: replyBody.trim(),
+        message_status: "sent",
+        channel: "email",
+        ai_generated: false,
+        sent_at: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+        direction: "outbound",
+        metadata: { type: "admin_reply" },
+      }, ...prev]);
+      cancelReply();
+      onStatsChange?.();
+    } catch (e: any) {
+      toast.error(`Failed to send reply: ${e.message}`);
+    } finally {
+      setReplySending(false);
     }
   };
 
@@ -207,8 +274,10 @@ export function OutreachMessagesList({ campaignId, onStatsChange }: Props) {
       {filteredMessages.map((msg, i) => {
         const lead = leads[msg.lead_id];
         const isFollowUp = msg.metadata?.is_follow_up;
+        const isAdminReply = msg.metadata?.type === "admin_reply";
         const isEditing = editingId === msg.id;
         const isDraft = msg.message_status === "drafted";
+        const isReplying = replyingTo?.leadId === msg.lead_id && !isDraft;
 
         return (
           <motion.div
@@ -220,6 +289,7 @@ export function OutreachMessagesList({ campaignId, onStatsChange }: Props) {
             <Card className={cn(
               "border-border/50 transition-all hover:shadow-md",
               isDraft && "border-l-2 border-l-amber-500/50",
+              isAdminReply && "border-l-2 border-l-primary/50",
               isEditing && "ring-1 ring-primary/20 shadow-lg"
             )}>
               <CardContent className="p-4">
@@ -276,64 +346,133 @@ export function OutreachMessagesList({ campaignId, onStatsChange }: Props) {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
-                      className="flex items-start gap-3"
                     >
-                      {/* Status icon */}
-                      <div className={cn(
-                        "h-9 w-9 rounded-lg flex items-center justify-center shrink-0 mt-0.5",
-                        isDraft ? "bg-amber-500/10" : "bg-emerald-500/10"
-                      )}>
-                        {isDraft ? (
-                          <Pencil className="h-4 w-4 text-amber-500" />
-                        ) : (
-                          <CheckCircle className="h-4 w-4 text-emerald-500" />
-                        )}
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                          <span className="font-bold text-sm">{lead?.business_name || "Unknown"}</span>
-                          {lead?.contact_email && (
-                            <span className="text-xs text-muted-foreground">{lead.contact_email}</span>
-                          )}
-                          <MessageStatusBadge status={msg.message_status} />
-                          {msg.ai_generated && (
-                            <Badge className="text-[10px] bg-primary/10 text-primary border-0 gap-0.5">
-                              <Sparkles className="h-2 w-2" /> AI
-                            </Badge>
-                          )}
-                          {isFollowUp && (
-                            <Badge className="text-[10px] bg-amber-500/10 text-amber-600 border-0 gap-0.5">
-                              <Clock className="h-2.5 w-2.5" />
-                              #{msg.metadata?.follow_up_number}
-                            </Badge>
+                      <div className="flex items-start gap-3">
+                        {/* Status icon */}
+                        <div className={cn(
+                          "h-9 w-9 rounded-lg flex items-center justify-center shrink-0 mt-0.5",
+                          isAdminReply ? "bg-primary/10" : isDraft ? "bg-amber-500/10" : "bg-emerald-500/10"
+                        )}>
+                          {isAdminReply ? (
+                            <Reply className="h-4 w-4 text-primary" />
+                          ) : isDraft ? (
+                            <Pencil className="h-4 w-4 text-amber-500" />
+                          ) : (
+                            <CheckCircle className="h-4 w-4 text-emerald-500" />
                           )}
                         </div>
-                        <p className="text-sm font-semibold mt-1">{msg.subject}</p>
-                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2 whitespace-pre-line leading-relaxed">{msg.body}</p>
-                        {msg.sent_at && (
-                          <p className="text-[10px] text-muted-foreground mt-2 flex items-center gap-1">
-                            <Send className="h-2.5 w-2.5" />
-                            Sent {new Date(msg.sent_at).toLocaleString()}
-                          </p>
-                        )}
+
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                            <span className="font-bold text-sm">{lead?.business_name || "Unknown"}</span>
+                            {lead?.contact_email && (
+                              <span className="text-xs text-muted-foreground">{lead.contact_email}</span>
+                            )}
+                            <MessageStatusBadge status={msg.message_status} />
+                            {isAdminReply && (
+                              <Badge className="text-[10px] bg-primary/10 text-primary border-0 gap-0.5">
+                                <Reply className="h-2 w-2" /> Reply
+                              </Badge>
+                            )}
+                            {msg.ai_generated && (
+                              <Badge className="text-[10px] bg-primary/10 text-primary border-0 gap-0.5">
+                                <Sparkles className="h-2 w-2" /> AI
+                              </Badge>
+                            )}
+                            {isFollowUp && (
+                              <Badge className="text-[10px] bg-amber-500/10 text-amber-600 border-0 gap-0.5">
+                                <Clock className="h-2.5 w-2.5" />
+                                #{msg.metadata?.follow_up_number}
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-sm font-semibold mt-1">{msg.subject}</p>
+                          <p className="text-xs text-muted-foreground mt-1 line-clamp-2 whitespace-pre-line leading-relaxed">{msg.body}</p>
+                          {msg.sent_at && (
+                            <p className="text-[10px] text-muted-foreground mt-2 flex items-center gap-1">
+                              <Send className="h-2.5 w-2.5" />
+                              Sent {new Date(msg.sent_at).toLocaleString()}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="flex flex-col gap-1 shrink-0">
+                          {isDraft && (
+                            <>
+                              <Button size="sm" variant="outline" onClick={() => startEdit(msg)} className="text-xs gap-1 h-8">
+                                <Pencil className="h-3 w-3" /> Edit
+                              </Button>
+                              <Button size="sm" onClick={() => setSendConfirmId(msg.id)} className="text-xs gap-1 h-8">
+                                <Send className="h-3 w-3" /> Send
+                              </Button>
+                            </>
+                          )}
+                          {!isDraft && lead?.contact_email && (
+                            <Button size="sm" variant="outline" onClick={() => startReply(msg)} className="text-xs gap-1 h-8">
+                              <Reply className="h-3 w-3" /> Reply
+                            </Button>
+                          )}
+                          <Button size="sm" variant="ghost" onClick={() => copyMessage(msg)} className="text-xs gap-1 h-8">
+                            <Copy className="h-3 w-3" /> Copy
+                          </Button>
+                        </div>
                       </div>
 
-                      <div className="flex flex-col gap-1 shrink-0">
-                        {isDraft && (
-                          <>
-                            <Button size="sm" variant="outline" onClick={() => startEdit(msg)} className="text-xs gap-1 h-8">
-                              <Pencil className="h-3 w-3" /> Edit
-                            </Button>
-                            <Button size="sm" onClick={() => setSendConfirmId(msg.id)} className="text-xs gap-1 h-8">
-                              <Send className="h-3 w-3" /> Send
-                            </Button>
-                          </>
+                      {/* Inline reply composer */}
+                      <AnimatePresence>
+                        {isReplying && replyingTo?.leadId === msg.lead_id && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="mt-4 pt-4 border-t border-border/50"
+                          >
+                            <div className="flex items-center gap-2 mb-3">
+                              <div className="h-7 w-7 rounded-md bg-primary/10 flex items-center justify-center">
+                                <MessageSquare className="h-3.5 w-3.5 text-primary" />
+                              </div>
+                              <span className="text-xs font-bold text-foreground">Reply to {lead?.business_name}</span>
+                              <span className="text-xs text-muted-foreground">→ {lead?.contact_email}</span>
+                            </div>
+                            <div className="space-y-2">
+                              <div>
+                                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1 block">Subject</label>
+                                <Input
+                                  value={replySubject}
+                                  onChange={e => setReplySubject(e.target.value)}
+                                  placeholder="Re: ..."
+                                  className="text-sm"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1 block">Message</label>
+                                <Textarea
+                                  value={replyBody}
+                                  onChange={e => setReplyBody(e.target.value)}
+                                  rows={6}
+                                  placeholder="Write your reply..."
+                                  className="text-sm leading-relaxed"
+                                  autoFocus
+                                />
+                              </div>
+                              <div className="flex gap-2 justify-end">
+                                <Button variant="ghost" size="sm" onClick={cancelReply} disabled={replySending} className="text-xs">
+                                  <X className="h-3 w-3 mr-1" /> Cancel
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  onClick={executeReply}
+                                  disabled={replySending || !replyBody.trim()}
+                                  className="text-xs gap-1"
+                                >
+                                  {replySending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
+                                  Send Reply
+                                </Button>
+                              </div>
+                            </div>
+                          </motion.div>
                         )}
-                        <Button size="sm" variant="ghost" onClick={() => copyMessage(msg)} className="text-xs gap-1 h-8">
-                          <Copy className="h-3 w-3" /> Copy
-                        </Button>
-                      </div>
+                      </AnimatePresence>
                     </motion.div>
                   )}
                 </AnimatePresence>

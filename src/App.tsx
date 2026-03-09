@@ -48,6 +48,7 @@ import CreatorHandbook from "./pages/CreatorHandbook";
 import Credits from "./pages/Credits";
 import Onboarding from "./pages/Onboarding";
 import Security from "./pages/Security";
+import AdminOutreach from "./pages/AdminOutreach";
 
 const queryClient = new QueryClient();
 
@@ -69,6 +70,7 @@ const App = () => (
           <Route path="/success" element={<Success />} />
           <Route path="/checkout/:id" element={<Checkout />} />
           <Route path="/admin" element={<Admin />} />
+          <Route path="/admin/outreach" element={<AdminOutreach />} />
           <Route path="/faq" element={<FAQ />} />
           <Route path="/storefront" element={<Storefront />} />
           <Route path="/cloud" element={<CloudPage />} />

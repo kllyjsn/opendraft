@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { CompletenessBadge } from "@/components/CompletenessBadge";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle, XCircle, Eye, Loader2, ShieldCheck, Clock, BarChart3, Flag, Archive, Bot, Globe, Crown, ImageIcon } from "lucide-react";
+import { CheckCircle, XCircle, Eye, Loader2, ShieldCheck, Clock, BarChart3, Flag, Archive, Bot, Globe, Crown, ImageIcon, Mail } from "lucide-react";
 import { AdminDiscountCodes } from "@/components/AdminDiscountCodes";
 import { AdminFlagReview } from "@/components/AdminFlagReview";
 import { AdminConceptGenerator } from "@/components/AdminConceptGenerator";
@@ -358,6 +358,11 @@ export default function Admin() {
             <Link to="/boardroom">
               <Button variant="outline" size="sm" className="gap-1.5">
                 <Crown className="h-3.5 w-3.5" /> Board Room
+              </Button>
+            </Link>
+            <Link to="/admin/outreach">
+              <Button variant="outline" size="sm" className="gap-1.5">
+                <Mail className="h-3.5 w-3.5" /> Outreach
               </Button>
             </Link>
             <Link to="/swarm">

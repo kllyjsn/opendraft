@@ -46,7 +46,7 @@ export function LiveStatsBar() {
       const items: StatItem[] = [
         { icon: Package, value: String(appCount), label: "Ready-to-launch apps" },
         ...(salesCount > 0 ? [{ icon: ShoppingBag, value: String(salesCount), label: "Apps sold" }] : []),
-        { icon: Users, value: String(builderCount), label: "Entrepreneurs joined" },
+        { icon: Bot, value: "6", label: "Gremlins™ working 24/7" },
         { icon: Star, value: "4.8", label: "Avg satisfaction" },
       ];
 

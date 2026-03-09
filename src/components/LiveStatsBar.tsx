@@ -43,12 +43,14 @@ export function LiveStatsBar() {
       const salesCount = purchasesRes.count ?? 0;
       const builderCount = profilesRes.count ?? 0;
 
-      setStats([
+      const items: StatItem[] = [
         { icon: Package, value: String(appCount), label: "Ready-to-launch apps" },
-        { icon: ShoppingBag, value: String(salesCount), label: "Apps sold" },
+        ...(salesCount > 0 ? [{ icon: ShoppingBag, value: String(salesCount), label: "Apps sold" }] : []),
         { icon: Users, value: String(builderCount), label: "Entrepreneurs joined" },
         { icon: Star, value: "4.8", label: "Avg satisfaction" },
-      ]);
+      ];
+
+      setStats(items);
     }
     load();
   }, []);

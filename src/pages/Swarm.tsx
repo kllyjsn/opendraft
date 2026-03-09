@@ -71,9 +71,9 @@ const agentConfig = {
     icon: Building2,
     color: "text-violet-500",
     bgColor: "bg-violet-500/10",
-    description: "Discovers small businesses, evaluates websites, drafts personalized outreach",
+    description: "Auto-discovers SMBs across 12 industries, scores leads, drafts & sends personalized emails",
     functionName: "swarm-b2b-outreach",
-    actions: ["full_cycle", "discover_businesses", "evaluate_leads", "generate_outreach"],
+    actions: ["full_cycle", "discover_businesses", "evaluate_leads", "generate_outreach", "send_emails", "send_follow_ups"],
   },
   product_improvement: {
     label: "Product Improvement",

@@ -6,27 +6,43 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Target industries for small business outreach
+// Expanded target industries for maximum coverage
 const TARGET_INDUSTRIES = [
-  { name: "Home Services", niches: ["cleaning", "plumbing", "HVAC", "landscaping", "roofing", "electrical"] },
-  { name: "Food & Beverage", niches: ["restaurant", "cafe", "bakery", "catering", "food truck", "bar"] },
-  { name: "Health & Wellness", niches: ["dental", "clinic", "gym", "spa", "chiropractic", "physical therapy"] },
-  { name: "Professional Services", niches: ["legal", "accounting", "photography", "consulting", "real estate", "insurance"] },
-  { name: "Automotive", niches: ["auto repair", "car wash", "detailing", "tire shop", "body shop"] },
-  { name: "Beauty & Personal Care", niches: ["salon", "barbershop", "nail salon", "tattoo", "esthetician"] },
-  { name: "Retail & Local Shops", niches: ["boutique", "florist", "pet store", "gift shop", "hardware store"] },
-  { name: "Education & Childcare", niches: ["daycare", "tutoring", "music lessons", "martial arts", "dance studio"] },
+  { name: "Home Services", niches: ["cleaning service", "plumber", "HVAC contractor", "landscaping", "roofing contractor", "electrician", "handyman", "pest control", "moving company", "pressure washing"] },
+  { name: "Food & Beverage", niches: ["restaurant", "cafe", "bakery", "catering", "food truck", "bar", "pizzeria", "juice bar", "ice cream shop", "brewery"] },
+  { name: "Health & Wellness", niches: ["dental office", "medical clinic", "gym", "spa", "chiropractic", "physical therapy", "yoga studio", "pilates studio", "acupuncture", "massage therapy"] },
+  { name: "Professional Services", niches: ["law firm", "accounting firm", "photographer", "consulting", "real estate agent", "insurance agency", "financial advisor", "architect", "interior designer", "marketing agency"] },
+  { name: "Automotive", niches: ["auto repair shop", "car wash", "auto detailing", "tire shop", "body shop", "oil change", "auto parts store", "motorcycle repair", "RV repair", "boat repair"] },
+  { name: "Beauty & Personal Care", niches: ["hair salon", "barbershop", "nail salon", "tattoo shop", "esthetician", "makeup artist", "lash studio", "tanning salon", "waxing studio", "med spa"] },
+  { name: "Retail & Local Shops", niches: ["boutique", "florist", "pet store", "gift shop", "hardware store", "jewelry store", "antique shop", "bike shop", "craft store", "furniture store"] },
+  { name: "Education & Childcare", niches: ["daycare center", "tutoring center", "music lessons", "martial arts school", "dance studio", "preschool", "driving school", "art classes", "swim lessons", "coding bootcamp"] },
+  { name: "Events & Entertainment", niches: ["wedding venue", "event planner", "DJ service", "photographer", "party rental", "escape room", "bowling alley", "mini golf", "arcade", "trampoline park"] },
+  { name: "Pet Services", niches: ["veterinary clinic", "pet grooming", "dog training", "pet boarding", "dog walking", "pet sitting", "pet store", "animal hospital", "pet daycare", "mobile vet"] },
+  { name: "Construction & Trades", niches: ["general contractor", "painter", "flooring company", "kitchen remodel", "bathroom remodel", "fence company", "deck builder", "concrete contractor", "masonry", "drywall"] },
+  { name: "Real Estate & Property", niches: ["property management", "real estate agency", "home staging", "home inspection", "mortgage broker", "title company", "appraisal", "commercial real estate", "vacation rental", "storage facility"] },
 ];
 
-// Services we offer
+// Comprehensive services we offer
 const SERVICES_OFFERED = [
-  { name: "Custom Website", description: "Modern, mobile-first website with booking/contact forms", price_range: "$500-2000" },
-  { name: "Online Booking System", description: "Let customers book appointments 24/7", price_range: "$300-800" },
-  { name: "Online Ordering", description: "Full ecommerce or food ordering system", price_range: "$800-2500" },
-  { name: "Customer Portal", description: "Client login area for invoices, documents, status updates", price_range: "$600-1500" },
-  { name: "Review Management", description: "Automated review requests and reputation dashboard", price_range: "$200-500" },
-  { name: "Landing Page", description: "High-converting single page for ads/promotions", price_range: "$200-600" },
+  { name: "Custom Website", description: "Modern, mobile-first website with booking/contact forms", price_range: "$500-2000", ideal_for: ["all"] },
+  { name: "Online Booking System", description: "Let customers book appointments 24/7", price_range: "$300-800", ideal_for: ["Health & Wellness", "Beauty & Personal Care", "Professional Services"] },
+  { name: "Online Ordering", description: "Full ecommerce or food ordering system", price_range: "$800-2500", ideal_for: ["Food & Beverage", "Retail & Local Shops"] },
+  { name: "Customer Portal", description: "Client login area for invoices, documents, status updates", price_range: "$600-1500", ideal_for: ["Professional Services", "Construction & Trades"] },
+  { name: "Review Management", description: "Automated review requests and reputation dashboard", price_range: "$200-500", ideal_for: ["all"] },
+  { name: "Landing Page", description: "High-converting single page for ads/promotions", price_range: "$200-600", ideal_for: ["all"] },
+  { name: "Quote Calculator", description: "Interactive pricing tool for services", price_range: "$400-1000", ideal_for: ["Home Services", "Construction & Trades", "Automotive"] },
+  { name: "Gallery & Portfolio", description: "Showcase work with beautiful image galleries", price_range: "$300-700", ideal_for: ["Professional Services", "Beauty & Personal Care", "Construction & Trades"] },
+  { name: "Email Marketing Setup", description: "Newsletter templates and automation", price_range: "$200-500", ideal_for: ["all"] },
+  { name: "Google Business Optimization", description: "Local SEO and GMB profile optimization", price_range: "$150-400", ideal_for: ["all"] },
 ];
+
+// Email templates for different scenarios
+const EMAIL_TEMPLATES = {
+  initial: "initial_outreach",
+  follow_up_1: "follow_up_gentle",
+  follow_up_2: "follow_up_value",
+  follow_up_3: "follow_up_final",
+};
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -38,6 +54,7 @@ serve(async (req) => {
 
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY");
+  const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
   if (!LOVABLE_API_KEY) {
     return new Response(JSON.stringify({ error: "LOVABLE_API_KEY not configured" }), {
@@ -75,6 +92,12 @@ serve(async (req) => {
           break;
         case "generate_outreach":
           result = await generateOutreachMessages(supabase, LOVABLE_API_KEY, campaignId);
+          break;
+        case "send_emails":
+          result = await sendOutreachEmails(supabase, RESEND_API_KEY, campaignId);
+          break;
+        case "send_follow_ups":
+          result = await sendFollowUpEmails(supabase, LOVABLE_API_KEY, RESEND_API_KEY, campaignId);
           break;
         case "full_cycle":
         default:
@@ -521,4 +544,272 @@ Return JSON with: subject (compelling, not spammy), body (the email text), follo
     messages_drafted: messagesCreated.length,
     messages: messagesCreated,
   };
+}
+
+// Send outreach emails via Resend
+async function sendOutreachEmails(
+  supabase: any,
+  resendKey: string | undefined,
+  campaignId: string | null
+): Promise<any> {
+  if (!resendKey) {
+    return { error: "RESEND_API_KEY not configured", emails_sent: 0 };
+  }
+
+  // Get drafted messages that haven't been sent
+  let query = supabase
+    .from("outreach_messages")
+    .select("*, outreach_leads!inner(*)")
+    .eq("message_status", "drafted")
+    .eq("channel", "email")
+    .not("outreach_leads.contact_email", "is", null)
+    .limit(10);
+
+  if (campaignId) {
+    query = query.eq("campaign_id", campaignId);
+  }
+
+  const { data: messages } = await query;
+
+  if (!messages || messages.length === 0) {
+    return { emails_sent: 0, message: "No drafted emails with contact emails found" };
+  }
+
+  const sentEmails: any[] = [];
+  const failedEmails: any[] = [];
+
+  for (const msg of messages) {
+    const lead = msg.outreach_leads;
+    
+    try {
+      const response = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${resendKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from: "OpenDraft <outreach@opendraft.lovable.app>",
+          to: [lead.contact_email],
+          subject: msg.subject,
+          html: formatEmailHtml(msg.body, lead),
+          tags: [
+            { name: "campaign_id", value: msg.campaign_id },
+            { name: "lead_id", value: msg.lead_id },
+          ],
+        }),
+      });
+
+      if (response.ok) {
+        const emailData = await response.json();
+        
+        await supabase
+          .from("outreach_messages")
+          .update({
+            message_status: "sent",
+            sent_at: new Date().toISOString(),
+            metadata: { ...msg.metadata, resend_id: emailData.id }
+          })
+          .eq("id", msg.id);
+
+        await supabase
+          .from("outreach_leads")
+          .update({ 
+            last_contacted_at: new Date().toISOString(),
+            lead_status: "contacted"
+          })
+          .eq("id", lead.id);
+
+        sentEmails.push({
+          lead_id: lead.id,
+          business_name: lead.business_name,
+          email: lead.contact_email,
+          subject: msg.subject,
+        });
+      } else {
+        const errorData = await response.json();
+        failedEmails.push({
+          lead_id: lead.id,
+          business_name: lead.business_name,
+          error: errorData.message || "Send failed",
+        });
+      }
+    } catch (e) {
+      failedEmails.push({
+        lead_id: lead.id,
+        business_name: lead.business_name,
+        error: e instanceof Error ? e.message : "Unknown error",
+      });
+    }
+  }
+
+  return {
+    emails_sent: sentEmails.length,
+    emails_failed: failedEmails.length,
+    sent: sentEmails,
+    failed: failedEmails,
+  };
+}
+
+// Send follow-up emails
+async function sendFollowUpEmails(
+  supabase: any,
+  lovableKey: string,
+  resendKey: string | undefined,
+  campaignId: string | null
+): Promise<any> {
+  if (!resendKey) {
+    return { error: "RESEND_API_KEY not configured", follow_ups_sent: 0 };
+  }
+
+  // Get leads that need follow-up
+  const now = new Date().toISOString();
+  
+  let query = supabase
+    .from("outreach_leads")
+    .select("*, outreach_messages(*)")
+    .eq("lead_status", "contacted")
+    .lte("next_follow_up_at", now)
+    .not("contact_email", "is", null)
+    .limit(5);
+
+  if (campaignId) {
+    query = query.eq("campaign_id", campaignId);
+  }
+
+  const { data: leads } = await query;
+
+  if (!leads || leads.length === 0) {
+    return { follow_ups_sent: 0, message: "No leads ready for follow-up" };
+  }
+
+  const followUpsSent: any[] = [];
+
+  for (const lead of leads) {
+    const existingMessages = lead.outreach_messages || [];
+    const followUpCount = existingMessages.filter((m: any) => m.metadata?.is_follow_up).length;
+    
+    // Max 3 follow-ups
+    if (followUpCount >= 3) {
+      await supabase
+        .from("outreach_leads")
+        .update({ lead_status: "no_response" })
+        .eq("id", lead.id);
+      continue;
+    }
+
+    // Generate follow-up with AI
+    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${lovableKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-3-flash-preview",
+        messages: [
+          {
+            role: "system",
+            content: `You write friendly follow-up emails for a web dev agency. Keep it SHORT (under 80 words). Be helpful, not pushy. This is follow-up #${followUpCount + 1}.`
+          },
+          {
+            role: "user",
+            content: `Write follow-up #${followUpCount + 1} for:
+Business: ${lead.business_name}
+Industry: ${lead.industry}
+Original pain points: ${lead.metadata?.scoring?.pain_points?.join(", ") || "website improvement"}
+Previous subject: ${existingMessages[0]?.subject || "N/A"}
+
+Return JSON: { "subject": "...", "body": "..." }`
+          }
+        ],
+        response_format: { type: "json_object" }
+      }),
+    });
+
+    if (aiResponse.ok) {
+      const aiData = await aiResponse.json();
+      const content = aiData.choices?.[0]?.message?.content;
+      
+      if (content) {
+        const followUp = JSON.parse(content);
+        
+        // Send via Resend
+        const sendResponse = await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${resendKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            from: "OpenDraft <outreach@opendraft.lovable.app>",
+            to: [lead.contact_email],
+            subject: followUp.subject,
+            html: formatEmailHtml(followUp.body, lead),
+          }),
+        });
+
+        if (sendResponse.ok) {
+          // Save follow-up message
+          await supabase.from("outreach_messages").insert({
+            campaign_id: lead.campaign_id,
+            lead_id: lead.id,
+            channel: "email",
+            subject: followUp.subject,
+            body: followUp.body,
+            message_status: "sent",
+            sent_at: new Date().toISOString(),
+            ai_generated: true,
+            metadata: { is_follow_up: true, follow_up_number: followUpCount + 1 }
+          });
+
+          // Schedule next follow-up
+          const nextFollowUp = new Date();
+          nextFollowUp.setDate(nextFollowUp.getDate() + (followUpCount + 1) * 3);
+          
+          await supabase
+            .from("outreach_leads")
+            .update({ 
+              last_contacted_at: new Date().toISOString(),
+              next_follow_up_at: nextFollowUp.toISOString()
+            })
+            .eq("id", lead.id);
+
+          followUpsSent.push({
+            lead_id: lead.id,
+            business_name: lead.business_name,
+            follow_up_number: followUpCount + 1,
+          });
+        }
+      }
+    }
+  }
+
+  return {
+    follow_ups_sent: followUpsSent.length,
+    follow_ups: followUpsSent,
+  };
+}
+
+// Format email as HTML
+function formatEmailHtml(body: string, lead: any): string {
+  const paragraphs = body.split('\n\n').map(p => `<p style="margin-bottom: 16px; line-height: 1.6;">${p}</p>`).join('');
+  
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #1a1a1a; padding: 20px; max-width: 600px; margin: 0 auto;">
+  ${paragraphs}
+  <hr style="border: none; border-top: 1px solid #e5e5e5; margin: 24px 0;">
+  <p style="font-size: 12px; color: #666;">
+    Sent by OpenDraft · <a href="https://opendraft.lovable.app" style="color: #666;">opendraft.lovable.app</a>
+    <br>
+    <a href="https://opendraft.lovable.app/unsubscribe?email=${encodeURIComponent(lead.contact_email || '')}" style="color: #666;">Unsubscribe</a>
+  </p>
+</body>
+</html>`;
 }

@@ -159,7 +159,7 @@ export function OutreachDashboard() {
           </SelectContent>
         </Select>
 
-        <div className="flex gap-2 ml-auto">
+        <div className="flex gap-2 ml-auto flex-wrap">
           <Button 
             size="sm" 
             variant="outline"
@@ -185,7 +185,25 @@ export function OutreachDashboard() {
             disabled={running !== null}
           >
             {running === "generate_outreach" ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Mail className="h-3.5 w-3.5 mr-1.5" />}
-            Draft Emails
+            Draft
+          </Button>
+          <Button 
+            size="sm" 
+            variant="secondary"
+            onClick={() => runAgent("send_emails")}
+            disabled={running !== null}
+          >
+            {running === "send_emails" ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Send className="h-3.5 w-3.5 mr-1.5" />}
+            Send
+          </Button>
+          <Button 
+            size="sm" 
+            variant="outline"
+            onClick={() => runAgent("send_follow_ups")}
+            disabled={running !== null}
+          >
+            {running === "send_follow_ups" ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Clock className="h-3.5 w-3.5 mr-1.5" />}
+            Follow-ups
           </Button>
           <Button 
             size="sm"

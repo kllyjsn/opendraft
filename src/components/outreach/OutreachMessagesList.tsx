@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
-import { Mail, Copy, Loader2, Send, Clock, Pencil, Save, X, CheckCircle, Sparkles, Reply, MessageSquare, Inbox, ArrowUpDown } from "lucide-react";
+import { Mail, Copy, Loader2, Send, Clock, Pencil, Save, X, CheckCircle, Sparkles, Reply, MessageSquare, Inbox, ArrowUpDown, TestTube } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
@@ -62,6 +62,7 @@ export function OutreachMessagesList({ campaignId, onStatsChange }: Props) {
 
   // Thread expansion
   const [expandedThread, setExpandedThread] = useState<string | null>(null);
+  const [simulatingReply, setSimulatingReply] = useState<string | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -86,6 +87,38 @@ export function OutreachMessagesList({ campaignId, onStatsChange }: Props) {
     (leadsRes.data || []).forEach((l: any) => { leadsMap[l.id] = l; });
     setLeads(leadsMap);
     setLoading(false);
+  };
+
+  const simulateInboundReply = async (msg: OutreachMessage) => {
+    const lead = leads[msg.lead_id];
+    if (!lead?.contact_email) {
+      toast.error("Lead has no email to simulate from");
+      return;
+    }
+    setSimulatingReply(msg.id);
+    try {
+      const mockPayload = {
+        type: "email.received",
+        from: { email: lead.contact_email },
+        to: ["outreach@opendraft.co"],
+        subject: `Re: ${msg.subject || "Your message"}`,
+        text: `Hi there,\n\nThanks for reaching out! We're interested in learning more about what you offer. Could you send over some pricing details?\n\nBest regards,\n${lead.business_name}`,
+      };
+
+      const { error } = await supabase.functions.invoke("outreach-inbound", {
+        body: mockPayload,
+      });
+
+      if (error) throw error;
+      toast.success(`Simulated reply from ${lead.business_name}`);
+      await fetchData();
+      onStatsChange?.();
+      setFilter("inbox");
+    } catch (e: any) {
+      toast.error(`Simulate failed: ${e.message}`);
+    } finally {
+      setSimulatingReply(null);
+    }
   };
 
   const inboundMessages = messages.filter(m => m.direction === "inbound");
@@ -439,6 +472,17 @@ export function OutreachMessagesList({ campaignId, onStatsChange }: Props) {
                           {(isInbound || (!isDraft && lead?.contact_email)) && (
                             <Button size="sm" variant={isInbound ? "default" : "outline"} onClick={() => startReply(msg)} className="text-xs gap-1 h-8">
                               <Reply className="h-3 w-3" /> Reply
+                            </Button>
+                          )}
+                          {!isDraft && !isInbound && lead?.contact_email && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => simulateInboundReply(msg)}
+                              disabled={simulatingReply === msg.id}
+                              className="text-xs gap-1 h-8 text-muted-foreground hover:text-foreground"
+                            >
+                              {simulatingReply === msg.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <TestTube className="h-3 w-3" />} Simulate Reply
                             </Button>
                           )}
                           <Button

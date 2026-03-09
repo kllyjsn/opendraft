@@ -52,7 +52,8 @@ interface OutreachMessage {
 const TARGET_INDUSTRIES = [
   "Home Services", "Food & Beverage", "Health & Wellness",
   "Professional Services", "Automotive", "Beauty & Personal Care",
-  "Retail & Local Shops", "Education & Childcare"
+  "Retail & Local Shops", "Education & Childcare", "Events & Entertainment",
+  "Pet Services", "Construction & Trades", "Real Estate & Property"
 ];
 
 export function OutreachDashboard() {

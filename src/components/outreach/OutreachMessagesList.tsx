@@ -62,6 +62,7 @@ export function OutreachMessagesList({ campaignId, onStatsChange }: Props) {
 
   // Thread expansion
   const [expandedThread, setExpandedThread] = useState<string | null>(null);
+  const [simulatingReply, setSimulatingReply] = useState<string | null>(null);
 
   useEffect(() => {
     fetchData();

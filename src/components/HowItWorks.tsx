@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Search, Rocket, HeartHandshake } from "lucide-react";
+import { MascotPeek } from "@/components/MascotPeek";
 
 const steps = [
   {

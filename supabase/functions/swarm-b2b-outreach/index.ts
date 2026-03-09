@@ -891,6 +891,143 @@ Return JSON: { "subject": "...", "body": "..." }`
   };
 }
 
+// Send a single drafted email by message ID
+async function sendSingleEmail(
+  supabase: any,
+  resendKey: string | undefined,
+  messageId: string
+): Promise<any> {
+  if (!resendKey) return { error: "RESEND_API_KEY not configured" };
+  if (!messageId) return { error: "message_id required" };
+
+  const { data: msg } = await supabase
+    .from("outreach_messages")
+    .select("*, outreach_leads!inner(*)")
+    .eq("id", messageId)
+    .single();
+
+  if (!msg) return { error: "Message not found" };
+  if (msg.message_status !== "drafted") return { error: "Message already sent" };
+
+  const lead = msg.outreach_leads;
+  if (!lead?.contact_email) return { error: "Lead has no contact email" };
+
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${resendKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from: "OpenDraft <outreach@opendraft.co>",
+      to: [lead.contact_email],
+      subject: msg.subject,
+      html: formatEmailHtml(msg.body, lead),
+      tags: [
+        { name: "campaign_id", value: msg.campaign_id },
+        { name: "lead_id", value: msg.lead_id },
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    const errData = await response.json();
+    return { error: errData.message || "Send failed" };
+  }
+
+  const emailData = await response.json();
+
+  await supabase
+    .from("outreach_messages")
+    .update({
+      message_status: "sent",
+      sent_at: new Date().toISOString(),
+      metadata: { ...msg.metadata, resend_id: emailData.id },
+    })
+    .eq("id", msg.id);
+
+  await supabase
+    .from("outreach_leads")
+    .update({ last_contacted_at: new Date().toISOString(), lead_status: "contacted" })
+    .eq("id", lead.id);
+
+  return { success: true, email: lead.contact_email, subject: msg.subject };
+}
+
+// Reply to a lead from the admin dashboard
+async function replyToLead(
+  supabase: any,
+  resendKey: string | undefined,
+  leadId: string,
+  campaignId: string,
+  subject: string,
+  body: string
+): Promise<any> {
+  if (!resendKey) return { error: "RESEND_API_KEY not configured" };
+  if (!leadId || !subject || !body) return { error: "lead_id, subject, and body are required" };
+
+  const { data: lead } = await supabase
+    .from("outreach_leads")
+    .select("*")
+    .eq("id", leadId)
+    .single();
+
+  if (!lead) return { error: "Lead not found" };
+  if (!lead.contact_email) return { error: "Lead has no contact email" };
+
+  // Send via Resend
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${resendKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from: "OpenDraft <outreach@opendraft.co>",
+      to: [lead.contact_email],
+      subject,
+      html: formatEmailHtml(body, lead),
+      tags: [
+        { name: "campaign_id", value: campaignId || lead.campaign_id },
+        { name: "lead_id", value: leadId },
+        { name: "type", value: "admin_reply" },
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    const errData = await response.json();
+    return { error: errData.message || "Send failed" };
+  }
+
+  const emailData = await response.json();
+
+  // Store the reply as an outreach message
+  const { data: newMsg } = await supabase
+    .from("outreach_messages")
+    .insert({
+      campaign_id: campaignId || lead.campaign_id,
+      lead_id: leadId,
+      channel: "email",
+      subject,
+      body,
+      message_status: "sent",
+      sent_at: new Date().toISOString(),
+      ai_generated: false,
+      direction: "outbound",
+      metadata: { resend_id: emailData.id, type: "admin_reply" },
+    })
+    .select()
+    .single();
+
+  await supabase
+    .from("outreach_leads")
+    .update({ last_contacted_at: new Date().toISOString(), lead_status: "in_conversation" })
+    .eq("id", leadId);
+
+  return { success: true, message_id: newMsg?.id, email: lead.contact_email };
+}
+
 // Format email as HTML
 function formatEmailHtml(body: string, lead: any): string {
   const paragraphs = body.split('\n\n').map(p => `<p style="margin-bottom: 16px; line-height: 1.6;">${p}</p>`).join('');

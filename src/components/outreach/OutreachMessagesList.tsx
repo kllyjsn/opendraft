@@ -474,6 +474,17 @@ export function OutreachMessagesList({ campaignId, onStatsChange }: Props) {
                               <Reply className="h-3 w-3" /> Reply
                             </Button>
                           )}
+                          {!isDraft && !isInbound && lead?.contact_email && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => simulateInboundReply(msg)}
+                              disabled={simulatingReply === msg.id}
+                              className="text-xs gap-1 h-8 text-muted-foreground hover:text-foreground"
+                            >
+                              {simulatingReply === msg.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <TestTube className="h-3 w-3" />} Simulate Reply
+                            </Button>
+                          )}
                           <Button
                             size="sm"
                             variant="ghost"

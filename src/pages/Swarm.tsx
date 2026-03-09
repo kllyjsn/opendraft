@@ -8,10 +8,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Bot, Zap, TrendingUp, Globe, RefreshCw, Clock, CheckCircle, XCircle, Loader2, Play, ShieldCheck, Lightbulb, Rocket, Code, AlertTriangle, ChevronDown, ChevronUp } from "lucide-react";
+import { Bot, Zap, TrendingUp, Globe, RefreshCw, Clock, CheckCircle, XCircle, Loader2, Play, ShieldCheck, Lightbulb, Rocket, Code, AlertTriangle, ChevronDown, ChevronUp, Building2, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { CanonicalTag } from "@/components/CanonicalTag";
 import { cn } from "@/lib/utils";
+import { OutreachDashboard } from "@/components/OutreachDashboard";
 
 interface SwarmTask {
   id: string;
@@ -57,13 +58,22 @@ const agentConfig = {
     actions: ["full_cycle", "blog_ideas", "meta_audit"],
   },
   outreach_growth: {
-    label: "Outreach & Growth",
+    label: "Directory Outreach",
     icon: Globe,
     color: "text-blue-500",
     bgColor: "bg-blue-500/10",
     description: "Discovers directories, crafts submissions, finds partnership opportunities",
     functionName: "swarm-outreach-agent",
     actions: ["full_cycle", "find_directories", "craft_submissions"],
+  },
+  b2b_outreach: {
+    label: "B2B Sales Outreach",
+    icon: Building2,
+    color: "text-violet-500",
+    bgColor: "bg-violet-500/10",
+    description: "Discovers small businesses, evaluates websites, drafts personalized outreach",
+    functionName: "swarm-b2b-outreach",
+    actions: ["full_cycle", "discover_businesses", "evaluate_leads", "generate_outreach"],
   },
   product_improvement: {
     label: "Product Improvement",

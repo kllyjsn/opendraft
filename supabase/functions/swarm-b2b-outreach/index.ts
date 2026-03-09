@@ -6,27 +6,43 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Target industries for small business outreach
+// Expanded target industries for maximum coverage
 const TARGET_INDUSTRIES = [
-  { name: "Home Services", niches: ["cleaning", "plumbing", "HVAC", "landscaping", "roofing", "electrical"] },
-  { name: "Food & Beverage", niches: ["restaurant", "cafe", "bakery", "catering", "food truck", "bar"] },
-  { name: "Health & Wellness", niches: ["dental", "clinic", "gym", "spa", "chiropractic", "physical therapy"] },
-  { name: "Professional Services", niches: ["legal", "accounting", "photography", "consulting", "real estate", "insurance"] },
-  { name: "Automotive", niches: ["auto repair", "car wash", "detailing", "tire shop", "body shop"] },
-  { name: "Beauty & Personal Care", niches: ["salon", "barbershop", "nail salon", "tattoo", "esthetician"] },
-  { name: "Retail & Local Shops", niches: ["boutique", "florist", "pet store", "gift shop", "hardware store"] },
-  { name: "Education & Childcare", niches: ["daycare", "tutoring", "music lessons", "martial arts", "dance studio"] },
+  { name: "Home Services", niches: ["cleaning service", "plumber", "HVAC contractor", "landscaping", "roofing contractor", "electrician", "handyman", "pest control", "moving company", "pressure washing"] },
+  { name: "Food & Beverage", niches: ["restaurant", "cafe", "bakery", "catering", "food truck", "bar", "pizzeria", "juice bar", "ice cream shop", "brewery"] },
+  { name: "Health & Wellness", niches: ["dental office", "medical clinic", "gym", "spa", "chiropractic", "physical therapy", "yoga studio", "pilates studio", "acupuncture", "massage therapy"] },
+  { name: "Professional Services", niches: ["law firm", "accounting firm", "photographer", "consulting", "real estate agent", "insurance agency", "financial advisor", "architect", "interior designer", "marketing agency"] },
+  { name: "Automotive", niches: ["auto repair shop", "car wash", "auto detailing", "tire shop", "body shop", "oil change", "auto parts store", "motorcycle repair", "RV repair", "boat repair"] },
+  { name: "Beauty & Personal Care", niches: ["hair salon", "barbershop", "nail salon", "tattoo shop", "esthetician", "makeup artist", "lash studio", "tanning salon", "waxing studio", "med spa"] },
+  { name: "Retail & Local Shops", niches: ["boutique", "florist", "pet store", "gift shop", "hardware store", "jewelry store", "antique shop", "bike shop", "craft store", "furniture store"] },
+  { name: "Education & Childcare", niches: ["daycare center", "tutoring center", "music lessons", "martial arts school", "dance studio", "preschool", "driving school", "art classes", "swim lessons", "coding bootcamp"] },
+  { name: "Events & Entertainment", niches: ["wedding venue", "event planner", "DJ service", "photographer", "party rental", "escape room", "bowling alley", "mini golf", "arcade", "trampoline park"] },
+  { name: "Pet Services", niches: ["veterinary clinic", "pet grooming", "dog training", "pet boarding", "dog walking", "pet sitting", "pet store", "animal hospital", "pet daycare", "mobile vet"] },
+  { name: "Construction & Trades", niches: ["general contractor", "painter", "flooring company", "kitchen remodel", "bathroom remodel", "fence company", "deck builder", "concrete contractor", "masonry", "drywall"] },
+  { name: "Real Estate & Property", niches: ["property management", "real estate agency", "home staging", "home inspection", "mortgage broker", "title company", "appraisal", "commercial real estate", "vacation rental", "storage facility"] },
 ];
 
-// Services we offer
+// Comprehensive services we offer
 const SERVICES_OFFERED = [
-  { name: "Custom Website", description: "Modern, mobile-first website with booking/contact forms", price_range: "$500-2000" },
-  { name: "Online Booking System", description: "Let customers book appointments 24/7", price_range: "$300-800" },
-  { name: "Online Ordering", description: "Full ecommerce or food ordering system", price_range: "$800-2500" },
-  { name: "Customer Portal", description: "Client login area for invoices, documents, status updates", price_range: "$600-1500" },
-  { name: "Review Management", description: "Automated review requests and reputation dashboard", price_range: "$200-500" },
-  { name: "Landing Page", description: "High-converting single page for ads/promotions", price_range: "$200-600" },
+  { name: "Custom Website", description: "Modern, mobile-first website with booking/contact forms", price_range: "$500-2000", ideal_for: ["all"] },
+  { name: "Online Booking System", description: "Let customers book appointments 24/7", price_range: "$300-800", ideal_for: ["Health & Wellness", "Beauty & Personal Care", "Professional Services"] },
+  { name: "Online Ordering", description: "Full ecommerce or food ordering system", price_range: "$800-2500", ideal_for: ["Food & Beverage", "Retail & Local Shops"] },
+  { name: "Customer Portal", description: "Client login area for invoices, documents, status updates", price_range: "$600-1500", ideal_for: ["Professional Services", "Construction & Trades"] },
+  { name: "Review Management", description: "Automated review requests and reputation dashboard", price_range: "$200-500", ideal_for: ["all"] },
+  { name: "Landing Page", description: "High-converting single page for ads/promotions", price_range: "$200-600", ideal_for: ["all"] },
+  { name: "Quote Calculator", description: "Interactive pricing tool for services", price_range: "$400-1000", ideal_for: ["Home Services", "Construction & Trades", "Automotive"] },
+  { name: "Gallery & Portfolio", description: "Showcase work with beautiful image galleries", price_range: "$300-700", ideal_for: ["Professional Services", "Beauty & Personal Care", "Construction & Trades"] },
+  { name: "Email Marketing Setup", description: "Newsletter templates and automation", price_range: "$200-500", ideal_for: ["all"] },
+  { name: "Google Business Optimization", description: "Local SEO and GMB profile optimization", price_range: "$150-400", ideal_for: ["all"] },
 ];
+
+// Email templates for different scenarios
+const EMAIL_TEMPLATES = {
+  initial: "initial_outreach",
+  follow_up_1: "follow_up_gentle",
+  follow_up_2: "follow_up_value",
+  follow_up_3: "follow_up_final",
+};
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -38,6 +54,7 @@ serve(async (req) => {
 
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY");
+  const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
   if (!LOVABLE_API_KEY) {
     return new Response(JSON.stringify({ error: "LOVABLE_API_KEY not configured" }), {
@@ -75,6 +92,12 @@ serve(async (req) => {
           break;
         case "generate_outreach":
           result = await generateOutreachMessages(supabase, LOVABLE_API_KEY, campaignId);
+          break;
+        case "send_emails":
+          result = await sendOutreachEmails(supabase, RESEND_API_KEY, campaignId);
+          break;
+        case "send_follow_ups":
+          result = await sendFollowUpEmails(supabase, LOVABLE_API_KEY, RESEND_API_KEY, campaignId);
           break;
         case "full_cycle":
         default:

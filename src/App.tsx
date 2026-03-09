@@ -48,6 +48,7 @@ import CreatorHandbook from "./pages/CreatorHandbook";
 import Credits from "./pages/Credits";
 import Onboarding from "./pages/Onboarding";
 import Security from "./pages/Security";
+import AdminOutreach from "./pages/AdminOutreach";
 
 const queryClient = new QueryClient();
 

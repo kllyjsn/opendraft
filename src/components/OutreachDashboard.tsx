@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { 
   Building2, Mail, Target, TrendingUp, Users, Star, 
   ExternalLink, Copy, Send, RefreshCw, Loader2, Eye,
-  CheckCircle, Clock, AlertCircle
+  CheckCircle, Clock, AlertCircle, Rocket
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";

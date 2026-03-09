@@ -6,13 +6,12 @@ import { ListingCard } from "@/components/ListingCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, TrendingUp, SlidersHorizontal, X, Loader2, ChevronDown, ArrowRight, Code2, Rocket, Users } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Search, TrendingUp, SlidersHorizontal, X, Loader2, ChevronDown, ArrowRight } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { FeaturedListings } from "@/components/FeaturedListings";
 import { CategoryShowcase } from "@/components/CategoryShowcase";
 import { HowItWorks } from "@/components/HowItWorks";
-import { BrandMascot } from "@/components/BrandMascot";
 
 const CATEGORIES = ["All", "SaaS Tool", "AI App", "Landing Page", "Utility", "Game", "Other"];
 const COMPLETENESS = ["All", "Prototype", "MVP", "Production Ready"];
@@ -48,24 +47,9 @@ interface Listing {
   seller_username?: string;
 }
 
-const easeOut = [0.22, 1, 0.36, 1] as const;
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 30 },
-  visible: (i: number = 0) => ({
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.7, delay: i * 0.1, ease: easeOut as unknown as [number, number, number, number] },
-  }),
-};
-
-const staggerContainer = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.08 } },
-};
-
 export default function Index() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -80,18 +64,15 @@ export default function Index() {
   const [page, setPage] = useState(0);
   const [showStickyBar, setShowStickyBar] = useState(false);
   const [stickyDismissed, setStickyDismissed] = useState(false);
+  const [heroSearch, setHeroSearch] = useState("");
 
-  // Show sticky bar after scroll for non-authenticated visitors
   useEffect(() => {
     if (user || stickyDismissed) return;
-    const onScroll = () => {
-      setShowStickyBar(window.scrollY > 400);
-    };
+    const onScroll = () => setShowStickyBar(window.scrollY > 400);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, [user, stickyDismissed]);
 
-  // Reset page when filters change
   useEffect(() => {
     setPage(0);
     setListings([]);
@@ -114,34 +95,22 @@ export default function Index() {
       .from("listings")
       .select("id,title,description,price,pricing_type,completeness_badge,tech_stack,screenshots,sales_count,view_count,built_with,seller_id,security_score", { count: "exact" })
       .eq("status", "live");
-
-    if (category !== "All" && categoryMap[category]) {
-      query = query.eq("category", categoryMap[category] as any);
-    }
-    if (completeness !== "All" && completenessMap[completeness]) {
-      query = query.eq("completeness_badge", completenessMap[completeness] as any);
-    }
-    if (freeOnly) {
-      query = query.eq("price", 0);
-    }
-    if (sort === "Newest") {
-      query = query.order("created_at", { ascending: false });
-    } else {
-      query = query.order("sales_count", { ascending: false });
-    }
+    if (category !== "All" && categoryMap[category]) query = query.eq("category", categoryMap[category] as any);
+    if (completeness !== "All" && completenessMap[completeness]) query = query.eq("completeness_badge", completenessMap[completeness] as any);
+    if (freeOnly) query = query.eq("price", 0);
+    if (sort === "Newest") query = query.order("created_at", { ascending: false });
+    else query = query.order("sales_count", { ascending: false });
     return query;
   }, [category, completeness, sort, freeOnly]);
 
   async function fetchListings(pageNum: number, reset: boolean = false) {
     if (reset) setLoading(true);
     else setLoadingMore(true);
-
     const from = pageNum * PAGE_SIZE;
     let listingsData: Listing[] = [];
     let count: number = 0;
 
     if (search.trim()) {
-      // Use the powerful search_listings RPC with full-text + trigram + fuzzy matching
       const { data, error } = await supabase.rpc("search_listings", {
         search_query: search.trim(),
         category_filter: category !== "All" && categoryMap[category] ? categoryMap[category] : null,
@@ -151,43 +120,34 @@ export default function Index() {
         page_offset: from,
         page_limit: PAGE_SIZE,
       });
-
       if (!error && data && data.length > 0) {
         count = (data[0] as any).total_count ?? data.length;
         listingsData = data as unknown as Listing[];
       }
     } else {
-      // No search term — use standard query
       const to = from + PAGE_SIZE - 1;
       const result = await buildQuery().range(from, to);
       listingsData = (result.data as Listing[]) ?? [];
       count = result.count ?? 0;
     }
 
-    // Fetch seller usernames
     const sellerIds = [...new Set(listingsData.map((l) => l.seller_id))];
     let profileMap: Record<string, string> = {};
     if (sellerIds.length > 0) {
-      const { data: profiles } = await supabase
-        .from("public_profiles")
-        .select("user_id, username")
-        .in("user_id", sellerIds);
+      const { data: profiles } = await supabase.from("public_profiles").select("user_id, username").in("user_id", sellerIds);
       profileMap = Object.fromEntries((profiles ?? []).map((p) => [p.user_id, p.username ?? "Anonymous"]));
     }
 
     const enriched = listingsData
       .map((l) => ({ ...l, seller_username: profileMap[l.seller_id] }))
       .sort((a, b) => {
-        const aHasImg = a.screenshots && a.screenshots.length > 0 && a.screenshots[0] !== "" ? 1 : 0;
-        const bHasImg = b.screenshots && b.screenshots.length > 0 && b.screenshots[0] !== "" ? 1 : 0;
-        return bHasImg - aHasImg; // screenshots first
+        const aHasImg = a.screenshots?.length > 0 && a.screenshots[0] !== "" ? 1 : 0;
+        const bHasImg = b.screenshots?.length > 0 && b.screenshots[0] !== "" ? 1 : 0;
+        return bHasImg - aHasImg;
       });
 
-    if (reset) {
-      setListings(enriched);
-    } else {
-      setListings((prev) => [...prev, ...enriched]);
-    }
+    if (reset) setListings(enriched);
+    else setListings((prev) => [...prev, ...enriched]);
     setTotalCount(count);
     setLoading(false);
     setLoadingMore(false);
@@ -199,6 +159,14 @@ export default function Index() {
     fetchListings(nextPage, false);
   }
 
+  function handleHeroSearch(e: React.FormEvent) {
+    e.preventDefault();
+    if (heroSearch.trim()) {
+      setSearch(heroSearch.trim());
+      document.getElementById("browse")?.scrollIntoView({ behavior: "smooth" });
+    }
+  }
+
   const hasMore = listings.length < totalCount;
   const hasFilters = search || category !== "All" || completeness !== "All" || freeOnly;
 
@@ -206,72 +174,90 @@ export default function Index() {
     <div className="min-h-screen flex flex-col">
       <Navbar />
 
-      {/* ── HERO ── */}
-      <section className="relative overflow-hidden py-10 md:py-16 grain-overlay">
-        <div className="absolute -top-60 -right-60 h-[700px] w-[700px] rounded-full bg-primary/20 blur-[140px] animate-pulse-glow pointer-events-none" />
+      {/* ── COMPACT HERO ── */}
+      <section className="relative overflow-hidden pt-6 pb-4 md:pt-10 md:pb-6">
+        <div className="absolute -top-40 -right-40 h-[500px] w-[500px] rounded-full bg-primary/15 blur-[120px] animate-pulse-glow pointer-events-none" />
 
         <div className="container mx-auto px-4 text-center relative z-10">
-          <motion.div initial="hidden" animate="visible" variants={staggerContainer}>
-            <motion.div variants={fadeUp} custom={0} className="flex justify-center mb-3">
-              <BrandMascot size={64} variant="wave" />
-            </motion.div>
+          <h1 className="text-3xl md:text-5xl lg:text-6xl font-black tracking-tighter mb-2 leading-[0.95]">
+            Get an app.{" "}
+            <span
+              className="text-gradient animate-gradient-shift inline-block"
+              style={{
+                backgroundImage: "linear-gradient(135deg, hsl(265 85% 58%), hsl(330 90% 60%), hsl(185 90% 45%), hsl(265 85% 58%))",
+                backgroundSize: "200% 200%",
+              }}
+            >
+              Launch today.
+            </span>
+          </h1>
+          <p className="text-sm md:text-base text-muted-foreground max-w-lg mx-auto mb-4">
+            1,000+ ready-made apps — pick one, deploy instantly, no coding required.
+          </p>
 
-            <motion.h1 variants={fadeUp} custom={0} className="text-4xl md:text-7xl font-black tracking-tighter mb-3 md:mb-4 leading-[0.95]">
-              Your idea.
-              <br />
-              <span className="text-gradient animate-gradient-shift inline-block"
-                style={{ backgroundImage: 'linear-gradient(135deg, hsl(265 85% 58%), hsl(330 90% 60%), hsl(185 90% 45%), hsl(265 85% 58%))', backgroundSize: '200% 200%' }}
+          {/* Hero search bar */}
+          <form onSubmit={handleHeroSearch} className="max-w-md mx-auto mb-4">
+            <div className="relative">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search apps — e.g. 'CRM', 'AI chatbot', 'landing page'..."
+                value={heroSearch}
+                onChange={(e) => setHeroSearch(e.target.value)}
+                className="pl-10 pr-24 h-11 glass border-border/40 focus-visible:border-primary/50 focus-visible:shadow-glow transition-all rounded-full text-sm"
+              />
+              <Button
+                type="submit"
+                size="sm"
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 gradient-hero text-white border-0 shadow-glow hover:opacity-90 rounded-full h-8 px-4 text-xs font-bold"
               >
-                Already built.
-              </span>
-            </motion.h1>
+                Search
+              </Button>
+            </div>
+          </form>
 
-            <motion.p variants={fadeUp} custom={1} className="text-sm md:text-base text-muted-foreground max-w-md mx-auto mb-5 leading-relaxed">
-              Skip months of development. Pick a ready-made app, customize it, and launch your business today.
-            </motion.p>
-
-            <motion.div variants={fadeUp} custom={1.5} className="flex items-center justify-center gap-3 mb-5">
-              <a href="#browse">
-                <Button size="lg" className="gradient-hero text-white border-0 shadow-glow hover:opacity-90 font-bold gap-2 h-11 px-6">
-                  Find your app
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </a>
-              <Link to={user ? "/sell" : "/login"}>
-                <Button size="lg" variant="outline" className="border-border/60 hover:border-primary/50 h-11 px-6 font-semibold">
-                  List & sell
-                </Button>
-              </Link>
-            </motion.div>
-
-            {/* Compact social proof */}
-            <motion.div variants={fadeUp} custom={2} className="flex items-center justify-center gap-5 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1.5"><Code2 className="h-3.5 w-3.5 text-primary" /><strong className="text-foreground">{totalCount || '—'}</strong> ready-made apps</span>
-              <span className="h-3 w-px bg-border/50" />
-              <span className="flex items-center gap-1.5"><Rocket className="h-3.5 w-3.5 text-accent" /><strong className="text-foreground">Instant</strong> launch</span>
-              <span className="h-3 w-px bg-border/50" />
-              <span className="flex items-center gap-1.5"><Users className="h-3.5 w-3.5 text-primary" /><strong className="text-foreground">No coding</strong> needed</span>
-            </motion.div>
-          </motion.div>
+          {/* Quick category pills */}
+          <div className="flex flex-wrap items-center justify-center gap-2 mb-2">
+            {["AI Apps", "SaaS Tools", "Landing Pages", "Utilities"].map((label) => {
+              const slugMap: Record<string, string> = {
+                "AI Apps": "ai-app",
+                "SaaS Tools": "saas-tool",
+                "Landing Pages": "landing-page",
+                "Utilities": "utility",
+              };
+              return (
+                <Link
+                  key={label}
+                  to={`/category/${slugMap[label]}`}
+                  className="rounded-full px-3 py-1 text-xs font-semibold bg-muted/60 text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all border border-border/30"
+                >
+                  {label}
+                </Link>
+              );
+            })}
+            <Link
+              to={user ? "/sell" : "/login"}
+              className="rounded-full px-3 py-1 text-xs font-semibold text-primary hover:underline"
+            >
+              Or sell yours →
+            </Link>
+          </div>
         </div>
       </section>
 
+      {/* ── TRENDING (immediately visible) ── */}
+      <FeaturedListings />
+
       {/* ── CATEGORIES ── */}
-      <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}>
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-60px" }}
+        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+      >
         <CategoryShowcase />
       </motion.div>
 
-      {/* ── TRENDING ── */}
-      <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}>
-        <FeaturedListings />
-      </motion.div>
-
-      {/* ── HOW IT WORKS ── */}
-      <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}>
-        <HowItWorks />
-      </motion.div>
-
-      {/* ── BROWSE ── */}
+      {/* ── BROWSE ALL ── */}
       <section id="browse" className="container mx-auto px-4 pb-24">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -411,21 +397,14 @@ export default function Index() {
           </motion.div>
         ) : (
           <>
-            <motion.div
-              variants={staggerContainer}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, margin: "-50px" }}
-              className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-5"
-            >
-              {listings.map((listing, i) => (
-                <motion.div key={listing.id} variants={fadeUp} custom={i % 8}>
+            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-5">
+              {listings.map((listing) => (
+                <div key={listing.id}>
                   <ListingCard {...listing} owned={ownedIds.has(listing.id)} />
-                </motion.div>
+                </div>
               ))}
-            </motion.div>
+            </div>
 
-            {/* Load More */}
             {hasMore && (
               <div className="flex justify-center mt-10">
                 <Button
@@ -446,6 +425,16 @@ export default function Index() {
           </>
         )}
       </section>
+
+      {/* ── HOW IT WORKS (below browse — low priority) ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-100px" }}
+        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <HowItWorks />
+      </motion.div>
 
       <Footer />
 

@@ -176,13 +176,33 @@ export default function Index() {
     <div className="min-h-screen flex flex-col">
       <Navbar />
 
+      {/* ── LIVE ACTIVITY TICKER ── */}
+      <LiveActivityTicker />
+
       {/* ── COMPACT HERO ── */}
-      <section className="relative overflow-hidden pt-6 pb-4 md:pt-10 md:pb-6">
+      <section className="relative overflow-hidden pt-4 pb-4 md:pt-8 md:pb-6">
         <div className="absolute -top-40 -right-40 h-[500px] w-[500px] rounded-full bg-primary/15 blur-[120px] animate-pulse-glow pointer-events-none" />
+        <div className="absolute -bottom-40 -left-40 h-[400px] w-[400px] rounded-full bg-accent/10 blur-[120px] pointer-events-none" />
 
         <div className="container mx-auto px-4 text-center relative z-10">
-          <h1 className="text-3xl md:text-5xl lg:text-6xl font-black tracking-tighter mb-2 leading-[0.95]">
-            Get an app.{" "}
+          {/* Urgency badge */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4 }}
+            className="inline-flex items-center gap-2 rounded-full glass px-4 py-1.5 mb-4 text-xs font-semibold"
+          >
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+            </span>
+            <span className="text-muted-foreground">New apps added daily — </span>
+            <span className="text-primary font-bold">free to browse</span>
+          </motion.div>
+
+          <h1 className="text-3xl md:text-5xl lg:text-6xl font-black tracking-tighter mb-3 leading-[0.95]">
+            Stop building from scratch.{" "}
+            <br className="hidden md:block" />
             <span
               className="text-gradient animate-gradient-shift inline-block"
               style={{
@@ -190,11 +210,11 @@ export default function Index() {
                 backgroundSize: "200% 200%",
               }}
             >
-              Launch today.
+              Launch in minutes.
             </span>
           </h1>
-          <p className="text-sm md:text-base text-muted-foreground max-w-lg mx-auto mb-4">
-            1,000+ ready-made apps — pick one, deploy instantly, no coding required.
+          <p className="text-sm md:text-base text-muted-foreground max-w-xl mx-auto mb-5">
+            Why spend months and thousands on development? Pick a ready-made app, make it yours, and go live today. <span className="text-foreground font-semibold">No coding required.</span>
           </p>
 
           {/* Hero search bar */}
@@ -202,7 +222,7 @@ export default function Index() {
             <div className="relative">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search apps — e.g. 'CRM', 'AI chatbot', 'landing page'..."
+                placeholder="What kind of app do you need? e.g. 'CRM', 'AI chatbot'..."
                 value={heroSearch}
                 onChange={(e) => setHeroSearch(e.target.value)}
                 className="pl-10 pr-24 h-11 glass border-border/40 focus-visible:border-primary/50 focus-visible:shadow-glow transition-all rounded-full text-sm"
@@ -218,7 +238,7 @@ export default function Index() {
           </form>
 
           {/* Quick category pills */}
-          <div className="flex flex-wrap items-center justify-center gap-2 mb-2">
+          <div className="flex flex-wrap items-center justify-center gap-2 mb-1">
             {["AI Apps", "SaaS Tools", "Landing Pages", "Utilities"].map((label) => {
               const slugMap: Record<string, string> = {
                 "AI Apps": "ai-app",
@@ -243,6 +263,9 @@ export default function Index() {
               Or sell yours →
             </Link>
           </div>
+
+          {/* Live stats */}
+          <LiveStatsBar />
         </div>
       </section>
 

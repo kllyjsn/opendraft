@@ -8,9 +8,10 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
-import { Mail, Copy, Loader2, Send, Clock, Pencil, Save, X } from "lucide-react";
+import { Mail, Copy, Loader2, Send, Clock, Pencil, Save, X, CheckCircle, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface OutreachMessage {
   id: string;
@@ -56,13 +57,11 @@ export function OutreachMessagesList({ campaignId, onStatsChange }: Props) {
 
   const fetchData = async () => {
     setLoading(true);
-
     let query = supabase
       .from("outreach_messages")
       .select("*")
       .order("created_at", { ascending: false })
       .limit(200);
-
     if (campaignId) query = query.eq("campaign_id", campaignId);
 
     const [msgsRes, leadsRes] = await Promise.all([
@@ -71,11 +70,9 @@ export function OutreachMessagesList({ campaignId, onStatsChange }: Props) {
     ]);
 
     setMessages((msgsRes.data as OutreachMessage[]) || []);
-
     const leadsMap: Record<string, Lead> = {};
     (leadsRes.data || []).forEach((l: any) => { leadsMap[l.id] = l; });
     setLeads(leadsMap);
-
     setLoading(false);
   };
 
@@ -86,6 +83,7 @@ export function OutreachMessagesList({ campaignId, onStatsChange }: Props) {
   });
 
   const draftedCount = messages.filter(m => m.message_status === "drafted").length;
+  const sentCount = messages.filter(m => m.message_status !== "drafted").length;
 
   const startEdit = (msg: OutreachMessage) => {
     setEditingId(msg.id);
@@ -116,14 +114,9 @@ export function OutreachMessagesList({ campaignId, onStatsChange }: Props) {
     setSaving(false);
   };
 
-  const confirmSend = (msgId: string) => {
-    setSendConfirmId(msgId);
-  };
-
   const executeSend = async () => {
     if (!sendConfirmId) return;
     setSending(true);
-
     try {
       const { data, error } = await supabase.functions.invoke("swarm-b2b-outreach", {
         body: { action: "send_single", message_id: sendConfirmId, triggered_by: "manual" },
@@ -142,14 +135,14 @@ export function OutreachMessagesList({ campaignId, onStatsChange }: Props) {
 
   const copyMessage = (msg: OutreachMessage) => {
     navigator.clipboard.writeText(`Subject: ${msg.subject}\n\n${msg.body}`);
-    toast.success("📋 Copied to clipboard");
+    toast.success("📋 Copied");
   };
 
   if (loading) {
     return (
       <Card>
-        <CardContent className="py-12 flex items-center justify-center">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        <CardContent className="py-16 flex items-center justify-center">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
         </CardContent>
       </Card>
     );
@@ -157,10 +150,13 @@ export function OutreachMessagesList({ campaignId, onStatsChange }: Props) {
 
   if (messages.length === 0) {
     return (
-      <Card>
-        <CardContent className="py-12 text-center">
-          <Mail className="h-8 w-8 text-muted-foreground mx-auto mb-3" />
-          <p className="text-sm text-muted-foreground">No messages yet. Score leads and draft outreach emails first.</p>
+      <Card className="border-dashed">
+        <CardContent className="py-16 text-center">
+          <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+            <Mail className="h-7 w-7 text-primary" />
+          </div>
+          <h3 className="font-bold mb-1">No emails yet</h3>
+          <p className="text-sm text-muted-foreground">Score leads and draft outreach emails first.</p>
         </CardContent>
       </Card>
     );
@@ -168,149 +164,195 @@ export function OutreachMessagesList({ campaignId, onStatsChange }: Props) {
 
   return (
     <div className="space-y-3">
-      {/* Filter tabs */}
-      <div className="flex items-center gap-2">
+      {/* Filter pills */}
+      <div className="flex items-center gap-1 p-1 bg-muted/50 rounded-xl w-fit">
         {([
-          { key: "drafted" as const, label: `Drafts (${draftedCount})` },
-          { key: "sent" as const, label: "Sent" },
-          { key: "all" as const, label: "All" },
+          { key: "drafted" as const, label: "Drafts", count: draftedCount },
+          { key: "sent" as const, label: "Sent", count: sentCount },
+          { key: "all" as const, label: "All", count: messages.length },
         ]).map(tab => (
-          <Button
+          <button
             key={tab.key}
-            variant={filter === tab.key ? "default" : "outline"}
-            size="sm"
             onClick={() => setFilter(tab.key)}
-            className="text-xs"
+            className={cn(
+              "px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5",
+              filter === tab.key
+                ? "bg-card text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            )}
           >
             {tab.label}
-          </Button>
+            {tab.count > 0 && (
+              <span className={cn(
+                "text-[10px] font-bold px-1.5 py-0.5 rounded-full",
+                filter === tab.key ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+              )}>
+                {tab.count}
+              </span>
+            )}
+          </button>
         ))}
-        <span className="text-xs text-muted-foreground ml-auto">
-          {filteredMessages.length} messages
-        </span>
       </div>
 
       {filteredMessages.length === 0 && (
-        <Card>
-          <CardContent className="py-8 text-center">
+        <Card className="border-dashed">
+          <CardContent className="py-10 text-center">
             <p className="text-sm text-muted-foreground">
-              {filter === "drafted" ? "No drafted emails. Run the Draft step first." : "No messages in this filter."}
+              {filter === "drafted" ? "No drafts. Run the Draft step to generate emails." : "No messages match this filter."}
             </p>
           </CardContent>
         </Card>
       )}
 
-      {filteredMessages.map(msg => {
+      {filteredMessages.map((msg, i) => {
         const lead = leads[msg.lead_id];
         const isFollowUp = msg.metadata?.is_follow_up;
         const isEditing = editingId === msg.id;
         const isDraft = msg.message_status === "drafted";
 
         return (
-          <Card key={msg.id} className={cn("border-border/50", isDraft && "border-amber-500/20")}>
-            <CardContent className="p-4">
-              {isEditing ? (
-                /* Edit mode */
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Pencil className="h-4 w-4 text-primary" />
-                    <span className="font-medium text-sm">Editing draft for {lead?.business_name || "Unknown"}</span>
-                    {lead?.contact_email && (
-                      <span className="text-xs text-muted-foreground">→ {lead.contact_email}</span>
-                    )}
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground mb-1 block">Subject</label>
-                    <Input
-                      value={editSubject}
-                      onChange={e => setEditSubject(e.target.value)}
-                      placeholder="Email subject line"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground mb-1 block">Body</label>
-                    <Textarea
-                      value={editBody}
-                      onChange={e => setEditBody(e.target.value)}
-                      rows={8}
-                      className="font-mono text-xs"
-                    />
-                  </div>
-                  <div className="flex gap-2 justify-end">
-                    <Button variant="ghost" size="sm" onClick={cancelEdit} disabled={saving}>
-                      <X className="h-3.5 w-3.5 mr-1" /> Cancel
-                    </Button>
-                    <Button size="sm" onClick={() => saveEdit(msg.id)} disabled={saving}>
-                      {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Save className="h-3.5 w-3.5 mr-1" />}
-                      Save Draft
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                /* View mode */
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      {msg.message_status === "sent" ? (
-                        <Send className="h-4 w-4 text-emerald-500" />
-                      ) : (
-                        <Mail className="h-4 w-4 text-amber-500" />
-                      )}
-                      <span className="font-medium text-sm">{lead?.business_name || "Unknown"}</span>
-                      {lead?.contact_email && (
-                        <span className="text-xs text-muted-foreground">{lead.contact_email}</span>
-                      )}
-                      <StatusBadge status={msg.message_status} />
-                      {msg.ai_generated && (
-                        <Badge className="text-[10px] bg-primary/10 text-primary">AI</Badge>
-                      )}
-                      {isFollowUp && (
-                        <Badge className="text-[10px] bg-amber-500/10 text-amber-600">
-                          <Clock className="h-2.5 w-2.5 mr-0.5" />
-                          Follow-up #{msg.metadata?.follow_up_number}
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="text-sm font-medium mt-1">{msg.subject}</p>
-                    <p className="text-xs text-muted-foreground mt-1 line-clamp-3 whitespace-pre-line">{msg.body}</p>
-                    {msg.sent_at && (
-                      <p className="text-[10px] text-muted-foreground mt-2">
-                        Sent {new Date(msg.sent_at).toLocaleString()}
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex flex-col gap-1.5 shrink-0">
-                    {isDraft && (
-                      <>
-                        <Button size="sm" variant="outline" onClick={() => startEdit(msg)} className="text-xs gap-1">
-                          <Pencil className="h-3 w-3" /> Edit
+          <motion.div
+            key={msg.id}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: Math.min(i * 0.03, 0.3) }}
+          >
+            <Card className={cn(
+              "border-border/50 transition-all hover:shadow-md",
+              isDraft && "border-l-2 border-l-amber-500/50",
+              isEditing && "ring-1 ring-primary/20 shadow-lg"
+            )}>
+              <CardContent className="p-4">
+                <AnimatePresence mode="wait">
+                  {isEditing ? (
+                    <motion.div
+                      key="edit"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="space-y-3"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Pencil className="h-4 w-4 text-primary" />
+                        <span className="font-bold text-sm">Editing for {lead?.business_name || "Unknown"}</span>
+                        {lead?.contact_email && (
+                          <span className="text-xs text-muted-foreground">→ {lead.contact_email}</span>
+                        )}
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1 block">Subject</label>
+                        <Input
+                          value={editSubject}
+                          onChange={e => setEditSubject(e.target.value)}
+                          placeholder="Email subject line"
+                          className="text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1 block">Body</label>
+                        <Textarea
+                          value={editBody}
+                          onChange={e => setEditBody(e.target.value)}
+                          rows={10}
+                          className="font-mono text-xs leading-relaxed"
+                        />
+                      </div>
+                      <div className="flex gap-2 justify-end pt-1">
+                        <Button variant="ghost" size="sm" onClick={cancelEdit} disabled={saving} className="text-xs">
+                          <X className="h-3 w-3 mr-1" /> Cancel
                         </Button>
-                        <Button size="sm" onClick={() => confirmSend(msg.id)} className="text-xs gap-1">
-                          <Send className="h-3 w-3" /> Send
+                        <Button variant="outline" size="sm" onClick={() => saveEdit(msg.id)} disabled={saving} className="text-xs">
+                          {saving ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Save className="h-3 w-3 mr-1" />}
+                          Save
                         </Button>
-                      </>
-                    )}
-                    <Button size="sm" variant="ghost" onClick={() => copyMessage(msg)} className="text-xs gap-1">
-                      <Copy className="h-3 w-3" /> Copy
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                        <Button size="sm" onClick={() => { saveEdit(msg.id).then(() => setSendConfirmId(msg.id)); }} disabled={saving} className="text-xs gap-1">
+                          <Send className="h-3 w-3" /> Save & Send
+                        </Button>
+                      </div>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="view"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="flex items-start gap-3"
+                    >
+                      {/* Status icon */}
+                      <div className={cn(
+                        "h-9 w-9 rounded-lg flex items-center justify-center shrink-0 mt-0.5",
+                        isDraft ? "bg-amber-500/10" : "bg-emerald-500/10"
+                      )}>
+                        {isDraft ? (
+                          <Pencil className="h-4 w-4 text-amber-500" />
+                        ) : (
+                          <CheckCircle className="h-4 w-4 text-emerald-500" />
+                        )}
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                          <span className="font-bold text-sm">{lead?.business_name || "Unknown"}</span>
+                          {lead?.contact_email && (
+                            <span className="text-xs text-muted-foreground">{lead.contact_email}</span>
+                          )}
+                          <MessageStatusBadge status={msg.message_status} />
+                          {msg.ai_generated && (
+                            <Badge className="text-[10px] bg-primary/10 text-primary border-0 gap-0.5">
+                              <Sparkles className="h-2 w-2" /> AI
+                            </Badge>
+                          )}
+                          {isFollowUp && (
+                            <Badge className="text-[10px] bg-amber-500/10 text-amber-600 border-0 gap-0.5">
+                              <Clock className="h-2.5 w-2.5" />
+                              #{msg.metadata?.follow_up_number}
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-sm font-semibold mt-1">{msg.subject}</p>
+                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2 whitespace-pre-line leading-relaxed">{msg.body}</p>
+                        {msg.sent_at && (
+                          <p className="text-[10px] text-muted-foreground mt-2 flex items-center gap-1">
+                            <Send className="h-2.5 w-2.5" />
+                            Sent {new Date(msg.sent_at).toLocaleString()}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="flex flex-col gap-1 shrink-0">
+                        {isDraft && (
+                          <>
+                            <Button size="sm" variant="outline" onClick={() => startEdit(msg)} className="text-xs gap-1 h-8">
+                              <Pencil className="h-3 w-3" /> Edit
+                            </Button>
+                            <Button size="sm" onClick={() => setSendConfirmId(msg.id)} className="text-xs gap-1 h-8">
+                              <Send className="h-3 w-3" /> Send
+                            </Button>
+                          </>
+                        )}
+                        <Button size="sm" variant="ghost" onClick={() => copyMessage(msg)} className="text-xs gap-1 h-8">
+                          <Copy className="h-3 w-3" /> Copy
+                        </Button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </CardContent>
+            </Card>
+          </motion.div>
         );
       })}
 
-      {/* Send confirmation dialog */}
+      {/* Send confirmation */}
       <Dialog open={!!sendConfirmId} onOpenChange={open => !open && setSendConfirmId(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Send this email?</DialogTitle>
+            <DialogTitle>Confirm Send</DialogTitle>
             <DialogDescription>
               {sendConfirmId && (() => {
                 const msg = messages.find(m => m.id === sendConfirmId);
                 const lead = msg ? leads[msg.lead_id] : null;
-                return `This will send the email to ${lead?.contact_email || "the lead"}. Make sure you've reviewed the content.`;
+                return `Send email to ${lead?.contact_email || "this lead"}? Make sure you've reviewed the content.`;
               })()}
             </DialogDescription>
           </DialogHeader>
@@ -318,7 +360,7 @@ export function OutreachMessagesList({ campaignId, onStatsChange }: Props) {
             <Button variant="outline" onClick={() => setSendConfirmId(null)} disabled={sending}>Cancel</Button>
             <Button onClick={executeSend} disabled={sending} className="gap-1.5">
               {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-              Confirm Send
+              Send Email
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -327,17 +369,17 @@ export function OutreachMessagesList({ campaignId, onStatsChange }: Props) {
   );
 }
 
-function StatusBadge({ status }: { status: string }) {
+function MessageStatusBadge({ status }: { status: string }) {
   const config: Record<string, string> = {
     drafted: "bg-amber-500/10 text-amber-600",
     sent: "bg-emerald-500/10 text-emerald-600",
     delivered: "bg-emerald-500/10 text-emerald-600",
-    opened: "bg-blue-500/10 text-blue-600",
-    replied: "bg-violet-500/10 text-violet-600",
-    bounced: "bg-red-500/10 text-red-600",
+    opened: "bg-secondary/10 text-secondary",
+    replied: "bg-primary/10 text-primary",
+    bounced: "bg-destructive/10 text-destructive",
   };
   return (
-    <Badge className={cn("text-[10px]", config[status] || "bg-muted text-muted-foreground")}>
+    <Badge className={cn("text-[10px] border-0", config[status] || "bg-muted text-muted-foreground")}>
       {status}
     </Badge>
   );

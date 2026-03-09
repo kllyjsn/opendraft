@@ -14,6 +14,8 @@ import { CategoryShowcase } from "@/components/CategoryShowcase";
 import { HowItWorks } from "@/components/HowItWorks";
 import { LiveActivityTicker } from "@/components/LiveActivityTicker";
 import { LiveStatsBar } from "@/components/LiveStatsBar";
+import { BrandMascot } from "@/components/BrandMascot";
+import { MascotPeek } from "@/components/MascotPeek";
 
 const CATEGORIES = ["All", "SaaS Tool", "AI App", "Landing Page", "Utility", "Game", "Other"];
 const COMPLETENESS = ["All", "Prototype", "MVP", "Production Ready"];
@@ -398,21 +400,20 @@ export default function Index() {
 
         {/* Grid */}
         {loading ? (
-          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-5">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="h-72 rounded-2xl bg-muted/50 animate-pulse" />
-            ))}
+          <div className="flex flex-col items-center justify-center py-20 gap-4">
+            <BrandMascot size={80} variant="thinking" />
+            <p className="text-sm text-muted-foreground font-medium animate-pulse">Finding the best apps for you…</p>
           </div>
         ) : listings.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="text-center py-28"
+            className="text-center py-24"
           >
-            <div className="text-5xl mb-5">🔮</div>
-            <h3 className="text-xl font-bold mb-2">No listings found</h3>
+            <BrandMascot size={100} variant="confused" />
+            <h3 className="text-xl font-bold mb-2 mt-4">No listings found</h3>
             <p className="text-muted-foreground mb-6 text-sm">
-              {hasFilters ? "Try adjusting your filters" : "Be the first to list a project!"}
+              {hasFilters ? "Try adjusting your filters — I'll keep looking!" : "Be the first to list a project!"}
             </p>
             <Link to="/sell">
               <Button className="gradient-hero text-white border-0 shadow-glow hover:opacity-90">
@@ -475,10 +476,7 @@ export default function Index() {
           >
             <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-3">
               <div className="hidden sm:flex items-center gap-3">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
-                </span>
+                <BrandMascot size={32} variant="wave" />
                 <p className="text-sm font-medium text-foreground">
                   <span className="font-bold">127 people</span> browsing apps right now — join free and launch yours
                 </p>

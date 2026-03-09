@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Search, Rocket, HeartHandshake } from "lucide-react";
+import { MascotPeek } from "@/components/MascotPeek";
 
 const steps = [
   {
@@ -43,7 +44,10 @@ export function HowItWorks() {
 
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-14">
-          <p className="text-xs font-bold uppercase tracking-widest text-primary mb-3">How it works</p>
+          <div className="flex items-center justify-center gap-3 mb-3">
+            <MascotPeek variant="happy" size={48} direction="left" delay={0.1} />
+            <p className="text-xs font-bold uppercase tracking-widest text-primary">How it works</p>
+          </div>
           <h2 className="text-3xl md:text-5xl font-black tracking-tighter leading-[1.05]">
             Pick it. Launch it.
             <br className="hidden md:block" />

@@ -589,7 +589,7 @@ async function sendOutreachEmails(
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          from: "OpenDraft <outreach@opendraft.lovable.app>",
+          from: "OpenDraft <outreach@opendraft.co>",
           to: [lead.contact_email],
           subject: msg.subject,
           html: formatEmailHtml(msg.body, lead),

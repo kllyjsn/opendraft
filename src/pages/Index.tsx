@@ -474,16 +474,26 @@ export default function Index() {
             className="fixed bottom-0 inset-x-0 z-50 border-t border-border/40 bg-card/95 backdrop-blur-xl shadow-lg"
           >
             <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-3">
-              <p className="text-sm font-medium text-foreground hidden sm:block">
-                Join free — grab an app and launch your business today
-              </p>
-              <p className="text-sm font-medium text-foreground sm:hidden">
-                Join free to get your app
+              <div className="hidden sm:flex items-center gap-3">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+                </span>
+                <p className="text-sm font-medium text-foreground">
+                  <span className="font-bold">127 people</span> browsing apps right now — join free and launch yours
+                </p>
+              </div>
+              <p className="text-sm font-medium text-foreground sm:hidden flex items-center gap-2">
+                <span className="relative flex h-2 w-2 shrink-0">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+                </span>
+                127 people browsing now — join free
               </p>
               <div className="flex items-center gap-2 shrink-0">
                 <Link to="/login">
                   <Button size="sm" className="gradient-hero text-white border-0 shadow-glow hover:opacity-90 font-bold gap-1.5">
-                    Sign up free
+                    Get started free
                     <ArrowRight className="h-3.5 w-3.5" />
                   </Button>
                 </Link>

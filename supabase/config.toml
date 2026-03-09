@@ -133,3 +133,7 @@ verify_jwt = false
 # B2B Outreach agent — autonomous small business outreach
 [functions.swarm-b2b-outreach]
 verify_jwt = false
+
+# Outreach inbound webhook — receives email replies from Resend
+[functions.outreach-inbound]
+verify_jwt = false

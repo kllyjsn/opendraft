@@ -6,9 +6,10 @@ import { Navigate, Link } from "react-router-dom";
 import { Zap } from "lucide-react";
 
 const TRUST_POINTS = [
-  { icon: "⚡", text: "Instant project delivery" },
-  { icon: "🔒", text: "Secure Stripe payments" },
-  { icon: "🚀", text: "Ship in minutes, not months" },
+  { icon: "⚡", text: "Get your app instantly — no waiting" },
+  { icon: "🔒", text: "Secure payments via Stripe" },
+  { icon: "🚀", text: "1,000+ apps ready to launch" },
+  { icon: "💰", text: "Free to browse — only pay when you buy" },
 ];
 
 export default function Login() {

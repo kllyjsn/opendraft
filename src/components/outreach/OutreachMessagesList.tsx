@@ -102,7 +102,7 @@ export function OutreachMessagesList({ campaignId, onStatsChange }: Props) {
         from: { email: lead.contact_email },
         to: ["outreach@opendraft.co"],
         subject: `Re: ${msg.subject || "Your message"}`,
-        text: `Hi there,\n\nThanks for reaching out! We're interested in learning more about what you offer. Could you send over some pricing details?\n\nBest regards,\n${lead.contact_name || lead.business_name}`,
+        text: `Hi there,\n\nThanks for reaching out! We're interested in learning more about what you offer. Could you send over some pricing details?\n\nBest regards,\n${lead.business_name}`,
       };
 
       const { error } = await supabase.functions.invoke("outreach-inbound", {

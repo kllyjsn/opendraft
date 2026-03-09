@@ -12,6 +12,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { FeaturedListings } from "@/components/FeaturedListings";
 import { CategoryShowcase } from "@/components/CategoryShowcase";
 import { HowItWorks } from "@/components/HowItWorks";
+import { LiveActivityTicker } from "@/components/LiveActivityTicker";
+import { LiveStatsBar } from "@/components/LiveStatsBar";
 
 const CATEGORIES = ["All", "SaaS Tool", "AI App", "Landing Page", "Utility", "Game", "Other"];
 const COMPLETENESS = ["All", "Prototype", "MVP", "Production Ready"];

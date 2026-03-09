@@ -366,7 +366,7 @@ async function evaluateLeads(
     .from("outreach_leads")
     .select("*")
     .eq("score", 0)
-    .limit(10);
+    .limit(5);
 
   if (campaignId) {
     query = query.eq("campaign_id", campaignId);
@@ -383,8 +383,9 @@ async function evaluateLeads(
   for (const lead of leads) {
     let websiteAnalysis = "";
 
-    // Scrape website if Firecrawl is available
-    if (firecrawlKey && lead.website_url) {
+    // Only scrape real websites (not AI-generated ones)
+    const isAiGenerated = lead.metadata?.discovery_method === "ai_generated";
+    if (firecrawlKey && lead.website_url && !isAiGenerated) {
       try {
         const scrapeResp = await fetch("https://api.firecrawl.dev/v1/scrape", {
           method: "POST",

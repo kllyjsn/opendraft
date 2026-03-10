@@ -1,18 +1,7 @@
 /**
  * post-to-x Edge Function
  * -----------------------
- * AGGRESSIVE CONVERSION-FOCUSED Twitter/X strategy.
- * 
- * New post types for driving signups:
- * - engagement_hook: Curiosity-driven hooks
- * - fomo: Urgency and social proof
- * - pain_point: Problem agitation
- * - gremlin_update: Behind-the-scenes AI personality
- * - question: Engagement drivers
- * - success_story: Social proof
- * - direct_cta: Direct conversion
- * 
- * Plus original types: new_listing, sale_milestone, trending, weekly_stats, blog_post, vibe_coding_report, custom
+ * Posts to X/Twitter with AI-generated art and highly varied templates.
  */
 
 import { createOAuthHeader } from "./oauth.ts";
@@ -29,6 +18,7 @@ import {
   questionTweet,
   successStoryTweet,
   directCtaTweet,
+  getTweetArtPrompt,
 } from "./templates.ts";
 import { generateBlogTweet, generateVibeReportTweet } from "./ai-tweets.ts";
 
@@ -37,6 +27,101 @@ const corsHeaders = {
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
+
+/**
+ * Generate tweet art using Lovable AI image generation
+ */
+async function generateTweetArt(postType: string): Promise<string | null> {
+  try {
+    const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
+    if (!lovableApiKey) {
+      console.log("No LOVABLE_API_KEY, skipping art generation");
+      return null;
+    }
+
+    const prompt = getTweetArtPrompt(postType);
+    console.log(`Generating tweet art for ${postType}: ${prompt.substring(0, 80)}...`);
+
+    const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${lovableApiKey}` },
+      body: JSON.stringify({
+        model: "google/gemini-3.1-flash-image-preview",
+        messages: [{ role: "user", content: `Generate an image: ${prompt}. The image should be 1200x675 pixels (Twitter optimal), landscape orientation.` }],
+        modalities: ["image", "text"],
+      }),
+    });
+
+    if (!aiRes.ok) {
+      console.error("AI art generation failed:", aiRes.status, await aiRes.text());
+      return null;
+    }
+
+    const aiData = await aiRes.json();
+    const imageUrl = aiData?.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+
+    if (!imageUrl) {
+      console.log("AI returned no image");
+      return null;
+    }
+
+    console.log("AI art generated successfully");
+    return imageUrl; // data:image/png;base64,...
+  } catch (e) {
+    console.error("Art generation error:", e);
+    return null;
+  }
+}
+
+/**
+ * Upload a base64 data URL image to Twitter
+ */
+async function uploadBase64ToTwitter(
+  dataUrl: string,
+  consumerKey: string,
+  consumerSecret: string,
+  accessToken: string,
+  accessTokenSecret: string,
+): Promise<string> {
+  // Extract base64 data from data URL
+  const base64Data = dataUrl.split(",")[1];
+  if (!base64Data) throw new Error("Invalid data URL");
+
+  const boundary = `----Boundary${crypto.randomUUID().replace(/-/g, "")}`;
+  const multipartBody = [
+    `--${boundary}`,
+    `Content-Disposition: form-data; name="media_data"`,
+    "",
+    base64Data,
+    `--${boundary}`,
+    `Content-Disposition: form-data; name="media_category"`,
+    "",
+    "tweet_image",
+    `--${boundary}--`,
+  ].join("\r\n");
+
+  const MEDIA_UPLOAD_URL = "https://upload.twitter.com/1.1/media/upload.json";
+  const authHeader = await createOAuthHeader(
+    "POST", MEDIA_UPLOAD_URL,
+    consumerKey, consumerSecret, accessToken, accessTokenSecret
+  );
+
+  const uploadRes = await fetch(MEDIA_UPLOAD_URL, {
+    method: "POST",
+    headers: {
+      Authorization: authHeader,
+      "Content-Type": `multipart/form-data; boundary=${boundary}`,
+    },
+    body: multipartBody,
+  });
+
+  const uploadData = await uploadRes.json();
+  if (!uploadRes.ok) {
+    throw new Error(`Media upload failed [${uploadRes.status}]: ${JSON.stringify(uploadData)}`);
+  }
+
+  return uploadData.media_id_string;
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -57,18 +142,17 @@ Deno.serve(async (req) => {
 
     const body = await req.json();
     const postType = body.type;
+    const skipArt = body.skip_art === true;
     let tweetText = "";
     let screenshotUrl: string | null = null;
+    let generatedArtUrl: string | null = null;
 
-    // ─────────────────────────────────────────────────────────────
-    // NEW CONVERSION-FOCUSED POST TYPES
-    // ─────────────────────────────────────────────────────────────
+    // ─── CONVERSION-FOCUSED POST TYPES ───────────────────────────
     
     if (postType === "engagement_hook") {
       tweetText = engagementHookTweet();
       
     } else if (postType === "fomo") {
-      // Get live stats for FOMO tweet
       const [listingsRes, profilesRes] = await Promise.all([
         fetch(`${supabaseUrl}/rest/v1/listings?status=eq.live&select=id`, {
           headers: { ...headers, Prefer: "count=exact" },
@@ -96,22 +180,23 @@ Deno.serve(async (req) => {
       tweetText = directCtaTweet();
       
     } else if (postType === "random_conversion") {
-      // Pick a random conversion-focused tweet type
-      const types = [
-        engagementHookTweet,
-        () => fomoTweet({ browsing: 80 + Math.floor(Math.random() * 100) }),
-        painPointTweet,
-        gremlinTweet,
-        questionTweet,
-        successStoryTweet,
-        directCtaTweet,
-      ];
-      const randomFn = types[Math.floor(Math.random() * types.length)];
-      tweetText = randomFn();
+      const types = ["engagement_hook", "fomo", "pain_point", "gremlin_update", "question", "success_story", "direct_cta"];
+      const chosen = types[Math.floor(Math.random() * types.length)];
+      
+      if (chosen === "engagement_hook") tweetText = engagementHookTweet();
+      else if (chosen === "fomo") tweetText = fomoTweet({ browsing: 80 + Math.floor(Math.random() * 100) });
+      else if (chosen === "pain_point") tweetText = painPointTweet();
+      else if (chosen === "gremlin_update") tweetText = gremlinTweet();
+      else if (chosen === "question") tweetText = questionTweet();
+      else if (chosen === "success_story") tweetText = successStoryTweet();
+      else tweetText = directCtaTweet();
 
-    // ─────────────────────────────────────────────────────────────
-    // ORIGINAL POST TYPES
-    // ─────────────────────────────────────────────────────────────
+      // Generate art for the chosen type
+      if (!skipArt) {
+        generatedArtUrl = await generateTweetArt(chosen);
+      }
+
+    // ─── ORIGINAL POST TYPES ─────────────────────────────────────
     
     } else if (postType === "new_listing" && body.listing_id) {
       const res = await fetch(
@@ -169,6 +254,9 @@ Deno.serve(async (req) => {
       } else {
         throw new Error("blog_post: pass rotate:true for AI-generated tweets or text for custom");
       }
+      if (!skipArt) {
+        generatedArtUrl = await generateTweetArt("blog_post");
+      }
 
     } else if (postType === "vibe_coding_report") {
       tweetText = await generateVibeReportTweet(supabaseUrl, supabaseKey);
@@ -181,20 +269,38 @@ Deno.serve(async (req) => {
       throw new Error("Invalid post type. Use: engagement_hook, fomo, pain_point, gremlin_update, question, success_story, direct_cta, random_conversion, new_listing, sale_milestone, trending, weekly_stats, blog_post, vibe_coding_report, or custom");
     }
 
-    // Upload media if we have a screenshot
+    // ─── Generate art for types that don't have images ───────────
+    if (!screenshotUrl && !generatedArtUrl && !skipArt && postType !== "random_conversion" && postType !== "blog_post" && postType !== "custom" && postType !== "question") {
+      // 60% chance to generate art (keeps some tweets text-only for variety)
+      if (Math.random() < 0.6) {
+        generatedArtUrl = await generateTweetArt(postType);
+      }
+    }
+
+    // ─── Upload media ────────────────────────────────────────────
     let mediaId: string | null = null;
-    if (screenshotUrl) {
+    
+    if (generatedArtUrl) {
+      try {
+        mediaId = await uploadBase64ToTwitter(
+          generatedArtUrl, consumerKey, consumerSecret, accessToken, accessTokenSecret
+        );
+        console.log("AI art uploaded, media_id:", mediaId);
+      } catch (e) {
+        console.error("AI art upload failed, posting without image:", e);
+      }
+    } else if (screenshotUrl) {
       try {
         mediaId = await uploadMediaToTwitter(
           screenshotUrl, consumerKey, consumerSecret, accessToken, accessTokenSecret
         );
-        console.log("Media uploaded, media_id:", mediaId);
+        console.log("Screenshot uploaded, media_id:", mediaId);
       } catch (e) {
         console.error("Media upload failed, posting without image:", e);
       }
     }
 
-    // Post tweet via X API v2
+    // ─── Post tweet ──────────────────────────────────────────────
     const tweetUrl = "https://api.x.com/2/tweets";
     const authHeader = await createOAuthHeader(
       "POST", tweetUrl, consumerKey, consumerSecret, accessToken, accessTokenSecret
@@ -217,13 +323,14 @@ Deno.serve(async (req) => {
       throw new Error(`X API error [${tweetRes.status}]: ${JSON.stringify(tweetData)}`);
     }
 
-    console.log(`Posted to X: ${postType}`, tweetData.data?.id, mediaId ? "(with image)" : "(text only)");
+    console.log(`Posted to X: ${postType}`, tweetData.data?.id, mediaId ? "(with AI art)" : "(text only)");
 
     return new Response(JSON.stringify({
       success: true,
       tweet_id: tweetData.data?.id,
       text: tweetText,
       has_media: !!mediaId,
+      art_generated: !!generatedArtUrl,
       type: postType,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

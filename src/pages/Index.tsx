@@ -230,7 +230,7 @@ export default function Index() {
           </motion.div>
 
           <h1 className="text-3xl md:text-5xl lg:text-6xl font-black tracking-tighter mb-3 leading-[0.95]">
-            Your idea.{" "}
+            Buy ready-made apps.{" "}
             <br className="hidden md:block" />
             <span
               className="text-gradient animate-gradient-shift inline-block"
@@ -239,11 +239,11 @@ export default function Index() {
                 backgroundSize: "200% 200%",
               }}
             >
-              Already built.
+              Launch today.
             </span>
           </h1>
           <p className="text-sm md:text-base text-muted-foreground max-w-xl mx-auto mb-5">
-            Browse thousands of ready-to-launch apps — from SaaS tools to AI products. <span className="text-foreground font-semibold">Pick one, make it yours, and go live today.</span>
+            SaaS tools, AI products, landing pages & utilities — all production-ready. <span className="text-foreground font-semibold">Pick one, customize it, go live in minutes.</span>
           </p>
 
           {/* Hero search bar */}

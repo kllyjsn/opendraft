@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Bot, LayoutDashboard, Globe, Gamepad2, Wrench, Sparkles, ArrowRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { ListingCard } from "./ListingCard";
 
 const categories = [
   { icon: Bot, label: "AI Apps", slug: "ai_app", urlSlug: "ai-app" },
@@ -16,9 +17,16 @@ const categories = [
 interface CategoryListing {
   id: string;
   title: string;
+  description: string;
   screenshots: string[];
   price: number;
   tech_stack: string[];
+  completeness_badge: "prototype" | "mvp" | "production_ready";
+  sales_count: number;
+  view_count: number;
+  built_with: string | null;
+  seller_id: string;
+  security_score: number | null;
 }
 
 interface CategoryData {
@@ -45,7 +53,7 @@ export function CategoryShowcase() {
       const promises = categories.map((cat) =>
         supabase
           .from("listings")
-          .select("id,title,screenshots,price,tech_stack", { count: "exact" })
+          .select("id,title,description,screenshots,price,tech_stack,completeness_badge,sales_count,view_count,built_with,seller_id,security_score", { count: "exact" })
           .eq("status", "live")
           .eq("category", cat.slug as any)
           .order("sales_count", { ascending: false })
@@ -105,47 +113,19 @@ export function CategoryShowcase() {
                 </div>
 
                 <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
-                  {catData.listings.map((listing, i) => {
-                    const screenshot = listing.screenshots?.[0];
-                    const hasImage = screenshot && screenshot !== "";
-
-                    return (
-                      <motion.div
-                        key={listing.id}
-                        custom={i}
-                        variants={cardVariant}
-                        initial="hidden"
-                        whileInView="visible"
-                        viewport={{ once: true }}
-                      >
-                        <Link
-                          to={`/listing/${listing.id}`}
-                          className="group flex-shrink-0 w-[130px] md:w-[160px] block"
-                        >
-                          <div className="aspect-square rounded-2xl overflow-hidden mb-2 border border-border/40 bg-muted/30 group-hover:shadow-glow group-hover:border-primary/30 transition-all duration-300">
-                            {hasImage ? (
-                              <img
-                                src={screenshot}
-                                alt={listing.title}
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                loading="lazy"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center">
-                                <Icon className="h-10 w-10 text-muted-foreground/30" />
-                              </div>
-                            )}
-                          </div>
-                          <p className="text-xs font-semibold leading-tight line-clamp-2 group-hover:text-primary transition-colors">
-                            {listing.title}
-                          </p>
-                          <p className="text-[11px] text-muted-foreground mt-0.5">
-                            {listing.price === 0 ? "Free" : `$${(listing.price / 100).toFixed(0)}`}
-                          </p>
-                        </Link>
-                      </motion.div>
-                    );
-                  })}
+                  {catData.listings.map((listing, i) => (
+                    <motion.div
+                      key={listing.id}
+                      custom={i}
+                      variants={cardVariant}
+                      initial="hidden"
+                      whileInView="visible"
+                      viewport={{ once: true }}
+                      className="flex-shrink-0 w-[170px] md:w-[220px]"
+                    >
+                      <ListingCard {...listing} />
+                    </motion.div>
+                  ))}
                 </div>
               </motion.div>
             );

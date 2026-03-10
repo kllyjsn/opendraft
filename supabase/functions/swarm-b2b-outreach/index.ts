@@ -512,13 +512,13 @@ async function generateOutreachMessages(
   lovableKey: string,
   campaignId: string | null
 ): Promise<any> {
-  // Get qualified leads without messages
+  // Get qualified leads that don't already have a drafted message waiting
   let query = supabase
     .from("outreach_leads")
     .select("*")
     .in("lead_status", ["qualified", "nurture"])
     .gte("score", 50)
-    .limit(5);
+    .limit(20);
 
   if (campaignId) {
     query = query.eq("campaign_id", campaignId);
@@ -527,20 +527,22 @@ async function generateOutreachMessages(
   const { data: leads } = await query;
 
   if (!leads || leads.length === 0) {
-    return { messages_drafted: 0, message: "No qualified leads without messages" };
+    return { messages_drafted: 0, message: "No qualified leads found" };
   }
 
   const messagesCreated: any[] = [];
 
   for (const lead of leads) {
-    // Check if message already exists
-    const { data: existingMsg } = await supabase
+    // Skip leads that already have a drafted (unsent) message
+    const { data: existingDraft } = await supabase
       .from("outreach_messages")
       .select("id")
       .eq("lead_id", lead.id)
-      .single();
+      .eq("message_status", "drafted")
+      .eq("direction", "outbound")
+      .maybeSingle();
 
-    if (existingMsg) continue;
+    if (existingDraft) continue;
 
     const scoring = lead.metadata?.scoring || {};
     
@@ -560,6 +562,7 @@ async function generateOutreachMessages(
 TONE: Friendly, helpful, not salesy. Focus on helping them, not selling.
 LENGTH: Keep emails under 150 words.
 PERSONALIZATION: Reference specific things about their business/website.
+SIGNATURE: Always sign emails as "Jason" (not [Your Name] or any placeholder). Use "Jason" as the sender name. Example sign-off: "Best,\nJason\nOpenDraft"
 
 Our services: ${SERVICES_OFFERED.map(s => `${s.name} (${s.price_range})`).join(", ")}`
           },
@@ -810,7 +813,7 @@ async function sendFollowUpEmails(
         messages: [
           {
             role: "system",
-            content: `You write friendly follow-up emails for a web dev agency. Keep it SHORT (under 80 words). Be helpful, not pushy. This is follow-up #${followUpCount + 1}.`
+            content: `You write friendly follow-up emails for a web dev agency called OpenDraft. Keep it SHORT (under 80 words). Be helpful, not pushy. This is follow-up #${followUpCount + 1}. Always sign off as "Jason" (never use [Your Name] or placeholders).`
           },
           {
             role: "user",
@@ -1030,7 +1033,14 @@ async function replyToLead(
 
 // Format email as HTML
 function formatEmailHtml(body: string, lead: any): string {
-  const paragraphs = body.split('\n\n').map(p => `<p style="margin-bottom: 16px; line-height: 1.6;">${p}</p>`).join('');
+  // Replace any AI placeholder names with Jason
+  const cleanedBody = body
+    .replace(/\[Your Name\]/gi, "Jason")
+    .replace(/\[your name\]/gi, "Jason")
+    .replace(/\[Name\]/gi, "Jason")
+    .replace(/\[Sender Name\]/gi, "Jason")
+    .replace(/\[sender\]/gi, "Jason");
+  const paragraphs = cleanedBody.split('\n\n').map(p => `<p style="margin-bottom: 16px; line-height: 1.6;">${p}</p>`).join('');
   
   return `
 <!DOCTYPE html>

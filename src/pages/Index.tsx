@@ -203,7 +203,7 @@ export default function Index() {
           </motion.div>
 
           <h1 className="text-3xl md:text-5xl lg:text-6xl font-black tracking-tighter mb-3 leading-[0.95]">
-            Stop building from scratch.{" "}
+            Fire your agency.{" "}
             <br className="hidden md:block" />
             <span
               className="text-gradient animate-gradient-shift inline-block"
@@ -212,11 +212,11 @@ export default function Index() {
                 backgroundSize: "200% 200%",
               }}
             >
-              Launch in minutes.
+              Hire OpenDraft.
             </span>
           </h1>
           <p className="text-sm md:text-base text-muted-foreground max-w-xl mx-auto mb-5">
-            Why spend months and thousands on development? Pick a ready-made app, make it yours, and go live today. <span className="text-foreground font-semibold">No coding required.</span>
+            Agencies charge $10k and ghost you for 3 months. We sell you a finished app for the price of lunch. <span className="text-foreground font-semibold">Own it outright. Launch today.</span>
           </p>
 
           {/* Hero search bar */}

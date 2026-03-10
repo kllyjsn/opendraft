@@ -74,7 +74,7 @@ export function OutreachPipeline() {
     const [campaignsRes, leadsRes, messagesRes] = await Promise.all([
       supabase.from("outreach_campaigns").select("*").order("created_at", { ascending: false }),
       supabase.from("outreach_leads").select("id, score, lead_status, industry, campaign_id"),
-      supabase.from("outreach_messages").select("id, message_status, campaign_id"),
+      supabase.from("outreach_messages").select("id, message_status, campaign_id, lead_id"),
     ]);
 
     setCampaigns((campaignsRes.data as Campaign[]) || []);
@@ -90,6 +90,14 @@ export function OutreachPipeline() {
       return true;
     });
 
+    // Find leads with score >= 50 and qualified/nurture status that don't have a drafted message
+    const draftedLeadIds = new Set(
+      messages.filter(m => m.message_status === "drafted").map(m => m.lead_id)
+    );
+    const readyForDraft = leads.filter(
+      l => l.score >= 50 && ["qualified", "nurture"].includes(l.lead_status) && !draftedLeadIds.has(l.id)
+    ).length;
+
     setStats({
       totalLeads: leads.length,
       unscored: leads.filter(l => l.score === 0).length,
@@ -99,6 +107,7 @@ export function OutreachPipeline() {
       messagesDrafted: messages.filter(m => m.message_status === "drafted").length,
       messagesSent: messages.filter(m => m.message_status === "sent").length,
       noResponse: leads.filter(l => l.lead_status === "no_response").length,
+      readyForDraft,
     });
 
     setLoading(false);

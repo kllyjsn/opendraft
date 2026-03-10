@@ -34,6 +34,7 @@ interface PipelineStats {
   messagesDrafted: number;
   messagesSent: number;
   noResponse: number;
+  readyForDraft: number;
 }
 
 const STEPS = [
@@ -59,7 +60,7 @@ export function OutreachPipeline() {
   const [selectedIndustry, setSelectedIndustry] = useState<string>("all");
   const [stats, setStats] = useState<PipelineStats>({
     totalLeads: 0, unscored: 0, qualified: 0, nurture: 0,
-    contacted: 0, messagesDrafted: 0, messagesSent: 0, noResponse: 0,
+    contacted: 0, messagesDrafted: 0, messagesSent: 0, noResponse: 0, readyForDraft: 0,
   });
   const [loading, setLoading] = useState(true);
   const [runningStep, setRunningStep] = useState<string | null>(null);
@@ -73,7 +74,7 @@ export function OutreachPipeline() {
     const [campaignsRes, leadsRes, messagesRes] = await Promise.all([
       supabase.from("outreach_campaigns").select("*").order("created_at", { ascending: false }),
       supabase.from("outreach_leads").select("id, score, lead_status, industry, campaign_id"),
-      supabase.from("outreach_messages").select("id, message_status, campaign_id"),
+      supabase.from("outreach_messages").select("id, message_status, campaign_id, lead_id"),
     ]);
 
     setCampaigns((campaignsRes.data as Campaign[]) || []);
@@ -89,6 +90,14 @@ export function OutreachPipeline() {
       return true;
     });
 
+    // Find leads with score >= 50 and qualified/nurture status that don't have a drafted message
+    const draftedLeadIds = new Set(
+      messages.filter(m => m.message_status === "drafted").map(m => m.lead_id)
+    );
+    const readyForDraft = leads.filter(
+      l => l.score >= 50 && ["qualified", "nurture"].includes(l.lead_status) && !draftedLeadIds.has(l.id)
+    ).length;
+
     setStats({
       totalLeads: leads.length,
       unscored: leads.filter(l => l.score === 0).length,
@@ -98,6 +107,7 @@ export function OutreachPipeline() {
       messagesDrafted: messages.filter(m => m.message_status === "drafted").length,
       messagesSent: messages.filter(m => m.message_status === "sent").length,
       noResponse: leads.filter(l => l.lead_status === "no_response").length,
+      readyForDraft,
     });
 
     setLoading(false);
@@ -299,6 +309,46 @@ export function OutreachPipeline() {
         <StatCard icon={Send} label="Emails Sent" value={stats.messagesSent} accent="secondary" />
         <StatCard icon={TrendingUp} label="Drafts Ready" value={stats.messagesDrafted} accent="primary" />
       </motion.div>
+
+      {/* Draft CTA Banner */}
+      <AnimatePresence>
+        {stats.readyForDraft > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+          >
+            <Card className="border-primary/20 bg-primary/[0.04] overflow-hidden">
+              <CardContent className="p-3 sm:p-4 flex items-center gap-3 sm:gap-4 flex-wrap">
+                <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                  <Mail className="h-5 w-5 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-foreground">
+                    {stats.readyForDraft} lead{stats.readyForDraft !== 1 ? "s" : ""} ready for email drafts
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Qualified leads with score ≥ 50 that don't have a draft yet. Click to generate personalized emails.
+                  </p>
+                </div>
+                <Button
+                  onClick={() => runStep("generate_outreach")}
+                  disabled={runningStep !== null}
+                  size="sm"
+                  className="rounded-xl gap-1.5 font-bold h-9 px-5 shrink-0 w-full sm:w-auto"
+                >
+                  {runningStep === "generate_outreach" ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-3.5 w-3.5" />
+                  )}
+                  Generate Drafts
+                </Button>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Last Result */}
       <AnimatePresence>

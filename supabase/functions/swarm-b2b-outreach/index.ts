@@ -1033,7 +1033,14 @@ async function replyToLead(
 
 // Format email as HTML
 function formatEmailHtml(body: string, lead: any): string {
-  const paragraphs = body.split('\n\n').map(p => `<p style="margin-bottom: 16px; line-height: 1.6;">${p}</p>`).join('');
+  // Replace any AI placeholder names with Jason
+  const cleanedBody = body
+    .replace(/\[Your Name\]/gi, "Jason")
+    .replace(/\[your name\]/gi, "Jason")
+    .replace(/\[Name\]/gi, "Jason")
+    .replace(/\[Sender Name\]/gi, "Jason")
+    .replace(/\[sender\]/gi, "Jason");
+  const paragraphs = cleanedBody.split('\n\n').map(p => `<p style="margin-bottom: 16px; line-height: 1.6;">${p}</p>`).join('');
   
   return `
 <!DOCTYPE html>

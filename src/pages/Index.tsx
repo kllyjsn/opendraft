@@ -472,15 +472,8 @@ export default function Index() {
         )}
       </section>
 
-      {/* ── HOW IT WORKS (below browse — low priority) ── */}
-      <motion.div
-        initial={{ opacity: 0, y: 40 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-100px" }}
-        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-      >
-        <HowItWorks />
-      </motion.div>
+
+
 
       <Footer />
 

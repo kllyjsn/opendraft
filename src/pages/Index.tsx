@@ -274,6 +274,16 @@ export default function Index() {
       {/* ── TRENDING (immediately visible) ── */}
       <FeaturedListings />
 
+      {/* ── INDUSTRIES WE SERVE ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-60px" }}
+        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <IndustryVerticals />
+      </motion.div>
+
       {/* ── CATEGORIES ── */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
@@ -282,6 +292,16 @@ export default function Index() {
         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
       >
         <CategoryShowcase />
+      </motion.div>
+
+      {/* ── HOW IT WORKS (before browse for visibility) ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-100px" }}
+        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <HowItWorks />
       </motion.div>
 
       {/* ── BROWSE ALL ── */}

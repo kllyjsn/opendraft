@@ -53,7 +53,7 @@ export function CategoryShowcase() {
       const promises = categories.map((cat) =>
         supabase
           .from("listings")
-          .select("id,title,screenshots,price,tech_stack", { count: "exact" })
+          .select("id,title,description,screenshots,price,tech_stack,completeness_badge,sales_count,view_count,built_with,seller_id,security_score", { count: "exact" })
           .eq("status", "live")
           .eq("category", cat.slug as any)
           .order("sales_count", { ascending: false })

@@ -266,8 +266,22 @@ export default function Index() {
             </div>
           </form>
 
+          {/* Popular searches */}
+          <div className="flex flex-wrap items-center justify-center gap-1.5 mb-1">
+            <span className="text-[10px] text-muted-foreground/60 font-medium mr-1">Popular:</span>
+            {["CRM", "AI Chatbot", "Dashboard", "E-commerce", "Portfolio", "Invoice Tool"].map((term) => (
+              <button
+                key={term}
+                onClick={() => { setHeroSearch(term); setSearch(term); document.getElementById("browse")?.scrollIntoView({ behavior: "smooth" }); }}
+                className="rounded-full px-2.5 py-0.5 text-[11px] font-medium bg-muted/50 text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all border border-border/20"
+              >
+                {term}
+              </button>
+            ))}
+          </div>
+
           {/* Quick category pills */}
-          <div className="flex flex-wrap items-center justify-center gap-2 mb-1">
+          <div className="flex flex-wrap items-center justify-center gap-2 mt-2 mb-1">
             {["AI Apps", "SaaS Tools", "Landing Pages", "Utilities"].map((label) => {
               const slugMap: Record<string, string> = {
                 "AI Apps": "ai-app",

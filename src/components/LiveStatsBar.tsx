@@ -67,10 +67,11 @@ export function LiveStatsBar() {
       transition={{ duration: 0.5, delay: 0.3 }}
       className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-2xl mx-auto mt-6"
     >
-      {stats.map(({ icon: Icon, value, label }) => (
+      {stats.map(({ icon: Icon, value, label, link }) => (
         <div
           key={label}
-          className="flex flex-col items-center gap-1 rounded-xl glass px-3 py-3 text-center"
+          onClick={link ? () => navigate(link) : undefined}
+          className={`flex flex-col items-center gap-1 rounded-xl glass px-3 py-3 text-center transition-colors ${link ? "cursor-pointer hover:bg-primary/5 hover:border-primary/20" : ""}`}
         >
           <Icon className="h-4 w-4 text-primary mb-0.5" />
           <span className="text-xl md:text-2xl font-black text-foreground tabular-nums">

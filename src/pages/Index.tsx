@@ -199,11 +199,11 @@ export default function Index() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
             </span>
-            <span className="text-muted-foreground">Smart businesses skip the middleman</span>
+            <span className="text-muted-foreground">Ready-made apps for every business</span>
           </motion.div>
 
           <h1 className="text-3xl md:text-5xl lg:text-6xl font-black tracking-tighter mb-3 leading-[0.95]">
-            Fire your agency.{" "}
+            Your idea.{" "}
             <br className="hidden md:block" />
             <span
               className="text-gradient animate-gradient-shift inline-block"
@@ -212,11 +212,11 @@ export default function Index() {
                 backgroundSize: "200% 200%",
               }}
             >
-              Hire OpenDraft.
+              Already built.
             </span>
           </h1>
           <p className="text-sm md:text-base text-muted-foreground max-w-xl mx-auto mb-5">
-            Agencies charge $10k and ghost you for 3 months. We sell you a finished app for the price of lunch. <span className="text-foreground font-semibold">Own it outright. Launch today.</span>
+            Browse thousands of ready-to-launch apps — from SaaS tools to AI products. <span className="text-foreground font-semibold">Pick one, make it yours, and go live today.</span>
           </p>
 
           {/* Hero search bar */}
@@ -491,15 +491,11 @@ export default function Index() {
               <div className="hidden sm:flex items-center gap-3">
                 <BrandMascot size={32} variant="wave" />
                 <p className="text-sm font-medium text-foreground">
-                  <span className="font-bold">127 people</span> browsing apps right now — join free and launch yours
+                  Find the perfect app for your business — <span className="font-bold">sign up free</span>
                 </p>
               </div>
-              <p className="text-sm font-medium text-foreground sm:hidden flex items-center gap-2">
-                <span className="relative flex h-2 w-2 shrink-0">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
-                </span>
-                127 people browsing now — join free
+              <p className="text-sm font-medium text-foreground sm:hidden">
+                Find your perfect app — sign up free
               </p>
               <div className="flex items-center gap-2 shrink-0">
                 <Link to="/login">

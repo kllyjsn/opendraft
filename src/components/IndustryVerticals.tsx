@@ -46,13 +46,13 @@ export function IndustryVerticals() {
 
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-10">
-          <p className="text-xs font-bold uppercase tracking-widest text-primary mb-2">Your industry. Already covered.</p>
+          <p className="text-xs font-bold uppercase tracking-widest text-primary mb-2">Built for your industry</p>
           <h2 className="text-2xl md:text-4xl font-black tracking-tighter leading-[1.05] mb-3">
-            Stop Googling "app developer near me"
+            Apps tailored to what you do
           </h2>
           <p className="text-sm md:text-base text-muted-foreground max-w-lg mx-auto">
-            We have ready-made apps for <span className="text-foreground font-semibold">12+ industries</span>. 
-            Pick one, customize it, launch it — all before your agency even replies to your email.
+            Ready-made apps for <span className="text-foreground font-semibold">12+ industries</span>. 
+            Pick one, customize it, and launch — no development wait times.
           </p>
         </div>
 

@@ -34,6 +34,7 @@ interface PipelineStats {
   messagesDrafted: number;
   messagesSent: number;
   noResponse: number;
+  readyForDraft: number;
 }
 
 const STEPS = [

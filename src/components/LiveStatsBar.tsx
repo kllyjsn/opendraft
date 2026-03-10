@@ -48,8 +48,8 @@ export function LiveStatsBar() {
       const items: StatItem[] = [
         { icon: Package, value: String(appCount), label: "Ready-to-launch apps" },
         ...(salesCount >= 50 ? [{ icon: ShoppingBag, value: String(salesCount), label: "Apps sold" }] : []),
-        { icon: Bot, value: "14", label: "Gremlins™ working 24/7" },
-        { icon: Building2, value: "12", label: "Industries covered" },
+        { icon: Bot, value: "14", label: "Gremlins™ working 24/7", link: "/swarm" },
+        { icon: Building2, value: "12", label: "Industries covered", link: "/swarm" },
       ];
 
       setStats(items);

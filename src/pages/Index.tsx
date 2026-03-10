@@ -73,6 +73,29 @@ export default function Index() {
   const [stickyDismissed, setStickyDismissed] = useState(false);
   const [heroSearch, setHeroSearch] = useState("");
 
+  const jsonLdData = useMemo(() => [
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "OpenDraft",
+      "url": "https://opendraft.co",
+      "description": "Browse 1,000+ ready-to-launch apps. Buy SaaS tools, AI products, landing pages & utilities.",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://opendraft.co/?q={search_term_string}",
+        "query-input": "required name=search_term_string",
+      },
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "OpenDraft",
+      "url": "https://opendraft.co",
+      "logo": "https://opendraft.co/mascot-icon.png",
+      "sameAs": ["https://x.com/OpenDraft"],
+    },
+  ], []);
+
   useEffect(() => {
     if (user || stickyDismissed) return;
     const onScroll = () => setShowStickyBar(window.scrollY > 400);

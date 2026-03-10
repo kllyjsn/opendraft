@@ -813,7 +813,7 @@ async function sendFollowUpEmails(
         messages: [
           {
             role: "system",
-            content: `You write friendly follow-up emails for a web dev agency. Keep it SHORT (under 80 words). Be helpful, not pushy. This is follow-up #${followUpCount + 1}.`
+            content: `You write friendly follow-up emails for a web dev agency called OpenDraft. Keep it SHORT (under 80 words). Be helpful, not pushy. This is follow-up #${followUpCount + 1}. Always sign off as "Jason" (never use [Your Name] or placeholders).`
           },
           {
             role: "user",

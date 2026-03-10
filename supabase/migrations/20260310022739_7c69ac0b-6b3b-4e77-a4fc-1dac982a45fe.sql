@@ -1,0 +1,1 @@
+UPDATE public.listings SET status = 'hidden' WHERE id = 'd03acf96-fc7f-4925-9fd6-8995b56cc78c'

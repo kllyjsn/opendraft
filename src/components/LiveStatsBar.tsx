@@ -32,6 +32,7 @@ function AnimatedNumber({ target }: { target: number }) {
 
 export function LiveStatsBar() {
   const [stats, setStats] = useState<StatItem[]>([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     async function load() {

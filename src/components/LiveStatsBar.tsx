@@ -8,6 +8,7 @@ interface StatItem {
   icon: typeof Package;
   value: string;
   label: string;
+  link?: string;
 }
 
 function AnimatedNumber({ target }: { target: number }) {

@@ -412,23 +412,59 @@ export default function Pitch() {
         </Slide>
 
         {/* Go-to-Market */}
-        <Slide title="Go-to-Market" icon={Users} index={12}>
-          <div className="space-y-3">
+        <Slide title="Go-to-Market Strategy" icon={Users} index={12}>
+          <p className="text-muted-foreground mb-6">
+            Our GTM targets <strong className="text-foreground">small business verticals</strong> — the highest-volume, lowest-CAC segment in software. Every plumber, salon, and restaurant needs an app. None of them want to hire a developer.
+          </p>
+
+          <div className="space-y-3 mb-6">
             {[
-              { phase: "Phase 1 (Now ✅)", desc: "95+ live listings. Automated X promotion live. Site Doctor monitoring deployed. Revenue flywheel operational." },
-              { phase: "Phase 2 (Q2)", desc: "Agent developer outreach — SDK packages, Claude Desktop configs, MCP registry listings on Smithery, Glama, MCP.so." },
-              { phase: "Phase 3 (Q3+)", desc: "Enterprise agent fleet deals — bulk API access, managed deployment tier, custom procurement pipelines." },
+              { phase: "Phase 1 — SMB Verticals (Now ✅)", items: [
+                "12 industry-specific landing paths on homepage (Home Services, Restaurants, Salons, Real Estate, etc.)",
+                "95+ live templates covering booking, ordering, CRM, portfolios, and loyalty apps",
+                "One-click deploy: business owners go from browse → live site in <60 seconds",
+                "Automated X promotion drives organic inbound across every vertical",
+              ]},
+              { phase: "Phase 2 — Vertical Depth (Q2)", items: [
+                "SEO landing pages per vertical (/apps/restaurants, /apps/salons) targeting 'app for [industry]' searches",
+                "Outreach Swarm auto-discovers SMBs via Google Maps API → sends personalized cold emails with matching templates",
+                "Founder First Program: 0% fees for first 100 creators → seeds supply across all 12 verticals",
+                "Referral loops: deployed sites include 'Built on OpenDraft' badge → organic discovery",
+              ]},
+              { phase: "Phase 3 — Agent + Enterprise (Q3+)", items: [
+                "Agent developer outreach — SDK packages, Claude Desktop configs, MCP registry listings",
+                "Enterprise fleet licensing — bulk API access for agencies managing 50+ SMB clients",
+                "White-label partnerships with web hosting providers (GoDaddy, Squarespace alternatives)",
+              ]},
             ].map((p) => (
-              <div key={p.phase} className="flex gap-4 items-start">
-                <div className="h-8 w-8 rounded-lg gradient-hero flex items-center justify-center shrink-0 mt-0.5">
-                  <Bot className="h-4 w-4 text-primary-foreground" />
-                </div>
-                <div>
-                  <p className="font-bold text-foreground text-sm">{p.phase}</p>
-                  <p className="text-sm text-muted-foreground">{p.desc}</p>
-                </div>
+              <div key={p.phase} className="rounded-xl border border-border/40 bg-muted/20 p-5">
+                <p className="font-bold text-foreground text-sm mb-3 flex items-center gap-2">
+                  <Bot className="h-4 w-4 text-primary" />
+                  {p.phase}
+                </p>
+                <ul className="space-y-1.5">
+                  {p.items.map((item, i) => (
+                    <li key={i} className="text-sm text-muted-foreground flex gap-2">
+                      <span className="text-primary font-bold shrink-0">•</span>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
               </div>
             ))}
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-6">
+            <MetricCard label="Target Verticals" value="12" sub="SMB industries" />
+            <MetricCard label="Avg Agency Cost" value="$10K" sub="Our price: $0–$99" />
+            <MetricCard label="SMBs in US" value="33M" sub="Total addressable" />
+            <MetricCard label="CAC Target" value="<$5" sub="Organic + auto-outreach" />
+          </div>
+
+          <div className="rounded-xl border border-primary/30 bg-primary/5 p-5">
+            <p className="text-sm text-muted-foreground">
+              <strong className="text-foreground">Why SMB first:</strong> Small businesses spend $120B/yr on websites and apps (Clutch, 2025). Most pay $5K–$15K to agencies for basic booking/ordering apps that OpenDraft offers for free or under $100. The automated outreach swarm can reach 1,000+ qualified leads/week at near-zero cost, creating a distribution engine that compounds alongside the content flywheel.
+            </p>
           </div>
         </Slide>
 

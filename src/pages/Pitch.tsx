@@ -173,7 +173,7 @@ export default function Pitch() {
         {/* Market */}
         <Slide title="Market Opportunity" icon={Globe} index={2}>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-6">
-            <MetricCard label="TAM" value="$120B" sub="AI agent economy (2030)" />
+            <MetricCard label="TAM" value="$50B" sub="AI agent economy (2030)" />
             <MetricCard label="Agent Commerce" value="$50B" sub="Programmatic procurement" />
             <MetricCard label="SAM" value="$8B" sub="Indie/SMB AI tools" />
             <MetricCard label="SOM Y1" value="$2M" sub="Year 1 GMV target" />

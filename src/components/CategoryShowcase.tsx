@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Bot, LayoutDashboard, Globe, Gamepad2, Wrench, Sparkles, ArrowRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { ListingCard } from "./ListingCard";
 
 const categories = [
   { icon: Bot, label: "AI Apps", slug: "ai_app", urlSlug: "ai-app" },
@@ -16,9 +17,16 @@ const categories = [
 interface CategoryListing {
   id: string;
   title: string;
+  description: string;
   screenshots: string[];
   price: number;
   tech_stack: string[];
+  completeness_badge: "prototype" | "mvp" | "production_ready";
+  sales_count: number;
+  view_count: number;
+  built_with: string | null;
+  seller_id: string;
+  security_score: number | null;
 }
 
 interface CategoryData {

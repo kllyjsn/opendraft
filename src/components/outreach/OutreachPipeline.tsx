@@ -350,7 +350,7 @@ export function OutreachPipeline() {
         )}
       </AnimatePresence>
 
-      {/* Last Result */}
+      {/* Last Result — human-readable summary */}
       <AnimatePresence>
         {lastResult?.result && (
           <motion.div
@@ -358,16 +358,61 @@ export function OutreachPipeline() {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
           >
-            <Card className="border-primary/10 bg-primary/[0.02] overflow-hidden">
-              <CardContent className="p-3 sm:p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <CheckCircle className="h-3.5 w-3.5 text-primary" />
-                  <span className="text-xs font-bold">Last Run</span>
-                  <Badge variant="outline" className="text-[10px] rounded-md">{lastResult.action?.replace(/_/g, " ")}</Badge>
+            <Card className="border-emerald-500/20 bg-emerald-500/[0.04] overflow-hidden">
+              <CardContent className="p-3.5 sm:p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="h-8 w-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                    <CheckCircle className="h-4 w-4 text-emerald-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-foreground">Cycle Complete</p>
+                    <p className="text-[10px] text-muted-foreground">{lastResult.action?.replace(/_/g, " ")}</p>
+                  </div>
                 </div>
-                <pre className="text-[10px] sm:text-[11px] text-muted-foreground bg-muted/40 rounded-lg p-2.5 sm:p-3 overflow-auto max-h-28 font-mono leading-relaxed">
-                  {JSON.stringify(lastResult.result, null, 2)}
-                </pre>
+
+                {/* Human-readable summary */}
+                {lastResult.result.summary ? (
+                  <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                    <div className="bg-card rounded-xl p-2.5 sm:p-3 text-center border border-border/40">
+                      <p className="text-lg sm:text-2xl font-black tabular-nums text-foreground">{lastResult.result.summary.businesses_found ?? 0}</p>
+                      <p className="text-[10px] text-muted-foreground font-medium mt-0.5">Leads Found</p>
+                    </div>
+                    <div className="bg-card rounded-xl p-2.5 sm:p-3 text-center border border-border/40">
+                      <p className="text-lg sm:text-2xl font-black tabular-nums text-foreground">{lastResult.result.summary.leads_scored ?? 0}</p>
+                      <p className="text-[10px] text-muted-foreground font-medium mt-0.5">Scored</p>
+                    </div>
+                    <div className="bg-card rounded-xl p-2.5 sm:p-3 text-center border border-border/40">
+                      <p className="text-lg sm:text-2xl font-black tabular-nums text-foreground">{lastResult.result.summary.messages_drafted ?? 0}</p>
+                      <p className="text-[10px] text-muted-foreground font-medium mt-0.5">Drafts Created</p>
+                    </div>
+                  </div>
+                ) : (
+                  <pre className="text-[10px] sm:text-[11px] text-muted-foreground bg-muted/40 rounded-lg p-2.5 sm:p-3 overflow-auto max-h-28 font-mono leading-relaxed">
+                    {JSON.stringify(lastResult.result, null, 2)}
+                  </pre>
+                )}
+
+                {/* Quick actions after cycle */}
+                {lastResult.result.summary?.messages_drafted > 0 && (
+                  <div className="flex gap-2 mt-3 flex-wrap">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="rounded-xl text-xs h-8 gap-1.5"
+                      onClick={() => setActiveView("messages")}
+                    >
+                      <Mail className="h-3 w-3" /> Review {lastResult.result.summary.messages_drafted} Drafts
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="rounded-xl text-xs h-8 gap-1.5"
+                      onClick={() => setActiveView("leads")}
+                    >
+                      <Building2 className="h-3 w-3" /> View Leads
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </motion.div>

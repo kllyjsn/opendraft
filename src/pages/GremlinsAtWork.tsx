@@ -312,9 +312,9 @@ function StatusDashboard() {
   return (
     <div className="grid grid-cols-3 gap-3 mb-6">
       {[
-        { label: "Uptime", value: `${uptime}%`, color: "text-green-400" },
+        { label: "Uptime", value: `${uptime}%`, color: "text-primary" },
         { label: "Tasks Today", value: tasksCompleted.toLocaleString(), color: "text-primary" },
-        { label: "Bugs Squashed", value: "∞", color: "text-pink-400" },
+        { label: "Bugs Squashed", value: "∞", color: "text-destructive" },
       ].map((stat, i) => (
         <motion.div
           key={stat.label}

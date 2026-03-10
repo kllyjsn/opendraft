@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Package, Users, ShoppingBag, Star, Bot, Building2 } from "lucide-react";
 
@@ -7,6 +8,7 @@ interface StatItem {
   icon: typeof Package;
   value: string;
   label: string;
+  link?: string;
 }
 
 function AnimatedNumber({ target }: { target: number }) {
@@ -30,6 +32,7 @@ function AnimatedNumber({ target }: { target: number }) {
 
 export function LiveStatsBar() {
   const [stats, setStats] = useState<StatItem[]>([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     async function load() {
@@ -46,8 +49,8 @@ export function LiveStatsBar() {
       const items: StatItem[] = [
         { icon: Package, value: String(appCount), label: "Ready-to-launch apps" },
         ...(salesCount >= 50 ? [{ icon: ShoppingBag, value: String(salesCount), label: "Apps sold" }] : []),
-        { icon: Bot, value: "14", label: "Gremlins™ working 24/7" },
-        { icon: Building2, value: "12", label: "Industries covered" },
+        { icon: Bot, value: "14", label: "Gremlins™ working 24/7", link: "/swarm" },
+        { icon: Building2, value: "12", label: "Industries covered", link: "/swarm" },
       ];
 
       setStats(items);
@@ -64,10 +67,11 @@ export function LiveStatsBar() {
       transition={{ duration: 0.5, delay: 0.3 }}
       className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-2xl mx-auto mt-6"
     >
-      {stats.map(({ icon: Icon, value, label }) => (
+      {stats.map(({ icon: Icon, value, label, link }) => (
         <div
           key={label}
-          className="flex flex-col items-center gap-1 rounded-xl glass px-3 py-3 text-center"
+          onClick={link ? () => navigate(link) : undefined}
+          className={`flex flex-col items-center gap-1 rounded-xl glass px-3 py-3 text-center transition-colors ${link ? "cursor-pointer hover:bg-primary/5 hover:border-primary/20" : ""}`}
         >
           <Icon className="h-4 w-4 text-primary mb-0.5" />
           <span className="text-xl md:text-2xl font-black text-foreground tabular-nums">

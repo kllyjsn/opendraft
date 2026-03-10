@@ -184,7 +184,7 @@ export function OutreachPipeline() {
   ];
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4 sm:space-y-5">
       {/* Filters bar */}
       <motion.div
         initial={{ opacity: 0, y: -6 }}
@@ -192,7 +192,7 @@ export function OutreachPipeline() {
         className="flex items-center gap-2 flex-wrap"
       >
         <Select value={selectedCampaign} onValueChange={setSelectedCampaign}>
-          <SelectTrigger className="w-[180px] bg-card border-border/60 text-xs h-9 rounded-xl">
+          <SelectTrigger className="w-full sm:w-[180px] bg-card border-border/60 text-xs h-9 rounded-xl">
             <SelectValue placeholder="All Campaigns" />
           </SelectTrigger>
           <SelectContent>
@@ -204,7 +204,7 @@ export function OutreachPipeline() {
         </Select>
 
         <Select value={selectedIndustry} onValueChange={setSelectedIndustry}>
-          <SelectTrigger className="w-[170px] bg-card border-border/60 text-xs h-9 rounded-xl">
+          <SelectTrigger className="w-full sm:w-[170px] bg-card border-border/60 text-xs h-9 rounded-xl">
             <SelectValue placeholder="All Industries" />
           </SelectTrigger>
           <SelectContent>
@@ -215,81 +215,76 @@ export function OutreachPipeline() {
           </SelectContent>
         </Select>
 
-        <div className="ml-auto">
-          <Button
-            onClick={runFullCycle}
-            disabled={runningStep !== null}
-            size="sm"
-            className="rounded-xl gap-1.5 font-bold h-9 px-4"
-            style={{ background: "var(--gradient-hero)" }}
-          >
-            {runningStep === "full_cycle" ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <Zap className="h-3.5 w-3.5" />
-            )}
-            <span className="text-white">Full Cycle</span>
-          </Button>
-        </div>
+        <Button
+          onClick={runFullCycle}
+          disabled={runningStep !== null}
+          size="sm"
+          className="rounded-xl gap-1.5 font-bold h-9 px-4 w-full sm:w-auto sm:ml-auto"
+          style={{ background: "var(--gradient-hero)" }}
+        >
+          {runningStep === "full_cycle" ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <Zap className="h-3.5 w-3.5" />
+          )}
+          <span className="text-white">Full Cycle</span>
+        </Button>
       </motion.div>
 
-      {/* Pipeline Steps — horizontal flow */}
-      <div className="grid grid-cols-5 gap-1 p-1 bg-muted/40 rounded-2xl">
-        {STEPS.map((step, i) => {
-          const status = getStepStatus(step.id);
-          const count = getStepCount(step.id);
-          const isRunning = runningStep === step.action;
-          const Icon = step.icon;
+      {/* Pipeline Steps — scrollable on mobile, grid on desktop */}
+      <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0">
+        <div className="flex sm:grid sm:grid-cols-5 gap-1 p-1 bg-muted/40 rounded-2xl min-w-[600px] sm:min-w-0">
+          {STEPS.map((step, i) => {
+            const status = getStepStatus(step.id);
+            const count = getStepCount(step.id);
+            const isRunning = runningStep === step.action;
+            const Icon = step.icon;
 
-          return (
-            <motion.button
-              key={step.id}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: i * 0.05 }}
-              onClick={() => status !== "locked" && !runningStep && runStep(step.action)}
-              disabled={status === "locked" || !!runningStep}
-              className={cn(
-                "relative rounded-xl p-4 text-left transition-all group",
-                "bg-card hover:shadow-md",
-                status === "complete" && "ring-1 ring-emerald-500/20",
-                status === "ready" && "hover:ring-1 hover:ring-primary/30",
-                status === "locked" && "opacity-35 cursor-not-allowed",
-                isRunning && "ring-2 ring-primary/40 shadow-lg"
-              )}
-            >
-              <div className="flex items-center justify-between mb-3">
-                <div className={cn(
-                  "h-8 w-8 rounded-lg flex items-center justify-center transition-colors",
-                  status === "complete"
-                    ? "bg-emerald-500/10 text-emerald-500"
-                    : status === "ready"
-                      ? "bg-primary/10 text-primary"
-                      : "bg-muted text-muted-foreground"
-                )}>
-                  {isRunning ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : status === "complete" ? (
-                    <CheckCircle className="h-4 w-4" />
-                  ) : (
-                    <Icon className="h-4 w-4" />
+            return (
+              <motion.button
+                key={step.id}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: i * 0.05 }}
+                onClick={() => status !== "locked" && !runningStep && runStep(step.action)}
+                disabled={status === "locked" || !!runningStep}
+                className={cn(
+                  "relative rounded-xl p-3 sm:p-4 text-left transition-all group flex-1 sm:flex-none",
+                  "bg-card hover:shadow-md",
+                  status === "complete" && "ring-1 ring-emerald-500/20",
+                  status === "ready" && "hover:ring-1 hover:ring-primary/30",
+                  status === "locked" && "opacity-35 cursor-not-allowed",
+                  isRunning && "ring-2 ring-primary/40 shadow-lg"
+                )}
+              >
+                <div className="flex items-center justify-between mb-2 sm:mb-3">
+                  <div className={cn(
+                    "h-7 w-7 sm:h-8 sm:w-8 rounded-lg flex items-center justify-center transition-colors",
+                    status === "complete"
+                      ? "bg-emerald-500/10 text-emerald-500"
+                      : status === "ready"
+                        ? "bg-primary/10 text-primary"
+                        : "bg-muted text-muted-foreground"
+                  )}>
+                    {isRunning ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : status === "complete" ? (
+                      <CheckCircle className="h-3.5 w-3.5" />
+                    ) : (
+                      <Icon className="h-3.5 w-3.5" />
+                    )}
+                  </div>
+                  {status === "ready" && !isRunning && (
+                    <Play className="h-3 w-3 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
                   )}
                 </div>
-                {status === "ready" && !isRunning && (
-                  <Play className="h-3 w-3 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
-                )}
-              </div>
-              <p className="text-xs font-bold text-foreground">{step.label}</p>
-              <p className="text-[10px] text-muted-foreground leading-snug mt-0.5 line-clamp-1">{step.description}</p>
-              <p className="text-xl font-black mt-2 tracking-tight tabular-nums">{count}</p>
-              
-              {/* Progress connector line */}
-              {i < STEPS.length - 1 && status === "complete" && (
-                <div className="hidden md:block absolute -right-[3px] top-1/2 -translate-y-1/2 w-[5px] h-[5px] rounded-full bg-emerald-500/40 z-10" />
-              )}
-            </motion.button>
-          );
-        })}
+                <p className="text-xs font-bold text-foreground">{step.label}</p>
+                <p className="text-[10px] text-muted-foreground leading-snug mt-0.5 hidden sm:block line-clamp-1">{step.description}</p>
+                <p className="text-lg sm:text-xl font-black mt-1.5 sm:mt-2 tracking-tight tabular-nums">{count}</p>
+              </motion.button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Stats row */}
@@ -297,7 +292,7 @@ export function OutreachPipeline() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.25 }}
-        className="grid grid-cols-4 gap-2"
+        className="grid grid-cols-2 sm:grid-cols-4 gap-2"
       >
         <StatCard icon={Users} label="Total Leads" value={stats.totalLeads} />
         <StatCard icon={CheckCircle} label="Qualified" value={stats.qualified} accent="emerald" />
@@ -314,13 +309,13 @@ export function OutreachPipeline() {
             exit={{ opacity: 0, height: 0 }}
           >
             <Card className="border-primary/10 bg-primary/[0.02] overflow-hidden">
-              <CardContent className="p-4">
+              <CardContent className="p-3 sm:p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <CheckCircle className="h-3.5 w-3.5 text-primary" />
-                  <span className="text-xs font-bold">Last Run Result</span>
+                  <span className="text-xs font-bold">Last Run</span>
                   <Badge variant="outline" className="text-[10px] rounded-md">{lastResult.action?.replace(/_/g, " ")}</Badge>
                 </div>
-                <pre className="text-[11px] text-muted-foreground bg-muted/40 rounded-lg p-3 overflow-auto max-h-28 font-mono leading-relaxed">
+                <pre className="text-[10px] sm:text-[11px] text-muted-foreground bg-muted/40 rounded-lg p-2.5 sm:p-3 overflow-auto max-h-28 font-mono leading-relaxed">
                   {JSON.stringify(lastResult.result, null, 2)}
                 </pre>
               </CardContent>
@@ -329,31 +324,33 @@ export function OutreachPipeline() {
         )}
       </AnimatePresence>
 
-      {/* View tabs */}
-      <div className="flex items-center gap-0.5 p-0.5 bg-muted/50 rounded-xl w-fit border border-border/40">
-        {TABS.map(tab => (
-          <button
-            key={tab.key}
-            onClick={() => setActiveView(tab.key)}
-            className={cn(
-              "px-4 py-2 text-xs font-semibold rounded-[10px] transition-all flex items-center gap-1.5",
-              activeView === tab.key
-                ? "bg-card text-foreground shadow-sm border border-border/40"
-                : "text-muted-foreground hover:text-foreground border border-transparent"
-            )}
-          >
-            <tab.icon className="h-3.5 w-3.5" />
-            {tab.label}
-            {tab.count !== undefined && tab.count > 0 && (
-              <span className={cn(
-                "text-[10px] font-bold min-w-[20px] text-center py-0.5 px-1.5 rounded-md",
-                activeView === tab.key ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
-              )}>
-                {tab.count}
-              </span>
-            )}
-          </button>
-        ))}
+      {/* View tabs — scrollable on mobile */}
+      <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0">
+        <div className="flex items-center gap-0.5 p-0.5 bg-muted/50 rounded-xl w-fit border border-border/40">
+          {TABS.map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveView(tab.key)}
+              className={cn(
+                "px-3 sm:px-4 py-2 text-xs font-semibold rounded-[10px] transition-all flex items-center gap-1.5 whitespace-nowrap",
+                activeView === tab.key
+                  ? "bg-card text-foreground shadow-sm border border-border/40"
+                  : "text-muted-foreground hover:text-foreground border border-transparent"
+              )}
+            >
+              <tab.icon className="h-3.5 w-3.5" />
+              {tab.label}
+              {tab.count !== undefined && tab.count > 0 && (
+                <span className={cn(
+                  "text-[10px] font-bold min-w-[20px] text-center py-0.5 px-1.5 rounded-md",
+                  activeView === tab.key ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+                )}>
+                  {tab.count}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Content */}
@@ -369,12 +366,12 @@ export function OutreachPipeline() {
             <div className="space-y-2">
               {campaigns.length === 0 ? (
                 <Card className="border-dashed border-border/60">
-                  <CardContent className="py-20 text-center">
-                    <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center mx-auto mb-5">
-                      <Target className="h-8 w-8 text-primary" />
+                  <CardContent className="py-14 sm:py-20 text-center px-4">
+                    <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center mx-auto mb-4 sm:mb-5">
+                      <Target className="h-7 w-7 sm:h-8 sm:w-8 text-primary" />
                     </div>
-                    <h3 className="font-bold text-lg mb-1.5">No campaigns yet</h3>
-                    <p className="text-sm text-muted-foreground mb-6 max-w-sm mx-auto">
+                    <h3 className="font-bold text-base sm:text-lg mb-1.5">No campaigns yet</h3>
+                    <p className="text-xs sm:text-sm text-muted-foreground mb-5 sm:mb-6 max-w-sm mx-auto">
                       Click "Full Cycle" to auto-discover businesses and begin outreach.
                     </p>
                     <Button onClick={() => runStep("discover_businesses")} disabled={!!runningStep} className="gap-1.5 rounded-xl">
@@ -391,29 +388,33 @@ export function OutreachPipeline() {
                     transition={{ delay: i * 0.04 }}
                   >
                     <Card className="border-border/40 hover:shadow-md transition-all hover:border-border/60">
-                      <CardContent className="p-4 flex items-center gap-4">
-                        <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary/15 to-accent/10 flex items-center justify-center shrink-0">
-                          <Target className="h-5 w-5 text-primary" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-bold text-sm">{c.name}</h3>
-                          <div className="flex gap-1 mt-1.5 flex-wrap">
-                            {c.industries.slice(0, 3).map((ind, j) => (
-                              <Badge key={j} variant="secondary" className="text-[10px] rounded-md font-medium">{ind}</Badge>
-                            ))}
-                            {c.target_regions[0] && (
-                              <Badge variant="outline" className="text-[10px] rounded-md">{c.target_regions[0]}</Badge>
-                            )}
+                      <CardContent className="p-3 sm:p-4">
+                        <div className="flex items-start sm:items-center gap-3 sm:gap-4">
+                          <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-gradient-to-br from-primary/15 to-accent/10 flex items-center justify-center shrink-0">
+                            <Target className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                           </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <Badge className={cn(
-                            "text-[10px] rounded-md font-bold",
-                            c.status === "active" ? "bg-emerald-500/10 text-emerald-600 border-0" : "bg-muted text-muted-foreground border-0"
-                          )}>
-                            {c.status}
-                          </Badge>
-                          <span className="text-[11px] text-muted-foreground tabular-nums">{new Date(c.created_at).toLocaleDateString()}</span>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h3 className="font-bold text-sm">{c.name}</h3>
+                              <Badge className={cn(
+                                "text-[10px] rounded-md font-bold",
+                                c.status === "active" ? "bg-emerald-500/10 text-emerald-600 border-0" : "bg-muted text-muted-foreground border-0"
+                              )}>
+                                {c.status}
+                              </Badge>
+                            </div>
+                            <div className="flex gap-1 mt-1.5 flex-wrap">
+                              {c.industries.slice(0, 3).map((ind, j) => (
+                                <Badge key={j} variant="secondary" className="text-[10px] rounded-md font-medium">{ind}</Badge>
+                              ))}
+                              {c.target_regions[0] && (
+                                <Badge variant="outline" className="text-[10px] rounded-md">{c.target_regions[0]}</Badge>
+                              )}
+                            </div>
+                          </div>
+                          <span className="text-[10px] text-muted-foreground tabular-nums shrink-0 hidden sm:block">
+                            {new Date(c.created_at).toLocaleDateString()}
+                          </span>
                         </div>
                       </CardContent>
                     </Card>
@@ -453,13 +454,13 @@ function StatCard({ icon: Icon, label, value, accent }: { icon: any; label: stri
 
   return (
     <Card className="border-border/40">
-      <CardContent className="p-3.5 flex items-center gap-3">
-        <div className={cn("h-9 w-9 rounded-xl flex items-center justify-center shrink-0", bgColor)}>
-          <Icon className={cn("h-4 w-4", textColor)} />
+      <CardContent className="p-3 flex items-center gap-2.5 sm:gap-3">
+        <div className={cn("h-8 w-8 sm:h-9 sm:w-9 rounded-xl flex items-center justify-center shrink-0", bgColor)}>
+          <Icon className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", textColor)} />
         </div>
-        <div>
-          <p className="text-xl font-black tracking-tight tabular-nums">{value}</p>
-          <p className="text-[10px] text-muted-foreground font-medium leading-none mt-0.5">{label}</p>
+        <div className="min-w-0">
+          <p className="text-lg sm:text-xl font-black tracking-tight tabular-nums">{value}</p>
+          <p className="text-[10px] text-muted-foreground font-medium leading-none mt-0.5 truncate">{label}</p>
         </div>
       </CardContent>
     </Card>

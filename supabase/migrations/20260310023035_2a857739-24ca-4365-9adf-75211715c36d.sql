@@ -1,0 +1,1 @@
+UPDATE public.listings SET screenshots = ARRAY['https://xwumrdcagsuwqeelyxih.supabase.co/storage/v1/object/public/listing-screenshots/unique-v2/starmap-night-sky-preview.png'] WHERE id = 'f1e78100-84f7-4763-8cbe-35360e235feb'

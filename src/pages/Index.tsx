@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -17,6 +17,8 @@ import { LiveStatsBar } from "@/components/LiveStatsBar";
 import { BrandMascot } from "@/components/BrandMascot";
 import { MascotPeek } from "@/components/MascotPeek";
 import { IndustryVerticals } from "@/components/IndustryVerticals";
+import { JsonLd } from "@/components/JsonLd";
+import { CanonicalTag } from "@/components/CanonicalTag";
 
 const CATEGORIES = ["All", "SaaS Tool", "AI App", "Landing Page", "Utility", "Game", "Other"];
 const COMPLETENESS = ["All", "Prototype", "MVP", "Production Ready"];
@@ -70,6 +72,29 @@ export default function Index() {
   const [showStickyBar, setShowStickyBar] = useState(false);
   const [stickyDismissed, setStickyDismissed] = useState(false);
   const [heroSearch, setHeroSearch] = useState("");
+
+  const jsonLdData = useMemo(() => [
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "OpenDraft",
+      "url": "https://opendraft.co",
+      "description": "Browse 1,000+ ready-to-launch apps. Buy SaaS tools, AI products, landing pages & utilities.",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://opendraft.co/?q={search_term_string}",
+        "query-input": "required name=search_term_string",
+      },
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "OpenDraft",
+      "url": "https://opendraft.co",
+      "logo": "https://opendraft.co/mascot-icon.png",
+      "sameAs": ["https://x.com/OpenDraft"],
+    },
+  ], []);
 
   useEffect(() => {
     if (user || stickyDismissed) return;
@@ -177,6 +202,8 @@ export default function Index() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <CanonicalTag path="/" />
+      <JsonLd data={jsonLdData} />
       <Navbar />
 
       {/* ── LIVE ACTIVITY TICKER ── */}
@@ -203,7 +230,7 @@ export default function Index() {
           </motion.div>
 
           <h1 className="text-3xl md:text-5xl lg:text-6xl font-black tracking-tighter mb-3 leading-[0.95]">
-            Your idea.{" "}
+            Buy ready-made apps.{" "}
             <br className="hidden md:block" />
             <span
               className="text-gradient animate-gradient-shift inline-block"
@@ -212,11 +239,11 @@ export default function Index() {
                 backgroundSize: "200% 200%",
               }}
             >
-              Already built.
+              Launch today.
             </span>
           </h1>
           <p className="text-sm md:text-base text-muted-foreground max-w-xl mx-auto mb-5">
-            Browse thousands of ready-to-launch apps — from SaaS tools to AI products. <span className="text-foreground font-semibold">Pick one, make it yours, and go live today.</span>
+            SaaS tools, AI products, landing pages & utilities — all production-ready. <span className="text-foreground font-semibold">Pick one, customize it, go live in minutes.</span>
           </p>
 
           {/* Hero search bar */}
@@ -239,8 +266,22 @@ export default function Index() {
             </div>
           </form>
 
+          {/* Popular searches */}
+          <div className="flex flex-wrap items-center justify-center gap-1.5 mb-1">
+            <span className="text-[10px] text-muted-foreground/60 font-medium mr-1">Popular:</span>
+            {["CRM", "AI Chatbot", "Dashboard", "E-commerce", "Portfolio", "Invoice Tool"].map((term) => (
+              <button
+                key={term}
+                onClick={() => { setHeroSearch(term); setSearch(term); document.getElementById("browse")?.scrollIntoView({ behavior: "smooth" }); }}
+                className="rounded-full px-2.5 py-0.5 text-[11px] font-medium bg-muted/50 text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all border border-border/20"
+              >
+                {term}
+              </button>
+            ))}
+          </div>
+
           {/* Quick category pills */}
-          <div className="flex flex-wrap items-center justify-center gap-2 mb-1">
+          <div className="flex flex-wrap items-center justify-center gap-2 mt-2 mb-1">
             {["AI Apps", "SaaS Tools", "Landing Pages", "Utilities"].map((label) => {
               const slugMap: Record<string, string> = {
                 "AI Apps": "ai-app",

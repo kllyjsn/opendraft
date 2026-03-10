@@ -16,6 +16,7 @@ import { LiveActivityTicker } from "@/components/LiveActivityTicker";
 import { LiveStatsBar } from "@/components/LiveStatsBar";
 import { BrandMascot } from "@/components/BrandMascot";
 import { MascotPeek } from "@/components/MascotPeek";
+import { IndustryVerticals } from "@/components/IndustryVerticals";
 
 const CATEGORIES = ["All", "SaaS Tool", "AI App", "Landing Page", "Utility", "Game", "Other"];
 const COMPLETENESS = ["All", "Prototype", "MVP", "Production Ready"];

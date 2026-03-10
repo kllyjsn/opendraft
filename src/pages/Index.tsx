@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -17,6 +17,8 @@ import { LiveStatsBar } from "@/components/LiveStatsBar";
 import { BrandMascot } from "@/components/BrandMascot";
 import { MascotPeek } from "@/components/MascotPeek";
 import { IndustryVerticals } from "@/components/IndustryVerticals";
+import { JsonLd } from "@/components/JsonLd";
+import { CanonicalTag } from "@/components/CanonicalTag";
 
 const CATEGORIES = ["All", "SaaS Tool", "AI App", "Landing Page", "Utility", "Game", "Other"];
 const COMPLETENESS = ["All", "Prototype", "MVP", "Production Ready"];

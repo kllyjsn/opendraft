@@ -60,7 +60,7 @@ export function OutreachPipeline() {
   const [selectedIndustry, setSelectedIndustry] = useState<string>("all");
   const [stats, setStats] = useState<PipelineStats>({
     totalLeads: 0, unscored: 0, qualified: 0, nurture: 0,
-    contacted: 0, messagesDrafted: 0, messagesSent: 0, noResponse: 0,
+    contacted: 0, messagesDrafted: 0, messagesSent: 0, noResponse: 0, readyForDraft: 0,
   });
   const [loading, setLoading] = useState(true);
   const [runningStep, setRunningStep] = useState<string | null>(null);

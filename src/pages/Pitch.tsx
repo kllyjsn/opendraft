@@ -173,7 +173,7 @@ export default function Pitch() {
         {/* Market */}
         <Slide title="Market Opportunity" icon={Globe} index={2}>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-6">
-            <MetricCard label="TAM" value="$120B" sub="AI agent economy (2030)" />
+            <MetricCard label="TAM" value="$50B" sub="AI agent economy (2030)" />
             <MetricCard label="Agent Commerce" value="$50B" sub="Programmatic procurement" />
             <MetricCard label="SAM" value="$8B" sub="Indie/SMB AI tools" />
             <MetricCard label="SOM Y1" value="$2M" sub="Year 1 GMV target" />
@@ -461,9 +461,9 @@ export default function Pitch() {
             <MetricCard label="CAC Target" value="<$5" sub="Organic + auto-outreach" />
           </div>
 
-          <div className="rounded-xl border border-primary/30 bg-primary/5 p-5">
+        <div className="rounded-xl border border-primary/30 bg-primary/5 p-5">
             <p className="text-sm text-muted-foreground">
-              <strong className="text-foreground">Why SMB first:</strong> Small businesses spend $120B/yr on websites and apps (Clutch, 2025). Most pay $5K–$15K to agencies for basic booking/ordering apps that OpenDraft offers for free or under $100. The automated outreach swarm can reach 1,000+ qualified leads/week at near-zero cost, creating a distribution engine that compounds alongside the content flywheel.
+              <strong className="text-foreground">Why SMB first:</strong> Small businesses spend ~$75B/yr on websites and apps (IBISWorld). Most pay $5K–$15K to agencies for basic booking/ordering apps that OpenDraft offers for free or under $100. The automated outreach swarm can reach 1,000+ qualified leads/week at near-zero cost, creating a distribution engine that compounds alongside the content flywheel.
             </p>
           </div>
         </Slide>

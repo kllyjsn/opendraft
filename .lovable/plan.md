@@ -93,8 +93,8 @@ Our long-term vision: **become the default procurement layer for the autonomous 
 
 | Segment | Size | Rationale |
 |---|---|---|
-| **TAM — AI Agent Software Economy** | **$120B by 2030** | Gartner projects 15B+ autonomous agent instances by 2030; each needing tools/templates at $8 avg spend |
-| **TAM — SMB Website/App Spend** | **$120B/yr** | US small businesses spend $120B annually on websites and apps (Clutch, 2025) |
+| **TAM — AI Agent Software Economy** | **$50B by 2030** | MarketsandMarkets projects $52.6B AI agent market by 2030 (CAGR 44.8%); subset focused on software procurement |
+| **TAM — SMB Website/App Spend** | **$75B/yr** | US small businesses spend ~$75B annually on websites, apps, and digital tools (IBISWorld / SBA estimates) |
 | **SAM — Indie/SMB AI-Built Tools** | **$8B** | 2M+ active vibe coders (Lovable, Cursor, Bolt, Replit) × $4K avg annual tool spend |
 | **SOM — Year 1** | **$2M GMV** | 1,000 listings × $50 avg price × 40 purchases each |
 | **Agent-Driven Commerce** | **$50B by 2030** | MCP/A2A protocols enabling programmatic procurement; OpenDraft is first-mover |

@@ -562,6 +562,7 @@ async function generateOutreachMessages(
 TONE: Friendly, helpful, not salesy. Focus on helping them, not selling.
 LENGTH: Keep emails under 150 words.
 PERSONALIZATION: Reference specific things about their business/website.
+SIGNATURE: Always sign emails as "Jason" (not [Your Name] or any placeholder). Use "Jason" as the sender name. Example sign-off: "Best,\nJason\nOpenDraft"
 
 Our services: ${SERVICES_OFFERED.map(s => `${s.name} (${s.price_range})`).join(", ")}`
           },

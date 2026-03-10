@@ -202,6 +202,8 @@ export default function Index() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <CanonicalTag path="/" />
+      <JsonLd data={jsonLdData} />
       <Navbar />
 
       {/* ── LIVE ACTIVITY TICKER ── */}

@@ -310,6 +310,46 @@ export function OutreachPipeline() {
         <StatCard icon={TrendingUp} label="Drafts Ready" value={stats.messagesDrafted} accent="primary" />
       </motion.div>
 
+      {/* Draft CTA Banner */}
+      <AnimatePresence>
+        {stats.readyForDraft > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+          >
+            <Card className="border-primary/20 bg-primary/[0.04] overflow-hidden">
+              <CardContent className="p-3 sm:p-4 flex items-center gap-3 sm:gap-4 flex-wrap">
+                <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                  <Mail className="h-5 w-5 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-foreground">
+                    {stats.readyForDraft} lead{stats.readyForDraft !== 1 ? "s" : ""} ready for email drafts
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Qualified leads with score ≥ 50 that don't have a draft yet. Click to generate personalized emails.
+                  </p>
+                </div>
+                <Button
+                  onClick={() => runStep("generate_outreach")}
+                  disabled={runningStep !== null}
+                  size="sm"
+                  className="rounded-xl gap-1.5 font-bold h-9 px-5 shrink-0 w-full sm:w-auto"
+                >
+                  {runningStep === "generate_outreach" ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-3.5 w-3.5" />
+                  )}
+                  Generate Drafts
+                </Button>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Last Result */}
       <AnimatePresence>
         {lastResult?.result && (

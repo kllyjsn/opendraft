@@ -49,6 +49,7 @@ import Credits from "./pages/Credits";
 import Onboarding from "./pages/Onboarding";
 import Security from "./pages/Security";
 import AdminOutreach from "./pages/AdminOutreach";
+import GremlinsAtWork from "./pages/GremlinsAtWork";
 
 const queryClient = new QueryClient();
 

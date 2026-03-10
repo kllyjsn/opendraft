@@ -512,13 +512,13 @@ async function generateOutreachMessages(
   lovableKey: string,
   campaignId: string | null
 ): Promise<any> {
-  // Get qualified leads without messages
+  // Get qualified leads that don't already have a drafted message waiting
   let query = supabase
     .from("outreach_leads")
     .select("*")
     .in("lead_status", ["qualified", "nurture"])
     .gte("score", 50)
-    .limit(5);
+    .limit(20);
 
   if (campaignId) {
     query = query.eq("campaign_id", campaignId);
@@ -527,20 +527,22 @@ async function generateOutreachMessages(
   const { data: leads } = await query;
 
   if (!leads || leads.length === 0) {
-    return { messages_drafted: 0, message: "No qualified leads without messages" };
+    return { messages_drafted: 0, message: "No qualified leads found" };
   }
 
   const messagesCreated: any[] = [];
 
   for (const lead of leads) {
-    // Check if message already exists
-    const { data: existingMsg } = await supabase
+    // Skip leads that already have a drafted (unsent) message
+    const { data: existingDraft } = await supabase
       .from("outreach_messages")
       .select("id")
       .eq("lead_id", lead.id)
-      .single();
+      .eq("message_status", "drafted")
+      .eq("direction", "outbound")
+      .maybeSingle();
 
-    if (existingMsg) continue;
+    if (existingDraft) continue;
 
     const scoring = lead.metadata?.scoring || {};
     

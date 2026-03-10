@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   Target, Star, Mail, Send, Clock, Loader2,
   CheckCircle, Building2, Users, TrendingUp,
-  ChevronRight, Zap, Sparkles, ArrowRight
+  Zap, Sparkles, Play,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -37,11 +37,11 @@ interface PipelineStats {
 }
 
 const STEPS = [
-  { id: "discover", label: "Discover", icon: Target, action: "discover_businesses", description: "Find businesses via web + AI", gradient: "from-primary to-accent" },
-  { id: "score", label: "Score", icon: Star, action: "evaluate_leads", description: "AI scores lead quality 0–100", gradient: "from-amber-500 to-orange-500" },
-  { id: "draft", label: "Draft", icon: Mail, action: "generate_outreach", description: "Generate personalized emails", gradient: "from-secondary to-cyan-400" },
-  { id: "send", label: "Send", icon: Send, action: "send_emails", description: "Deliver via email", gradient: "from-emerald-500 to-green-400" },
-  { id: "follow_up", label: "Follow Up", icon: Clock, action: "send_follow_ups", description: "Automated follow-ups", gradient: "from-violet-500 to-purple-400" },
+  { id: "discover", label: "Discover", icon: Target, action: "discover_businesses", description: "Find businesses via web + AI" },
+  { id: "score", label: "Score", icon: Star, action: "evaluate_leads", description: "AI scores lead quality 0–100" },
+  { id: "draft", label: "Draft", icon: Mail, action: "generate_outreach", description: "Generate personalized emails" },
+  { id: "send", label: "Send", icon: Send, action: "send_emails", description: "Deliver via Resend" },
+  { id: "follow_up", label: "Follow Up", icon: Clock, action: "send_follow_ups", description: "Automated follow-ups" },
 ] as const;
 
 const INDUSTRIES = [
@@ -108,7 +108,7 @@ export function OutreachPipeline() {
   const runStep = async (action: string) => {
     setRunningStep(action);
     setLastResult(null);
-    toast.info(`🤖 Running ${action.replace(/_/g, " ")}...`);
+    toast.info(`Running ${action.replace(/_/g, " ")}...`);
 
     try {
       const { data, error } = await supabase.functions.invoke("swarm-b2b-outreach", {
@@ -121,10 +121,10 @@ export function OutreachPipeline() {
       });
       if (error) throw error;
       setLastResult({ action, ...data });
-      toast.success(`✅ ${action.replace(/_/g, " ")} completed!`);
+      toast.success(`${action.replace(/_/g, " ")} completed`);
       fetchStats();
     } catch (e: any) {
-      toast.error(`❌ Failed: ${e.message}`);
+      toast.error(`Failed: ${e.message}`);
     } finally {
       setRunningStep(null);
     }
@@ -133,7 +133,7 @@ export function OutreachPipeline() {
   const runFullCycle = async () => {
     setRunningStep("full_cycle");
     setLastResult(null);
-    toast.info("🤖 Running full outreach cycle...");
+    toast.info("Running full outreach cycle...");
 
     try {
       const { data, error } = await supabase.functions.invoke("swarm-b2b-outreach", {
@@ -146,10 +146,10 @@ export function OutreachPipeline() {
       });
       if (error) throw error;
       setLastResult({ action: "full_cycle", ...data });
-      toast.success("✅ Full cycle completed!");
+      toast.success("Full cycle completed");
       fetchStats();
     } catch (e: any) {
-      toast.error(`❌ Failed: ${e.message}`);
+      toast.error(`Failed: ${e.message}`);
     } finally {
       setRunningStep(null);
     }
@@ -184,64 +184,57 @@ export function OutreachPipeline() {
   ];
 
   return (
-    <div className="space-y-6">
-      {/* Hero header with gradient */}
+    <div className="space-y-5">
+      {/* Filters bar */}
       <motion.div
-        initial={{ opacity: 0, y: -10 }}
+        initial={{ opacity: 0, y: -6 }}
         animate={{ opacity: 1, y: 0 }}
-        className="rounded-2xl p-6 relative overflow-hidden"
-        style={{ background: "var(--gradient-hero)" }}
+        className="flex items-center gap-2 flex-wrap"
       >
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImciIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMSIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjA4KSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3QgZmlsbD0idXJsKCNnKSIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIvPjwvc3ZnPg==')] opacity-50" />
-        <div className="relative z-10 flex items-center justify-between flex-wrap gap-4">
-          <div>
-            <h2 className="text-xl font-black text-white tracking-tight">Outreach Pipeline</h2>
-            <p className="text-white/70 text-sm mt-0.5">Discover → Score → Draft → Review → Send</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Select value={selectedCampaign} onValueChange={setSelectedCampaign}>
-              <SelectTrigger className="w-[180px] bg-white/10 border-white/20 text-white backdrop-blur-sm text-xs h-9 [&>svg]:text-white">
-                <SelectValue placeholder="All Campaigns" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Campaigns</SelectItem>
-                {campaigns.map(c => (
-                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        <Select value={selectedCampaign} onValueChange={setSelectedCampaign}>
+          <SelectTrigger className="w-[180px] bg-card border-border/60 text-xs h-9 rounded-xl">
+            <SelectValue placeholder="All Campaigns" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Campaigns</SelectItem>
+            {campaigns.map(c => (
+              <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-            <Select value={selectedIndustry} onValueChange={setSelectedIndustry}>
-              <SelectTrigger className="w-[160px] bg-white/10 border-white/20 text-white backdrop-blur-sm text-xs h-9 [&>svg]:text-white">
-                <SelectValue placeholder="All Industries" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Industries</SelectItem>
-                {INDUSTRIES.map(i => (
-                  <SelectItem key={i} value={i}>{i}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        <Select value={selectedIndustry} onValueChange={setSelectedIndustry}>
+          <SelectTrigger className="w-[170px] bg-card border-border/60 text-xs h-9 rounded-xl">
+            <SelectValue placeholder="All Industries" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Industries</SelectItem>
+            {INDUSTRIES.map(i => (
+              <SelectItem key={i} value={i}>{i}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-            <Button
-              onClick={runFullCycle}
-              disabled={runningStep !== null}
-              size="sm"
-              className="bg-white/20 hover:bg-white/30 text-white border border-white/20 backdrop-blur-sm gap-1.5 font-bold"
-            >
-              {runningStep === "full_cycle" ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <Zap className="h-3.5 w-3.5" />
-              )}
-              Full Cycle
-            </Button>
-          </div>
+        <div className="ml-auto">
+          <Button
+            onClick={runFullCycle}
+            disabled={runningStep !== null}
+            size="sm"
+            className="rounded-xl gap-1.5 font-bold h-9 px-4"
+            style={{ background: "var(--gradient-hero)" }}
+          >
+            {runningStep === "full_cycle" ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Zap className="h-3.5 w-3.5" />
+            )}
+            <span className="text-white">Full Cycle</span>
+          </Button>
         </div>
       </motion.div>
 
       {/* Pipeline Steps — horizontal flow */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+      <div className="grid grid-cols-5 gap-1 p-1 bg-muted/40 rounded-2xl">
         {STEPS.map((step, i) => {
           const status = getStepStatus(step.id);
           const count = getStepCount(step.id);
@@ -249,70 +242,52 @@ export function OutreachPipeline() {
           const Icon = step.icon;
 
           return (
-            <motion.div
+            <motion.button
               key={step.id}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.07 }}
-              className="relative"
-            >
-              <button
-                onClick={() => status !== "locked" && !runningStep && runStep(step.action)}
-                disabled={status === "locked" || !!runningStep}
-                className={cn(
-                  "w-full rounded-xl p-4 text-left border transition-all group relative overflow-hidden",
-                  "bg-card hover:shadow-lg",
-                  status === "complete" && "border-emerald-500/30",
-                  status === "ready" && "border-primary/30 hover:border-primary/50",
-                  status === "locked" && "opacity-40 cursor-not-allowed",
-                  isRunning && "ring-2 ring-primary/50"
-                )}
-              >
-                {/* Subtle gradient overlay on hover */}
-                <div className={cn(
-                  "absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-br",
-                  step.gradient,
-                  "pointer-events-none"
-                )} style={{ opacity: status === "locked" ? 0 : undefined }} />
-                <div className="absolute inset-0 bg-card opacity-0 group-hover:opacity-90 transition-opacity pointer-events-none" />
-
-                <div className="relative z-10">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className={cn(
-                      "h-8 w-8 rounded-lg flex items-center justify-center",
-                      status === "complete"
-                        ? "bg-emerald-500/10"
-                        : status === "ready"
-                          ? "bg-primary/10"
-                          : "bg-muted"
-                    )}>
-                      {isRunning ? (
-                        <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                      ) : status === "complete" ? (
-                        <CheckCircle className="h-4 w-4 text-emerald-500" />
-                      ) : (
-                        <Icon className={cn("h-4 w-4", status === "ready" ? "text-primary" : "text-muted-foreground")} />
-                      )}
-                    </div>
-                    {status === "ready" && !isRunning && (
-                      <Badge className="ml-auto text-[9px] bg-primary/10 text-primary border-0 gap-0.5 px-1.5">
-                        <ArrowRight className="h-2.5 w-2.5" /> Run
-                      </Badge>
-                    )}
-                  </div>
-                  <p className="text-sm font-bold">{step.label}</p>
-                  <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">{step.description}</p>
-                  <p className="text-2xl font-black mt-2 tracking-tight">{count}</p>
-                </div>
-              </button>
-
-              {/* Arrow connector */}
-              {i < STEPS.length - 1 && (
-                <div className="hidden md:flex absolute -right-2 top-1/2 -translate-y-1/2 z-20">
-                  <ChevronRight className="h-4 w-4 text-muted-foreground/30" />
-                </div>
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: i * 0.05 }}
+              onClick={() => status !== "locked" && !runningStep && runStep(step.action)}
+              disabled={status === "locked" || !!runningStep}
+              className={cn(
+                "relative rounded-xl p-4 text-left transition-all group",
+                "bg-card hover:shadow-md",
+                status === "complete" && "ring-1 ring-emerald-500/20",
+                status === "ready" && "hover:ring-1 hover:ring-primary/30",
+                status === "locked" && "opacity-35 cursor-not-allowed",
+                isRunning && "ring-2 ring-primary/40 shadow-lg"
               )}
-            </motion.div>
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className={cn(
+                  "h-8 w-8 rounded-lg flex items-center justify-center transition-colors",
+                  status === "complete"
+                    ? "bg-emerald-500/10 text-emerald-500"
+                    : status === "ready"
+                      ? "bg-primary/10 text-primary"
+                      : "bg-muted text-muted-foreground"
+                )}>
+                  {isRunning ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : status === "complete" ? (
+                    <CheckCircle className="h-4 w-4" />
+                  ) : (
+                    <Icon className="h-4 w-4" />
+                  )}
+                </div>
+                {status === "ready" && !isRunning && (
+                  <Play className="h-3 w-3 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+                )}
+              </div>
+              <p className="text-xs font-bold text-foreground">{step.label}</p>
+              <p className="text-[10px] text-muted-foreground leading-snug mt-0.5 line-clamp-1">{step.description}</p>
+              <p className="text-xl font-black mt-2 tracking-tight tabular-nums">{count}</p>
+              
+              {/* Progress connector line */}
+              {i < STEPS.length - 1 && status === "complete" && (
+                <div className="hidden md:block absolute -right-[3px] top-1/2 -translate-y-1/2 w-[5px] h-[5px] rounded-full bg-emerald-500/40 z-10" />
+              )}
+            </motion.button>
           );
         })}
       </div>
@@ -321,13 +296,13 @@ export function OutreachPipeline() {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.35 }}
-        className="grid grid-cols-2 md:grid-cols-4 gap-2"
+        transition={{ delay: 0.25 }}
+        className="grid grid-cols-4 gap-2"
       >
         <StatCard icon={Users} label="Total Leads" value={stats.totalLeads} />
-        <StatCard icon={CheckCircle} label="Qualified" value={stats.qualified} color="text-emerald-500" />
-        <StatCard icon={Mail} label="Emails Sent" value={stats.messagesSent} color="text-secondary" />
-        <StatCard icon={TrendingUp} label="Drafts Ready" value={stats.messagesDrafted} color="text-primary" />
+        <StatCard icon={CheckCircle} label="Qualified" value={stats.qualified} accent="emerald" />
+        <StatCard icon={Send} label="Emails Sent" value={stats.messagesSent} accent="secondary" />
+        <StatCard icon={TrendingUp} label="Drafts Ready" value={stats.messagesDrafted} accent="primary" />
       </motion.div>
 
       {/* Last Result */}
@@ -338,14 +313,14 @@ export function OutreachPipeline() {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
           >
-            <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-transparent overflow-hidden">
+            <Card className="border-primary/10 bg-primary/[0.02] overflow-hidden">
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <CheckCircle className="h-4 w-4 text-primary" />
-                  <span className="text-sm font-bold">Last Run</span>
-                  <Badge variant="outline" className="text-[10px]">{lastResult.action?.replace(/_/g, " ")}</Badge>
+                  <CheckCircle className="h-3.5 w-3.5 text-primary" />
+                  <span className="text-xs font-bold">Last Run Result</span>
+                  <Badge variant="outline" className="text-[10px] rounded-md">{lastResult.action?.replace(/_/g, " ")}</Badge>
                 </div>
-                <pre className="text-xs text-muted-foreground bg-muted/50 rounded-lg p-3 overflow-auto max-h-32 font-mono">
+                <pre className="text-[11px] text-muted-foreground bg-muted/40 rounded-lg p-3 overflow-auto max-h-28 font-mono leading-relaxed">
                   {JSON.stringify(lastResult.result, null, 2)}
                 </pre>
               </CardContent>
@@ -354,24 +329,24 @@ export function OutreachPipeline() {
         )}
       </AnimatePresence>
 
-      {/* View tabs — pill style */}
-      <div className="flex items-center gap-1 p-1 bg-muted/50 rounded-xl w-fit">
+      {/* View tabs */}
+      <div className="flex items-center gap-0.5 p-0.5 bg-muted/50 rounded-xl w-fit border border-border/40">
         {TABS.map(tab => (
           <button
             key={tab.key}
             onClick={() => setActiveView(tab.key)}
             className={cn(
-              "px-4 py-2 text-sm font-semibold rounded-lg transition-all flex items-center gap-1.5",
+              "px-4 py-2 text-xs font-semibold rounded-[10px] transition-all flex items-center gap-1.5",
               activeView === tab.key
-                ? "bg-card text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
+                ? "bg-card text-foreground shadow-sm border border-border/40"
+                : "text-muted-foreground hover:text-foreground border border-transparent"
             )}
           >
             <tab.icon className="h-3.5 w-3.5" />
             {tab.label}
             {tab.count !== undefined && tab.count > 0 && (
               <span className={cn(
-                "text-[10px] font-bold px-1.5 py-0.5 rounded-full ml-0.5",
+                "text-[10px] font-bold min-w-[20px] text-center py-0.5 px-1.5 rounded-md",
                 activeView === tab.key ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
               )}>
                 {tab.count}
@@ -385,22 +360,24 @@ export function OutreachPipeline() {
       <AnimatePresence mode="wait">
         <motion.div
           key={activeView}
-          initial={{ opacity: 0, y: 8 }}
+          initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          transition={{ duration: 0.2 }}
+          exit={{ opacity: 0, y: -6 }}
+          transition={{ duration: 0.15 }}
         >
           {activeView === "pipeline" && (
-            <div className="grid gap-2">
+            <div className="space-y-2">
               {campaigns.length === 0 ? (
-                <Card className="border-dashed">
-                  <CardContent className="py-16 text-center">
-                    <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                      <Target className="h-7 w-7 text-primary" />
+                <Card className="border-dashed border-border/60">
+                  <CardContent className="py-20 text-center">
+                    <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center mx-auto mb-5">
+                      <Target className="h-8 w-8 text-primary" />
                     </div>
-                    <h3 className="font-bold mb-1">No campaigns yet</h3>
-                    <p className="text-sm text-muted-foreground mb-4">Click "Full Cycle" or "Discover" to create your first outreach campaign.</p>
-                    <Button onClick={() => runStep("discover_businesses")} disabled={!!runningStep} className="gap-1.5">
+                    <h3 className="font-bold text-lg mb-1.5">No campaigns yet</h3>
+                    <p className="text-sm text-muted-foreground mb-6 max-w-sm mx-auto">
+                      Click "Full Cycle" to auto-discover businesses and begin outreach.
+                    </p>
+                    <Button onClick={() => runStep("discover_businesses")} disabled={!!runningStep} className="gap-1.5 rounded-xl">
                       <Sparkles className="h-4 w-4" /> Start Discovering
                     </Button>
                   </CardContent>
@@ -409,33 +386,35 @@ export function OutreachPipeline() {
                 campaigns.map((c, i) => (
                   <motion.div
                     key={c.id}
-                    initial={{ opacity: 0, x: -12 }}
+                    initial={{ opacity: 0, x: -8 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.05 }}
+                    transition={{ delay: i * 0.04 }}
                   >
-                    <Card className="border-border/50 hover:shadow-md transition-shadow">
+                    <Card className="border-border/40 hover:shadow-md transition-all hover:border-border/60">
                       <CardContent className="p-4 flex items-center gap-4">
-                        <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary/20 to-accent/10 flex items-center justify-center shrink-0">
+                        <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary/15 to-accent/10 flex items-center justify-center shrink-0">
                           <Target className="h-5 w-5 text-primary" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <h3 className="font-bold text-sm">{c.name}</h3>
-                          <div className="flex gap-1 mt-1 flex-wrap">
+                          <div className="flex gap-1 mt-1.5 flex-wrap">
                             {c.industries.slice(0, 3).map((ind, j) => (
-                              <Badge key={j} variant="secondary" className="text-[10px]">{ind}</Badge>
+                              <Badge key={j} variant="secondary" className="text-[10px] rounded-md font-medium">{ind}</Badge>
                             ))}
                             {c.target_regions[0] && (
-                              <Badge variant="outline" className="text-[10px]">{c.target_regions[0]}</Badge>
+                              <Badge variant="outline" className="text-[10px] rounded-md">{c.target_regions[0]}</Badge>
                             )}
                           </div>
                         </div>
-                        <Badge className={cn(
-                          "text-xs",
-                          c.status === "active" ? "bg-emerald-500/10 text-emerald-500 border-0" : "bg-muted text-muted-foreground border-0"
-                        )}>
-                          {c.status}
-                        </Badge>
-                        <span className="text-xs text-muted-foreground">{new Date(c.created_at).toLocaleDateString()}</span>
+                        <div className="flex items-center gap-3">
+                          <Badge className={cn(
+                            "text-[10px] rounded-md font-bold",
+                            c.status === "active" ? "bg-emerald-500/10 text-emerald-600 border-0" : "bg-muted text-muted-foreground border-0"
+                          )}>
+                            {c.status}
+                          </Badge>
+                          <span className="text-[11px] text-muted-foreground tabular-nums">{new Date(c.created_at).toLocaleDateString()}</span>
+                        </div>
                       </CardContent>
                     </Card>
                   </motion.div>
@@ -463,16 +442,24 @@ export function OutreachPipeline() {
   );
 }
 
-function StatCard({ icon: Icon, label, value, color }: { icon: any; label: string; value: number | string; color?: string }) {
+function StatCard({ icon: Icon, label, value, accent }: { icon: any; label: string; value: number | string; accent?: string }) {
+  const colorMap: Record<string, string> = {
+    emerald: "text-emerald-500 bg-emerald-500/10",
+    secondary: "text-secondary bg-secondary/10",
+    primary: "text-primary bg-primary/10",
+  };
+  const colors = accent ? colorMap[accent] : "text-muted-foreground bg-muted";
+  const [textColor, bgColor] = colors.split(" ");
+
   return (
-    <Card className="border-border/50">
-      <CardContent className="p-3 flex items-center gap-3">
-        <div className="h-9 w-9 rounded-xl bg-muted flex items-center justify-center shrink-0">
-          <Icon className={cn("h-4 w-4", color || "text-muted-foreground")} />
+    <Card className="border-border/40">
+      <CardContent className="p-3.5 flex items-center gap-3">
+        <div className={cn("h-9 w-9 rounded-xl flex items-center justify-center shrink-0", bgColor)}>
+          <Icon className={cn("h-4 w-4", textColor)} />
         </div>
         <div>
-          <p className="text-xl font-black tracking-tight">{value}</p>
-          <p className="text-[10px] text-muted-foreground font-medium">{label}</p>
+          <p className="text-xl font-black tracking-tight tabular-nums">{value}</p>
+          <p className="text-[10px] text-muted-foreground font-medium leading-none mt-0.5">{label}</p>
         </div>
       </CardContent>
     </Card>

@@ -91,12 +91,12 @@ export function OutreachLeadsList({ campaignId, industry }: Props) {
   if (leads.length === 0) {
     return (
       <Card className="border-dashed border-border/60">
-        <CardContent className="py-20 text-center">
-          <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center mx-auto mb-5">
-            <Building2 className="h-8 w-8 text-primary" />
+        <CardContent className="py-14 sm:py-20 text-center px-4">
+          <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center mx-auto mb-4 sm:mb-5">
+            <Building2 className="h-7 w-7 sm:h-8 sm:w-8 text-primary" />
           </div>
-          <h3 className="font-bold text-lg mb-1.5">No leads found</h3>
-          <p className="text-sm text-muted-foreground">Run "Discover" to find businesses.</p>
+          <h3 className="font-bold text-base sm:text-lg mb-1.5">No leads found</h3>
+          <p className="text-xs sm:text-sm text-muted-foreground">Run "Discover" to find businesses.</p>
         </CardContent>
       </Card>
     );
@@ -109,10 +109,10 @@ export function OutreachLeadsList({ campaignId, industry }: Props) {
 
   return (
     <div className="space-y-3">
-      {/* Header with counts */}
-      <div className="flex items-center justify-between">
+      {/* Header */}
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <p className="text-xs text-muted-foreground font-medium">{leads.length} leads</p>
-        <div className="flex gap-1">
+        <div className="flex gap-1 flex-wrap">
           {statusCounts.map(({ status, count }) => (
             <Badge key={status} variant="secondary" className="text-[10px] font-medium rounded-md">
               {status.replace(/_/g, " ")} · {count}
@@ -139,11 +139,11 @@ export function OutreachLeadsList({ campaignId, industry }: Props) {
                 "border-border/40 transition-all",
                 isExpanded ? "ring-1 ring-primary/15 shadow-md border-border/60" : "hover:border-border/60 hover:shadow-sm"
               )}>
-                <CardContent className="p-3.5">
-                  <div className="flex items-start gap-3">
+                <CardContent className="p-3 sm:p-3.5">
+                  <div className="flex items-start gap-2.5 sm:gap-3">
                     {/* Score */}
                     <div className={cn(
-                      "h-10 w-10 rounded-xl flex items-center justify-center shrink-0 font-black text-sm tabular-nums",
+                      "h-9 w-9 sm:h-10 sm:w-10 rounded-xl flex items-center justify-center shrink-0 font-black text-xs sm:text-sm tabular-nums",
                       lead.score >= 70
                         ? "bg-emerald-500/10 text-emerald-600 ring-1 ring-emerald-500/20"
                         : lead.score >= 40
@@ -154,24 +154,24 @@ export function OutreachLeadsList({ campaignId, industry }: Props) {
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <h3 className="font-bold text-sm truncate">{lead.business_name}</h3>
-                        <Badge variant="outline" className="text-[10px] font-medium rounded-md">{lead.industry}</Badge>
+                      <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap">
+                        <h3 className="font-bold text-xs sm:text-sm truncate max-w-[140px] sm:max-w-none">{lead.business_name}</h3>
                         <LeadStatusBadge status={lead.lead_status} />
-                        {lead.source === "ai_discovery" && (
-                          <Badge className="text-[9px] bg-primary/8 text-primary border-0 rounded-md px-1.5">AI</Badge>
-                        )}
                       </div>
 
-                      <div className="flex items-center gap-2.5 mt-1.5 text-[11px] text-muted-foreground flex-wrap">
-                        {lead.contact_name && <span className="font-medium text-foreground/70">{lead.contact_name}</span>}
-                        {lead.contact_email && <span className="font-mono text-[10px]">{lead.contact_email}</span>}
-                        {lead.city && lead.state && <span>{lead.city}, {lead.state}</span>}
+                      <div className="flex items-center gap-1.5 sm:gap-2.5 mt-1 text-[10px] sm:text-[11px] text-muted-foreground flex-wrap">
+                        <Badge variant="outline" className="text-[9px] sm:text-[10px] font-medium rounded-md px-1.5">{lead.industry}</Badge>
+                        {lead.contact_email && (
+                          <span className="font-mono text-[9px] sm:text-[10px] truncate max-w-[150px] sm:max-w-none">{lead.contact_email}</span>
+                        )}
+                        {lead.city && lead.state && (
+                          <span className="hidden sm:inline">{lead.city}, {lead.state}</span>
+                        )}
                         {lead.website_url && (
                           <a
                             href={lead.website_url.startsWith("http") ? lead.website_url : `https://${lead.website_url}`}
                             target="_blank" rel="noopener noreferrer"
-                            className="hover:text-primary flex items-center gap-0.5 transition-colors"
+                            className="hover:text-primary flex items-center gap-0.5 transition-colors hidden sm:flex"
                           >
                             {lead.website_url.replace(/^https?:\/\//, "").split("/")[0]}
                             <ExternalLink className="h-2.5 w-2.5" />
@@ -180,10 +180,13 @@ export function OutreachLeadsList({ campaignId, industry }: Props) {
                       </div>
 
                       {scoring.pain_points?.length > 0 && (
-                        <div className="flex gap-1 mt-2 flex-wrap">
-                          {scoring.pain_points.slice(0, 3).map((p: string, j: number) => (
+                        <div className="flex gap-1 mt-1.5 sm:mt-2 flex-wrap">
+                          {scoring.pain_points.slice(0, 2).map((p: string, j: number) => (
                             <Badge key={j} className="text-[9px] bg-destructive/6 text-destructive/70 border-0 rounded-md font-normal">{p}</Badge>
                           ))}
+                          {scoring.pain_points.length > 2 && (
+                            <Badge className="text-[9px] bg-muted text-muted-foreground border-0 rounded-md font-normal">+{scoring.pain_points.length - 2}</Badge>
+                          )}
                         </div>
                       )}
                     </div>
@@ -191,13 +194,13 @@ export function OutreachLeadsList({ campaignId, industry }: Props) {
                     <div className="flex gap-0.5 shrink-0">
                       <Button
                         size="sm" variant="ghost"
-                        className="h-8 w-8 p-0 rounded-lg"
+                        className="h-7 w-7 sm:h-8 sm:w-8 p-0 rounded-lg"
                         onClick={() => setExpandedId(isExpanded ? null : lead.id)}
                       >
-                        {isExpanded ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                        {isExpanded ? <EyeOff className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> : <Eye className="h-3 w-3 sm:h-3.5 sm:w-3.5" />}
                       </Button>
                       {msg && (
-                        <Button size="sm" variant="ghost" className="h-8 w-8 p-0 rounded-lg" onClick={() => copyMessage(msg)}>
+                        <Button size="sm" variant="ghost" className="h-7 w-7 sm:h-8 sm:w-8 p-0 rounded-lg hidden sm:flex" onClick={() => copyMessage(msg)}>
                           <Copy className="h-3.5 w-3.5" />
                         </Button>
                       )}
@@ -213,20 +216,39 @@ export function OutreachLeadsList({ campaignId, industry }: Props) {
                         transition={{ duration: 0.2 }}
                         className="overflow-hidden"
                       >
+                        {/* Show mobile-hidden info */}
+                        <div className="flex gap-2 mt-2 flex-wrap sm:hidden text-[10px] text-muted-foreground">
+                          {lead.contact_name && <span className="font-medium text-foreground/70">{lead.contact_name}</span>}
+                          {lead.city && lead.state && <span>{lead.city}, {lead.state}</span>}
+                          {lead.website_url && (
+                            <a
+                              href={lead.website_url.startsWith("http") ? lead.website_url : `https://${lead.website_url}`}
+                              target="_blank" rel="noopener noreferrer"
+                              className="hover:text-primary flex items-center gap-0.5 transition-colors"
+                            >
+                              {lead.website_url.replace(/^https?:\/\//, "").split("/")[0]}
+                              <ExternalLink className="h-2.5 w-2.5" />
+                            </a>
+                          )}
+                        </div>
+
                         {scoring.reasoning && (
-                          <p className="text-[11px] text-muted-foreground mt-3 p-3 rounded-xl bg-muted/40 leading-relaxed border border-border/30">
+                          <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-2.5 sm:mt-3 p-2.5 sm:p-3 rounded-xl bg-muted/40 leading-relaxed border border-border/30">
                             {scoring.reasoning}
                           </p>
                         )}
                         {msg && (
-                          <div className="mt-3 p-3 rounded-xl bg-primary/[0.03] border border-primary/10">
+                          <div className="mt-2.5 sm:mt-3 p-2.5 sm:p-3 rounded-xl bg-primary/[0.03] border border-primary/10">
                             <div className="flex items-center gap-2 mb-2">
                               <Mail className="h-3.5 w-3.5 text-primary" />
                               <span className="text-[11px] font-bold">Draft Email</span>
                               <Badge variant="outline" className="text-[10px] rounded-md">{msg.message_status}</Badge>
+                              <Button size="sm" variant="ghost" className="h-6 w-6 p-0 rounded-md sm:hidden ml-auto" onClick={() => copyMessage(msg)}>
+                                <Copy className="h-3 w-3" />
+                              </Button>
                             </div>
                             <p className="text-xs font-semibold mb-1">{msg.subject}</p>
-                            <p className="text-[11px] text-muted-foreground whitespace-pre-wrap leading-relaxed">{msg.body}</p>
+                            <p className="text-[10px] sm:text-[11px] text-muted-foreground whitespace-pre-wrap leading-relaxed">{msg.body}</p>
                           </div>
                         )}
                       </motion.div>

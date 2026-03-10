@@ -66,11 +66,7 @@ export function OutreachMessagesList({ campaignId, onStatsChange }: Props) {
 
   const fetchData = async () => {
     setLoading(true);
-    let query = supabase
-      .from("outreach_messages")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(200);
+    let query = supabase.from("outreach_messages").select("*").order("created_at", { ascending: false }).limit(200);
     if (campaignId) query = query.eq("campaign_id", campaignId);
 
     const [msgsRes, leadsRes] = await Promise.all([
@@ -124,12 +120,7 @@ export function OutreachMessagesList({ campaignId, onStatsChange }: Props) {
   const getThreadMessages = (leadId: string) =>
     messages.filter(m => m.lead_id === leadId).sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
 
-  const startEdit = (msg: OutreachMessage) => {
-    setEditingId(msg.id);
-    setEditSubject(msg.subject || "");
-    setEditBody(msg.body);
-  };
-
+  const startEdit = (msg: OutreachMessage) => { setEditingId(msg.id); setEditSubject(msg.subject || ""); setEditBody(msg.body); };
   const cancelEdit = () => { setEditingId(null); setEditSubject(""); setEditBody(""); };
 
   const saveEdit = async (msgId: string) => {
@@ -206,22 +197,18 @@ export function OutreachMessagesList({ campaignId, onStatsChange }: Props) {
   };
 
   if (loading) {
-    return (
-      <div className="py-20 flex items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-primary" />
-      </div>
-    );
+    return <div className="py-20 flex items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
   }
 
   if (messages.length === 0) {
     return (
       <Card className="border-dashed border-border/60">
-        <CardContent className="py-20 text-center">
-          <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center mx-auto mb-5">
-            <Mail className="h-8 w-8 text-primary" />
+        <CardContent className="py-14 sm:py-20 text-center px-4">
+          <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center mx-auto mb-4 sm:mb-5">
+            <Mail className="h-7 w-7 sm:h-8 sm:w-8 text-primary" />
           </div>
-          <h3 className="font-bold text-lg mb-1.5">No emails yet</h3>
-          <p className="text-sm text-muted-foreground">Score leads and draft outreach emails first.</p>
+          <h3 className="font-bold text-base sm:text-lg mb-1.5">No emails yet</h3>
+          <p className="text-xs sm:text-sm text-muted-foreground">Score leads and draft outreach emails first.</p>
         </CardContent>
       </Card>
     );
@@ -229,47 +216,49 @@ export function OutreachMessagesList({ campaignId, onStatsChange }: Props) {
 
   return (
     <div className="space-y-3">
-      {/* Filter tabs */}
-      <div className="flex items-center gap-0.5 p-0.5 bg-muted/50 rounded-xl w-fit border border-border/40">
-        {([
-          { key: "inbox" as const, label: "Inbox", count: inboundMessages.length, icon: Inbox },
-          { key: "drafted" as const, label: "Drafts", count: draftedMessages.length, icon: Pencil },
-          { key: "sent" as const, label: "Sent", count: sentMessages.length, icon: Send },
-          { key: "all" as const, label: "All", count: messages.length, icon: Mail },
-        ]).map(tab => (
-          <button
-            key={tab.key}
-            onClick={() => setFilter(tab.key)}
-            className={cn(
-              "px-3 py-1.5 text-xs font-semibold rounded-[10px] transition-all flex items-center gap-1.5",
-              filter === tab.key
-                ? "bg-card text-foreground shadow-sm border border-border/40"
-                : "text-muted-foreground hover:text-foreground border border-transparent"
-            )}
-          >
-            <tab.icon className="h-3 w-3" />
-            {tab.label}
-            {tab.count > 0 && (
-              <span className={cn(
-                "text-[10px] font-bold min-w-[18px] text-center py-0.5 px-1 rounded-md",
+      {/* Filter tabs — scrollable on mobile */}
+      <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0">
+        <div className="flex items-center gap-0.5 p-0.5 bg-muted/50 rounded-xl w-fit border border-border/40">
+          {([
+            { key: "inbox" as const, label: "Inbox", count: inboundMessages.length, icon: Inbox },
+            { key: "drafted" as const, label: "Drafts", count: draftedMessages.length, icon: Pencil },
+            { key: "sent" as const, label: "Sent", count: sentMessages.length, icon: Send },
+            { key: "all" as const, label: "All", count: messages.length, icon: Mail },
+          ]).map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => setFilter(tab.key)}
+              className={cn(
+                "px-2.5 sm:px-3 py-1.5 text-[11px] sm:text-xs font-semibold rounded-[10px] transition-all flex items-center gap-1 sm:gap-1.5 whitespace-nowrap",
                 filter === tab.key
-                  ? tab.key === "inbox" ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary"
-                  : "bg-muted text-muted-foreground"
-              )}>
-                {tab.count}
-              </span>
-            )}
-          </button>
-        ))}
+                  ? "bg-card text-foreground shadow-sm border border-border/40"
+                  : "text-muted-foreground hover:text-foreground border border-transparent"
+              )}
+            >
+              <tab.icon className="h-3 w-3" />
+              {tab.label}
+              {tab.count > 0 && (
+                <span className={cn(
+                  "text-[9px] sm:text-[10px] font-bold min-w-[16px] sm:min-w-[18px] text-center py-0.5 px-1 rounded-md",
+                  filter === tab.key
+                    ? tab.key === "inbox" ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary"
+                    : "bg-muted text-muted-foreground"
+                )}>
+                  {tab.count}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
       </div>
 
       {filteredMessages.length === 0 && (
         <Card className="border-dashed border-border/60">
-          <CardContent className="py-16 text-center">
-            <div className="h-14 w-14 rounded-xl bg-muted/40 flex items-center justify-center mx-auto mb-4">
-              {filter === "inbox" ? <Inbox className="h-6 w-6 text-muted-foreground" /> : <Mail className="h-6 w-6 text-muted-foreground" />}
+          <CardContent className="py-12 sm:py-16 text-center px-4">
+            <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-xl bg-muted/40 flex items-center justify-center mx-auto mb-3 sm:mb-4">
+              {filter === "inbox" ? <Inbox className="h-5 w-5 sm:h-6 sm:w-6 text-muted-foreground" /> : <Mail className="h-5 w-5 sm:h-6 sm:w-6 text-muted-foreground" />}
             </div>
-            <p className="text-sm text-muted-foreground max-w-xs mx-auto">
+            <p className="text-xs sm:text-sm text-muted-foreground max-w-xs mx-auto">
               {filter === "inbox"
                 ? "No replies yet. When leads respond, their messages appear here."
                 : filter === "drafted"
@@ -307,26 +296,26 @@ export function OutreachMessagesList({ campaignId, onStatsChange }: Props) {
                 isEditing && "ring-1 ring-primary/20 shadow-lg",
                 !isEditing && "hover:border-border/60 hover:shadow-sm"
               )}>
-                <CardContent className="p-3.5">
+                <CardContent className="p-3 sm:p-3.5">
                   <AnimatePresence mode="wait">
                     {isEditing ? (
                       <motion.div key="edit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-3">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <Pencil className="h-3.5 w-3.5 text-primary" />
                           <span className="font-bold text-xs">Editing for {lead?.business_name || "Unknown"}</span>
-                          {lead?.contact_email && (
-                            <span className="text-[11px] text-muted-foreground font-mono">→ {lead.contact_email}</span>
-                          )}
                         </div>
+                        {lead?.contact_email && (
+                          <span className="text-[10px] text-muted-foreground font-mono block -mt-2">→ {lead.contact_email}</span>
+                        )}
                         <div>
                           <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1 block">Subject</label>
                           <Input value={editSubject} onChange={e => setEditSubject(e.target.value)} placeholder="Email subject line" className="text-sm rounded-xl" />
                         </div>
                         <div>
                           <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1 block">Body</label>
-                          <Textarea value={editBody} onChange={e => setEditBody(e.target.value)} rows={10} className="font-mono text-xs leading-relaxed rounded-xl" />
+                          <Textarea value={editBody} onChange={e => setEditBody(e.target.value)} rows={8} className="font-mono text-xs leading-relaxed rounded-xl" />
                         </div>
-                        <div className="flex gap-2 justify-end pt-1">
+                        <div className="flex gap-2 justify-end flex-wrap">
                           <Button variant="ghost" size="sm" onClick={cancelEdit} disabled={saving} className="text-xs rounded-lg h-8">
                             <X className="h-3 w-3 mr-1" /> Cancel
                           </Button>
@@ -334,112 +323,96 @@ export function OutreachMessagesList({ campaignId, onStatsChange }: Props) {
                             {saving ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Save className="h-3 w-3 mr-1" />} Save
                           </Button>
                           <Button size="sm" onClick={() => { saveEdit(msg.id).then(() => setSendConfirmId(msg.id)); }} disabled={saving} className="text-xs gap-1 rounded-lg h-8">
-                            <Send className="h-3 w-3" /> Save & Send
+                            <Send className="h-3 w-3" /> Send
                           </Button>
                         </div>
                       </motion.div>
                     ) : (
                       <motion.div key="view" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                        <div className="flex items-start gap-3">
+                        {/* Message header + body */}
+                        <div className="flex items-start gap-2.5 sm:gap-3">
                           {/* Status icon */}
                           <div className={cn(
-                            "h-8 w-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5",
+                            "h-7 w-7 sm:h-8 sm:w-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5",
                             isInbound ? "bg-blue-500/10" : isAdminReply ? "bg-primary/10" : isDraft ? "bg-amber-500/10" : "bg-emerald-500/10"
                           )}>
-                            {isInbound ? <Inbox className="h-3.5 w-3.5 text-blue-500" /> :
-                             isAdminReply ? <Reply className="h-3.5 w-3.5 text-primary" /> :
-                             isDraft ? <Pencil className="h-3.5 w-3.5 text-amber-500" /> :
-                             <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />}
+                            {isInbound ? <Inbox className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-blue-500" /> :
+                             isAdminReply ? <Reply className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-primary" /> :
+                             isDraft ? <Pencil className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-amber-500" /> :
+                             <CheckCircle className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-emerald-500" />}
                           </div>
 
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
+                            <div className="flex items-center gap-1 sm:gap-1.5 mb-0.5 flex-wrap">
                               {isInbound && (
-                                <Badge className="text-[9px] bg-blue-500/10 text-blue-600 border-0 gap-0.5 font-bold rounded-md">
+                                <Badge className="text-[8px] sm:text-[9px] bg-blue-500/10 text-blue-600 border-0 gap-0.5 font-bold rounded-md">
                                   <Inbox className="h-2 w-2" /> FROM
                                 </Badge>
                               )}
-                              <span className="font-bold text-sm">{lead?.business_name || "Unknown"}</span>
-                              {lead?.contact_email && (
-                                <span className="text-[10px] text-muted-foreground font-mono">{lead.contact_email}</span>
-                              )}
+                              <span className="font-bold text-xs sm:text-sm truncate max-w-[120px] sm:max-w-none">{lead?.business_name || "Unknown"}</span>
                               <MessageStatusBadge status={msg.message_status} />
-                              {isAdminReply && (
-                                <Badge className="text-[9px] bg-primary/8 text-primary border-0 gap-0.5 rounded-md">
-                                  <Reply className="h-2 w-2" /> Reply
-                                </Badge>
-                              )}
                               {msg.ai_generated && (
-                                <Badge className="text-[9px] bg-primary/8 text-primary border-0 gap-0.5 rounded-md">
+                                <Badge className="text-[8px] sm:text-[9px] bg-primary/8 text-primary border-0 gap-0.5 rounded-md hidden sm:flex">
                                   <Sparkles className="h-2 w-2" /> AI
-                                </Badge>
-                              )}
-                              {isFollowUp && (
-                                <Badge className="text-[9px] bg-amber-500/8 text-amber-600 border-0 gap-0.5 rounded-md">
-                                  <Clock className="h-2 w-2" /> #{msg.metadata?.follow_up_number}
                                 </Badge>
                               )}
                             </div>
 
-                            <p className="text-sm font-semibold mt-1">{msg.subject}</p>
+                            {lead?.contact_email && (
+                              <p className="text-[9px] sm:text-[10px] text-muted-foreground font-mono truncate">{lead.contact_email}</p>
+                            )}
+
+                            <p className="text-xs sm:text-sm font-semibold mt-1.5">{msg.subject}</p>
                             <p className={cn(
-                              "text-[11px] text-muted-foreground mt-1 whitespace-pre-line leading-relaxed",
-                              isInbound ? "line-clamp-6" : "line-clamp-2"
+                              "text-[10px] sm:text-[11px] text-muted-foreground mt-1 whitespace-pre-line leading-relaxed",
+                              isInbound ? "line-clamp-4 sm:line-clamp-6" : "line-clamp-2"
                             )}>
                               {msg.body}
                             </p>
 
-                            <div className="flex items-center gap-3 mt-2">
-                              {msg.sent_at && (
-                                <p className="text-[10px] text-muted-foreground flex items-center gap-1">
-                                  <Send className="h-2.5 w-2.5" />
-                                  {new Date(msg.sent_at).toLocaleString()}
-                                </p>
-                              )}
-                              {isInbound && (
-                                <p className="text-[10px] text-muted-foreground flex items-center gap-1">
-                                  <Clock className="h-2.5 w-2.5" />
-                                  {new Date(msg.created_at).toLocaleString()}
-                                </p>
-                              )}
-                            </div>
+                            {/* Timestamp */}
+                            <p className="text-[9px] sm:text-[10px] text-muted-foreground flex items-center gap-1 mt-2">
+                              {isInbound ? <Clock className="h-2.5 w-2.5" /> : <Send className="h-2.5 w-2.5" />}
+                              {new Date(msg.sent_at || msg.created_at).toLocaleString()}
+                            </p>
                           </div>
+                        </div>
 
-                          {/* Actions — show on hover for cleaner look */}
-                          <div className="flex flex-col gap-1 shrink-0 opacity-60 group-hover:opacity-100 transition-opacity">
-                            {isDraft && (
-                              <>
-                                <Button size="sm" variant="outline" onClick={() => startEdit(msg)} className="text-xs gap-1 h-7 px-2 rounded-lg">
-                                  <Pencil className="h-3 w-3" /> Edit
-                                </Button>
-                                <Button size="sm" onClick={() => setSendConfirmId(msg.id)} className="text-xs gap-1 h-7 px-2 rounded-lg">
-                                  <Send className="h-3 w-3" /> Send
-                                </Button>
-                              </>
-                            )}
-                            {(isInbound || (!isDraft && lead?.contact_email)) && (
-                              <Button size="sm" variant={isInbound ? "default" : "outline"} onClick={() => startReply(msg)} className="text-xs gap-1 h-7 px-2 rounded-lg">
-                                <Reply className="h-3 w-3" /> Reply
+                        {/* Actions — stacked on mobile, row on desktop */}
+                        <div className="flex items-center gap-1.5 mt-2.5 pt-2 border-t border-border/30 flex-wrap">
+                          {isDraft && (
+                            <>
+                              <Button size="sm" variant="outline" onClick={() => startEdit(msg)} className="text-[10px] sm:text-xs gap-1 h-7 px-2 sm:px-2.5 rounded-lg flex-1 sm:flex-none">
+                                <Pencil className="h-3 w-3" /> Edit
                               </Button>
-                            )}
-                            {!isDraft && !isInbound && lead?.contact_email && (
-                              <Button
-                                size="sm" variant="ghost"
-                                onClick={() => simulateInboundReply(msg)}
-                                disabled={simulatingReply === msg.id}
-                                className="text-xs gap-1 h-7 px-2 rounded-lg text-muted-foreground hover:text-foreground"
-                              >
-                                {simulatingReply === msg.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <TestTube className="h-3 w-3" />}
-                                Test
+                              <Button size="sm" onClick={() => setSendConfirmId(msg.id)} className="text-[10px] sm:text-xs gap-1 h-7 px-2 sm:px-2.5 rounded-lg flex-1 sm:flex-none">
+                                <Send className="h-3 w-3" /> Send
                               </Button>
-                            )}
-                            <Button size="sm" variant="ghost" onClick={() => setExpandedThread(isThreadExpanded ? null : msg.lead_id)} className="text-xs gap-1 h-7 px-2 rounded-lg">
-                              <ArrowUpDown className="h-3 w-3" /> Thread
+                            </>
+                          )}
+                          {(isInbound || (!isDraft && lead?.contact_email)) && (
+                            <Button size="sm" variant={isInbound ? "default" : "outline"} onClick={() => startReply(msg)} className="text-[10px] sm:text-xs gap-1 h-7 px-2 sm:px-2.5 rounded-lg flex-1 sm:flex-none">
+                              <Reply className="h-3 w-3" /> Reply
                             </Button>
-                            <Button size="sm" variant="ghost" onClick={() => copyMessage(msg)} className="text-xs gap-1 h-7 px-2 rounded-lg">
-                              <Copy className="h-3 w-3" />
+                          )}
+                          {!isDraft && !isInbound && lead?.contact_email && (
+                            <Button
+                              size="sm" variant="ghost"
+                              onClick={() => simulateInboundReply(msg)}
+                              disabled={simulatingReply === msg.id}
+                              className="text-[10px] sm:text-xs gap-1 h-7 px-2 rounded-lg text-muted-foreground hover:text-foreground"
+                            >
+                              {simulatingReply === msg.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <TestTube className="h-3 w-3" />}
+                              <span className="hidden sm:inline">Test</span>
                             </Button>
-                          </div>
+                          )}
+                          <Button size="sm" variant="ghost" onClick={() => setExpandedThread(isThreadExpanded ? null : msg.lead_id)} className="text-[10px] sm:text-xs gap-1 h-7 px-2 rounded-lg">
+                            <ArrowUpDown className="h-3 w-3" />
+                            <span className="hidden sm:inline">Thread</span>
+                          </Button>
+                          <Button size="sm" variant="ghost" onClick={() => copyMessage(msg)} className="text-[10px] sm:text-xs gap-1 h-7 px-2 rounded-lg">
+                            <Copy className="h-3 w-3" />
+                          </Button>
                         </div>
 
                         {/* Thread view */}
@@ -449,34 +422,34 @@ export function OutreachMessagesList({ campaignId, onStatsChange }: Props) {
                               initial={{ opacity: 0, height: 0 }}
                               animate={{ opacity: 1, height: "auto" }}
                               exit={{ opacity: 0, height: 0 }}
-                              className="mt-4 pt-3 border-t border-border/40"
+                              className="mt-3 pt-3 border-t border-border/40"
                             >
-                              <div className="flex items-center gap-2 mb-3">
+                              <div className="flex items-center gap-2 mb-2.5">
                                 <MessageSquare className="h-3 w-3 text-muted-foreground" />
-                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                                  Thread with {lead?.business_name} · {threadMessages.length} messages
+                                <span className="text-[9px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                                  Thread · {threadMessages.length} messages
                                 </span>
                               </div>
-                              <div className="space-y-1.5 max-h-80 overflow-y-auto pr-1">
+                              <div className="space-y-1.5 max-h-60 sm:max-h-80 overflow-y-auto pr-1">
                                 {threadMessages.map(tm => (
                                   <div
                                     key={tm.id}
                                     className={cn(
-                                      "rounded-xl p-3 text-[11px]",
+                                      "rounded-xl p-2.5 sm:p-3 text-[10px] sm:text-[11px]",
                                       tm.direction === "inbound"
-                                        ? "bg-blue-500/[0.04] border border-blue-500/10 mr-12"
-                                        : "bg-muted/30 border border-border/30 ml-12"
+                                        ? "bg-blue-500/[0.04] border border-blue-500/10 mr-4 sm:mr-12"
+                                        : "bg-muted/30 border border-border/30 ml-4 sm:ml-12"
                                     )}
                                   >
                                     <div className="flex items-center gap-2 mb-1">
-                                      <span className="font-bold text-xs">
+                                      <span className="font-bold text-[10px] sm:text-xs">
                                         {tm.direction === "inbound" ? lead?.business_name : "You"}
                                       </span>
-                                      <span className="text-[10px] text-muted-foreground">
+                                      <span className="text-[9px] sm:text-[10px] text-muted-foreground">
                                         {new Date(tm.created_at).toLocaleString()}
                                       </span>
                                     </div>
-                                    {tm.subject && <p className="font-semibold mb-1 text-xs">{tm.subject}</p>}
+                                    {tm.subject && <p className="font-semibold mb-1 text-[10px] sm:text-xs">{tm.subject}</p>}
                                     <p className="whitespace-pre-line leading-relaxed text-muted-foreground">{tm.body}</p>
                                   </div>
                                 ))}
@@ -492,14 +465,14 @@ export function OutreachMessagesList({ campaignId, onStatsChange }: Props) {
                               initial={{ opacity: 0, height: 0 }}
                               animate={{ opacity: 1, height: "auto" }}
                               exit={{ opacity: 0, height: 0 }}
-                              className="mt-4 pt-4 border-t border-border/40"
+                              className="mt-3 pt-3 border-t border-border/40"
                             >
-                              <div className="flex items-center gap-2 mb-3">
+                              <div className="flex items-center gap-2 mb-2.5 flex-wrap">
                                 <div className="h-6 w-6 rounded-md bg-primary/10 flex items-center justify-center">
                                   <Reply className="h-3 w-3 text-primary" />
                                 </div>
                                 <span className="text-xs font-bold">Reply to {lead?.business_name}</span>
-                                <span className="text-[10px] text-muted-foreground font-mono">→ {lead?.contact_email}</span>
+                                <span className="text-[9px] sm:text-[10px] text-muted-foreground font-mono">→ {lead?.contact_email}</span>
                               </div>
                               <div className="space-y-2">
                                 <div>
@@ -511,7 +484,7 @@ export function OutreachMessagesList({ campaignId, onStatsChange }: Props) {
                                   <Textarea
                                     value={replyBody}
                                     onChange={e => setReplyBody(e.target.value)}
-                                    rows={5}
+                                    rows={4}
                                     placeholder="Write your reply..."
                                     className="text-sm leading-relaxed rounded-xl"
                                     autoFocus
@@ -523,7 +496,7 @@ export function OutreachMessagesList({ campaignId, onStatsChange }: Props) {
                                   </Button>
                                   <Button size="sm" onClick={executeReply} disabled={replySending || !replyBody.trim()} className="text-xs gap-1 rounded-lg h-8">
                                     {replySending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
-                                    Send Reply
+                                    Send
                                   </Button>
                                 </div>
                               </div>
@@ -542,20 +515,20 @@ export function OutreachMessagesList({ campaignId, onStatsChange }: Props) {
 
       {/* Send confirmation */}
       <Dialog open={!!sendConfirmId} onOpenChange={open => !open && setSendConfirmId(null)}>
-        <DialogContent className="rounded-2xl">
+        <DialogContent className="rounded-2xl mx-4 sm:mx-auto">
           <DialogHeader>
             <DialogTitle>Confirm Send</DialogTitle>
             <DialogDescription>
               {sendConfirmId && (() => {
                 const msg = messages.find(m => m.id === sendConfirmId);
                 const lead = msg ? leads[msg.lead_id] : null;
-                return `Send email to ${lead?.contact_email || "this lead"}? Make sure you've reviewed the content.`;
+                return `Send email to ${lead?.contact_email || "this lead"}?`;
               })()}
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setSendConfirmId(null)} disabled={sending} className="rounded-lg">Cancel</Button>
-            <Button onClick={executeSend} disabled={sending} className="gap-1.5 rounded-lg">
+          <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setSendConfirmId(null)} disabled={sending} className="rounded-lg w-full sm:w-auto">Cancel</Button>
+            <Button onClick={executeSend} disabled={sending} className="gap-1.5 rounded-lg w-full sm:w-auto">
               {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
               Send Email
             </Button>
@@ -577,7 +550,7 @@ function MessageStatusBadge({ status }: { status: string }) {
     bounced: "bg-destructive/10 text-destructive",
   };
   return (
-    <Badge className={cn("text-[9px] border-0 rounded-md", config[status] || "bg-muted text-muted-foreground")}>
+    <Badge className={cn("text-[8px] sm:text-[9px] border-0 rounded-md", config[status] || "bg-muted text-muted-foreground")}>
       {status}
     </Badge>
   );

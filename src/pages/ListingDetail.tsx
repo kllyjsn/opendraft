@@ -15,6 +15,7 @@ import { DeployPanel } from "@/components/DeployPanel";
 import { useToast } from "@/hooks/use-toast";
 import { ChatDrawer } from "@/components/ChatDrawer";
 import { RemixChain } from "@/components/RemixChain";
+import { ImprovementDashboard } from "@/components/ImprovementDashboard";
 import { JsonLd } from "@/components/JsonLd";
 import { CanonicalTag } from "@/components/CanonicalTag";
 import { VerifiedBadge } from "@/components/VerifiedBadge";

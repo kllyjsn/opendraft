@@ -149,3 +149,7 @@ verify_jwt = false
 # Deploy suggestion — AI generates code changes
 [functions.swarm-deploy-suggestion]
 verify_jwt = false
+
+# Self-healing cron — daily screenshot + analysis loop
+[functions.swarm-self-healing]
+verify_jwt = false

@@ -213,6 +213,29 @@ export function ForkRequestsManager() {
                 <Button size="sm" onClick={() => updateStatus(req.id, "in_progress")} className="gradient-hero text-white border-0">
                   Start Building
                 </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={autoBuilding === req.id}
+                  onClick={async () => {
+                    setAutoBuilding(req.id);
+                    try {
+                      const { data, error } = await supabase.functions.invoke("swarm-fork-autobuilder", {
+                        body: { fork_request_id: req.id },
+                      });
+                      if (error) throw error;
+                      toast({ title: "Fork auto-built! 🤖", description: `Created "${data.title}" with ${data.changed_files} modified files.` });
+                      loadRequests();
+                    } catch (e: any) {
+                      toast({ title: "Auto-build failed", description: e.message, variant: "destructive" });
+                    } finally {
+                      setAutoBuilding(null);
+                    }
+                  }}
+                >
+                  {autoBuilding === req.id ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <Sparkles className="h-3.5 w-3.5 mr-1" />}
+                  AI Auto-Build
+                </Button>
                 <Button size="sm" variant="outline">
                   <MessageSquare className="h-3.5 w-3.5 mr-1" /> Message Buyer
                 </Button>

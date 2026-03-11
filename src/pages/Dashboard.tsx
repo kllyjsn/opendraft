@@ -383,6 +383,8 @@ export default function Dashboard() {
 
         {activeTab === "forks" && <ForkRequestsManager />}
 
+        {activeTab === "improvements" && <ImprovementDashboard />}
+
         {activeTab === "analytics" && <SellerAnalytics />}
       </main>
       <Footer />

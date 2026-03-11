@@ -60,8 +60,8 @@ export default function Dashboard() {
   const [sales, setSales] = useState<Sale[]>([]);
   const [summary, setSummary] = useState<SaleSummary>({ total_earned: 0, total_sales: 0 });
   const [dataLoading, setDataLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"feed" | "listings" | "sales" | "forks" | "analytics">(
-    (new URLSearchParams(window.location.search).get("tab") as "feed" | "listings" | "sales" | "forks" | "analytics") || "feed"
+  const [activeTab, setActiveTab] = useState<"feed" | "listings" | "sales" | "forks" | "improvements" | "analytics">(
+    (new URLSearchParams(window.location.search).get("tab") as any) || "feed"
   );
 
   useEffect(() => {

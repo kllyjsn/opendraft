@@ -682,6 +682,94 @@ export type Database = {
           },
         ]
       }
+      improvement_changes: {
+        Row: {
+          applied_at: string | null
+          approved: boolean | null
+          change_type: string
+          code: string
+          cycle_id: string
+          description: string
+          file_path: string
+          id: string
+          risk_level: string
+        }
+        Insert: {
+          applied_at?: string | null
+          approved?: boolean | null
+          change_type?: string
+          code: string
+          cycle_id: string
+          description: string
+          file_path: string
+          id?: string
+          risk_level?: string
+        }
+        Update: {
+          applied_at?: string | null
+          approved?: boolean | null
+          change_type?: string
+          code?: string
+          cycle_id?: string
+          description?: string
+          file_path?: string
+          id?: string
+          risk_level?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "improvement_changes_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "improvement_cycles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      improvement_cycles: {
+        Row: {
+          analysis: Json
+          created_at: string
+          id: string
+          listing_id: string
+          screenshot_url: string | null
+          status: string
+          suggestions: Json
+          trigger: string
+          user_id: string
+        }
+        Insert: {
+          analysis?: Json
+          created_at?: string
+          id?: string
+          listing_id: string
+          screenshot_url?: string | null
+          status?: string
+          suggestions?: Json
+          trigger?: string
+          user_id: string
+        }
+        Update: {
+          analysis?: Json
+          created_at?: string
+          id?: string
+          listing_id?: string
+          screenshot_url?: string | null
+          status?: string
+          suggestions?: Json
+          trigger?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "improvement_cycles_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listing_flags: {
         Row: {
           created_at: string
@@ -1200,6 +1288,44 @@ export type Database = {
           verified?: boolean
         }
         Relationships: []
+      }
+      project_goals: {
+        Row: {
+          created_at: string
+          goals_prompt: string
+          id: string
+          listing_id: string
+          structured_goals: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          goals_prompt: string
+          id?: string
+          listing_id: string
+          structured_goals?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          goals_prompt?: string
+          id?: string
+          listing_id?: string
+          structured_goals?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_goals_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       purchases: {
         Row: {

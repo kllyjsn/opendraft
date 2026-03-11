@@ -15,6 +15,7 @@ import { ActivityFeed } from "@/components/ActivityFeed";
 import { VerifyListingPanel } from "@/components/VerifyListingPanel";
 import { AgentDemandFeed } from "@/components/AgentDemandFeed";
 import { ForkRequestsManager } from "@/components/ForkRequestsManager";
+import { ImprovementDashboard } from "@/components/ImprovementDashboard";
 
 interface Sale {
   id: string;
@@ -59,8 +60,8 @@ export default function Dashboard() {
   const [sales, setSales] = useState<Sale[]>([]);
   const [summary, setSummary] = useState<SaleSummary>({ total_earned: 0, total_sales: 0 });
   const [dataLoading, setDataLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"feed" | "listings" | "sales" | "forks" | "analytics">(
-    (new URLSearchParams(window.location.search).get("tab") as "feed" | "listings" | "sales" | "forks" | "analytics") || "feed"
+  const [activeTab, setActiveTab] = useState<"feed" | "listings" | "sales" | "forks" | "improvements" | "analytics">(
+    (new URLSearchParams(window.location.search).get("tab") as any) || "feed"
   );
 
   useEffect(() => {
@@ -189,6 +190,7 @@ export default function Dashboard() {
             { key: "listings" as const, label: "Listings", icon: <Package className="h-3.5 w-3.5" /> },
             { key: "sales" as const, label: "Sales", icon: <ShoppingBag className="h-3.5 w-3.5" /> },
             { key: "forks" as const, label: "Fork Requests", icon: <GitFork className="h-3.5 w-3.5" /> },
+            { key: "improvements" as const, label: "Improvements", icon: <TrendingUp className="h-3.5 w-3.5" /> },
             { key: "analytics" as const, label: "Analytics", icon: <BarChart3 className="h-3.5 w-3.5" /> },
           ]).map(({ key, label, icon }) => (
             <button
@@ -380,6 +382,8 @@ export default function Dashboard() {
         )}
 
         {activeTab === "forks" && <ForkRequestsManager />}
+
+        {activeTab === "improvements" && <ImprovementDashboard />}
 
         {activeTab === "analytics" && <SellerAnalytics />}
       </main>

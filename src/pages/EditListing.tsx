@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { CompletenessBadge } from "@/components/CompletenessBadge";
+import { ProjectGoalsEditor } from "@/components/ProjectGoalsEditor";
 import { Upload, Plus, X, Link as LinkIcon, Github, FileArchive, CheckCircle2, Loader2, Save } from "lucide-react";
 
 const TECH_SUGGESTIONS = ["React", "Next.js", "Tailwind", "TypeScript", "Python", "Supabase", "OpenAI", "Stripe", "Node.js", "PostgreSQL"];
@@ -365,6 +366,9 @@ export default function EditListing() {
               </label>
             )}
           </div>
+
+          {/* Project Goals */}
+          {id && <ProjectGoalsEditor listingId={id} />}
 
           {/* Save */}
           <div className="flex justify-end gap-3 pt-2">

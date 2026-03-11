@@ -24,17 +24,18 @@ const steps = [
   },
 ];
 
-export function BuyerWelcomeModal() {
+export function BuyerWelcomeModal({ skipForOwners = false }: { skipForOwners?: boolean }) {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(0);
 
   useEffect(() => {
+    if (skipForOwners) return;
     const seen = localStorage.getItem(STORAGE_KEY);
     if (!seen) {
       const timer = setTimeout(() => setOpen(true), 5000);
       return () => clearTimeout(timer);
     }
-  }, []);
+  }, [skipForOwners]);
 
   function dismiss() {
     setOpen(false);

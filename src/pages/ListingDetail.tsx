@@ -387,7 +387,7 @@ export default function ListingDetail() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <BuyerWelcomeModal />
+      <BuyerWelcomeModal skipForOwners={purchased} />
       <Navbar />
       {listing && <CanonicalTag path={`/listing/${listing.id}`} />}
       {productSchema && <JsonLd data={productSchema} />}

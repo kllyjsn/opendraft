@@ -713,6 +713,13 @@ export default function ListingDetail() {
           </div>
         </div>
 
+        {/* Improvement Dashboard for owned listings */}
+        {purchased && user && listing.seller_id === user.id && (
+          <div className="mt-12">
+            <ImprovementDashboard />
+          </div>
+        )}
+
         {/* Reviews — full width below the grid */}
         <div className="mt-12">
           <h3 className="font-bold text-lg mb-4 flex items-center gap-2">

@@ -412,25 +412,27 @@ Deno.serve(async (req) => {
       } else if (event.type === "checkout.session.async_payment_failed") {
         console.log("Async payment failed — purchase NOT granted:", (event.data.object as Stripe.Checkout.Session).id);
       } else if (event.type === "invoice.payment_succeeded") {
-        // Handle recurring subscription credit top-ups
+        // Handle recurring subscription renewals
         const invoice = event.data.object as Stripe.Invoice;
         const subMeta = (invoice as any).subscription_details?.metadata ?? {};
-        if (subMeta.type === "credit_subscription" && subMeta.user_id && subMeta.credit_amount) {
-          const creditAmount = parseInt(subMeta.credit_amount, 10);
-          const creditDollars = (creditAmount / 100).toFixed(0);
-          console.log(`Subscription credit top-up: user=${subMeta.user_id}, credits=$${creditDollars}`);
-          await fetch(`${supabaseUrl}/rest/v1/rpc/add_credits`, {
-            method: "POST",
+        if (subMeta.type === "credit_subscription" && subMeta.user_id) {
+          const tierId = subMeta.tier_id || "starter";
+          console.log(`Subscription renewal: user=${subMeta.user_id}, tier=${tierId}`);
+          // Update subscription period
+          await fetch(`${supabaseUrl}/rest/v1/subscriptions?user_id=eq.${subMeta.user_id}`, {
+            method: "PATCH",
             headers: {
               apikey: supabaseServiceKey,
               Authorization: `Bearer ${supabaseServiceKey}`,
               "Content-Type": "application/json",
+              Prefer: "return=minimal",
             },
             body: JSON.stringify({
-              p_user_id: subMeta.user_id,
-              p_amount: creditAmount,
-              p_type: "subscription",
-              p_description: `Monthly plan — $${creditDollars} credits`,
+              status: "active",
+              plan: tierId,
+              current_period_start: new Date().toISOString(),
+              current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+              updated_at: new Date().toISOString(),
             }),
           });
         }

@@ -478,12 +478,41 @@ async function handleCheckoutSessionCompleted(
   console.log(`Checkout session ${session.id} completed. Metadata:`, JSON.stringify(metadata));
   console.log(`Payment status: ${session.payment_status}, Amount total: ${session.amount_total}`);
 
+  // Handle credit subscription checkout — create/update subscription record
+  if (metadata.type === "credit_subscription" && metadata.user_id) {
+    if (session.payment_status !== "paid") return;
+    const tierId = metadata.tier_id || "starter";
+    const stripeSubId = (session as any).subscription as string | null;
+    const stripeCustomerId = (session as any).customer as string | null;
+    console.log(`Subscription checkout: user=${metadata.user_id}, tier=${tierId}, sub=${stripeSubId}`);
+
+    // Upsert subscription record
+    await fetch(`${supabaseUrl}/rest/v1/subscriptions`, {
+      method: "POST",
+      headers: {
+        apikey: supabaseServiceKey,
+        Authorization: `Bearer ${supabaseServiceKey}`,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal,resolution=merge-duplicates",
+      },
+      body: JSON.stringify({
+        user_id: metadata.user_id,
+        plan: tierId,
+        status: "active",
+        stripe_subscription_id: stripeSubId,
+        stripe_customer_id: stripeCustomerId,
+        current_period_start: new Date().toISOString(),
+        current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      }),
+    });
+    return;
+  }
+
   // Handle credit top-up purchases
   if (metadata.type === "credit_top_up" && metadata.user_id && metadata.credit_amount) {
     if (session.payment_status !== "paid") return;
     const creditAmount = parseInt(metadata.credit_amount, 10);
     console.log(`Credit top-up: user=${metadata.user_id}, amount=${creditAmount}`);
-    // Call the add_credits function
     await fetch(`${supabaseUrl}/rest/v1/rpc/add_credits`, {
       method: "POST",
       headers: {

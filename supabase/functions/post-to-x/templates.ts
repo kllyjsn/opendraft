@@ -232,7 +232,20 @@ export function weeklyStatsTweet(stats: { listings: number; sales: number; build
 // ART PROMPT GENERATOR — for AI image generation
 // ═══════════════════════════════════════════════════════════════
 export function getTweetArtPrompt(postType: string): string {
-  const styleBase = "clean modern digital illustration, dark purple background (#1a0533), vibrant accent colors, minimal flat design, no text, no words, no letters, no watermarks";
+  // Rotate through varied art styles so images never look samey
+  const styles = [
+    "clean modern digital illustration, dark purple background (#1a0533), vibrant accent colors, minimal flat design, no text, no words, no letters, no watermarks",
+    "3D rendered scene with soft volumetric lighting, deep indigo and teal color scheme, cinematic depth of field, no text, no words, no letters",
+    "retro pixel art style with a modern twist, 16-bit aesthetic, rich purple and neon green palette, crisp edges, no text, no words, no letters",
+    "watercolor-meets-digital art style, soft gradients bleeding into sharp vector elements, midnight blue and coral accents, no text, no words, no letters",
+    "isometric low-poly 3D scene, geometric shapes, warm amber lighting against cool navy backdrop, no text, no words, no letters",
+    "paper cut-out layered illustration, subtle shadows between layers, rich jewel tones on dark background, no text, no words, no letters",
+    "neon noir cyberpunk style, rain-slicked surfaces reflecting neon signs, purple and electric blue, cinematic composition, no text, no words, no letters",
+    "Japanese ukiyo-e woodblock print reimagined with tech elements, bold outlines, limited color palette of indigo and gold, no text, no words, no letters",
+    "stained glass window aesthetic with glowing backlit panels, rich saturated colors, dark leading lines, no text, no words, no letters",
+    "botanical illustration style but with tech elements instead of plants, detailed linework, muted earth tones with electric purple accents, no text, no words, no letters",
+  ];
+  const styleBase = pick(styles);
 
   const prompts: Record<string, string[]> = {
     engagement_hook: [
@@ -240,38 +253,87 @@ export function getTweetArtPrompt(postType: string): string {
       `A maze viewed from above, with one path glowing bright — the shortcut — while dozens of other paths are dark and tangled. ${styleBase}, glowing green path`,
       `A lightbulb moment: a brain made of circuit boards with a bright golden glow emanating from its center. ${styleBase}, gold and electric blue accents`,
       `Split scene: left side shows a tangled mess of code and frustrated developer, right side shows a clean app interface with a happy user. ${styleBase}, contrast warm/cool`,
+      `A key turning in a lock that's actually a computer screen, unlocking a flood of light and floating app icons. ${styleBase}, dramatic golden light burst`,
+      `A surfer riding a massive wave made of flowing source code, perfectly balanced and confident. Ocean spray is tiny UI components. ${styleBase}, dynamic motion`,
+      `An architect's drafting table but the blueprints are glowing holographic app wireframes floating above it. Coffee cup nearby. ${styleBase}, warm workspace glow`,
+      `A domino chain reaction where the first domino is tiny (an idea) and the last one is enormous (a thriving business), mid-topple. ${styleBase}, dramatic perspective`,
+      `A telescope pointed at a constellation that forms the shape of a perfect app dashboard. Stars twinkling with data points. ${styleBase}, cosmic wonder`,
+      `A Swiss Army knife where each tool is a different app feature: chat, payments, auth, dashboard. One tool extended and glowing. ${styleBase}, metallic sheen`,
     ],
     fomo: [
       `A clock melting Salvador Dali style, with app windows floating away into a vortex. Urgency and time running out. ${styleBase}, red and orange urgency colors`,
       `A crowded marketplace with glowing app storefronts, people rushing to grab glowing boxes off shelves. ${styleBase}, warm golden light`,
       `A train departing a neon-lit station, with one person running to catch it. Digital/cyber aesthetic. ${styleBase}, motion blur, cyan trails`,
+      `An hourglass where the top half contains app ideas and the bottom half is filling with competitor logos. Sand falling fast. ${styleBase}, amber urgency`,
+      `A conveyor belt of glowing app packages moving toward a "SOLD" stamp, with the last few items about to disappear. ${styleBase}, industrial warmth`,
+      `A sunrise over a cityscape where each building is a launched app, and someone is watching from a dark room still planning. ${styleBase}, dramatic dawn light`,
+      `A game of musical chairs with app icons as chairs and founder silhouettes circling. The music is about to stop. ${styleBase}, spotlight tension`,
+      `A garden where flowers (apps) are being picked by hands reaching in from all sides. Only a few flowers remain. ${styleBase}, lush but urgent`,
     ],
     pain_point: [
       `A person buried under an avalanche of sticky notes, code printouts, and project management boards. Overwhelm visualized. ${styleBase}, muted tones with one bright exit sign`,
       `A piggy bank cracking open with dollar bills flying out, next to a calendar showing months passing. ${styleBase}, red warning tones`,
       `A hamster wheel made of code editors and deployment pipelines, with a tiny developer running endlessly. ${styleBase}, warm amber glow`,
+      `A tangled ball of yarn where the yarn is ethernet cables, USB cords, and code — with scissors nearby ready to cut through. ${styleBase}, chaotic but hopeful`,
+      `A desert with a lone coder at a desk, mirage of a launched app shimmering in the distance. Vultures circling (labeled with bug icons). ${styleBase}, scorching heat haze`,
+      `A Rube Goldberg machine that's absurdly complex just to achieve "deploy app." Gears, pulleys, conveyor belts for a simple button press. ${styleBase}, whimsical engineering`,
+      `An archaeological dig site but they're excavating an old codebase, finding fossils of deprecated frameworks. ${styleBase}, dusty earth tones with code artifacts`,
+      `A person on a treadmill going nowhere while outside the window, apps are launching like fireworks in the sky. ${styleBase}, indoor/outdoor contrast`,
+      `A stack of "How to Code" books taller than a person, wobbling dangerously, while a single glowing app floats serenely beside them. ${styleBase}, absurd scale`,
     ],
     gremlin_update: [
       `A cute purple gremlin character (round body, big eyes, small antenna) working at a holographic dashboard in a cozy server room at night. ${styleBase}, cozy warm lighting with screen glow`,
       `Multiple small purple gremlin creatures each doing different tasks: one scanning with a magnifying glass, one patching code, one painting screenshots, one standing guard with a shield. ${styleBase}, team formation`,
       `A purple gremlin sleeping on a server rack with one eye open, monitoring green status lights. Night scene with stars visible through a window. ${styleBase}, peaceful but vigilant`,
+      `A purple gremlin wearing tiny round glasses, hunched over a microscope examining lines of code. Bioluminescent mushrooms grow from the server floor. ${styleBase}, laboratory aesthetic`,
+      `A team of purple gremlins building a bridge across a canyon — the bridge is made of API connections and data pipes. One gremlin directs traffic with a tiny flag. ${styleBase}, construction scene`,
+      `A purple gremlin in a chef's hat, stirring a cauldron of bubbling code. Ingredients floating in: React components, database schemas, CSS stylesheets. ${styleBase}, magical kitchen`,
+      `A purple gremlin meditating on top of a server tower, surrounded by floating orbs of resolved bugs. Cherry blossom petals (actually deploy confirmations) drifting by. ${styleBase}, zen garden meets tech`,
+      `A purple gremlin riding a mechanical spider across a web of interconnected app nodes, repairing broken connections with a tiny welding torch. ${styleBase}, steampunk web`,
+      `A cozy purple gremlin reading a book titled "Vulnerability Report" by fireplace, wearing reading glasses. The fire is made of safely contained error logs. ${styleBase}, cottage core meets cybersecurity`,
+      `A purple gremlin conducting an orchestra of smaller gremlins, each playing a different "instrument" — keyboards, servers, monitoring dashboards. A symphony of deployment. ${styleBase}, grand concert hall`,
+      `A purple gremlin as a lighthouse keeper, shining a beam across a dark ocean of code. Ships (apps) navigating safely past dangerous rocks (bugs). ${styleBase}, maritime night scene`,
+      `A purple gremlin tending a bonsai tree whose branches are folder structures and whose leaves are green checkmarks. Peaceful desk scene. ${styleBase}, contemplative zen`,
+      `A purple gremlin in a detective trench coat investigating a crime scene made of error logs, magnifying glass revealing hidden bugs. Noir atmosphere. ${styleBase}, film noir`,
+      `A purple gremlin painting a masterpiece on an easel — but the painting is a beautiful app screenshot. Tiny paint splatters are colorful code snippets. ${styleBase}, artist's studio`,
+      `Two purple gremlins playing chess, but the pieces are security vulnerabilities and patches. One gremlin is winning decisively. ${styleBase}, strategic intensity`,
     ],
     question: [
       `Two doors floating in space — one leads to a long winding road, the other opens directly to a glowing city. A figure stands between them deciding. ${styleBase}, dramatic lighting`,
       `A giant question mark made of app screenshots and UI components, floating in space. ${styleBase}, scattered colorful elements`,
+      `A crossroads in a digital forest, with holographic signposts pointing different directions: "Build," "Buy," "Ship," "Wait." ${styleBase}, enchanted tech forest`,
+      `A mirror showing two reflections: the left shows someone coding for months, the right shows someone launching today. Both versions of the same person. ${styleBase}, duality`,
+      `A fortune teller's crystal ball showing swirling visions of different app futures — some successful, some abandoned. Hands hovering over the ball. ${styleBase}, mystical glow`,
+      `A vending machine full of different app ideas, each in a glowing capsule. A hand reaches for the coin slot. Which one to choose? ${styleBase}, retro-futuristic`,
+      `A compass spinning wildly, with each direction labeled by a different tech stack icon. The needle slowly settling on one. ${styleBase}, navigation and choice`,
     ],
     success_story: [
       `A person planting a tiny seed and immediately a fully-grown tree of apps and money blooms. Time-lapse style composition. ${styleBase}, green growth, golden fruits`,
       `A podium with #1 spot, but instead of a person it's a laptop showing a launched app. Confetti and spotlights. ${styleBase}, celebration vibes, gold and white`,
       `A before/after split: left shows an empty desk with just an idea notebook, right shows a bustling app with users and revenue charts. ${styleBase}, transformation visual`,
+      `A mountain peak with a flag planted at the top — the flag is a browser window showing "App Live." Sunrise behind the summit. ${styleBase}, achievement and dawn`,
+      `A caterpillar transforming into a butterfly, but the caterpillar is raw code and the butterfly is a beautiful polished app with wings made of UI screens. ${styleBase}, metamorphosis`,
+      `A bowling lane where all pins are knocked down perfectly. Each pin represents a launch milestone: Deploy, First User, First Sale, Growth. ${styleBase}, satisfying strike`,
+      `A time-lapse of a city being built in fast-forward, but it's a digital city of apps and services rising from empty ground. Cranes lifting components into place. ${styleBase}, urban growth`,
+      `A trophy case but each trophy is a different deployed app, gleaming under museum spotlights. One empty pedestal with a spotlight waiting. ${styleBase}, aspiration`,
     ],
     direct_cta: [
       `A glowing portal/gateway made of code, with warm inviting light streaming through it. A path leads directly to it. ${styleBase}, inviting warm golden glow`,
       `A treasure chest opening with app icons and source code floating out, bathed in magical light. ${styleBase}, treasure and discovery`,
+      `A welcome mat in front of a grand doorway, but the doorway opens into a vast digital marketplace full of floating app cards. ${styleBase}, inviting threshold`,
+      `A launchpad with a countdown display at zero, a sleek app rocket sitting ready for takeoff. Steam and anticipation. ${styleBase}, launch readiness`,
+      `An open book where the pages transform into a 3D app coming to life, characters and UI elements rising from the pages. ${styleBase}, storybook magic`,
+      `A pair of hands cupping a glowing orb that contains a miniature running app, offering it forward to the viewer. ${styleBase}, generous warmth`,
+      `A slot machine hitting triple sevens, but the symbols are app icons. Coins cascading out. Lucky break aesthetic. ${styleBase}, fortune and opportunity`,
     ],
     blog_post: [
       `An abstract representation of the vibe coding movement: waves of code transforming into finished products, with AI symbols interwoven. ${styleBase}, flowing organic shapes`,
       `A crystal ball showing the future of software: apps assembling themselves from floating UI components. ${styleBase}, mystical tech aesthetic`,
+      `A giant newspaper front page but the headlines are holograms floating off the paper, showing charts and AI trends. ${styleBase}, editorial gravitas`,
+      `A library where the books are floating and open, each revealing a different chapter of the AI revolution. Warm reading lamp light. ${styleBase}, scholarly wisdom`,
+      `A timeline stretching across the scene like a river, with major tech milestones as bridges over it. We're at the latest bridge looking forward. ${styleBase}, panoramic journey`,
+      `An observatory dome open to a sky full of data constellations, with a researcher mapping new patterns. ${styleBase}, scientific discovery`,
+      `A printing press but it's producing holographic blog posts that float up and spread across a digital sky. Old meets new. ${styleBase}, renaissance meets cyber`,
     ],
   };
 

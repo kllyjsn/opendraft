@@ -412,25 +412,27 @@ Deno.serve(async (req) => {
       } else if (event.type === "checkout.session.async_payment_failed") {
         console.log("Async payment failed — purchase NOT granted:", (event.data.object as Stripe.Checkout.Session).id);
       } else if (event.type === "invoice.payment_succeeded") {
-        // Handle recurring subscription credit top-ups
+        // Handle recurring subscription renewals
         const invoice = event.data.object as Stripe.Invoice;
         const subMeta = (invoice as any).subscription_details?.metadata ?? {};
-        if (subMeta.type === "credit_subscription" && subMeta.user_id && subMeta.credit_amount) {
-          const creditAmount = parseInt(subMeta.credit_amount, 10);
-          const creditDollars = (creditAmount / 100).toFixed(0);
-          console.log(`Subscription credit top-up: user=${subMeta.user_id}, credits=$${creditDollars}`);
-          await fetch(`${supabaseUrl}/rest/v1/rpc/add_credits`, {
-            method: "POST",
+        if (subMeta.type === "credit_subscription" && subMeta.user_id) {
+          const tierId = subMeta.tier_id || "starter";
+          console.log(`Subscription renewal: user=${subMeta.user_id}, tier=${tierId}`);
+          // Update subscription period
+          await fetch(`${supabaseUrl}/rest/v1/subscriptions?user_id=eq.${subMeta.user_id}`, {
+            method: "PATCH",
             headers: {
               apikey: supabaseServiceKey,
               Authorization: `Bearer ${supabaseServiceKey}`,
               "Content-Type": "application/json",
+              Prefer: "return=minimal",
             },
             body: JSON.stringify({
-              p_user_id: subMeta.user_id,
-              p_amount: creditAmount,
-              p_type: "subscription",
-              p_description: `Monthly plan — $${creditDollars} credits`,
+              status: "active",
+              plan: tierId,
+              current_period_start: new Date().toISOString(),
+              current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+              updated_at: new Date().toISOString(),
             }),
           });
         }
@@ -478,12 +480,41 @@ async function handleCheckoutSessionCompleted(
   console.log(`Checkout session ${session.id} completed. Metadata:`, JSON.stringify(metadata));
   console.log(`Payment status: ${session.payment_status}, Amount total: ${session.amount_total}`);
 
+  // Handle credit subscription checkout — create/update subscription record
+  if (metadata.type === "credit_subscription" && metadata.user_id) {
+    if (session.payment_status !== "paid") return;
+    const tierId = metadata.tier_id || "starter";
+    const stripeSubId = (session as any).subscription as string | null;
+    const stripeCustomerId = (session as any).customer as string | null;
+    console.log(`Subscription checkout: user=${metadata.user_id}, tier=${tierId}, sub=${stripeSubId}`);
+
+    // Upsert subscription record
+    await fetch(`${supabaseUrl}/rest/v1/subscriptions`, {
+      method: "POST",
+      headers: {
+        apikey: supabaseServiceKey,
+        Authorization: `Bearer ${supabaseServiceKey}`,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal,resolution=merge-duplicates",
+      },
+      body: JSON.stringify({
+        user_id: metadata.user_id,
+        plan: tierId,
+        status: "active",
+        stripe_subscription_id: stripeSubId,
+        stripe_customer_id: stripeCustomerId,
+        current_period_start: new Date().toISOString(),
+        current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      }),
+    });
+    return;
+  }
+
   // Handle credit top-up purchases
   if (metadata.type === "credit_top_up" && metadata.user_id && metadata.credit_amount) {
     if (session.payment_status !== "paid") return;
     const creditAmount = parseInt(metadata.credit_amount, 10);
     console.log(`Credit top-up: user=${metadata.user_id}, amount=${creditAmount}`);
-    // Call the add_credits function
     await fetch(`${supabaseUrl}/rest/v1/rpc/add_credits`, {
       method: "POST",
       headers: {

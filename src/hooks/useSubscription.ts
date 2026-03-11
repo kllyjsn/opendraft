@@ -23,5 +23,9 @@ export function useSubscription() {
 
   useEffect(() => { fetchSubscription(); }, [user]);
 
-  return { isSubscribed, loading, subscription, refetch: fetchSubscription };
+  // Derived helpers
+  const plan = subscription?.plan as string | null;
+  const appLimit = plan === "unlimited" ? Infinity : plan === "growth" ? 20 : plan === "starter" ? 5 : 0;
+
+  return { isSubscribed, loading, subscription, plan, appLimit, refetch: fetchSubscription };
 }

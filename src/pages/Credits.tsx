@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { useAuth } from "@/hooks/useAuth";
@@ -6,101 +6,151 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Check, Loader2, Crown, Zap, MessageSquare, Download, Shield, Infinity, Wrench } from "lucide-react";
+import { Check, Loader2, Crown, Zap, Wrench, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-const FEATURES = [
-  { icon: Download, text: "Claim & download any app — unlimited" },
-  { icon: Infinity, text: "Full source code on every project" },
-  { icon: Shield, text: "Deploy anywhere — yours forever" },
-  { icon: MessageSquare, text: "Message any builder directly" },
-];
+import { TIERS, type PricingTier } from "@/lib/pricing-tiers";
 
 export default function Credits() {
   const { user, loading: authLoading } = useAuth();
-  const { isSubscribed, loading: subLoading } = useSubscription();
-  const [subscribing, setSubscribing] = useState(false);
+  const { isSubscribed, subscription, loading: subLoading } = useSubscription();
+  const [subscribingTier, setSubscribingTier] = useState<string | null>(null);
 
-  async function handleSubscribe() {
+  async function handleSubscribe(tier: PricingTier) {
     if (!user) return;
-    setSubscribing(true);
+    setSubscribingTier(tier.id);
     try {
       const { data, error } = await supabase.functions.invoke("create-credit-checkout", {
-        body: { amount: 2000, mode: "subscription" },
+        body: { amount: tier.price, mode: "subscription", tierId: tier.id },
       });
       if (error) throw error;
       if (data?.url) window.location.href = data.url;
     } catch {
-      setSubscribing(false);
+      setSubscribingTier(null);
     }
   }
+
+  const currentPlan = subscription?.plan ?? null;
 
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="flex-1 container mx-auto px-4 py-16 max-w-3xl page-enter">
+      <main className="flex-1 container mx-auto px-4 py-16 max-w-5xl page-enter">
         {/* Header */}
         <div className="text-center mb-12">
           <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 mb-5">
             <Crown className="h-8 w-8 text-primary" />
           </div>
           <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-3">
-            One plan. Every app.
+            Pick your plan
           </h1>
-          <p className="text-muted-foreground text-lg max-w-md mx-auto leading-relaxed">
-            Subscribe for $20/mo and claim any project on OpenDraft. Need custom work? Hire your builder directly.
+          <p className="text-muted-foreground text-lg max-w-lg mx-auto leading-relaxed">
+            Claim fully serviced apps with source code. Every plan includes marketplace access. Scale when you're ready.
           </p>
         </div>
 
-        {/* Pricing card */}
-        <div className="rounded-3xl border-2 border-primary/30 bg-card p-8 md:p-10 shadow-card max-w-lg mx-auto mb-16">
-          <div className="flex items-baseline gap-1 mb-1">
-            <span className="text-5xl font-black">$20</span>
-            <span className="text-muted-foreground font-medium">/month</span>
-          </div>
-          <p className="text-sm text-muted-foreground mb-6">Cancel anytime. No lock-in.</p>
+        {/* Pricing grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16 max-w-4xl mx-auto">
+          {TIERS.map((tier) => {
+            const isCurrentPlan = currentPlan === tier.id;
+            const isLoading = subscribingTier === tier.id;
 
-          <div className="space-y-3 mb-8">
-            {FEATURES.map(({ icon: Icon, text }) => (
-              <div key={text} className="flex items-center gap-3">
-                <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                  <Icon className="h-4 w-4 text-primary" />
+            return (
+              <div
+                key={tier.id}
+                className={cn(
+                  "rounded-3xl border-2 bg-card p-6 md:p-8 shadow-card flex flex-col relative transition-shadow hover:shadow-lg",
+                  tier.popular
+                    ? "border-primary/50 shadow-glow"
+                    : "border-border"
+                )}
+              >
+                {tier.popular && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                    <span className="inline-flex items-center gap-1 rounded-full gradient-hero px-3 py-1 text-xs font-bold text-white shadow-glow">
+                      <Sparkles className="h-3 w-3" /> Most Popular
+                    </span>
+                  </div>
+                )}
+
+                <div className="mb-4">
+                  <h3 className="text-lg font-bold mb-1">{tier.name}</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {tier.description}
+                  </p>
                 </div>
-                <span className="text-sm font-medium">{text}</span>
-              </div>
-            ))}
-          </div>
 
-          {authLoading || subLoading ? (
-            <div className="h-12 flex items-center justify-center">
-              <Loader2 className="h-5 w-5 animate-spin text-primary" />
-            </div>
-          ) : isSubscribed ? (
-            <div className="rounded-xl bg-primary/8 border border-primary/20 px-5 py-4 text-center">
-              <p className="font-bold text-primary flex items-center justify-center gap-2">
-                <Check className="h-5 w-5" /> You're subscribed
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">You have unlimited access to all apps.</p>
-            </div>
-          ) : user ? (
-            <Button
-              onClick={handleSubscribe}
-              disabled={subscribing}
-              className="w-full gradient-hero text-white border-0 shadow-glow hover:opacity-90 h-12 text-base font-bold"
-            >
-              {subscribing ? (
-                <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Processing…</>
-              ) : (
-                <><Zap className="h-4 w-4 mr-2" /> Subscribe — $20/mo</>
-              )}
-            </Button>
-          ) : (
-            <Link to="/login">
-              <Button className="w-full gradient-hero text-white border-0 shadow-glow hover:opacity-90 h-12 text-base font-bold">
-                Sign in to subscribe
-              </Button>
-            </Link>
-          )}
+                <div className="flex items-baseline gap-1 mb-1">
+                  <span className="text-4xl font-black">${tier.price / 100}</span>
+                  <span className="text-muted-foreground font-medium">/mo</span>
+                </div>
+                <p className="text-xs text-muted-foreground mb-6">
+                  {tier.appLimitLabel} · Cancel anytime
+                </p>
+
+                <div className="space-y-2.5 mb-6 flex-1">
+                  {tier.features.map((feature) => (
+                    <div key={feature} className="flex items-start gap-2.5">
+                      <Check className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                      <span className="text-sm">{feature}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {authLoading || subLoading ? (
+                  <div className="h-11 flex items-center justify-center">
+                    <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                  </div>
+                ) : isCurrentPlan ? (
+                  <div className="rounded-xl bg-primary/8 border border-primary/20 px-4 py-3 text-center">
+                    <p className="font-bold text-primary flex items-center justify-center gap-2 text-sm">
+                      <Check className="h-4 w-4" /> Current plan
+                    </p>
+                  </div>
+                ) : user ? (
+                  <Button
+                    onClick={() => handleSubscribe(tier)}
+                    disabled={!!subscribingTier}
+                    className={cn(
+                      "w-full h-11 text-sm font-bold",
+                      tier.popular
+                        ? "gradient-hero text-white border-0 shadow-glow hover:opacity-90"
+                        : ""
+                    )}
+                    variant={tier.popular ? "default" : "outline"}
+                  >
+                    {isLoading ? (
+                      <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Processing…</>
+                    ) : isSubscribed ? (
+                      "Switch plan"
+                    ) : (
+                      <><Zap className="h-4 w-4 mr-2" /> Subscribe</>
+                    )}
+                  </Button>
+                ) : (
+                  <Link to="/login">
+                    <Button
+                      className={cn(
+                        "w-full h-11 text-sm font-bold",
+                        tier.popular
+                          ? "gradient-hero text-white border-0 shadow-glow hover:opacity-90"
+                          : ""
+                      )}
+                      variant={tier.popular ? "default" : "outline"}
+                    >
+                      Sign in to subscribe
+                    </Button>
+                  </Link>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* All plans include */}
+        <div className="text-center mb-8">
+          <p className="text-sm text-muted-foreground">
+            All plans include marketplace browsing, source code downloads, and direct builder messaging. No development services included — hire builders separately for custom work.
+          </p>
         </div>
 
         {/* Builder support section */}

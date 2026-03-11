@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { GitFork, DollarSign, Clock, CheckCircle, MessageSquare, X } from "lucide-react";
+import { GitFork, DollarSign, Clock, CheckCircle, MessageSquare, X, Loader2, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface ForkRequest {

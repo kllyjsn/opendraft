@@ -190,6 +190,7 @@ export default function Dashboard() {
             { key: "listings" as const, label: "Listings", icon: <Package className="h-3.5 w-3.5" /> },
             { key: "sales" as const, label: "Sales", icon: <ShoppingBag className="h-3.5 w-3.5" /> },
             { key: "forks" as const, label: "Fork Requests", icon: <GitFork className="h-3.5 w-3.5" /> },
+            { key: "improvements" as const, label: "Improvements", icon: <TrendingUp className="h-3.5 w-3.5" /> },
             { key: "analytics" as const, label: "Analytics", icon: <BarChart3 className="h-3.5 w-3.5" /> },
           ]).map(({ key, label, icon }) => (
             <button

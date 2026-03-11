@@ -15,6 +15,7 @@ import { ActivityFeed } from "@/components/ActivityFeed";
 import { VerifyListingPanel } from "@/components/VerifyListingPanel";
 import { AgentDemandFeed } from "@/components/AgentDemandFeed";
 import { ForkRequestsManager } from "@/components/ForkRequestsManager";
+import { ImprovementDashboard } from "@/components/ImprovementDashboard";
 
 interface Sale {
   id: string;

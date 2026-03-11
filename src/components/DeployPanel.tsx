@@ -84,6 +84,16 @@ export function DeployPanel({ listingId, listingTitle, hasFile, githubUrl }: Dep
 
   if (!user) return null;
 
+  if (!hasFile && !githubUrl) {
+    return (
+      <Button disabled className="w-full h-11 font-bold gap-2 opacity-60 cursor-not-allowed">
+        <Rocket className="h-4 w-4" />
+        Deploy to Cloud
+        <span className="text-[10px] text-muted-foreground ml-1">(no source uploaded)</span>
+      </Button>
+    );
+  }
+
   const token = activeTab === "netlify" ? netlifyToken : vercelToken;
   const setToken = activeTab === "netlify" ? setNetlifyToken : setVercelToken;
 
@@ -248,7 +258,10 @@ export function DeployPanel({ listingId, listingTitle, hasFile, githubUrl }: Dep
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Deploy failed");
+      if (!res.ok) {
+        const detail = data.details ? ` — ${data.details}` : "";
+        throw new Error((data.error || "Deploy failed") + detail);
+      }
 
       if (data.method === "github_redirect") {
         window.open(data.deployUrl, "_blank");

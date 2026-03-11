@@ -14,15 +14,9 @@ function parseGithubRepo(githubUrl: string): GithubRepo | null {
   try {
     const parsed = new URL(githubUrl);
     if (parsed.hostname !== "github.com") return null;
-
     const segments = parsed.pathname.split("/").filter(Boolean);
     if (segments.length < 2) return null;
-
-    const owner = segments[0];
-    const repo = segments[1].replace(/\.git$/, "");
-    if (!owner || !repo) return null;
-
-    return { owner, repo };
+    return { owner: segments[0], repo: segments[1].replace(/\.git$/, "") };
   } catch {
     return null;
   }
@@ -30,16 +24,12 @@ function parseGithubRepo(githubUrl: string): GithubRepo | null {
 
 async function downloadGithubRepoZip(githubUrl: string): Promise<ArrayBuffer> {
   const parsedRepo = parseGithubRepo(githubUrl);
-  if (!parsedRepo) {
-    throw new Error("Invalid GitHub repository URL");
-  }
+  if (!parsedRepo) throw new Error("Invalid GitHub repository URL");
 
-  const repoInfoRes = await fetch(`https://api.github.com/repos/${parsedRepo.owner}/${parsedRepo.repo}`, {
-    headers: {
-      Accept: "application/vnd.github+json",
-      "User-Agent": "opendraft-deployer",
-    },
-  });
+  const repoInfoRes = await fetch(
+    `https://api.github.com/repos/${parsedRepo.owner}/${parsedRepo.repo}`,
+    { headers: { Accept: "application/vnd.github+json", "User-Agent": "opendraft-deployer" } }
+  );
 
   if (!repoInfoRes.ok) {
     if (repoInfoRes.status === 404) {
@@ -56,11 +46,41 @@ async function downloadGithubRepoZip(githubUrl: string): Promise<ArrayBuffer> {
     { headers: { "User-Agent": "opendraft-deployer" } }
   );
 
-  if (!zipRes.ok) {
-    throw new Error("Failed to download GitHub repository archive");
+  if (!zipRes.ok) throw new Error("Failed to download GitHub repository archive");
+  return await zipRes.arrayBuffer();
+}
+
+/** Upload a single file to Vercel's File API and return its SHA */
+async function uploadFileToVercel(
+  content: Uint8Array,
+  vercelToken: string
+): Promise<string> {
+  // Compute SHA1 digest for the file
+  const hashBuffer = await crypto.subtle.digest("SHA-1", content);
+  const sha = Array.from(new Uint8Array(hashBuffer))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+
+  // Upload file content to Vercel
+  const uploadRes = await fetch("https://api.vercel.com/v2/files", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${vercelToken}`,
+      "Content-Type": "application/octet-stream",
+      "x-vercel-digest": sha,
+      "Content-Length": String(content.byteLength),
+    },
+    body: content,
+  });
+
+  // 409 = file already exists, which is fine
+  if (!uploadRes.ok && uploadRes.status !== 409) {
+    const errText = await uploadRes.text();
+    console.error(`File upload failed (${uploadRes.status}):`, errText);
+    throw new Error(`Failed to upload file to Vercel: ${uploadRes.status}`);
   }
 
-  return await zipRes.arrayBuffer();
+  return sha;
 }
 
 serve(async (req) => {
@@ -71,6 +91,7 @@ serve(async (req) => {
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
+    // Auth
     const authHeader = req.headers.get("Authorization");
     const token = authHeader?.replace("Bearer ", "") || "";
     const supabaseAnon = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY") || "");
@@ -88,6 +109,7 @@ serve(async (req) => {
       });
     }
 
+    // Fetch listing
     const { data: listing } = await supabase
       .from("listings")
       .select("id, title, description, file_path, seller_id, github_url")
@@ -100,7 +122,7 @@ serve(async (req) => {
       });
     }
 
-    // Auth: must be seller or buyer
+    // Must be seller or buyer
     const isSeller = listing.seller_id === user.id;
     if (!isSeller) {
       const { data: purchase } = await supabase
@@ -113,7 +135,6 @@ serve(async (req) => {
       }
     }
 
-    // Require either uploaded file or GitHub repository source
     if (!listing.file_path && !listing.github_url) {
       return new Response(JSON.stringify({ error: "No deployable source available" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -130,24 +151,23 @@ serve(async (req) => {
       });
     }
 
-    // Download and extract ZIP from uploaded file or GitHub repository
+    // Download source ZIP
     let sourceZipBuffer: ArrayBuffer;
-
     if (listing.file_path) {
       const { data: fileData } = await supabase.storage
         .from("listing-files")
         .download(listing.file_path);
-
       if (!fileData) {
         return new Response(JSON.stringify({ error: "Failed to download source file" }), {
           status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-
       sourceZipBuffer = await fileData.arrayBuffer();
     } else {
       sourceZipBuffer = await downloadGithubRepoZip(listing.github_url!);
     }
+
+    console.log(`ZIP downloaded: ${(sourceZipBuffer.byteLength / 1024 / 1024).toFixed(2)} MB`);
 
     const zip = await JSZip.loadAsync(sourceZipBuffer);
     const entries = Object.keys(zip.files);
@@ -164,18 +184,39 @@ serve(async (req) => {
       }
     }
 
-    // Extract all files as Vercel file objects
-    const files: Array<{ file: string; data: string; encoding: string }> = [];
+    // Upload files individually to Vercel's File API, then reference by SHA
+    const fileRefs: Array<{ file: string; sha: string; size: number }> = [];
+    let uploadedCount = 0;
+    let skippedCount = 0;
+
     for (const [path, entry] of Object.entries(zip.files)) {
       if (entry.dir) continue;
       const relativePath = prefix ? path.replace(prefix, "") : path;
       if (!relativePath) continue;
-      const content = await entry.async("base64");
-      files.push({ file: relativePath, data: content, encoding: "base64" });
+
+      // Skip very large files (>50MB) — Vercel won't accept them
+      const content = await entry.async("uint8array");
+      if (content.byteLength > 50 * 1024 * 1024) {
+        console.warn(`Skipping oversized file: ${relativePath} (${(content.byteLength / 1024 / 1024).toFixed(1)} MB)`);
+        skippedCount++;
+        continue;
+      }
+
+      try {
+        const sha = await uploadFileToVercel(content, vercelToken);
+        fileRefs.push({ file: relativePath, sha, size: content.byteLength });
+        uploadedCount++;
+      } catch (err) {
+        console.error(`Failed to upload ${relativePath}:`, err);
+        // Continue with remaining files rather than failing entirely
+        skippedCount++;
+      }
     }
 
-    if (files.length === 0) {
-      return new Response(JSON.stringify({ error: "ZIP file is empty" }), {
+    console.log(`Uploaded ${uploadedCount} files, skipped ${skippedCount}`);
+
+    if (fileRefs.length === 0) {
+      return new Response(JSON.stringify({ error: "ZIP file is empty or all files failed to upload" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -198,21 +239,21 @@ serve(async (req) => {
     if (!createProjectRes.ok) {
       const errText = await createProjectRes.text();
       console.error("Vercel create project error:", createProjectRes.status, errText);
-      return new Response(JSON.stringify({ error: "Failed to create Vercel project" }), {
+      return new Response(JSON.stringify({ error: "Failed to create Vercel project", details: errText }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const projectData = await createProjectRes.json();
 
-    // Deploy source files — Vercel will install deps and build
+    // Deploy using file references (SHA-based) instead of inline content
     const deployRes = await fetch("https://api.vercel.com/v13/deployments", {
       method: "POST",
       headers: { Authorization: `Bearer ${vercelToken}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         name: projectName,
         project: projectData.id,
-        files,
+        files: fileRefs,
         projectSettings: {
           framework: "vite",
           installCommand: "npm install",
@@ -225,7 +266,7 @@ serve(async (req) => {
     if (!deployRes.ok) {
       const errText = await deployRes.text();
       console.error("Vercel deploy error:", deployRes.status, errText);
-      return new Response(JSON.stringify({ error: "Failed to deploy to Vercel" }), {
+      return new Response(JSON.stringify({ error: "Failed to deploy to Vercel", details: errText }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -243,6 +284,8 @@ serve(async (req) => {
       success: true, siteUrl, projectId: projectData.id, deployId: deployData.id,
       adminUrl: `https://vercel.com/${projectData.accountId}/${projectName}`,
       method: "source_deploy",
+      filesUploaded: uploadedCount,
+      filesSkipped: skippedCount,
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
     console.error("deploy-to-vercel error:", e);

@@ -101,7 +101,8 @@ export function DeployToVercel({ listingId, listingTitle, hasFile, githubUrl }: 
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || "Deploy failed");
+        const detail = data.details ? ` — ${data.details}` : "";
+        throw new Error((data.error || "Deploy failed") + detail);
       }
 
       if (data.method === "github_redirect") {

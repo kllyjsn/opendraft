@@ -36,6 +36,7 @@ export function ForkRequestsManager() {
   const [requests, setRequests] = useState<ForkRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [quoteFees, setQuoteFees] = useState<Record<string, string>>({});
+  const [autoBuilding, setAutoBuilding] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;

@@ -24,17 +24,18 @@ const steps = [
   },
 ];
 
-export function BuyerWelcomeModal() {
+export function BuyerWelcomeModal({ skipForOwners = false }: { skipForOwners?: boolean }) {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(0);
 
   useEffect(() => {
+    if (skipForOwners) return;
     const seen = localStorage.getItem(STORAGE_KEY);
     if (!seen) {
       const timer = setTimeout(() => setOpen(true), 5000);
       return () => clearTimeout(timer);
     }
-  }, []);
+  }, [skipForOwners]);
 
   function dismiss() {
     setOpen(false);
@@ -55,7 +56,7 @@ export function BuyerWelcomeModal() {
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-[100] flex items-center justify-center p-4"
         >
-          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={dismiss} />
+          <div className="absolute inset-0 bg-background/80" onClick={dismiss} />
           <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}

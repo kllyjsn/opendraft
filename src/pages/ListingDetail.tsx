@@ -15,6 +15,7 @@ import { DeployPanel } from "@/components/DeployPanel";
 import { useToast } from "@/hooks/use-toast";
 import { ChatDrawer } from "@/components/ChatDrawer";
 import { RemixChain } from "@/components/RemixChain";
+import { ImprovementDashboard } from "@/components/ImprovementDashboard";
 import { JsonLd } from "@/components/JsonLd";
 import { CanonicalTag } from "@/components/CanonicalTag";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
@@ -387,7 +388,7 @@ export default function ListingDetail() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <BuyerWelcomeModal />
+      <BuyerWelcomeModal skipForOwners={purchased} />
       <Navbar />
       {listing && <CanonicalTag path={`/listing/${listing.id}`} />}
       {productSchema && <JsonLd data={productSchema} />}
@@ -711,6 +712,13 @@ export default function ListingDetail() {
             )}
           </div>
         </div>
+
+        {/* Improvement Dashboard for owned listings */}
+        {purchased && user && listing.seller_id === user.id && (
+          <div className="mt-12">
+            <ImprovementDashboard />
+          </div>
+        )}
 
         {/* Reviews — full width below the grid */}
         <div className="mt-12">

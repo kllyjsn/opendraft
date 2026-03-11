@@ -258,7 +258,10 @@ export function DeployPanel({ listingId, listingTitle, hasFile, githubUrl }: Dep
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Deploy failed");
+      if (!res.ok) {
+        const detail = data.details ? ` — ${data.details}` : "";
+        throw new Error((data.error || "Deploy failed") + detail);
+      }
 
       if (data.method === "github_redirect") {
         window.open(data.deployUrl, "_blank");

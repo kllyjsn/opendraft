@@ -367,6 +367,9 @@ export default function EditListing() {
             )}
           </div>
 
+          {/* Project Goals */}
+          {id && <ProjectGoalsEditor listingId={id} />}
+
           {/* Save */}
           <div className="flex justify-end gap-3 pt-2">
             <Button variant="outline" onClick={() => navigate("/dashboard?tab=listings")}>Cancel</Button>

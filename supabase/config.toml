@@ -137,3 +137,15 @@ verify_jwt = false
 # Outreach inbound webhook — receives email replies from Resend
 [functions.outreach-inbound]
 verify_jwt = false
+
+# Fork auto-builder — AI generates forked apps
+[functions.swarm-fork-autobuilder]
+verify_jwt = false
+
+# App analyzer — screenshot + AI improvement suggestions
+[functions.swarm-app-analyzer]
+verify_jwt = false
+
+# Deploy suggestion — AI generates code changes
+[functions.swarm-deploy-suggestion]
+verify_jwt = false

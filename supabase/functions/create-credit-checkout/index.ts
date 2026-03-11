@@ -10,11 +10,17 @@ const corsHeaders = {
 
 const VALID_AMOUNTS = [1000, 2500, 5000, 10000]; // one-time cents
 
-// Subscription tiers: price per month (cents) → credits per month (cents)
-const SUBSCRIPTION_TIERS: Record<number, number> = {
-  1500: 2000,   // $15/mo → $20 credits
-  3000: 5000,   // $30/mo → $50 credits
-  5000: 10000,  // $50/mo → $100 credits
+// Subscription tiers: price → { tierId, appLimit }
+const SUBSCRIPTION_TIERS: Record<number, { tierId: string; appLimit: number }> = {
+  2000: { tierId: "starter", appLimit: 5 },
+  3000: { tierId: "growth", appLimit: 20 },
+  5000: { tierId: "unlimited", appLimit: -1 }, // -1 = unlimited
+};
+
+const TIER_NAMES: Record<string, string> = {
+  starter: "Starter",
+  growth: "Growth",
+  unlimited: "Unlimited",
 };
 
 Deno.serve(async (req) => {
@@ -34,17 +40,17 @@ Deno.serve(async (req) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Not authenticated");
 
-    const { amount, mode } = await req.json();
+    const { amount, mode, tierId } = await req.json();
     const stripe = new Stripe(stripeKey);
     const origin = req.headers.get("origin") || "https://opendraft.lovable.app";
 
     if (mode === "subscription") {
-      // Subscription checkout
-      const creditAmount = SUBSCRIPTION_TIERS[amount];
-      if (!creditAmount) throw new Error("Invalid subscription tier");
+      const tierInfo = SUBSCRIPTION_TIERS[amount];
+      if (!tierInfo) throw new Error("Invalid subscription tier");
 
+      const resolvedTierId = tierId || tierInfo.tierId;
+      const tierName = TIER_NAMES[resolvedTierId] || resolvedTierId;
       const priceDollars = (amount / 100).toFixed(0);
-      const creditDollars = (creditAmount / 100).toFixed(0);
 
       const session = await stripe.checkout.sessions.create({
         mode: "subscription",
@@ -55,8 +61,8 @@ Deno.serve(async (req) => {
             unit_amount: amount,
             recurring: { interval: "month" },
             product_data: {
-              name: `OpenDraft ${creditDollars} Credits/mo`,
-              description: `$${creditDollars} in credits added monthly for $${priceDollars}/mo`,
+              name: `OpenDraft ${tierName} Plan`,
+              description: `${tierName} plan — $${priceDollars}/mo`,
             },
           },
           quantity: 1,
@@ -64,16 +70,18 @@ Deno.serve(async (req) => {
         metadata: {
           type: "credit_subscription",
           user_id: user.id,
-          credit_amount: String(creditAmount),
+          tier_id: resolvedTierId,
+          app_limit: String(tierInfo.appLimit),
         },
         subscription_data: {
           metadata: {
             type: "credit_subscription",
             user_id: user.id,
-            credit_amount: String(creditAmount),
+            tier_id: resolvedTierId,
+            app_limit: String(tierInfo.appLimit),
           },
         },
-        success_url: `${origin}/credits?subscribed=${creditDollars}`,
+        success_url: `${origin}/credits?subscribed=${resolvedTierId}`,
         cancel_url: `${origin}/credits`,
       });
 

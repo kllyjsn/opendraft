@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Search, TrendingUp, SlidersHorizontal, X, Loader2, ChevronDown, ArrowRight } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { GoogleSignInButton } from "@/components/GoogleSignInButton";
 import { FeaturedListings } from "@/components/FeaturedListings";
 import { BrandMascot } from "@/components/BrandMascot";
 import { JsonLd } from "@/components/JsonLd";

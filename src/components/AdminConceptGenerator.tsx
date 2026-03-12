@@ -71,7 +71,7 @@ export function AdminConceptGenerator() {
       if (error) throw new Error(error.message);
       if (!data?.success) throw new Error(data?.error || "Generation failed");
       setTemplateResult(data);
-      toast({ title: `${data.generated}/${data.requested} templates created`, description: `All at $15/mo — in Pending queue.` });
+      toast({ title: `${data.generated}/${data.requested} templates created`, description: `All in Pending queue.` });
     } catch (err) {
       toast({ title: "Generation failed", description: err instanceof Error ? err.message : "Unknown error", variant: "destructive" });
     } finally {

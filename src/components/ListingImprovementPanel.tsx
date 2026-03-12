@@ -7,6 +7,7 @@ import {
   Sparkles, CheckCircle, XCircle, Clock, ChevronDown, ChevronUp,
   Loader2, Zap, Shield, Palette, Accessibility, Bug, Code,
   Send, Target, Bot, Rocket, PartyPopper, FileCode,
+  CalendarClock, Camera, Brain, ListChecks, ToggleLeft, ToggleRight,
 } from "lucide-react";
 
 interface Props {
@@ -60,11 +61,17 @@ const RISK_COLORS: Record<string, string> = {
 };
 
 const GREMLIN_PROMPTS = [
-  "Analyze the UX and suggest improvements",
-  "Check for accessibility issues",
-  "Improve the mobile experience",
-  "Suggest performance optimizations",
-  "Review the design consistency",
+  "Optimize for mobile devices",
+  "Improve accessibility & contrast",
+  "Make the hero section more engaging",
+  "Add loading states & error handling",
+  "Review color palette & typography",
+];
+
+const ANALYSIS_STEPS = [
+  { icon: Camera, label: "Screenshotting your live app…", duration: 3000 },
+  { icon: Brain, label: "AI analyzing against your goals…", duration: 6000 },
+  { icon: ListChecks, label: "Generating improvement suggestions…", duration: 3000 },
 ];
 
 export function ListingImprovementPanel({ listingId, listingTitle, demoUrl }: Props) {
@@ -74,14 +81,18 @@ export function ListingImprovementPanel({ listingId, listingTitle, demoUrl }: Pr
   const [changes, setChanges] = useState<Record<string, Change[]>>({});
   const [loading, setLoading] = useState(true);
   const [analyzing, setAnalyzing] = useState(false);
+  const [analysisStep, setAnalysisStep] = useState(0);
   const [expandedCycle, setExpandedCycle] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [goalsPrompt, setGoalsPrompt] = useState("");
   const [hasGoals, setHasGoals] = useState(false);
   const [savingGoals, setSavingGoals] = useState(false);
   const [showGoalsEditor, setShowGoalsEditor] = useState(false);
+  const [autoImprove, setAutoImprove] = useState(false);
+  const [togglingAuto, setTogglingAuto] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [appliedSummary, setAppliedSummary] = useState<{ changes: string[]; cycleId: string } | null>(null);
+  const analysisTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -89,20 +100,43 @@ export function ListingImprovementPanel({ listingId, listingTitle, demoUrl }: Pr
     loadGoals();
   }, [user, listingId]);
 
+  // Animated progress steps during analysis
+  useEffect(() => {
+    if (analyzing) {
+      setAnalysisStep(0);
+      let step = 0;
+      const advance = () => {
+        step++;
+        if (step < ANALYSIS_STEPS.length) {
+          setAnalysisStep(step);
+          analysisTimerRef.current = setTimeout(advance, ANALYSIS_STEPS[step].duration);
+        }
+      };
+      analysisTimerRef.current = setTimeout(advance, ANALYSIS_STEPS[0].duration);
+    } else {
+      if (analysisTimerRef.current) clearTimeout(analysisTimerRef.current);
+      setAnalysisStep(0);
+    }
+    return () => {
+      if (analysisTimerRef.current) clearTimeout(analysisTimerRef.current);
+    };
+  }, [analyzing]);
+
   async function loadGoals() {
     if (!user) return;
     const { data } = await supabase
       .from("project_goals" as any)
-      .select("goals_prompt")
+      .select("goals_prompt, auto_improve")
       .eq("listing_id", listingId)
       .eq("user_id", user.id)
       .maybeSingle();
 
     if (data) {
       setGoalsPrompt((data as any).goals_prompt || "");
+      setAutoImprove((data as any).auto_improve || false);
       setHasGoals(true);
     } else {
-      setShowGoalsEditor(true); // Encourage setting goals if none exist
+      setShowGoalsEditor(true);
     }
   }
 
@@ -133,6 +167,39 @@ export function ListingImprovementPanel({ listingId, listingTitle, demoUrl }: Pr
       setShowGoalsEditor(false);
     }
     setSavingGoals(false);
+  }
+
+  async function toggleAutoImprove() {
+    if (!user) return;
+    setTogglingAuto(true);
+    const newVal = !autoImprove;
+
+    if (hasGoals) {
+      await supabase
+        .from("project_goals" as any)
+        .update({ auto_improve: newVal })
+        .eq("listing_id", listingId)
+        .eq("user_id", user.id);
+    } else {
+      // Create goals entry with auto_improve
+      await supabase.from("project_goals" as any).insert({
+        user_id: user.id,
+        listing_id: listingId,
+        goals_prompt: goalsPrompt || listingTitle,
+        auto_improve: newVal,
+        structured_goals: { source: "auto_toggle", updated_at: new Date().toISOString() },
+      });
+      setHasGoals(true);
+    }
+
+    setAutoImprove(newVal);
+    setTogglingAuto(false);
+    toast({
+      title: newVal ? "🔄 Daily auto-improve enabled" : "Auto-improve paused",
+      description: newVal
+        ? "Gremlins will analyze this project every day at 6 AM UTC and notify you with suggestions."
+        : "You can still run manual analyses anytime.",
+    });
   }
 
   async function loadCycles() {
@@ -214,12 +281,11 @@ export function ListingImprovementPanel({ listingId, listingTitle, demoUrl }: Pr
 
     if (approved && description) {
       setAppliedSummary({ changes: [description], cycleId: changeId });
-      // Auto-dismiss after 6 seconds
       setTimeout(() => setAppliedSummary(null), 6000);
     }
 
     toast({
-      title: approved ? "✅ Improvement applied!" : "Change rejected",
+      title: approved ? "✅ Improvement applied!" : "Change skipped",
       description: approved
         ? `"${description || "Change"}" has been queued for your next deploy.`
         : undefined,
@@ -240,7 +306,6 @@ export function ListingImprovementPanel({ listingId, listingTitle, demoUrl }: Pr
       }
     }
 
-    // Update local state
     setChanges((prev) => {
       const updated = { ...prev };
       if (updated[cycleId]) {
@@ -277,6 +342,9 @@ export function ListingImprovementPanel({ listingId, listingTitle, demoUrl }: Pr
     );
   }
 
+  const currentStep = ANALYSIS_STEPS[analysisStep];
+  const StepIcon = currentStep?.icon || Camera;
+
   return (
     <div className="space-y-4">
       {/* Gremlin Chat Header */}
@@ -286,9 +354,9 @@ export function ListingImprovementPanel({ listingId, listingTitle, demoUrl }: Pr
             <div className="h-9 w-9 rounded-full bg-primary/20 flex items-center justify-center">
               <Bot className="h-5 w-5 text-primary" />
             </div>
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <h3 className="font-bold text-sm">Gremlins™ — Project Improver</h3>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground truncate">
                 Tell the gremlins what to focus on for <strong>{listingTitle}</strong>
               </p>
             </div>
@@ -297,6 +365,34 @@ export function ListingImprovementPanel({ listingId, listingTitle, demoUrl }: Pr
               <span className="text-[10px] text-muted-foreground font-medium">Online</span>
             </div>
           </div>
+        </div>
+
+        {/* Auto-improve toggle */}
+        <div className="px-5 py-2.5 border-b border-border/40 bg-muted/5">
+          <button
+            onClick={toggleAutoImprove}
+            disabled={togglingAuto}
+            className="w-full flex items-center justify-between gap-2 group"
+          >
+            <div className="flex items-center gap-2.5 min-w-0">
+              <CalendarClock className={`h-4 w-4 shrink-0 ${autoImprove ? "text-primary" : "text-muted-foreground"}`} />
+              <div className="text-left min-w-0">
+                <p className="text-xs font-semibold">Daily Auto-Improve</p>
+                <p className="text-[10px] text-muted-foreground truncate">
+                  {autoImprove
+                    ? "Gremlins analyze this project every day at 6 AM UTC"
+                    : "Enable to get daily improvement suggestions automatically"}
+                </p>
+              </div>
+            </div>
+            {togglingAuto ? (
+              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground shrink-0" />
+            ) : autoImprove ? (
+              <ToggleRight className="h-6 w-6 text-primary shrink-0" />
+            ) : (
+              <ToggleLeft className="h-6 w-6 text-muted-foreground group-hover:text-foreground shrink-0 transition-colors" />
+            )}
+          </button>
         </div>
 
         {/* Goals nudge / editor */}
@@ -369,20 +465,23 @@ export function ListingImprovementPanel({ listingId, listingTitle, demoUrl }: Pr
         {/* Chat-like input area */}
         <div className="px-4 py-3 space-y-3">
           {/* Quick suggestion chips */}
-          {cycles.length === 0 && (
-            <div className="flex flex-wrap gap-1.5">
-              {GREMLIN_PROMPTS.map((prompt) => (
-                <button
-                  key={prompt}
-                  onClick={() => {
-                    setMessage(prompt);
-                    inputRef.current?.focus();
-                  }}
-                  className="rounded-full border border-border/60 bg-muted/30 px-3 py-1 text-[11px] text-muted-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-colors"
-                >
-                  {prompt}
-                </button>
-              ))}
+          {cycles.length === 0 && !analyzing && (
+            <div className="space-y-2">
+              <p className="text-[11px] text-muted-foreground font-medium">💡 Not sure what to ask? Try one of these:</p>
+              <div className="flex flex-wrap gap-1.5">
+                {GREMLIN_PROMPTS.map((prompt) => (
+                  <button
+                    key={prompt}
+                    onClick={() => {
+                      setMessage(prompt);
+                      inputRef.current?.focus();
+                    }}
+                    className="rounded-full border border-border/60 bg-muted/30 px-3 py-1.5 text-[11px] text-muted-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-colors"
+                  >
+                    {prompt}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 
@@ -392,7 +491,7 @@ export function ListingImprovementPanel({ listingId, listingTitle, demoUrl }: Pr
               <textarea
                 ref={inputRef}
                 className="w-full rounded-xl border border-input bg-background px-3 py-2.5 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring min-h-[44px] max-h-[120px] resize-none pr-3"
-                placeholder={analyzing ? "Gremlins are analyzing…" : "Tell the gremlins what to improve…"}
+                placeholder={analyzing ? "Gremlins are working…" : "Tell the gremlins what to improve…"}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 onKeyDown={handleKeyDown}
@@ -414,14 +513,43 @@ export function ListingImprovementPanel({ listingId, listingTitle, demoUrl }: Pr
             </Button>
           </div>
 
+          {/* Multi-step analysis progress */}
           {analyzing && (
-            <div className="flex items-center gap-2 px-1">
-              <div className="flex gap-1">
-                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: "0ms" }} />
-                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: "150ms" }} />
-                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: "300ms" }} />
+            <div className="rounded-xl bg-primary/5 border border-primary/20 p-3 space-y-3">
+              <div className="flex items-center gap-2">
+                <Bot className="h-4 w-4 text-primary" />
+                <span className="text-xs font-semibold text-primary">Gremlins at work…</span>
               </div>
-              <span className="text-xs text-muted-foreground">Gremlins are screenshotting & analyzing your app…</span>
+              <div className="space-y-2">
+                {ANALYSIS_STEPS.map((step, idx) => {
+                  const Icon = step.icon;
+                  const isActive = idx === analysisStep;
+                  const isDone = idx < analysisStep;
+                  return (
+                    <div key={idx} className={`flex items-center gap-2.5 transition-all duration-300 ${
+                      isActive ? "opacity-100" : isDone ? "opacity-50" : "opacity-30"
+                    }`}>
+                      {isDone ? (
+                        <CheckCircle className="h-3.5 w-3.5 text-green-500 shrink-0" />
+                      ) : isActive ? (
+                        <Icon className="h-3.5 w-3.5 text-primary animate-pulse shrink-0" />
+                      ) : (
+                        <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                      )}
+                      <span className={`text-xs ${isActive ? "text-foreground font-medium" : "text-muted-foreground"}`}>
+                        {step.label}
+                      </span>
+                      {isActive && (
+                        <div className="flex gap-0.5 ml-auto">
+                          <span className="h-1 w-1 rounded-full bg-primary animate-bounce" style={{ animationDelay: "0ms" }} />
+                          <span className="h-1 w-1 rounded-full bg-primary animate-bounce" style={{ animationDelay: "150ms" }} />
+                          <span className="h-1 w-1 rounded-full bg-primary animate-bounce" style={{ animationDelay: "300ms" }} />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
         </div>
@@ -453,12 +581,12 @@ export function ListingImprovementPanel({ listingId, listingTitle, demoUrl }: Pr
                   }}
                   className="w-full flex items-center justify-between p-4 text-left hover:bg-muted/20 transition-colors"
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
                     {statusIcon}
-                    <div>
+                    <div className="min-w-0">
                       <p className="font-bold text-sm">
                         {cycle.trigger === "fork_request" ? "Fork Auto-Build" :
-                         cycle.trigger === "cron" ? "Scheduled Analysis" :
+                         cycle.trigger === "cron" ? "🔄 Scheduled Analysis" :
                          cycle.trigger === "deploy_check" ? "Deploy Health Check" :
                          "Manual Analysis"}
                       </p>
@@ -467,12 +595,12 @@ export function ListingImprovementPanel({ listingId, listingTitle, demoUrl }: Pr
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 shrink-0">
                     {score !== undefined && (
                       <div className={`rounded-full px-3 py-1 text-xs font-bold ${
-                        score >= 80 ? "bg-green-100 text-green-700" :
-                        score >= 60 ? "bg-orange-100 text-orange-700" :
-                        "bg-red-100 text-red-700"
+                        score >= 80 ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300" :
+                        score >= 60 ? "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300" :
+                        "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300"
                       }`}>
                         {score}/100
                       </div>
@@ -512,13 +640,13 @@ export function ListingImprovementPanel({ listingId, listingTitle, demoUrl }: Pr
                           }`}
                         >
                           <div className="flex items-start justify-between gap-2">
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 min-w-0">
                               {isApproved ? (
-                                <Rocket className="h-3.5 w-3.5 text-green-600" />
+                                <Rocket className="h-3.5 w-3.5 text-green-600 shrink-0" />
                               ) : (
-                                CATEGORY_ICONS[suggestion.category] || <Code className="h-3.5 w-3.5" />
+                                <span className="shrink-0">{CATEGORY_ICONS[suggestion.category] || <Code className="h-3.5 w-3.5" />}</span>
                               )}
-                              <span className={`font-bold text-sm ${isApproved ? "text-green-700 dark:text-green-400" : ""}`}>
+                              <span className={`font-bold text-sm truncate ${isApproved ? "text-green-700 dark:text-green-400" : ""}`}>
                                 {suggestion.title}
                               </span>
                             </div>
@@ -546,7 +674,6 @@ export function ListingImprovementPanel({ listingId, listingTitle, demoUrl }: Pr
 
                           <p className="text-xs text-muted-foreground">{suggestion.description}</p>
 
-                          {/* Show the code that was applied */}
                           {isApproved && change?.code && (
                             <details className="group">
                               <summary className="text-[11px] text-green-600 dark:text-green-400 cursor-pointer hover:underline flex items-center gap-1">
@@ -566,7 +693,6 @@ export function ListingImprovementPanel({ listingId, listingTitle, demoUrl }: Pr
                             </pre>
                           )}
 
-                          {/* Approve / Reject buttons */}
                           {change && change.approved === null && (
                             <div className="flex gap-2 pt-1">
                               <Button
@@ -625,7 +751,6 @@ export function ListingImprovementPanel({ listingId, listingTitle, demoUrl }: Pr
                       </div>
                     )}
 
-                    {/* All done state */}
                     {cycle.status === "approved" && !appliedSummary && (
                       <div className="rounded-lg bg-muted/20 p-3 flex items-center gap-2">
                         <CheckCircle className="h-4 w-4 text-green-500" />

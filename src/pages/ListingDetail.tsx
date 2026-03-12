@@ -720,10 +720,14 @@ export default function ListingDetail() {
           </div>
         </div>
 
-        {/* Improvement Dashboard for owned listings */}
-        {purchased && user && listing.seller_id === user.id && (
+        {/* Improvement panel for owned listings */}
+        {user && listing.seller_id === user.id && (
           <div className="mt-12">
-            <ImprovementDashboard />
+            <ListingImprovementPanel
+              listingId={listing.id}
+              listingTitle={listing.title}
+              demoUrl={listing.demo_url}
+            />
           </div>
         )}
 

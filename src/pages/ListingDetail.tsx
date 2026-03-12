@@ -358,8 +358,7 @@ export default function ListingDetail() {
     );
   }
 
-  const supportPrice = "$15/mo";
-  const isFree = false; // All listings now use the support model
+  const isFree = true; // Projects are free to claim with a subscription plan
 
   return (
     <div className="min-h-screen flex flex-col">

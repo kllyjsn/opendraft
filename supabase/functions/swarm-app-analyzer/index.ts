@@ -25,7 +25,7 @@ serve(async (req) => {
 
   try {
     const body = await req.json().catch(() => ({}));
-    const { listing_id, trigger = "manual", user_id } = body;
+    const { listing_id, trigger = "manual", user_id, focus_prompt } = body;
 
     if (!listing_id) {
       return new Response(JSON.stringify({ error: "listing_id required" }), {

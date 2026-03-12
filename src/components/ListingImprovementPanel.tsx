@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   Sparkles, CheckCircle, XCircle, Clock, ChevronDown, ChevronUp,
   Loader2, Zap, Shield, Palette, Accessibility, Bug, Code,
-  Send, Target, Bot,
+  Send, Target, Bot, Rocket, PartyPopper, FileCode,
 } from "lucide-react";
 
 interface Props {
@@ -81,6 +81,7 @@ export function ListingImprovementPanel({ listingId, listingTitle, demoUrl }: Pr
   const [savingGoals, setSavingGoals] = useState(false);
   const [showGoalsEditor, setShowGoalsEditor] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const [appliedSummary, setAppliedSummary] = useState<{ changes: string[]; cycleId: string } | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -195,7 +196,7 @@ export function ListingImprovementPanel({ listingId, listingTitle, demoUrl }: Pr
     }
   }
 
-  async function approveChange(changeId: string, approved: boolean) {
+  async function approveChange(changeId: string, approved: boolean, description?: string) {
     await supabase
       .from("improvement_changes" as any)
       .update({ approved, applied_at: approved ? new Date().toISOString() : null })
@@ -210,23 +211,62 @@ export function ListingImprovementPanel({ listingId, listingTitle, demoUrl }: Pr
       }
       return updated;
     });
-    toast({ title: approved ? "Change approved ✓" : "Change rejected" });
+
+    if (approved && description) {
+      setAppliedSummary({ changes: [description], cycleId: changeId });
+      // Auto-dismiss after 6 seconds
+      setTimeout(() => setAppliedSummary(null), 6000);
+    }
+
+    toast({
+      title: approved ? "✅ Improvement applied!" : "Change rejected",
+      description: approved
+        ? `"${description || "Change"}" has been queued for your next deploy.`
+        : undefined,
+    });
   }
 
   async function approveAllInCycle(cycleId: string) {
     const cycleChanges = changes[cycleId] || [];
+    const appliedDescriptions: string[] = [];
+
     for (const change of cycleChanges) {
       if (change.approved === null) {
-        await approveChange(change.id, true);
+        await supabase
+          .from("improvement_changes" as any)
+          .update({ approved: true, applied_at: new Date().toISOString() })
+          .eq("id", change.id);
+        appliedDescriptions.push(change.description);
       }
     }
+
+    // Update local state
+    setChanges((prev) => {
+      const updated = { ...prev };
+      if (updated[cycleId]) {
+        updated[cycleId] = updated[cycleId].map((c) =>
+          c.approved === null ? { ...c, approved: true } : c
+        );
+      }
+      return updated;
+    });
+
     await supabase
       .from("improvement_cycles" as any)
       .update({ status: "approved" })
       .eq("id", cycleId);
+
     setCycles((prev) =>
       prev.map((c) => (c.id === cycleId ? { ...c, status: "approved" } : c))
     );
+
+    setAppliedSummary({ changes: appliedDescriptions, cycleId });
+    setTimeout(() => setAppliedSummary(null), 8000);
+
+    toast({
+      title: `🚀 ${appliedDescriptions.length} improvements applied!`,
+      description: "All approved changes are queued for your next deploy.",
+    });
   }
 
   if (loading) {
@@ -458,53 +498,140 @@ export function ListingImprovementPanel({ listingId, listingTitle, demoUrl }: Pr
 
                     {(cycle.suggestions || []).map((suggestion: any, idx: number) => {
                       const change = cycleChanges[idx];
+                      const isApproved = change?.approved === true;
+                      const isRejected = change?.approved === false;
                       return (
-                        <div key={idx} className="rounded-xl border border-border/40 p-3 space-y-2">
+                        <div
+                          key={idx}
+                          className={`rounded-xl border p-3 space-y-2 transition-all ${
+                            isApproved
+                              ? "border-green-300 bg-green-50/50 dark:border-green-800 dark:bg-green-950/30"
+                              : isRejected
+                              ? "border-border/20 bg-muted/10 opacity-60"
+                              : "border-border/40"
+                          }`}
+                        >
                           <div className="flex items-start justify-between gap-2">
                             <div className="flex items-center gap-2">
-                              {CATEGORY_ICONS[suggestion.category] || <Code className="h-3.5 w-3.5" />}
-                              <span className="font-bold text-sm">{suggestion.title}</span>
+                              {isApproved ? (
+                                <Rocket className="h-3.5 w-3.5 text-green-600" />
+                              ) : (
+                                CATEGORY_ICONS[suggestion.category] || <Code className="h-3.5 w-3.5" />
+                              )}
+                              <span className={`font-bold text-sm ${isApproved ? "text-green-700 dark:text-green-400" : ""}`}>
+                                {suggestion.title}
+                              </span>
                             </div>
                             <div className="flex items-center gap-1.5 shrink-0">
-                              <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${PRIORITY_COLORS[suggestion.priority] || PRIORITY_COLORS.low}`}>
-                                {suggestion.priority}
-                              </span>
-                              <span className={`text-[10px] font-semibold flex items-center gap-0.5 ${RISK_COLORS[suggestion.risk_level] || ""}`}>
-                                <Shield className="h-3 w-3" /> {suggestion.risk_level}
-                              </span>
+                              {isApproved ? (
+                                <span className="rounded-full bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 px-2.5 py-0.5 text-[10px] font-bold flex items-center gap-1">
+                                  <CheckCircle className="h-3 w-3" /> Applied
+                                </span>
+                              ) : isRejected ? (
+                                <span className="rounded-full bg-muted px-2.5 py-0.5 text-[10px] font-semibold text-muted-foreground flex items-center gap-1">
+                                  <XCircle className="h-3 w-3" /> Skipped
+                                </span>
+                              ) : (
+                                <>
+                                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${PRIORITY_COLORS[suggestion.priority] || PRIORITY_COLORS.low}`}>
+                                    {suggestion.priority}
+                                  </span>
+                                  <span className={`text-[10px] font-semibold flex items-center gap-0.5 ${RISK_COLORS[suggestion.risk_level] || ""}`}>
+                                    <Shield className="h-3 w-3" /> {suggestion.risk_level}
+                                  </span>
+                                </>
+                              )}
                             </div>
                           </div>
+
                           <p className="text-xs text-muted-foreground">{suggestion.description}</p>
-                          {suggestion.implementation_hint && (
+
+                          {/* Show the code that was applied */}
+                          {isApproved && change?.code && (
+                            <details className="group">
+                              <summary className="text-[11px] text-green-600 dark:text-green-400 cursor-pointer hover:underline flex items-center gap-1">
+                                <FileCode className="h-3 w-3" />
+                                View applied code change
+                                <span className="text-[10px] text-muted-foreground ml-1">({change.file_path})</span>
+                              </summary>
+                              <pre className="text-[11px] bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-900 rounded-lg p-3 overflow-x-auto whitespace-pre-wrap font-mono mt-2">
+                                {change.code}
+                              </pre>
+                            </details>
+                          )}
+
+                          {!isApproved && !isRejected && suggestion.implementation_hint && (
                             <pre className="text-[11px] bg-muted rounded-lg p-3 overflow-x-auto whitespace-pre-wrap font-mono">
                               {suggestion.implementation_hint}
                             </pre>
                           )}
+
+                          {/* Approve / Reject buttons */}
                           {change && change.approved === null && (
                             <div className="flex gap-2 pt-1">
-                              <Button size="sm" variant="outline" onClick={() => approveChange(change.id, true)} className="text-xs text-green-600 hover:text-green-700">
-                                <CheckCircle className="h-3 w-3 mr-1" /> Approve
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => approveChange(change.id, true, suggestion.title)}
+                                className="text-xs text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-950"
+                              >
+                                <Rocket className="h-3 w-3 mr-1" /> Apply Improvement
                               </Button>
-                              <Button size="sm" variant="ghost" onClick={() => approveChange(change.id, false)} className="text-xs text-muted-foreground">
-                                <XCircle className="h-3 w-3 mr-1" /> Reject
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => approveChange(change.id, false, suggestion.title)}
+                                className="text-xs text-muted-foreground"
+                              >
+                                <XCircle className="h-3 w-3 mr-1" /> Skip
                               </Button>
                             </div>
-                          )}
-                          {change?.approved === true && (
-                            <p className="text-xs text-green-600 flex items-center gap-1"><CheckCircle className="h-3 w-3" /> Approved</p>
-                          )}
-                          {change?.approved === false && (
-                            <p className="text-xs text-muted-foreground flex items-center gap-1"><XCircle className="h-3 w-3" /> Rejected</p>
                           )}
                         </div>
                       );
                     })}
 
+                    {/* Applied summary banner */}
+                    {appliedSummary && appliedSummary.cycleId === cycle.id && (
+                      <div className="rounded-xl bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/40 dark:to-emerald-950/40 border border-green-200 dark:border-green-800 p-4 space-y-2 animate-in slide-in-from-bottom-2">
+                        <div className="flex items-center gap-2">
+                          <PartyPopper className="h-5 w-5 text-green-600" />
+                          <p className="font-bold text-sm text-green-700 dark:text-green-400">
+                            {appliedSummary.changes.length} improvement{appliedSummary.changes.length > 1 ? "s" : ""} applied!
+                          </p>
+                        </div>
+                        <ul className="space-y-1 pl-7">
+                          {appliedSummary.changes.map((desc, i) => (
+                            <li key={i} className="text-xs text-green-700/80 dark:text-green-400/80 flex items-start gap-1.5">
+                              <CheckCircle className="h-3 w-3 mt-0.5 shrink-0" />
+                              {desc}
+                            </li>
+                          ))}
+                        </ul>
+                        <p className="text-[11px] text-green-600/70 dark:text-green-500/70 pl-7">
+                          Changes will take effect on your next deploy. Re-analyze after deploying to track progress.
+                        </p>
+                      </div>
+                    )}
+
                     {cycle.status === "pending" && cycleChanges.some((c) => c.approved === null) && (
-                      <div className="flex justify-end gap-2 pt-1">
+                      <div className="flex items-center justify-between gap-2 pt-1">
+                        <p className="text-[11px] text-muted-foreground">
+                          {cycleChanges.filter((c) => c.approved === null).length} pending improvements
+                        </p>
                         <Button size="sm" onClick={() => approveAllInCycle(cycle.id)} className="gradient-hero text-white border-0 text-xs">
-                          <CheckCircle className="h-3.5 w-3.5 mr-1" /> Approve All
+                          <Rocket className="h-3.5 w-3.5 mr-1" /> Apply All Improvements
                         </Button>
+                      </div>
+                    )}
+
+                    {/* All done state */}
+                    {cycle.status === "approved" && !appliedSummary && (
+                      <div className="rounded-lg bg-muted/20 p-3 flex items-center gap-2">
+                        <CheckCircle className="h-4 w-4 text-green-500" />
+                        <p className="text-xs text-muted-foreground">
+                          All improvements from this analysis have been reviewed. Deploy to see changes live.
+                        </p>
                       </div>
                     )}
                   </div>

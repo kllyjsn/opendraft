@@ -67,8 +67,8 @@ export default function Sell() {
   const [form, setForm] = useState({
     title: "",
     description: "",
-    price: "15",
-    pricing_type: "monthly" as "one_time" | "monthly",
+    price: "0",
+    pricing_type: "one_time" as "one_time" | "monthly",
     completeness_badge: "prototype" as "prototype" | "mvp" | "production_ready",
     category: "other" as string,
     tech_stack: [] as string[],

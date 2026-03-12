@@ -14,7 +14,23 @@ export interface PricingTier {
   features: string[];
 }
 
+export const FREE_TIER: PricingTier = {
+  id: "free",
+  name: "Free",
+  price: 0,
+  appLimit: 1,
+  appLimitLabel: "1 app",
+  description: "Try the full experience — claim one app with complete source code, no card required.",
+  features: [
+    "1 fully serviced app with source code",
+    "Browse & preview all marketplace apps",
+    "Message the builder directly",
+    "Deploy anywhere — yours forever",
+  ],
+};
+
 export const TIERS: PricingTier[] = [
+  FREE_TIER,
   {
     id: "starter",
     name: "Starter",
@@ -59,6 +75,9 @@ export const TIERS: PricingTier[] = [
     ],
   },
 ];
+
+/** Paid tiers only (for pricing page subscription cards) */
+export const PAID_TIERS = TIERS.filter((t) => t.price > 0);
 
 /** Look up a tier by its Stripe price (cents) */
 export function getTierByPrice(priceCents: number): PricingTier | undefined {

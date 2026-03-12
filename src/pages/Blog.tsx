@@ -400,21 +400,29 @@ function BlogPost() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar />
-      <CanonicalTag path={`/blog/${post.slug}`} />
-
-      {/* OG meta tags via helmet-style approach */}
+      <MetaTags
+        title={`${post.title} | OpenDraft Blog`}
+        description={post.description}
+        path={`/blog/${post.slug}`}
+        ogImage={ogImageUrl}
+        ogType="article"
+      />
       <JsonLd data={{
         "@context": "https://schema.org",
         "@type": "Article",
         headline: post.title,
         description: post.description,
         datePublished: post.date,
-        author: { "@type": "Organization", name: "OpenDraft" },
-        publisher: { "@type": "Organization", name: "OpenDraft", url: "https://opendraft.co" },
+        dateModified: post.date,
+        author: { "@type": "Organization", name: "OpenDraft", url: "https://opendraft.co" },
+        publisher: { "@type": "Organization", name: "OpenDraft", url: "https://opendraft.co", logo: { "@type": "ImageObject", url: "https://opendraft.co/mascot-icon.png" } },
+        mainEntityOfPage: { "@type": "WebPage", "@id": `https://opendraft.co/blog/${post.slug}` },
         url: `https://opendraft.co/blog/${post.slug}`,
         image: ogImageUrl,
+        articleSection: post.category,
+        wordCount: post.content.join(" ").split(/\s+/).length,
       }} />
+      <Navbar />
 
       <article className="container mx-auto px-4 py-14 max-w-2xl">
         <div className="flex items-center justify-between mb-8">

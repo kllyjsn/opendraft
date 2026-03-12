@@ -8,6 +8,24 @@ const corsHeaders = {
 const CATEGORIES = ["saas-tool", "ai-app", "landing-page", "utility", "game", "other"];
 const TOOLS = ["lovable", "cursor", "claude-code", "bolt", "replit"];
 
+const BLOG_SLUGS = [
+  "autonomous-revenue-zero-employees",
+  "ai-agents-buying-software",
+  "site-doctor-self-healing-deploys",
+  "mcp-servers-complete-guide-2026",
+  "what-is-vibe-coding",
+  "best-ai-coding-tools-2026",
+  "monetize-side-project",
+  "rise-of-ai-agent-marketplace",
+  "vibe-coding-multi-agent-workflows",
+  "vibe-coding-state-of-the-market",
+];
+
+const PERSONAS = [
+  "founders", "developers", "designers", "product-managers", "agencies",
+  "freelancers", "indie-hackers", "students", "startups", "enterprise",
+];
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -20,24 +38,54 @@ Deno.serve(async (req) => {
   const base = "https://opendraft.co";
   const now = new Date().toISOString().split("T")[0];
 
-  let urls = [
-    `<url><loc>${base}</loc><changefreq>daily</changefreq><priority>1.0</priority></url>`,
-    `<url><loc>${base}/faq</loc><changefreq>weekly</changefreq><priority>0.6</priority></url>`,
-    `<url><loc>${base}/builders</loc><changefreq>daily</changefreq><priority>0.7</priority></url>`,
-    `<url><loc>${base}/bounties</loc><changefreq>daily</changefreq><priority>0.7</priority></url>`,
+  let urls: string[] = [];
+
+  // ── Core pages ──
+  const corePages = [
+    { loc: "/", changefreq: "daily", priority: "1.0" },
+    { loc: "/blog", changefreq: "daily", priority: "0.9" },
+    { loc: "/sell", changefreq: "weekly", priority: "0.8" },
+    { loc: "/faq", changefreq: "weekly", priority: "0.7" },
+    { loc: "/builders", changefreq: "daily", priority: "0.8" },
+    { loc: "/bounties", changefreq: "daily", priority: "0.7" },
+    { loc: "/agents", changefreq: "weekly", priority: "0.7" },
+    { loc: "/developers", changefreq: "weekly", priority: "0.7" },
+    { loc: "/openclaw", changefreq: "weekly", priority: "0.6" },
+    { loc: "/cloud", changefreq: "monthly", priority: "0.5" },
+    { loc: "/founders", changefreq: "monthly", priority: "0.6" },
+    { loc: "/security", changefreq: "monthly", priority: "0.5" },
+    { loc: "/terms", changefreq: "monthly", priority: "0.3" },
+    { loc: "/privacy", changefreq: "monthly", priority: "0.3" },
+    { loc: "/guides/sell", changefreq: "weekly", priority: "0.7" },
+    { loc: "/guides/creators", changefreq: "weekly", priority: "0.7" },
+    { loc: "/credits", changefreq: "monthly", priority: "0.5" },
   ];
 
-  // Category pages
+  for (const page of corePages) {
+    urls.push(`<url><loc>${base}${page.loc}</loc><changefreq>${page.changefreq}</changefreq><priority>${page.priority}</priority></url>`);
+  }
+
+  // ── Blog posts ──
+  for (const slug of BLOG_SLUGS) {
+    urls.push(`<url><loc>${base}/blog/${slug}</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>`);
+  }
+
+  // ── Category pages ──
   for (const cat of CATEGORIES) {
     urls.push(`<url><loc>${base}/category/${cat}</loc><changefreq>daily</changefreq><priority>0.8</priority></url>`);
   }
 
-  // Built-with pages
+  // ── Built-with pages ──
   for (const tool of TOOLS) {
     urls.push(`<url><loc>${base}/built-with/${tool}</loc><changefreq>daily</changefreq><priority>0.7</priority></url>`);
   }
 
-  // Live listings
+  // ── Persona pages ──
+  for (const persona of PERSONAS) {
+    urls.push(`<url><loc>${base}/for/${persona}</loc><changefreq>weekly</changefreq><priority>0.6</priority></url>`);
+  }
+
+  // ── Live listings ──
   const { data: listings } = await supabase
     .from("listings")
     .select("id, updated_at")
@@ -50,7 +98,7 @@ Deno.serve(async (req) => {
     urls.push(`<url><loc>${base}/listing/${l.id}</loc><lastmod>${lastmod}</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>`);
   }
 
-  // Builder profiles
+  // ── Builder profiles ──
   const { data: profiles } = await supabase
     .from("profiles")
     .select("user_id, updated_at")

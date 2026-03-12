@@ -134,8 +134,12 @@ export default function FAQ() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <MetaTags
+        title="FAQ — How to Buy, Sell & Deploy Apps | OpenDraft"
+        description="Answers to common questions about buying ready-made apps, selling your projects, payments, deployments, and the OpenDraft marketplace."
+        path="/faq"
+      />
       <Navbar />
-      <CanonicalTag path="/faq" />
       <JsonLd data={faqSchema} />
       <main className="flex-1">
         {/* Hero */}

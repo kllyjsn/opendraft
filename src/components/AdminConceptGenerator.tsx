@@ -155,7 +155,7 @@ export function AdminConceptGenerator() {
                   </button>
                 ))}
               </div>
-              <span className="text-xs text-muted-foreground">× $15/mo each</span>
+              <span className="text-xs text-muted-foreground">free to claim</span>
             </div>
             <div className="mb-4">
               <label className="text-sm font-medium block mb-1.5">Override theme (optional)</label>

@@ -124,8 +124,12 @@ export default function Category() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <MetaTags
+        title={`Buy ${meta.label} — Ready-to-Launch Apps | OpenDraft`}
+        description={meta.description}
+        path={`/category/${slug}`}
+      />
       <Navbar />
-      <CanonicalTag path={`/category/${slug}`} />
       {faqSchema && <JsonLd data={faqSchema} />}
 
       <section className="border-b border-border bg-card/50 py-14">

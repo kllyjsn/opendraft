@@ -106,8 +106,12 @@ export default function BuiltWith() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <MetaTags
+        title={`Apps Built with ${meta.label} — Browse & Buy | OpenDraft`}
+        description={meta.description}
+        path={`/built-with/${tool}`}
+      />
       <Navbar />
-      <CanonicalTag path={`/built-with/${tool}`} />
       <JsonLd data={collectionSchema} />
 
       <section className="border-b border-border bg-card/50 py-14">

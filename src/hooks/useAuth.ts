@@ -13,6 +13,10 @@ export function useAuth() {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+        // Auto-mark onboarding done so new users go straight to browsing
+        if (session?.user) {
+          localStorage.setItem("opendraft_onboarding_done", "1");
+        }
       }
     );
 

@@ -1,7 +1,7 @@
 import { Link, useParams } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
-import { CanonicalTag } from "@/components/CanonicalTag";
+import { MetaTags } from "@/components/MetaTags";
 import { JsonLd } from "@/components/JsonLd";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Calendar, Share2 } from "lucide-react";

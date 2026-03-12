@@ -12,11 +12,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { FeaturedListings } from "@/components/FeaturedListings";
 import { CategoryShowcase } from "@/components/CategoryShowcase";
 import { HowItWorks } from "@/components/HowItWorks";
-import { LiveActivityTicker } from "@/components/LiveActivityTicker";
-import { LiveStatsBar } from "@/components/LiveStatsBar";
-import { BrandMascot } from "@/components/BrandMascot";
-import { MascotPeek } from "@/components/MascotPeek";
-import { IndustryVerticals } from "@/components/IndustryVerticals";
+import { JsonLd } from "@/components/JsonLd";
+import { CanonicalTag } from "@/components/CanonicalTag";
 import { JsonLd } from "@/components/JsonLd";
 import { CanonicalTag } from "@/components/CanonicalTag";
 

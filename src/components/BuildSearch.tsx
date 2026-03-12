@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { Link, useNavigate } from "react-router-dom";
 import { CompletenessBadge } from "@/components/CompletenessBadge";
-import { ArrowRight, Sparkles, Loader2, ShoppingCart, X, Wand2, CheckCircle, AlertCircle, ExternalLink } from "lucide-react";
+import { ArrowRight, Sparkles, Loader2, ShoppingCart, X, Wand2, CheckCircle, AlertCircle, ExternalLink, Search, Zap } from "lucide-react";
 import { logActivity } from "@/lib/activity-logger";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -61,11 +61,14 @@ export function BuildSearch() {
   const [generating, setGenerating] = useState(false);
   const [job, setJob] = useState<GenerationJob | null>(null);
   const [results, setResults] = useState<MatchedListing[] | null>(null);
+  const [instantResults, setInstantResults] = useState<MatchedListing[] | null>(null);
   const [noMatch, setNoMatch] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [placeholderIdx, setPlaceholderIdx] = useState(0);
+  const [isTyping, setIsTyping] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -73,6 +76,65 @@ export function BuildSearch() {
     }, 2800);
     return () => clearInterval(interval);
   }, []);
+
+  // Debounced instant text search as user types
+  const runInstantSearch = useCallback(async (query: string) => {
+    if (query.length < 3) {
+      setInstantResults(null);
+      setIsTyping(false);
+      return;
+    }
+
+    try {
+      const { data } = await supabase.rpc("search_listings", {
+        search_query: query,
+        page_limit: 5,
+        page_offset: 0,
+        sort_by: "relevance",
+      });
+
+      if (data && data.length > 0) {
+        setInstantResults(
+          data.map((l: any) => ({
+            id: l.id,
+            title: l.title,
+            description: l.description,
+            price: l.price,
+            completeness_badge: l.completeness_badge,
+            tech_stack: l.tech_stack || [],
+            screenshots: l.screenshots || [],
+            category: "other",
+            sales_count: l.sales_count || 0,
+            score: l.relevance_score || 0.5,
+            reason: "Keyword match",
+          }))
+        );
+      } else {
+        setInstantResults(null);
+      }
+    } catch {
+      // Silent fail for instant search
+    } finally {
+      setIsTyping(false);
+    }
+  }, []);
+
+  function handlePromptChange(value: string) {
+    setPrompt(value);
+    
+    // Clear previous debounce
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    
+    if (value.trim().length >= 3 && !results) {
+      setIsTyping(true);
+      debounceRef.current = setTimeout(() => {
+        runInstantSearch(value.trim());
+      }, 400);
+    } else {
+      setInstantResults(null);
+      setIsTyping(false);
+    }
+  }
 
   // Subscribe to job updates via realtime
   useEffect(() => {
@@ -98,7 +160,6 @@ export function BuildSearch() {
       )
       .subscribe();
 
-    // Also poll as fallback every 5s in case realtime misses
     const pollInterval = setInterval(async () => {
       const { data } = await supabase
         .from("generation_jobs")
@@ -114,7 +175,6 @@ export function BuildSearch() {
       }
     }, 5000);
 
-    // Safety timeout: if job is still processing after 3 minutes, show fallback
     const safetyTimeout = setTimeout(() => {
       setJob(prev => {
         if (prev && prev.status !== "complete" && prev.status !== "failed") {
@@ -137,6 +197,7 @@ export function BuildSearch() {
     if (!prompt.trim() || loading) return;
     setLoading(true);
     setResults(null);
+    setInstantResults(null);
     setNoMatch(false);
     setError(null);
     setJob(null);
@@ -175,6 +236,7 @@ export function BuildSearch() {
   function reset() {
     setPrompt("");
     setResults(null);
+    setInstantResults(null);
     setNoMatch(false);
     setError(null);
     setJob(null);
@@ -191,7 +253,6 @@ export function BuildSearch() {
     setJob(null);
 
     try {
-      // Step 1: Create job row in DB (user can see it immediately)
       const { data: jobRow, error: jobErr } = await supabase
         .from("generation_jobs")
         .insert({
@@ -209,11 +270,9 @@ export function BuildSearch() {
 
       setJob(jobRow as GenerationJob);
 
-      // Step 2: Fire off the edge function (don't await the result — we poll instead)
       supabase.functions.invoke("generate-template-app", {
         body: { count: 1, themes: [prompt.trim()], job_id: jobRow.id },
       }).catch((err) => {
-        // If the HTTP call itself fails, update job state
         console.error("Edge function call failed:", err);
         setJob(prev => prev ? { ...prev, status: "failed", stage: "error", error: "Network error — check your dashboard, the build may still complete." } : prev);
         setGenerating(false);
@@ -311,6 +370,10 @@ export function BuildSearch() {
     </Button>
   );
 
+  // Show instant results or full AI results
+  const displayResults = results || null;
+  const showInstant = !results && !loading && instantResults && instantResults.length > 0;
+
   return (
     <div className="w-full max-w-2xl mx-auto">
       <form onSubmit={handleSearch} className="relative">
@@ -323,7 +386,7 @@ export function BuildSearch() {
               ref={inputRef}
               rows={2}
               value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
+              onChange={(e) => handlePromptChange(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder={`I want to build ${PLACEHOLDERS[placeholderIdx]}`}
               className="flex-1 bg-transparent resize-none text-sm md:text-base text-foreground placeholder:text-muted-foreground focus:outline-none leading-relaxed"
@@ -335,7 +398,13 @@ export function BuildSearch() {
             )}
           </div>
           <div className="flex items-center justify-between px-4 py-2.5 border-t border-border/50 bg-muted/30">
-            <p className="text-xs text-muted-foreground">Press Enter or click → to find matching projects</p>
+            <p className="text-xs text-muted-foreground">
+              {isTyping ? (
+                <span className="flex items-center gap-1.5"><Loader2 className="h-3 w-3 animate-spin" /> Searching…</span>
+              ) : (
+                "Press Enter for AI-powered deep search"
+              )}
+            </p>
             <Button
               type="submit"
               size="sm"
@@ -345,19 +414,59 @@ export function BuildSearch() {
               {loading ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
               ) : (
-                <>Find it <ArrowRight className="h-3 w-3 ml-1" /></>
+                <>
+                  <Sparkles className="h-3 w-3 mr-1" /> Deep search
+                </>
               )}
             </Button>
           </div>
         </div>
       </form>
 
-      {/* Results */}
+      {/* Instant results dropdown — appears while typing */}
+      {showInstant && (
+        <div className="mt-2 rounded-xl border border-border bg-card shadow-lg overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="px-3 py-2 border-b border-border/50 bg-muted/30 flex items-center gap-2">
+            <Zap className="h-3 w-3 text-accent" />
+            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Quick matches</span>
+            <span className="text-[10px] text-muted-foreground ml-auto">Press Enter for AI deep search</span>
+          </div>
+          {instantResults.map((listing) => (
+            <Link
+              key={listing.id}
+              to={`/listing/${listing.id}`}
+              className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors border-b border-border/30 last:border-0"
+            >
+              {listing.screenshots?.[0] && (
+                <div className="flex-shrink-0 h-10 w-14 rounded-md overflow-hidden bg-muted">
+                  <img src={listing.screenshots[0]} alt={listing.title} className="w-full h-full object-cover" />
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold line-clamp-1">{listing.title}</p>
+                <p className="text-xs text-muted-foreground line-clamp-1">{listing.description?.slice(0, 80)}</p>
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <CompletenessBadge level={listing.completeness_badge} showTooltip={false} />
+                <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
+
+      {/* Full results */}
       <div ref={resultsRef}>
         {loading && (
           <div className="mt-6 text-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin mx-auto mb-3 text-primary" />
-            <p className="text-sm text-muted-foreground">Searching for matching projects…</p>
+            <div className="relative inline-block">
+              <div className="absolute inset-0 rounded-full gradient-hero animate-ping opacity-20" style={{ animationDuration: "1.5s" }} />
+              <div className="relative h-12 w-12 rounded-full gradient-hero flex items-center justify-center mx-auto">
+                <Sparkles className="h-5 w-5 text-white animate-pulse" />
+              </div>
+            </div>
+            <p className="text-sm font-medium text-foreground mt-4">AI is analyzing {'>'}300 projects…</p>
+            <p className="text-xs text-muted-foreground mt-1">Finding the best semantic matches for your idea</p>
           </div>
         )}
 
@@ -367,13 +476,13 @@ export function BuildSearch() {
           </div>
         )}
 
-        {results && results.length > 0 && (
+        {displayResults && displayResults.length > 0 && (
           <div className="mt-6 space-y-3">
             <p className="text-sm font-semibold text-foreground flex items-center gap-2">
-              <span className="h-5 w-5 rounded-full gradient-hero flex items-center justify-center text-white text-xs">{results.length}</span>
-              matching projects found — buy & ship today
+              <span className="h-5 w-5 rounded-full gradient-hero flex items-center justify-center text-white text-xs">{displayResults.length}</span>
+              matching projects found — claim & ship today
             </p>
-            {results.map((listing) => (
+            {displayResults.map((listing, idx) => (
               <div
                 key={listing.id}
                 className="rounded-xl border border-border bg-card overflow-hidden hover:border-primary/40 hover:shadow-card transition-all duration-200"
@@ -387,26 +496,31 @@ export function BuildSearch() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2 mb-1">
                       <h3 className="font-bold text-sm leading-snug line-clamp-1">{listing.title}</h3>
-                      <span className="flex-shrink-0 text-sm font-black text-foreground">
-                        ${(listing.price / 100).toFixed(0)}
-                      </span>
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        {listing.score >= 0.8 && (
+                          <span className="text-[10px] font-bold text-primary bg-primary/10 rounded-full px-1.5 py-0.5">Top match</span>
+                        )}
+                        <span className="text-sm font-black text-foreground">
+                          {listing.price === 0 ? "Free" : `$${(listing.price / 100).toFixed(0)}`}
+                        </span>
+                      </div>
                     </div>
-                    <p className="text-xs text-muted-foreground line-clamp-1 mb-2">{listing.reason}</p>
+                    <p className="text-xs text-muted-foreground line-clamp-2 mb-2">{listing.reason}</p>
                     {listing.sales_count <= 3 && (
                       <p className="text-[10px] font-bold text-accent flex items-center gap-1 mb-1.5">
                         🚀 {listing.sales_count === 0 ? "No buyers yet — be first & shape the roadmap" : "Early adopter — influence future features"}
                       </p>
                     )}
                     <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 overflow-hidden">
                         <CompletenessBadge level={listing.completeness_badge} showTooltip={false} />
                         {listing.tech_stack?.slice(0, 3).map((t) => (
-                          <span key={t} className="rounded-md bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">{t}</span>
+                          <span key={t} className="rounded-md bg-muted px-1.5 py-0.5 text-xs text-muted-foreground whitespace-nowrap">{t}</span>
                         ))}
                       </div>
                       <Link to={`/listing/${listing.id}`}>
                         <Button size="sm" className="gradient-hero text-white border-0 hover:opacity-90 h-7 px-3 text-xs">
-                          <ShoppingCart className="h-3 w-3 mr-1" /> Buy this
+                          <ShoppingCart className="h-3 w-3 mr-1" /> View
                         </Button>
                       </Link>
                     </div>
@@ -432,29 +546,12 @@ export function BuildSearch() {
                 <Wand2 className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h3 className="font-bold text-lg mb-1">We'll build it for you</h3>
-                <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-                  No exact match — but our AI can generate a complete 
-                  <span className="text-foreground font-medium"> "{prompt}" </span>
-                  template with source code, screenshots & everything you need to launch.
+                <h3 className="text-lg font-bold text-foreground">No exact match — but we can build it</h3>
+                <p className="text-sm text-muted-foreground mt-1 max-w-md mx-auto">
+                  We'll generate a full-stack app based on your description, complete with source code and screenshots.
                 </p>
               </div>
-              <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1.5"><CheckCircle className="h-3.5 w-3.5 text-primary" /> Full source code</span>
-                <span className="flex items-center gap-1.5"><CheckCircle className="h-3.5 w-3.5 text-primary" /> AI screenshots</span>
-                <span className="flex items-center gap-1.5"><CheckCircle className="h-3.5 w-3.5 text-primary" /> Fully editable</span>
-              </div>
               {generateCta}
-            </div>
-
-            <div className="text-center">
-              <p className="text-xs text-muted-foreground mb-2">Or start from scratch</p>
-              <div className="flex gap-2 justify-center">
-                <Link to={user ? "/sell" : "/login"}>
-                  <Button size="sm" variant="outline">List it myself</Button>
-                </Link>
-                <Button size="sm" variant="ghost" onClick={reset}>Try a different idea</Button>
-              </div>
             </div>
           </div>
         )}

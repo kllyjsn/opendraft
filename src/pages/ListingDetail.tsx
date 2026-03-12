@@ -604,21 +604,28 @@ export default function ListingDetail() {
                     </p>
                   </div>
 
-                  {isSubscribed ? (
+                  {(isSubscribed || canClaimFree) ? (
                     user ? (
-                      <Button
-                        onClick={handleClaim}
-                        disabled={claiming}
-                        className="w-full gradient-hero text-white border-0 shadow-glow hover:opacity-90 h-12 text-base font-bold transition-opacity"
-                      >
-                        <Gift className="h-4 w-4 mr-2" />
-                        {claiming ? "Claiming…" : "Claim Project"}
-                      </Button>
+                      <div className="space-y-2">
+                        <Button
+                          onClick={handleClaim}
+                          disabled={claiming}
+                          className="w-full gradient-hero text-white border-0 shadow-glow hover:opacity-90 h-12 text-base font-bold transition-opacity"
+                        >
+                          <Gift className="h-4 w-4 mr-2" />
+                          {claiming ? "Claiming…" : canClaimFree && !isSubscribed ? "Claim Free — Your First App!" : "Claim Project"}
+                        </Button>
+                        {canClaimFree && !isSubscribed && (
+                          <p className="text-center text-xs text-muted-foreground">
+                            ✨ No subscription needed for your first app
+                          </p>
+                        )}
+                      </div>
                     ) : (
                       <Link to="/login">
                         <Button className="w-full gradient-hero text-white border-0 shadow-glow hover:opacity-90 h-12 text-base font-bold transition-opacity">
                           <Gift className="h-4 w-4 mr-2" />
-                          Sign in to claim
+                          Sign in to claim free
                         </Button>
                       </Link>
                     )
@@ -627,10 +634,10 @@ export default function ListingDetail() {
                       <Link to="/credits">
                         <Button className="w-full gradient-hero text-white border-0 shadow-glow hover:opacity-90 h-12 text-base font-bold transition-opacity">
                           <Crown className="h-4 w-4 mr-2" />
-                          Subscribe to claim — $20/mo
+                          Subscribe for more apps — $20/mo
                         </Button>
                       </Link>
-                      <p className="text-center text-xs text-muted-foreground font-medium">Unlimited access to every app on OpenDraft</p>
+                      <p className="text-center text-xs text-muted-foreground font-medium">You've claimed your free app · Subscribe to unlock more</p>
                       <Button
                         variant="outline"
                         disabled

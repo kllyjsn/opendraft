@@ -723,13 +723,22 @@ export default function ListingDetail() {
 
         {/* Improvement panel for owned listings */}
         {user && listing.seller_id === user.id && (
-          <div className="mt-12">
+          <div className="mt-12" id="gremlins-panel">
             <ListingImprovementPanel
               listingId={listing.id}
               listingTitle={listing.title}
               demoUrl={listing.demo_url}
             />
           </div>
+        )}
+
+        {/* Floating CTA for owners to discover gremlins */}
+        {user && listing.seller_id === user.id && (
+          <GremlinFloatingCTA
+            onClick={() => {
+              document.getElementById("gremlins-panel")?.scrollIntoView({ behavior: "smooth" });
+            }}
+          />
         )}
 
         {/* Reviews — full width below the grid */}

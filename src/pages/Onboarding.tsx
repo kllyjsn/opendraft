@@ -26,13 +26,21 @@ export default function Onboarding() {
 
   if (!authLoading && !user) return <Navigate to="/login" replace />;
 
+  const nextStep = progress.steps.find((s) => !s.completed);
+  const isFullGremlin = progress.percentage === 100;
+
+  // Auto-skip onboarding for users who already completed everything
+  useEffect(() => {
+    if (!progress.loading && isFullGremlin) {
+      localStorage.setItem("opendraft_onboarding_done", "1");
+      navigate("/", { replace: true });
+    }
+  }, [progress.loading, isFullGremlin, navigate]);
+
   function done(path: string) {
     localStorage.setItem("opendraft_onboarding_done", "1");
     navigate(path);
   }
-
-  const nextStep = progress.steps.find((s) => !s.completed);
-  const isFullGremlin = progress.percentage === 100;
 
   return (
     <div className="min-h-screen flex flex-col">

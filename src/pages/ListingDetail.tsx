@@ -17,7 +17,7 @@ import { ChatDrawer } from "@/components/ChatDrawer";
 import { RemixChain } from "@/components/RemixChain";
 import { ImprovementDashboard } from "@/components/ImprovementDashboard";
 import { JsonLd } from "@/components/JsonLd";
-import { CanonicalTag } from "@/components/CanonicalTag";
+import { MetaTags } from "@/components/MetaTags";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { FlagListingButton } from "@/components/FlagListingButton";
 import { BuyerWelcomeModal } from "@/components/BuyerWelcomeModal";

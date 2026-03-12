@@ -712,8 +712,8 @@ export default function ListingDetail() {
                       <div className="flex gap-2.5">
                         <RefreshCw className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
                         <div>
-                          <p className="font-semibold text-xs">Monthly updates</p>
-                          <p className="text-[11px] text-muted-foreground leading-relaxed">Bug fixes, improvements, and new features shipped every month.</p>
+                          <p className="font-semibold text-xs">Deploy anywhere</p>
+                          <p className="text-[11px] text-muted-foreground leading-relaxed">One-click deploy to OpenDraft Cloud, Vercel, or Netlify — your choice.</p>
                         </div>
                       </div>
                       <div className="flex gap-2.5">

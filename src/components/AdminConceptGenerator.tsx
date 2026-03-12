@@ -234,7 +234,7 @@ export function AdminConceptGenerator() {
                 {r.success && (
                   <div className="flex items-center gap-2 flex-shrink-0 ml-2">
                     <span className="text-xs text-muted-foreground">{r.file_count} files</span>
-                    <span className="text-sm font-black">$15/mo</span>
+                    <span className="text-sm font-black">Free</span>
                   </div>
                 )}
               </div>

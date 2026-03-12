@@ -1,0 +1,1 @@
+ALTER TABLE public.project_goals ADD COLUMN IF NOT EXISTS auto_improve boolean NOT NULL DEFAULT false;

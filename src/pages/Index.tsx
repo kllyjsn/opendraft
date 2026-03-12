@@ -255,9 +255,14 @@ export default function Index() {
             SaaS tools, AI products, landing pages & utilities — production-ready.
           </p>
           {!user && (
-            <p className="text-xs font-semibold text-accent mb-4">
-              ✨ Your first app is free — no credit card required
-            </p>
+            <div className="mb-4 space-y-2">
+              <p className="text-xs font-semibold text-accent">
+                ✨ Your first app is free — no credit card required
+              </p>
+              <div className="max-w-xs mx-auto">
+                <GoogleSignInButton label="Sign up free with Google" />
+              </div>
+            </div>
           )}
 
           {/* Hero search bar */}

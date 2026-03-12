@@ -8,7 +8,7 @@ import { SecurityBadge } from "@/components/SecurityBadge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
-import { ExternalLink, Github, Star, Crown, ChevronLeft, Download, Eye, Package, Gift, MessageSquare, GitFork, RefreshCw, Wrench, Shield, Infinity, Rocket } from "lucide-react";
+import { ExternalLink, Github, Star, Crown, ChevronLeft, Download, Eye, Package, Gift, MessageSquare, GitFork, RefreshCw, Wrench, Shield, Infinity, Rocket, Sparkles, Bot } from "lucide-react";
 import { RequestForkDialog } from "@/components/RequestForkDialog";
 import { ImageGallery } from "@/components/ImageGallery";
 import { DeployPanel } from "@/components/DeployPanel";
@@ -17,6 +17,7 @@ import { ChatDrawer } from "@/components/ChatDrawer";
 import { RemixChain } from "@/components/RemixChain";
 import { ListingImprovementPanel } from "@/components/ListingImprovementPanel";
 import { GremlinFloatingCTA } from "@/components/GremlinFloatingCTA";
+import { ProjectGoalsEditor } from "@/components/ProjectGoalsEditor";
 import { JsonLd } from "@/components/JsonLd";
 import { MetaTags } from "@/components/MetaTags";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
@@ -469,260 +470,335 @@ export default function ListingDetail() {
 
           </div>
 
-          {/* Right: buy card */}
+          {/* Right: sidebar */}
           <div className="space-y-4">
-            <div className="rounded-2xl border border-border/60 bg-card p-6 shadow-card sticky top-20 hover:shadow-card-hover transition-shadow duration-500">
-              {/* Price */}
-              <div className="mb-5">
-                <div className="text-4xl font-black">{supportPrice}</div>
-                <p className="text-xs text-muted-foreground">
-                  Monthly support · Auto-fixes + human builder access
-                </p>
-              </div>
-
-              {purchased ? (
-                <div className="space-y-3">
-                  <div className="rounded-xl bg-primary/8 border border-primary/20 px-4 py-3 text-center">
+            {purchased ? (
+              /* ───── OWNER EXPERIENCE ───── */
+              <div className="space-y-4 sticky top-20">
+                {/* Ownership confirmation */}
+                <div className="rounded-2xl border border-primary/30 bg-primary/5 p-5 shadow-card">
+                  <div className="rounded-xl bg-primary/10 border border-primary/20 px-4 py-3 text-center mb-4">
                     <p className="font-bold text-primary text-sm">✓ You own this project</p>
                   </div>
-                   <Button
-                    onClick={handleDownload}
-                    disabled={downloading}
-                    className="w-full gradient-hero text-white border-0 shadow-glow hover:opacity-90 h-12 text-base font-bold"
-                  >
-                    <Download className="h-4 w-4 mr-2" />
-                    {downloading ? "Preparing download…" : "Download Project"}
-                  </Button>
-                  <DeployPanel
-                    listingId={listing.id}
-                    listingTitle={listing.title}
-                    hasFile={!!listing.file_path}
-                    githubUrl={listing.github_url}
-                  />
-                  {listing.seller_id !== user?.id && (
-                    <>
-                      <Button
-                        onClick={() => setChatOpen(true)}
-                        className="w-full h-11 text-sm font-bold border-2 border-primary bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-                      >
-                        <MessageSquare className="h-4 w-4 mr-2" />
-                        Chat with your builder
-                      </Button>
-                      <Link to={`/sell?remix=${listing.id}`}>
-                        <Button variant="outline" className="w-full border-border/60 hover:border-primary/40 transition-colors">
-                          <GitFork className="h-4 w-4 mr-2" />
-                          Remix this project
-                        </Button>
-                      </Link>
-                      <RequestForkDialog
-                        listingId={listing.id}
-                        listingTitle={listing.title}
-                        builderId={listing.seller_id}
-                        builderName={seller?.username ?? "Builder"}
-                      />
-                    </>
-                  )}
-                </div>
-              ) : isSubscribed ? (
-                /* Subscribers use the claim flow */
-                user ? (
-                  <Button
-                    onClick={handleClaim}
-                    disabled={claiming}
-                    className="w-full gradient-hero text-white border-0 shadow-glow hover:opacity-90 h-12 text-base font-bold transition-opacity"
-                  >
-                    <Gift className="h-4 w-4 mr-2" />
-                    {claiming ? "Claiming…" : "Claim Project"}
-                  </Button>
-                ) : (
-                  <Link to="/login">
-                    <Button className="w-full gradient-hero text-white border-0 shadow-glow hover:opacity-90 h-12 text-base font-bold transition-opacity">
-                      <Gift className="h-4 w-4 mr-2" />
-                      Sign in to claim
-                    </Button>
-                  </Link>
-                )
-              ) : (
-                /* Non-subscribers see subscription CTA */
-                <div className="space-y-3">
-                  <Link to="/credits">
-                    <Button className="w-full gradient-hero text-white border-0 shadow-glow hover:opacity-90 h-12 text-base font-bold transition-opacity">
-                      <Crown className="h-4 w-4 mr-2" />
-                      Subscribe to claim — $20/mo
-                    </Button>
-                  </Link>
-                  <p className="text-center text-xs text-muted-foreground font-medium">Unlimited access to every app on OpenDraft</p>
+
+                  {/* Core actions */}
+                  <div className="space-y-2.5">
                     <Button
-                      variant="outline"
-                      disabled
-                      className="w-full border-border/60 text-muted-foreground gap-2 cursor-not-allowed"
+                      onClick={handleDownload}
+                      disabled={downloading}
+                      className="w-full gradient-hero text-white border-0 shadow-glow hover:opacity-90 h-11 text-sm font-bold"
                     >
-                      <Rocket className="h-4 w-4" />
-                      Deploy to cloud after claiming
+                      <Download className="h-4 w-4 mr-2" />
+                      {downloading ? "Preparing…" : "Download Project"}
                     </Button>
-                  {user && listing.seller_id !== user.id && (
+                    <DeployPanel
+                      listingId={listing.id}
+                      listingTitle={listing.title}
+                      hasFile={!!listing.file_path}
+                      githubUrl={listing.github_url}
+                    />
+                    {(listing.demo_url || listing.github_url) && (
+                      <div className="space-y-2">
+                        {listing.demo_url && (
+                          <a href={listing.demo_url} target="_blank" rel="noopener noreferrer">
+                            <Button variant="outline" className="w-full border-border/60 hover:border-primary/40 transition-colors">
+                              <ExternalLink className="h-4 w-4 mr-2" />
+                              View Live Demo
+                            </Button>
+                          </a>
+                        )}
+                        {listing.github_url && (
+                          <a href={listing.github_url} target="_blank" rel="noopener noreferrer">
+                            <Button variant="outline" className="w-full border-border/60 hover:border-primary/40 transition-colors">
+                              <Github className="h-4 w-4 mr-2" />
+                              View on GitHub
+                            </Button>
+                          </a>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Personalization tools — front and center for owners */}
+                <div className="rounded-2xl border border-accent/30 bg-accent/5 p-5 shadow-card space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-accent" />
+                    <p className="text-xs font-black uppercase tracking-wide text-accent">Personalize Your App</p>
+                  </div>
+                  <p className="text-[13px] text-muted-foreground leading-relaxed">
+                    Use AI-powered Gremlins™ to customize this app for your exact needs — no coding required.
+                  </p>
+                  <Button
+                    onClick={() => document.getElementById("gremlins-panel")?.scrollIntoView({ behavior: "smooth" })}
+                    className="w-full h-11 text-sm font-bold gradient-hero text-white border-0 shadow-glow hover:opacity-90"
+                  >
+                    <Bot className="h-4 w-4 mr-2" />
+                    Improve with Gremlins™
+                  </Button>
+                </div>
+
+                {/* Project Goals */}
+                <ProjectGoalsEditor listingId={listing.id} />
+
+                {/* Builder & community actions */}
+                {listing.seller_id !== user?.id && (
+                  <div className="rounded-2xl border border-border/60 bg-card p-5 shadow-card space-y-2.5">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Builder & Community</p>
+                    <Button
+                      onClick={() => setChatOpen(true)}
+                      className="w-full h-10 text-sm font-bold border-2 border-primary bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                    >
+                      <MessageSquare className="h-4 w-4 mr-2" />
+                      Chat with your builder
+                    </Button>
+                    <Link to={`/sell?remix=${listing.id}`}>
+                      <Button variant="outline" className="w-full border-border/60 hover:border-primary/40 transition-colors">
+                        <GitFork className="h-4 w-4 mr-2" />
+                        Remix this project
+                      </Button>
+                    </Link>
                     <RequestForkDialog
                       listingId={listing.id}
                       listingTitle={listing.title}
                       builderId={listing.seller_id}
                       builderName={seller?.username ?? "Builder"}
                     />
-                  )}
-                </div>
-              )}
-
-              {/* Secondary actions */}
-              {(listing.demo_url || listing.github_url) && (
-                <div className="mt-3 space-y-2">
-                  {listing.demo_url && (
-                    <a href={listing.demo_url} target="_blank" rel="noopener noreferrer">
-                      <Button variant="outline" className="w-full border-border/60 hover:border-primary/40 transition-colors">
-                        <ExternalLink className="h-4 w-4 mr-2" />
-                        View Live Demo
-                      </Button>
-                    </a>
-                  )}
-                  {listing.github_url && (
-                    <a href={listing.github_url} target="_blank" rel="noopener noreferrer">
-                      <Button variant="outline" className="w-full border-border/60 hover:border-primary/40 transition-colors">
-                        <Github className="h-4 w-4 mr-2" />
-                        View on GitHub
-                      </Button>
-                    </a>
-                  )}
-                </div>
-              )}
-
-              {/* Trust line */}
-              <p className="mt-4 text-center text-[11px] text-muted-foreground">
-                🔒 Secure checkout via Stripe · Cancel anytime
-              </p>
-
-              {/* Early Adopter Advantage */}
-              {listing.sales_count <= 5 && (
-                <div className="mt-5 rounded-xl border border-accent/30 bg-accent/5 p-4 space-y-2">
-                  <div className="flex items-center gap-2">
-                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-accent/15 text-accent text-xs">🚀</span>
-                    <p className="text-xs font-black uppercase tracking-wide text-accent">Early Adopter Advantage</p>
                   </div>
-                  <p className="text-[13px] font-semibold leading-snug">Be first — shape this product for your needs</p>
-                  <p className="text-[11px] text-muted-foreground leading-relaxed">
-                    Early buyers get the builder's full attention. Request features, influence the roadmap, and get a product tailored to <span className="text-foreground font-medium">your</span> workflow — before anyone else.
-                  </p>
-                  {listing.sales_count === 0 && (
-                    <p className="text-[10px] font-bold text-accent flex items-center gap-1">
-                      ✨ No buyers yet — you'll be #1
-                    </p>
-                  )}
-                </div>
-              )}
+                )}
 
-              {/* Value banner */}
-              <div className="mt-5 rounded-xl gradient-hero p-[1px]">
-                <div className="rounded-[11px] bg-card p-4 space-y-1.5 text-center">
-                  <p className="text-xs font-black uppercase tracking-wide text-primary">What you get</p>
-                  <p className="text-[13px] font-semibold leading-snug">Full source code + auto-healing deploys</p>
-                  <p className="text-[11px] text-muted-foreground leading-relaxed">$15/mo covers AI-powered site monitoring, automated bug fixes, and direct builder access for feature requests and support.</p>
-                </div>
-              </div>
-
-              {/* What's included */}
-              <div className="mt-5 pt-5 border-t border-border/50">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">What's included</p>
-                <div className="space-y-3">
-                  <div className="flex gap-2.5">
-                    <Shield className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-semibold text-xs">Dedicated support</p>
-                      <p className="text-[11px] text-muted-foreground leading-relaxed">Get direct help from the builder whenever you need it — no tickets, no wait.</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-2.5">
-                    <Wrench className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-semibold text-xs">Personalized feature requests</p>
-                      <p className="text-[11px] text-muted-foreground leading-relaxed">Request custom features tailored to your needs — the builder prioritizes them for you.</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-2.5">
-                    <Infinity className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-semibold text-xs">Unlimited usage</p>
-                      <p className="text-[11px] text-muted-foreground leading-relaxed">No caps or restrictions — use the app as much as you want.</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-2.5">
-                    <RefreshCw className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-semibold text-xs">Monthly updates</p>
-                      <p className="text-[11px] text-muted-foreground leading-relaxed">Bug fixes, improvements, and new features shipped every month.</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-2.5">
-                    <MessageSquare className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-semibold text-xs">Direct builder access</p>
-                      <p className="text-[11px] text-muted-foreground leading-relaxed">Message the builder anytime for ideas, questions, or collaboration.</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Seller card with integrated chat CTA */}
-            {seller && (
-              <div className="rounded-2xl border border-border/60 bg-card p-5 shadow-card">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-4">Seller</p>
-                <div className="flex items-center gap-3 mb-4">
-                  <Link to={`/builder/${listing.seller_id}`} className="h-10 w-10 rounded-full gradient-hero flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-glow hover:opacity-80 transition-opacity">
-                    {seller.username?.[0]?.toUpperCase() ?? "?"}
-                  </Link>
-                  <div>
-                    <div className="flex items-center gap-1">
-                      <Link to={`/builder/${listing.seller_id}`} className="font-bold text-sm hover:text-primary transition-colors">
-                        {seller.username ?? "Anonymous"}
+                {/* Seller card */}
+                {seller && (
+                  <div className="rounded-2xl border border-border/60 bg-card p-5 shadow-card">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">Builder</p>
+                    <div className="flex items-center gap-3">
+                      <Link to={`/builder/${listing.seller_id}`} className="h-10 w-10 rounded-full gradient-hero flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-glow hover:opacity-80 transition-opacity">
+                        {seller.username?.[0]?.toUpperCase() ?? "?"}
                       </Link>
-                      {seller.verified && <VerifiedBadge />}
+                      <div>
+                        <div className="flex items-center gap-1">
+                          <Link to={`/builder/${listing.seller_id}`} className="font-bold text-sm hover:text-primary transition-colors">
+                            {seller.username ?? "Anonymous"}
+                          </Link>
+                          {seller.verified && <VerifiedBadge />}
+                        </div>
+                        <p className="text-xs text-muted-foreground">{seller.total_sales ?? 0} total sales</p>
+                      </div>
                     </div>
-                    <p className="text-xs text-muted-foreground">{seller.total_sales ?? 0} total sales</p>
+                    <RemixChain listingId={listing.id} />
+                    <div className="mt-3 flex justify-end">
+                      <FlagListingButton listingId={listing.id} sellerId={listing.seller_id} />
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* ───── NON-OWNER EXPERIENCE ───── */
+              <div className="space-y-4">
+                <div className="rounded-2xl border border-border/60 bg-card p-6 shadow-card sticky top-20 hover:shadow-card-hover transition-shadow duration-500">
+                  {/* Price */}
+                  <div className="mb-5">
+                    <div className="text-4xl font-black">{supportPrice}</div>
+                    <p className="text-xs text-muted-foreground">
+                      Monthly support · Auto-fixes + human builder access
+                    </p>
+                  </div>
+
+                  {isSubscribed ? (
+                    user ? (
+                      <Button
+                        onClick={handleClaim}
+                        disabled={claiming}
+                        className="w-full gradient-hero text-white border-0 shadow-glow hover:opacity-90 h-12 text-base font-bold transition-opacity"
+                      >
+                        <Gift className="h-4 w-4 mr-2" />
+                        {claiming ? "Claiming…" : "Claim Project"}
+                      </Button>
+                    ) : (
+                      <Link to="/login">
+                        <Button className="w-full gradient-hero text-white border-0 shadow-glow hover:opacity-90 h-12 text-base font-bold transition-opacity">
+                          <Gift className="h-4 w-4 mr-2" />
+                          Sign in to claim
+                        </Button>
+                      </Link>
+                    )
+                  ) : (
+                    <div className="space-y-3">
+                      <Link to="/credits">
+                        <Button className="w-full gradient-hero text-white border-0 shadow-glow hover:opacity-90 h-12 text-base font-bold transition-opacity">
+                          <Crown className="h-4 w-4 mr-2" />
+                          Subscribe to claim — $20/mo
+                        </Button>
+                      </Link>
+                      <p className="text-center text-xs text-muted-foreground font-medium">Unlimited access to every app on OpenDraft</p>
+                      <Button
+                        variant="outline"
+                        disabled
+                        className="w-full border-border/60 text-muted-foreground gap-2 cursor-not-allowed"
+                      >
+                        <Rocket className="h-4 w-4" />
+                        Deploy to cloud after claiming
+                      </Button>
+                      {user && listing.seller_id !== user.id && (
+                        <RequestForkDialog
+                          listingId={listing.id}
+                          listingTitle={listing.title}
+                          builderId={listing.seller_id}
+                          builderName={seller?.username ?? "Builder"}
+                        />
+                      )}
+                    </div>
+                  )}
+
+                  {/* Secondary actions */}
+                  {(listing.demo_url || listing.github_url) && (
+                    <div className="mt-3 space-y-2">
+                      {listing.demo_url && (
+                        <a href={listing.demo_url} target="_blank" rel="noopener noreferrer">
+                          <Button variant="outline" className="w-full border-border/60 hover:border-primary/40 transition-colors">
+                            <ExternalLink className="h-4 w-4 mr-2" />
+                            View Live Demo
+                          </Button>
+                        </a>
+                      )}
+                      {listing.github_url && (
+                        <a href={listing.github_url} target="_blank" rel="noopener noreferrer">
+                          <Button variant="outline" className="w-full border-border/60 hover:border-primary/40 transition-colors">
+                            <Github className="h-4 w-4 mr-2" />
+                            View on GitHub
+                          </Button>
+                        </a>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Trust line */}
+                  <p className="mt-4 text-center text-[11px] text-muted-foreground">
+                    🔒 Secure checkout via Stripe · Cancel anytime
+                  </p>
+
+                  {/* Early Adopter Advantage */}
+                  {listing.sales_count <= 5 && (
+                    <div className="mt-5 rounded-xl border border-accent/30 bg-accent/5 p-4 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-accent/15 text-accent text-xs">🚀</span>
+                        <p className="text-xs font-black uppercase tracking-wide text-accent">Early Adopter Advantage</p>
+                      </div>
+                      <p className="text-[13px] font-semibold leading-snug">Be first — shape this product for your needs</p>
+                      <p className="text-[11px] text-muted-foreground leading-relaxed">
+                        Early buyers get the builder's full attention. Request features, influence the roadmap, and get a product tailored to <span className="text-foreground font-medium">your</span> workflow — before anyone else.
+                      </p>
+                      {listing.sales_count === 0 && (
+                        <p className="text-[10px] font-bold text-accent flex items-center gap-1">
+                          ✨ No buyers yet — you'll be #1
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Value banner */}
+                  <div className="mt-5 rounded-xl gradient-hero p-[1px]">
+                    <div className="rounded-[11px] bg-card p-4 space-y-1.5 text-center">
+                      <p className="text-xs font-black uppercase tracking-wide text-primary">What you get</p>
+                      <p className="text-[13px] font-semibold leading-snug">Full source code + auto-healing deploys</p>
+                      <p className="text-[11px] text-muted-foreground leading-relaxed">$15/mo covers AI-powered site monitoring, automated bug fixes, and direct builder access for feature requests and support.</p>
+                    </div>
+                  </div>
+
+                  {/* What's included */}
+                  <div className="mt-5 pt-5 border-t border-border/50">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">What's included</p>
+                    <div className="space-y-3">
+                      <div className="flex gap-2.5">
+                        <Shield className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="font-semibold text-xs">Dedicated support</p>
+                          <p className="text-[11px] text-muted-foreground leading-relaxed">Get direct help from the builder whenever you need it — no tickets, no wait.</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2.5">
+                        <Wrench className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="font-semibold text-xs">Personalized feature requests</p>
+                          <p className="text-[11px] text-muted-foreground leading-relaxed">Request custom features tailored to your needs — the builder prioritizes them for you.</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2.5">
+                        <Infinity className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="font-semibold text-xs">Unlimited usage</p>
+                          <p className="text-[11px] text-muted-foreground leading-relaxed">No caps or restrictions — use the app as much as you want.</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2.5">
+                        <RefreshCw className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="font-semibold text-xs">Monthly updates</p>
+                          <p className="text-[11px] text-muted-foreground leading-relaxed">Bug fixes, improvements, and new features shipped every month.</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2.5">
+                        <MessageSquare className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="font-semibold text-xs">Direct builder access</p>
+                          <p className="text-[11px] text-muted-foreground leading-relaxed">Message the builder anytime for ideas, questions, or collaboration.</p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                {/* Chat CTA */}
-                {!authLoading && (
-                  user && listing.seller_id === user.id ? (
-                    <p className="text-xs text-muted-foreground text-center">This is your listing</p>
-                  ) : user ? (
-                    <Button
-                      onClick={() => setChatOpen(true)}
-                      className="w-full h-11 text-sm font-bold gradient-hero text-white border-0 shadow-glow hover:opacity-90 transition-opacity"
-                    >
-                      <MessageSquare className="h-4 w-4 mr-2" />
-                      Ask {seller.username ?? "seller"} a question
-                    </Button>
-                  ) : (
-                    <Link to="/login">
-                      <Button className="w-full h-11 text-sm font-bold gradient-hero text-white border-0 shadow-glow hover:opacity-90 transition-opacity">
-                        <MessageSquare className="h-4 w-4 mr-2" />
-                        Sign in to ask a question
-                      </Button>
-                    </Link>
-                  )
-            )}
 
-            {/* Remix chain visualization */}
-            <RemixChain listingId={listing.id} />
-
-            {/* Report button */}
-            <div className="mt-3 flex justify-end">
-              <FlagListingButton listingId={listing.id} sellerId={listing.seller_id} />
-            </div>
-          </div>
+                {/* Seller card */}
+                {seller && (
+                  <div className="rounded-2xl border border-border/60 bg-card p-5 shadow-card">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-4">Seller</p>
+                    <div className="flex items-center gap-3 mb-4">
+                      <Link to={`/builder/${listing.seller_id}`} className="h-10 w-10 rounded-full gradient-hero flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-glow hover:opacity-80 transition-opacity">
+                        {seller.username?.[0]?.toUpperCase() ?? "?"}
+                      </Link>
+                      <div>
+                        <div className="flex items-center gap-1">
+                          <Link to={`/builder/${listing.seller_id}`} className="font-bold text-sm hover:text-primary transition-colors">
+                            {seller.username ?? "Anonymous"}
+                          </Link>
+                          {seller.verified && <VerifiedBadge />}
+                        </div>
+                        <p className="text-xs text-muted-foreground">{seller.total_sales ?? 0} total sales</p>
+                      </div>
+                    </div>
+                    {!authLoading && (
+                      user && listing.seller_id === user.id ? (
+                        <p className="text-xs text-muted-foreground text-center">This is your listing</p>
+                      ) : user ? (
+                        <Button
+                          onClick={() => setChatOpen(true)}
+                          className="w-full h-11 text-sm font-bold gradient-hero text-white border-0 shadow-glow hover:opacity-90 transition-opacity"
+                        >
+                          <MessageSquare className="h-4 w-4 mr-2" />
+                          Ask {seller.username ?? "seller"} a question
+                        </Button>
+                      ) : (
+                        <Link to="/login">
+                          <Button className="w-full h-11 text-sm font-bold gradient-hero text-white border-0 shadow-glow hover:opacity-90 transition-opacity">
+                            <MessageSquare className="h-4 w-4 mr-2" />
+                            Sign in to ask a question
+                          </Button>
+                        </Link>
+                      )
+                    )}
+                    <RemixChain listingId={listing.id} />
+                    <div className="mt-3 flex justify-end">
+                      <FlagListingButton listingId={listing.id} sellerId={listing.seller_id} />
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
           </div>
         </div>
 
-        {/* Improvement panel for owned listings */}
-        {user && listing.seller_id === user.id && (
+        {/* Improvement panel for owners */}
+        {user && purchased && (
           <div className="mt-12" id="gremlins-panel">
             <ListingImprovementPanel
               listingId={listing.id}
@@ -732,8 +808,8 @@ export default function ListingDetail() {
           </div>
         )}
 
-        {/* Floating CTA for owners to discover gremlins */}
-        {user && listing.seller_id === user.id && (
+        {/* Floating CTA for owners */}
+        {user && purchased && (
           <GremlinFloatingCTA
             onClick={() => {
               document.getElementById("gremlins-panel")?.scrollIntoView({ behavior: "smooth" });

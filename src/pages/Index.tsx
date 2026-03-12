@@ -19,6 +19,45 @@ const COMPLETENESS = ["All", "Prototype", "MVP", "Production Ready"];
 const SORT_OPTIONS = ["Newest", "Popular"];
 const PAGE_SIZE = 24;
 
+const ROTATING_WORDS = ["person", "business"];
+
+function HeroTagline() {
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIndex((prev) => (prev + 1) % ROTATING_WORDS.length);
+    }, 2800);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <h1 className="text-3xl md:text-5xl lg:text-6xl font-black tracking-tighter mb-3 leading-[0.95]">
+      Personalized apps for every{" "}
+      <br className="hidden md:block" />
+      <span className="inline-block relative overflow-hidden align-bottom" style={{ minWidth: "5ch" }}>
+        <AnimatePresence mode="wait">
+          <motion.span
+            key={ROTATING_WORDS[index]}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.45, ease: "easeInOut" }}
+            className="inline-block text-gradient animate-gradient-shift"
+            style={{
+              backgroundImage: "linear-gradient(135deg, hsl(265 85% 58%), hsl(330 90% 60%), hsl(185 90% 45%), hsl(265 85% 58%))",
+              backgroundSize: "200% 200%",
+            }}
+          >
+            {ROTATING_WORDS[index]}
+          </motion.span>
+        </AnimatePresence>
+      </span>{" "}
+      on the planet.
+    </h1>
+  );
+}
+
 const categoryMap: Record<string, string> = {
   "SaaS Tool": "saas_tool",
   "AI App": "ai_app",
@@ -210,19 +249,7 @@ export default function Index() {
         <div className="absolute -top-40 -right-40 h-[500px] w-[500px] rounded-full bg-primary/15 blur-[120px] animate-pulse-glow pointer-events-none" />
 
         <div className="container mx-auto px-4 text-center relative z-10">
-          <h1 className="text-3xl md:text-5xl lg:text-6xl font-black tracking-tighter mb-3 leading-[0.95]">
-            Personalized apps for{" "}
-            <br className="hidden md:block" />
-            <span
-              className="text-gradient animate-gradient-shift inline-block"
-              style={{
-                backgroundImage: "linear-gradient(135deg, hsl(265 85% 58%), hsl(330 90% 60%), hsl(185 90% 45%), hsl(265 85% 58%))",
-                backgroundSize: "200% 200%",
-              }}
-            >
-              every person and business on the planet.
-            </span>
-          </h1>
+          <HeroTagline />
           <p className="text-sm md:text-base text-muted-foreground max-w-xl mx-auto mb-5">
             SaaS tools, AI products, landing pages & utilities — production-ready.
           </p>

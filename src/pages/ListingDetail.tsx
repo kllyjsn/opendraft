@@ -797,8 +797,8 @@ export default function ListingDetail() {
           </div>
         </div>
 
-        {/* Improvement panel for owned listings */}
-        {user && listing.seller_id === user.id && (
+        {/* Improvement panel for owners */}
+        {user && purchased && (
           <div className="mt-12" id="gremlins-panel">
             <ListingImprovementPanel
               listingId={listing.id}
@@ -808,8 +808,8 @@ export default function ListingDetail() {
           </div>
         )}
 
-        {/* Floating CTA for owners to discover gremlins */}
-        {user && listing.seller_id === user.id && (
+        {/* Floating CTA for owners */}
+        {user && purchased && (
           <GremlinFloatingCTA
             onClick={() => {
               document.getElementById("gremlins-panel")?.scrollIntoView({ behavior: "smooth" });

@@ -69,7 +69,7 @@ serve(async (req) => {
     if (state === "error" || state === "canceled" || state === "failed") {
       try {
         const logRes = await fetch(`https://api.vercel.com/v2/deployments/${encodeURIComponent(deployId)}/events`, {
-          headers: { Authorization: `Bearer ${vercelToken}` },
+          headers: { Authorization: `Bearer ${token}` },
         });
 
         if (logRes.ok) {

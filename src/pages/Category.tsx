@@ -68,11 +68,7 @@ export default function Category() {
 
   const meta = slug ? CATEGORY_META[slug] : undefined;
 
-  useEffect(() => {
-    if (!meta) return;
-    document.title = `${meta.label} — OpenDraft Marketplace`;
-    return () => { document.title = "OpenDraft — Buy & Sell Vibe-Coded Projects"; };
-  }, [meta]);
+  // MetaTags handles title dynamically
 
   useEffect(() => {
     if (!meta) return;

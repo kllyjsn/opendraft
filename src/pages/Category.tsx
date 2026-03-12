@@ -4,8 +4,8 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { ListingCard } from "@/components/ListingCard";
 import { supabase } from "@/integrations/supabase/client";
+import { MetaTags } from "@/components/MetaTags";
 import { JsonLd } from "@/components/JsonLd";
-import { CanonicalTag } from "@/components/CanonicalTag";
 import { Button } from "@/components/ui/button";
 
 const CATEGORY_META: Record<string, { label: string; dbValue: string; description: string; longDescription: string }> = {

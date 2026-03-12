@@ -60,18 +60,15 @@ export function Navbar() {
           <span className="text-gradient">OpenDraft</span>
         </Link>
 
-        {/* Desktop Nav */}
+        {/* Desktop Nav — buyer-first */}
         <div className="hidden md:flex items-center gap-7">
-          <NavItem to="/">Browse</NavItem>
+          <NavItem to="/">Browse Apps</NavItem>
           <NavItem to="/credits">Pricing</NavItem>
-          <NavItem to="/builders">Builders</NavItem>
-          <NavItem to="/bounties">Bounties</NavItem>
-          <NavItem to="/agents">Agents</NavItem>
-          <NavItem to="/developers">Developers</NavItem>
+          <NavItem to="/builders">Find a Builder</NavItem>
+          <NavItem to="/faq">FAQ</NavItem>
           {user && (
             <>
-              <NavItem to="/sell">Sell</NavItem>
-              <NavItem to="/dashboard">Dashboard</NavItem>
+              <NavItem to="/dashboard">My Apps</NavItem>
               <NavItem to="/messages">
                 <span className="relative inline-flex items-center">
                   Messages
@@ -125,9 +122,9 @@ export function Navbar() {
                   Sign in
                 </Button>
               </Link>
-              <Link to="/sell">
+              <Link to="/">
                 <Button size="sm" className="gradient-hero text-white border-0 shadow-glow hover:shadow-[0_0_40px_hsl(265_85%_58%_/_0.35)] hover:opacity-90 transition-all duration-300">
-                  Start selling
+                  Find your app
                 </Button>
               </Link>
             </>
@@ -152,16 +149,13 @@ export function Navbar() {
         )}
       >
         <div className="flex flex-col gap-4">
-          <NavItem to="/" onClick={() => setMenuOpen(false)}>Browse</NavItem>
+          <NavItem to="/" onClick={() => setMenuOpen(false)}>Browse Apps</NavItem>
           <NavItem to="/credits" onClick={() => setMenuOpen(false)}>Pricing</NavItem>
-          <NavItem to="/builders" onClick={() => setMenuOpen(false)}>Builders</NavItem>
-          <NavItem to="/bounties" onClick={() => setMenuOpen(false)}>Bounties</NavItem>
-          <NavItem to="/agents" onClick={() => setMenuOpen(false)}>Agents</NavItem>
-          <NavItem to="/developers" onClick={() => setMenuOpen(false)}>Developers</NavItem>
+          <NavItem to="/builders" onClick={() => setMenuOpen(false)}>Find a Builder</NavItem>
+          <NavItem to="/faq" onClick={() => setMenuOpen(false)}>FAQ</NavItem>
           {user ? (
             <>
-              <NavItem to="/sell" onClick={() => setMenuOpen(false)}>Sell</NavItem>
-              <NavItem to="/dashboard" onClick={() => setMenuOpen(false)}>Dashboard</NavItem>
+              <NavItem to="/dashboard" onClick={() => setMenuOpen(false)}>My Apps</NavItem>
               <NavItem to="/messages" onClick={() => setMenuOpen(false)}>
                 <span className="relative inline-flex items-center">
                   Messages
@@ -192,7 +186,7 @@ export function Navbar() {
           ) : (
             <Link to="/login" onClick={() => setMenuOpen(false)}>
               <Button className="w-full gradient-hero text-white border-0 shadow-glow">
-                Sign in with Google
+                Sign in
               </Button>
             </Link>
           )}

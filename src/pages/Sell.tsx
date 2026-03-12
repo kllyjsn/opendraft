@@ -67,8 +67,8 @@ export default function Sell() {
   const [form, setForm] = useState({
     title: "",
     description: "",
-    price: "15",
-    pricing_type: "monthly" as "one_time" | "monthly",
+    price: "0",
+    pricing_type: "one_time" as "one_time" | "monthly",
     completeness_badge: "prototype" as "prototype" | "mvp" | "production_ready",
     category: "other" as string,
     tech_stack: [] as string[],
@@ -274,15 +274,12 @@ export default function Sell() {
                   onChange={(e) => update("description", e.target.value)}
                 />
               </div>
-              {/* Support pricing info — fixed at $15/mo */}
+              {/* Listing info */}
               <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
-                <p className="text-sm font-bold text-primary mb-1">💰 $15/mo support pricing</p>
+                <p className="text-sm font-bold text-primary mb-1">🚀 Free to claim</p>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  All projects default to <strong className="text-foreground">$15/month</strong> for ongoing support (auto + human). 
-                  Buyers get the source code free — they pay for your maintenance, updates, and feature requests.
-                </p>
-                <p className="text-xs text-muted-foreground mt-1.5">
-                  You receive <strong className="text-foreground">$12/mo</strong> (80%) per active subscriber.
+                  Subscribers can claim your project and get the full source code. 
+                  You earn visibility and can offer optional paid support retainers separately.
                 </p>
               </div>
             </>

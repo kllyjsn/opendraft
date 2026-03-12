@@ -95,8 +95,7 @@ export default function ListingDetail() {
   // Dynamic SEO meta tags
   useEffect(() => {
     if (!listing) return;
-    const price = "$15/mo";
-    const title = `${listing.title} — ${price} support | OpenDraft`;
+    const title = `${listing.title} — Full Source Code | OpenDraft`;
     const desc = listing.description.slice(0, 155).replace(/\n/g, " ") + (listing.description.length > 155 ? "…" : "");
     const image = listing.screenshots?.[0] || "https://opendraft.co/og-image.png";
 
@@ -359,8 +358,7 @@ export default function ListingDetail() {
     );
   }
 
-  const supportPrice = "$15/mo";
-  const isFree = false; // All listings now use the support model
+  const isFree = true; // Projects are free to claim with a subscription plan
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -572,9 +570,9 @@ export default function ListingDetail() {
                 <div className="rounded-2xl border border-border/60 bg-card p-6 shadow-card sticky top-20 hover:shadow-card-hover transition-shadow duration-500">
                   {/* Price */}
                   <div className="mb-5">
-                    <div className="text-4xl font-black">{supportPrice}</div>
+                    <div className="text-4xl font-black">Free</div>
                     <p className="text-xs text-muted-foreground">
-                      Monthly support · Auto-fixes + human builder access
+                      Full source code · Included with your plan
                     </p>
                   </div>
 
@@ -681,8 +679,8 @@ export default function ListingDetail() {
                   <div className="mt-5 rounded-xl gradient-hero p-[1px]">
                     <div className="rounded-[11px] bg-card p-4 space-y-1.5 text-center">
                       <p className="text-xs font-black uppercase tracking-wide text-primary">What you get</p>
-                      <p className="text-[13px] font-semibold leading-snug">Full source code + auto-healing deploys</p>
-                      <p className="text-[11px] text-muted-foreground leading-relaxed">$15/mo covers AI-powered site monitoring, automated bug fixes, and direct builder access for feature requests and support.</p>
+                      <p className="text-[13px] font-semibold leading-snug">Full source code + one-click deploy</p>
+                      <p className="text-[11px] text-muted-foreground leading-relaxed">Claim this project to get the complete source code, deploy it anywhere, and make it yours forever.</p>
                     </div>
                   </div>
 
@@ -714,8 +712,8 @@ export default function ListingDetail() {
                       <div className="flex gap-2.5">
                         <RefreshCw className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
                         <div>
-                          <p className="font-semibold text-xs">Monthly updates</p>
-                          <p className="text-[11px] text-muted-foreground leading-relaxed">Bug fixes, improvements, and new features shipped every month.</p>
+                          <p className="font-semibold text-xs">Deploy anywhere</p>
+                          <p className="text-[11px] text-muted-foreground leading-relaxed">One-click deploy to OpenDraft Cloud, Vercel, or Netlify — your choice.</p>
                         </div>
                       </div>
                       <div className="flex gap-2.5">

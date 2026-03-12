@@ -13,11 +13,11 @@ const sections = [
     faqs: [
       {
         q: "What am I actually buying?",
-        a: "You're not just buying code — you're buying peace of mind. When you subscribe to a project, you get a developer on retainer: ongoing support, bug fixes, feature requests, and monthly updates. It's like having your own micro-SaaS team for a fraction of the cost.",
+        a: "With a subscription plan, you can claim projects and get the complete source code — it's yours forever. You can deploy it anywhere, customize it, and use it however you want. Need ongoing help? Message the builder directly to arrange a support retainer.",
       },
       {
-        q: "How is this different from buying code on other marketplaces?",
-        a: "On most marketplaces, the transaction ends at download. Here, subscribing means the builder keeps your app alive and improving. You get direct access to message them, request features, and report issues. The code works — and keeps working.",
+        q: "How is this different from other marketplaces?",
+        a: "On most marketplaces, you pay per project. On OpenDraft, one subscription gives you access to claim multiple projects with full source code. Plus you can message builders directly for custom work and support.",
       },
       {
         q: "How do I buy a project?",

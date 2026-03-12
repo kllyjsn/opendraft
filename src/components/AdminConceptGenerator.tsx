@@ -71,7 +71,7 @@ export function AdminConceptGenerator() {
       if (error) throw new Error(error.message);
       if (!data?.success) throw new Error(data?.error || "Generation failed");
       setTemplateResult(data);
-      toast({ title: `${data.generated}/${data.requested} templates created`, description: `All at $15/mo — in Pending queue.` });
+      toast({ title: `${data.generated}/${data.requested} templates created`, description: `All in Pending queue.` });
     } catch (err) {
       toast({ title: "Generation failed", description: err instanceof Error ? err.message : "Unknown error", variant: "destructive" });
     } finally {
@@ -155,7 +155,7 @@ export function AdminConceptGenerator() {
                   </button>
                 ))}
               </div>
-              <span className="text-xs text-muted-foreground">× $15/mo each</span>
+              <span className="text-xs text-muted-foreground">free to claim</span>
             </div>
             <div className="mb-4">
               <label className="text-sm font-medium block mb-1.5">Override theme (optional)</label>
@@ -217,7 +217,7 @@ export function AdminConceptGenerator() {
           <div className="mt-4 space-y-2">
             <p className="text-xs font-semibold text-primary flex items-center gap-1.5">
               <CheckCircle2 className="h-3.5 w-3.5" />
-              {templateResult.generated}/{templateResult.requested} templates created at $15/mo
+              {templateResult.generated}/{templateResult.requested} templates created
             </p>
             {templateResult.results.map((r, i) => (
               <div key={i} className={`flex items-center justify-between rounded-lg border px-3 py-2 ${
@@ -234,7 +234,7 @@ export function AdminConceptGenerator() {
                 {r.success && (
                   <div className="flex items-center gap-2 flex-shrink-0 ml-2">
                     <span className="text-xs text-muted-foreground">{r.file_count} files</span>
-                    <span className="text-sm font-black">$15/mo</span>
+                    <span className="text-sm font-black">Free</span>
                   </div>
                 )}
               </div>

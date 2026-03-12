@@ -44,7 +44,7 @@ serve(async (req) => {
     }
 
     const statusRes = await fetch(`https://api.vercel.com/v13/deployments/${encodeURIComponent(deployId)}`, {
-      headers: { Authorization: `Bearer ${vercelToken}` },
+      headers: { Authorization: `Bearer ${token}` },
     });
 
     if (!statusRes.ok) {

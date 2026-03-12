@@ -81,6 +81,7 @@ export function ListingImprovementPanel({ listingId, listingTitle, demoUrl }: Pr
   const [savingGoals, setSavingGoals] = useState(false);
   const [showGoalsEditor, setShowGoalsEditor] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const [appliedSummary, setAppliedSummary] = useState<{ changes: string[]; cycleId: string } | null>(null);
 
   useEffect(() => {
     if (!user) return;

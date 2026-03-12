@@ -24,25 +24,60 @@ serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    const { data: listings, error } = await supabase
-      .from("listings")
-      .select("id,title,description,price,completeness_badge,tech_stack,screenshots,category,sales_count")
-      .eq("status", "live")
-      .order("sales_count", { ascending: false })
-      .limit(200);
+    // Strategy: Run text search AND broad fetch in parallel for maximum coverage
+    const [textSearchResult, broadResult] = await Promise.all([
+      // 1. Text/trigram search — finds exact & fuzzy keyword matches
+      supabase.rpc("search_listings", {
+        search_query: prompt.trim(),
+        page_limit: 50,
+        page_offset: 0,
+        sort_by: "relevance",
+      }),
+      // 2. Broad fetch — catches semantic matches text search would miss
+      supabase
+        .from("listings")
+        .select("id,title,description,price,completeness_badge,tech_stack,screenshots,category,sales_count")
+        .eq("status", "live")
+        .order("sales_count", { ascending: false })
+        .limit(300),
+    ]);
 
-    if (error) throw error;
+    // Merge listings, deduplicating by ID, text-search results first
+    const seenIds = new Set<string>();
+    const allListings: any[] = [];
 
-    if (!listings || listings.length === 0) {
-      return new Response(JSON.stringify({ matches: [], hasResults: false }), {
+    // Text search results get priority — they already matched keywords
+    if (textSearchResult.data) {
+      for (const l of textSearchResult.data) {
+        if (!seenIds.has(l.id)) {
+          seenIds.add(l.id);
+          allListings.push({ ...l, _textMatch: true, _relevanceScore: l.relevance_score || 0 });
+        }
+      }
+    }
+
+    // Add broad results for semantic coverage
+    if (broadResult.data) {
+      for (const l of broadResult.data) {
+        if (!seenIds.has(l.id)) {
+          seenIds.add(l.id);
+          allListings.push({ ...l, _textMatch: false, _relevanceScore: 0 });
+        }
+      }
+    }
+
+    if (allListings.length === 0) {
+      return new Response(JSON.stringify({ matches: [], hasResults: false, textMatches: [] }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const listingsText = listings
-      .map((l, i) =>
-        `[${i}] ID: ${l.id} | Title: "${l.title}" | Description: "${l.description.slice(0, 150)}" | Category: ${l.category} | Tech: ${(l.tech_stack || []).join(", ")} | Price: $${(l.price / 100).toFixed(2)} | Completeness: ${l.completeness_badge}`
-      )
+    // Build listing text for AI — include text-match hints to help scoring
+    const listingsText = allListings
+      .map((l, i) => {
+        const textHint = l._textMatch ? ` | TEXT_MATCH (relevance: ${l._relevanceScore.toFixed(2)})` : "";
+        return `[${i}] ID: ${l.id} | Title: "${l.title}" | Desc: "${(l.description || "").slice(0, 200)}" | Cat: ${l.category} | Tech: ${(l.tech_stack || []).join(", ")} | Price: $${(l.price / 100).toFixed(2)} | Badge: ${l.completeness_badge} | Sales: ${l.sales_count || 0}${textHint}`;
+      })
       .join("\n");
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -52,16 +87,31 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "google/gemini-2.5-flash",
         messages: [
           {
             role: "system",
-            content:
-              "You are a marketplace search assistant. Given a user's build idea and available projects, find the best semantic matches. Only return matches with score >= 0.5. If nothing matches well, return empty array. Be generous with matching if the user's idea overlaps in any meaningful way.",
+            content: `You are an expert marketplace search assistant. Given a user's build idea and a catalog of available projects, find ALL semantically relevant matches. 
+
+SCORING RULES:
+- 1.0 = Perfect match (same concept, same tech)
+- 0.8-0.9 = Strong match (same domain/purpose, overlapping tech)
+- 0.6-0.7 = Good match (related concept, could be adapted)
+- 0.5 = Weak but useful (tangentially related, shares some tech or patterns)
+- Items marked TEXT_MATCH already matched keywords — boost their score by 0.1
+
+Be GENEROUS with matching. Think about:
+1. Direct matches (user wants X, listing IS X)
+2. Adjacent matches (user wants X, listing is similar to X or could become X)
+3. Tech stack matches (user mentions React/AI/etc, listing uses those)
+4. Template matches (listing provides a foundation the user could build on)
+5. Category matches (same industry/domain even if different specific feature)
+
+Return up to 8 matches. Only return matches with score >= 0.45.`,
           },
           {
             role: "user",
-            content: `User wants to build: "${prompt}"\n\nAvailable projects:\n${listingsText}`,
+            content: `User wants to build: "${prompt}"\n\nAvailable projects (${allListings.length} total):\n${listingsText}`,
           },
         ],
         tools: [
@@ -80,7 +130,7 @@ serve(async (req) => {
                       properties: {
                         index: { type: "number", description: "Index from the listing list" },
                         score: { type: "number", description: "Relevance score from 0.0 to 1.0" },
-                        reason: { type: "string", description: "One concise sentence why this matches" },
+                        reason: { type: "string", description: "One compelling sentence explaining why this is a great starting point" },
                       },
                       required: ["index", "score", "reason"],
                       additionalProperties: false,
@@ -98,14 +148,32 @@ serve(async (req) => {
     });
 
     if (aiResponse.status === 429) {
-      return new Response(JSON.stringify({ error: "Rate limit exceeded, please try again later." }), {
-        status: 429,
+      // Fall back to text search results only
+      const fallbackMatches = allListings
+        .filter(l => l._textMatch)
+        .slice(0, 6)
+        .map(l => ({ ...l, score: l._relevanceScore, reason: "Matched by keyword search" }));
+      
+      return new Response(JSON.stringify({ 
+        matches: fallbackMatches, 
+        hasResults: fallbackMatches.length > 0,
+        fallback: true 
+      }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
     if (aiResponse.status === 402) {
-      return new Response(JSON.stringify({ error: "Service temporarily unavailable." }), {
-        status: 402,
+      // Same fallback for billing issues
+      const fallbackMatches = allListings
+        .filter(l => l._textMatch)
+        .slice(0, 6)
+        .map(l => ({ ...l, score: l._relevanceScore, reason: "Matched by keyword search" }));
+      
+      return new Response(JSON.stringify({ 
+        matches: fallbackMatches, 
+        hasResults: fallbackMatches.length > 0,
+        fallback: true 
+      }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -117,17 +185,27 @@ serve(async (req) => {
     const matchData = JSON.parse(toolCall.function.arguments || '{"matches":[]}');
 
     const topMatches = matchData.matches
-      .filter((m: { index: number; score: number; reason: string }) => m.score >= 0.5 && listings[m.index])
+      .filter((m: { index: number; score: number; reason: string }) => m.score >= 0.45 && allListings[m.index])
       .sort((a: { score: number }, b: { score: number }) => b.score - a.score)
-      .slice(0, 4)
-      .map((m: { index: number; score: number; reason: string }) => ({
-        ...listings[m.index],
-        score: m.score,
-        reason: m.reason,
-      }));
+      .slice(0, 8)
+      .map((m: { index: number; score: number; reason: string }) => {
+        const listing = allListings[m.index];
+        return {
+          id: listing.id,
+          title: listing.title,
+          description: listing.description,
+          price: listing.price,
+          completeness_badge: listing.completeness_badge,
+          tech_stack: listing.tech_stack,
+          screenshots: listing.screenshots,
+          category: listing.category,
+          sales_count: listing.sales_count,
+          score: m.score,
+          reason: m.reason,
+        };
+      });
 
-    // Log demand signal if no good matches found (fire-and-forget)
-    // Only log from homepage search — agent demand signals are logged separately in the MCP server
+    // Log demand signal if no good matches found
     if (topMatches.length === 0) {
       supabase.from("agent_demand_signals").insert({
         query: prompt.slice(0, 200),

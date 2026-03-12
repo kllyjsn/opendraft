@@ -149,16 +149,13 @@ export function Navbar() {
         )}
       >
         <div className="flex flex-col gap-4">
-          <NavItem to="/" onClick={() => setMenuOpen(false)}>Browse</NavItem>
+          <NavItem to="/" onClick={() => setMenuOpen(false)}>Browse Apps</NavItem>
           <NavItem to="/credits" onClick={() => setMenuOpen(false)}>Pricing</NavItem>
-          <NavItem to="/builders" onClick={() => setMenuOpen(false)}>Builders</NavItem>
-          <NavItem to="/bounties" onClick={() => setMenuOpen(false)}>Bounties</NavItem>
-          <NavItem to="/agents" onClick={() => setMenuOpen(false)}>Agents</NavItem>
-          <NavItem to="/developers" onClick={() => setMenuOpen(false)}>Developers</NavItem>
+          <NavItem to="/builders" onClick={() => setMenuOpen(false)}>Find a Builder</NavItem>
+          <NavItem to="/faq" onClick={() => setMenuOpen(false)}>FAQ</NavItem>
           {user ? (
             <>
-              <NavItem to="/sell" onClick={() => setMenuOpen(false)}>Sell</NavItem>
-              <NavItem to="/dashboard" onClick={() => setMenuOpen(false)}>Dashboard</NavItem>
+              <NavItem to="/dashboard" onClick={() => setMenuOpen(false)}>My Apps</NavItem>
               <NavItem to="/messages" onClick={() => setMenuOpen(false)}>
                 <span className="relative inline-flex items-center">
                   Messages

@@ -163,7 +163,7 @@ export function DeployPanel({ listingId, listingTitle, hasFile, githubUrl }: Dep
 
     pollRef.current = setInterval(async () => {
       pollCountRef.current += 1;
-      if (pollCountRef.current > 36) {
+      if (pollCountRef.current > 60) {
         stopPolling();
         setDeployState("ready");
         setCurrentStep("done");
@@ -177,7 +177,7 @@ export function DeployPanel({ listingId, listingTitle, hasFile, githubUrl }: Dep
         const res = await fetch(`https://api.vercel.com/v13/deployments/${deployId}`, {
           headers: { Authorization: `Bearer ${vToken}` },
         });
-        if (!res.ok) return;
+        if (!res.ok) { await res.text(); return; }
         const data = await res.json();
         const state = data.readyState?.toLowerCase() || data.state?.toLowerCase() || "unknown";
         setBuildStatus(state);
@@ -190,11 +190,31 @@ export function DeployPanel({ listingId, listingTitle, hasFile, githubUrl }: Dep
           const liveSiteUrl = data.url ? `https://${data.url}` : siteUrl;
           setResult({ siteUrl: liveSiteUrl, adminUrl, provider: "Vercel" });
           toast({ title: "Deployed successfully! 🚀", description: `${listingTitle} is now live on Vercel.` });
+
+          // Update deployed_sites status
+          try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+              await supabase
+                .from("deployed_sites")
+                .update({ status: "healthy", site_url: liveSiteUrl })
+                .eq("deploy_id", deployId);
+            }
+          } catch { /* best effort */ }
         } else if (state === "error" || state === "canceled") {
           stopPolling();
           setDeployState("error");
-          setError(data.errorMessage || "Vercel build failed");
-          // Try to get error logs
+
+          // Update deployed_sites status
+          try {
+            await supabase
+              .from("deployed_sites")
+              .update({ status: "error" })
+              .eq("deploy_id", deployId);
+          } catch { /* best effort */ }
+
+          setError(data.errorMessage || "Vercel build failed — check the build log below for details.");
+          // Fetch error logs
           try {
             const logRes = await fetch(`https://api.vercel.com/v2/deployments/${deployId}/events`, {
               headers: { Authorization: `Bearer ${vToken}` },
@@ -206,9 +226,11 @@ export function DeployPanel({ listingId, listingTitle, hasFile, githubUrl }: Dep
                   .filter((e: any) => e.type === "stderr" || e.type === "error")
                   .map((e: any) => e.text || e.payload?.text || "")
                   .filter(Boolean)
-                  .slice(-30);
+                  .slice(-40);
                 if (errLines.length > 0) setBuildLog(errLines.join("\n"));
               }
+            } else {
+              await logRes.text();
             }
           } catch { /* ignore */ }
         }

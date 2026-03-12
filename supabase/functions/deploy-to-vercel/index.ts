@@ -55,13 +55,11 @@ async function uploadFileToVercel(
   content: Uint8Array,
   vercelToken: string
 ): Promise<string> {
-  // Compute SHA1 digest for the file
   const hashBuffer = await crypto.subtle.digest("SHA-1", content);
   const sha = Array.from(new Uint8Array(hashBuffer))
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
 
-  // Upload file content to Vercel
   const uploadRes = await fetch("https://api.vercel.com/v2/files", {
     method: "POST",
     headers: {
@@ -78,9 +76,104 @@ async function uploadFileToVercel(
     const errText = await uploadRes.text();
     console.error(`File upload failed (${uploadRes.status}):`, errText);
     throw new Error(`Failed to upload file to Vercel: ${uploadRes.status}`);
+  } else {
+    // Consume body to prevent resource leak
+    await uploadRes.text();
   }
 
   return sha;
+}
+
+/** Detect framework and build settings from package.json */
+function detectFramework(packageJson: any): {
+  framework: string | null;
+  buildCommand: string;
+  outputDirectory: string;
+  installCommand: string;
+} {
+  const deps = { ...packageJson?.dependencies, ...packageJson?.devDependencies };
+  const scripts = packageJson?.scripts || {};
+
+  // Check for Next.js
+  if (deps["next"]) {
+    return {
+      framework: "nextjs",
+      buildCommand: scripts.build || "next build",
+      outputDirectory: ".next",
+      installCommand: "npm install",
+    };
+  }
+
+  // Check for Nuxt
+  if (deps["nuxt"]) {
+    return {
+      framework: "nuxtjs",
+      buildCommand: scripts.build || "nuxt build",
+      outputDirectory: ".output",
+      installCommand: "npm install",
+    };
+  }
+
+  // Check for SvelteKit
+  if (deps["@sveltejs/kit"]) {
+    return {
+      framework: "sveltekit",
+      buildCommand: scripts.build || "vite build",
+      outputDirectory: "build",
+      installCommand: "npm install",
+    };
+  }
+
+  // Check for Astro
+  if (deps["astro"]) {
+    return {
+      framework: "astro",
+      buildCommand: scripts.build || "astro build",
+      outputDirectory: "dist",
+      installCommand: "npm install",
+    };
+  }
+
+  // Check for Vite (React, Vue, etc.)
+  if (deps["vite"]) {
+    return {
+      framework: "vite",
+      buildCommand: scripts.build || "vite build",
+      outputDirectory: "dist",
+      installCommand: "npm install",
+    };
+  }
+
+  // Check for Create React App
+  if (deps["react-scripts"]) {
+    return {
+      framework: "create-react-app",
+      buildCommand: scripts.build || "react-scripts build",
+      outputDirectory: "build",
+      installCommand: "npm install",
+    };
+  }
+
+  // Fallback
+  return {
+    framework: null,
+    buildCommand: scripts.build || "npm run build",
+    outputDirectory: "dist",
+    installCommand: "npm install",
+  };
+}
+
+/** Generate a vercel.json config for SPA routing if one doesn't exist */
+function generateVercelConfig(framework: string | null): string {
+  // Next.js, Nuxt, SvelteKit, Astro handle their own routing
+  if (framework && ["nextjs", "nuxtjs", "sveltekit", "astro"].includes(framework)) {
+    return JSON.stringify({});
+  }
+
+  // For SPAs (Vite, CRA, etc.), add catch-all rewrite for client-side routing
+  return JSON.stringify({
+    rewrites: [{ source: "/(.*)", destination: "/index.html" }],
+  }, null, 2);
 }
 
 serve(async (req) => {
@@ -146,10 +239,12 @@ serve(async (req) => {
       headers: { Authorization: `Bearer ${vercelToken}` },
     });
     if (!meRes.ok) {
-      return new Response(JSON.stringify({ error: "Invalid Vercel token" }), {
+      await meRes.text();
+      return new Response(JSON.stringify({ error: "Invalid Vercel token. Generate a new one at vercel.com/account/tokens" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    await meRes.text();
 
     // Download source ZIP
     let sourceZipBuffer: ArrayBuffer;
@@ -184,32 +279,75 @@ serve(async (req) => {
       }
     }
 
-    // Upload files individually to Vercel's File API, then reference by SHA
+    // ── Detect framework from package.json ──
+    let frameworkInfo = detectFramework({});
+    const pkgJsonPath = prefix ? `${prefix}package.json` : "package.json";
+    const pkgJsonEntry = zip.files[pkgJsonPath];
+    if (pkgJsonEntry && !pkgJsonEntry.dir) {
+      try {
+        const pkgContent = await pkgJsonEntry.async("string");
+        const pkgJson = JSON.parse(pkgContent);
+        frameworkInfo = detectFramework(pkgJson);
+        console.log(`Detected framework: ${frameworkInfo.framework || "unknown"}`);
+      } catch (e) {
+        console.warn("Failed to parse package.json:", e);
+      }
+    }
+
+    // ── Inject vercel.json for SPA routing if missing ──
+    const vercelJsonPath = prefix ? `${prefix}vercel.json` : "vercel.json";
+    const hasVercelJson = !!zip.files[vercelJsonPath];
+    let injectedVercelJson = false;
+    if (!hasVercelJson) {
+      const config = generateVercelConfig(frameworkInfo.framework);
+      if (config !== "{}") {
+        zip.file(vercelJsonPath, config);
+        injectedVercelJson = true;
+        console.log("Injected vercel.json with SPA rewrites");
+      }
+    }
+
+    // Upload files individually to Vercel's File API
     const fileRefs: Array<{ file: string; sha: string; size: number }> = [];
     let uploadedCount = 0;
     let skippedCount = 0;
 
-    for (const [path, entry] of Object.entries(zip.files)) {
-      if (entry.dir) continue;
-      const relativePath = prefix ? path.replace(prefix, "") : path;
-      if (!relativePath) continue;
+    const allEntries = Object.entries(zip.files);
+    // Process in batches of 10 for better throughput
+    const BATCH_SIZE = 10;
 
-      // Skip very large files (>50MB) — Vercel won't accept them
-      const content = await entry.async("uint8array");
-      if (content.byteLength > 50 * 1024 * 1024) {
-        console.warn(`Skipping oversized file: ${relativePath} (${(content.byteLength / 1024 / 1024).toFixed(1)} MB)`);
-        skippedCount++;
-        continue;
-      }
+    for (let i = 0; i < allEntries.length; i += BATCH_SIZE) {
+      const batch = allEntries.slice(i, i + BATCH_SIZE);
+      const results = await Promise.allSettled(
+        batch.map(async ([path, entry]) => {
+          if (entry.dir) return null;
+          const relativePath = prefix ? path.replace(prefix, "") : path;
+          if (!relativePath) return null;
 
-      try {
-        const sha = await uploadFileToVercel(content, vercelToken);
-        fileRefs.push({ file: relativePath, sha, size: content.byteLength });
-        uploadedCount++;
-      } catch (err) {
-        console.error(`Failed to upload ${relativePath}:`, err);
-        // Continue with remaining files rather than failing entirely
-        skippedCount++;
+          const content = await entry.async("uint8array");
+          // Skip very large files (>50MB)
+          if (content.byteLength > 50 * 1024 * 1024) {
+            console.warn(`Skipping oversized file: ${relativePath} (${(content.byteLength / 1024 / 1024).toFixed(1)} MB)`);
+            return { skipped: true };
+          }
+
+          const sha = await uploadFileToVercel(content, vercelToken);
+          return { file: relativePath, sha, size: content.byteLength };
+        })
+      );
+
+      for (const result of results) {
+        if (result.status === "fulfilled" && result.value) {
+          if ("skipped" in result.value) {
+            skippedCount++;
+          } else {
+            fileRefs.push(result.value);
+            uploadedCount++;
+          }
+        } else if (result.status === "rejected") {
+          console.error("File upload failed:", result.reason);
+          skippedCount++;
+        }
       }
     }
 
@@ -229,10 +367,10 @@ serve(async (req) => {
       headers: { Authorization: `Bearer ${vercelToken}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         name: projectName,
-        framework: "vite",
-        buildCommand: "npm run build",
-        outputDirectory: "dist",
-        installCommand: "npm install",
+        framework: frameworkInfo.framework,
+        buildCommand: frameworkInfo.buildCommand,
+        outputDirectory: frameworkInfo.outputDirectory,
+        installCommand: frameworkInfo.installCommand,
       }),
     });
 
@@ -246,7 +384,7 @@ serve(async (req) => {
 
     const projectData = await createProjectRes.json();
 
-    // Deploy using file references (SHA-based) instead of inline content
+    // Deploy using file references (SHA-based)
     const deployRes = await fetch("https://api.vercel.com/v13/deployments", {
       method: "POST",
       headers: { Authorization: `Bearer ${vercelToken}`, "Content-Type": "application/json" },
@@ -255,10 +393,10 @@ serve(async (req) => {
         project: projectData.id,
         files: fileRefs,
         projectSettings: {
-          framework: "vite",
-          installCommand: "npm install",
-          buildCommand: "npm run build",
-          outputDirectory: "dist",
+          framework: frameworkInfo.framework,
+          installCommand: frameworkInfo.installCommand,
+          buildCommand: frameworkInfo.buildCommand,
+          outputDirectory: frameworkInfo.outputDirectory,
         },
       }),
     });
@@ -273,19 +411,48 @@ serve(async (req) => {
 
     const deployData = await deployRes.json();
     const siteUrl = `https://${deployData.url}`;
+    const adminUrl = `https://vercel.com/${projectData.accountId || projectData.id}/${projectName}`;
 
+    // ── Track deployment in deployed_sites table ──
+    try {
+      await supabase.from("deployed_sites").insert({
+        listing_id: listingId,
+        user_id: user.id,
+        provider: "vercel",
+        site_id: projectData.id,
+        site_url: siteUrl,
+        deploy_id: deployData.id,
+        status: "building",
+      });
+    } catch (e) {
+      console.warn("Failed to track deployment:", e);
+    }
+
+    // Log activity
     await supabase.from("activity_log").insert({
       event_type: "vercel_deploy",
       user_id: user.id,
-      event_data: { listing_id: listingId, site_url: siteUrl, project_id: projectData.id, deploy_id: deployData.id },
+      event_data: {
+        listing_id: listingId,
+        site_url: siteUrl,
+        project_id: projectData.id,
+        deploy_id: deployData.id,
+        framework: frameworkInfo.framework,
+        injected_vercel_json: injectedVercelJson,
+      },
     });
 
     return new Response(JSON.stringify({
-      success: true, siteUrl, projectId: projectData.id, deployId: deployData.id,
-      adminUrl: `https://vercel.com/${projectData.accountId}/${projectName}`,
+      success: true,
+      siteUrl,
+      projectId: projectData.id,
+      deployId: deployData.id,
+      adminUrl,
       method: "source_deploy",
+      framework: frameworkInfo.framework,
       filesUploaded: uploadedCount,
       filesSkipped: skippedCount,
+      injectedVercelJson,
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
     console.error("deploy-to-vercel error:", e);

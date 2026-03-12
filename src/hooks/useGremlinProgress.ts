@@ -78,25 +78,25 @@ export function useGremlinProgress(): GremlinProgress {
       completed: !!user,
     },
     {
-      id: "subscribe",
-      label: "Subscribe to OpenDraft",
-      description: "Unlock unlimited access to every app in the store.",
-      completed: hasSubscription,
-      cta: { label: "Subscribe — $20/mo", path: "/credits" },
-    },
-    {
       id: "claim",
-      label: "Claim your first app",
-      description: "Browse the store and claim any app — full source code, yours forever.",
+      label: "Claim your first app free",
+      description: "Browse the store and claim any app — full source code, yours forever. No card required.",
       completed: hasPurchase,
       cta: { label: "Browse apps", path: "/" },
     },
     {
       id: "deploy",
-      label: "Deploy an app",
+      label: "Deploy your app",
       description: "Ship it live to the world with one click. Netlify or Vercel — your call.",
       completed: hasDeploy,
-      cta: { label: "View your apps", path: "/dashboard" },
+      cta: { label: "View your apps", path: "/profile" },
+    },
+    {
+      id: "subscribe",
+      label: "Unlock more apps",
+      description: "Love it? Subscribe to claim unlimited apps and unlock the full marketplace.",
+      completed: hasSubscription,
+      cta: { label: "See plans", path: "/credits" },
     },
   ];
 

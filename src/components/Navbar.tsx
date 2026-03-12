@@ -122,9 +122,9 @@ export function Navbar() {
                   Sign in
                 </Button>
               </Link>
-              <Link to="/sell">
+              <Link to="/">
                 <Button size="sm" className="gradient-hero text-white border-0 shadow-glow hover:shadow-[0_0_40px_hsl(265_85%_58%_/_0.35)] hover:opacity-90 transition-all duration-300">
-                  Start selling
+                  Find your app
                 </Button>
               </Link>
             </>

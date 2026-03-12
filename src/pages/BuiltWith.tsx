@@ -62,11 +62,7 @@ export default function BuiltWith() {
   const meta = tool ? TOOL_META[tool] : undefined;
   const dbValue = tool ? slugToDb[tool] : undefined;
 
-  useEffect(() => {
-    if (!meta) return;
-    document.title = `Built with ${meta.label} — OpenDraft`;
-    return () => { document.title = "OpenDraft — Buy & Sell Vibe-Coded Projects"; };
-  }, [meta]);
+  // MetaTags handles title dynamically
 
   useEffect(() => {
     if (!dbValue) return;

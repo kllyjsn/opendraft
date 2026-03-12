@@ -570,9 +570,9 @@ export default function ListingDetail() {
                 <div className="rounded-2xl border border-border/60 bg-card p-6 shadow-card sticky top-20 hover:shadow-card-hover transition-shadow duration-500">
                   {/* Price */}
                   <div className="mb-5">
-                    <div className="text-4xl font-black">{supportPrice}</div>
+                    <div className="text-4xl font-black">Free</div>
                     <p className="text-xs text-muted-foreground">
-                      Monthly support · Auto-fixes + human builder access
+                      Full source code · Included with your plan
                     </p>
                   </div>
 

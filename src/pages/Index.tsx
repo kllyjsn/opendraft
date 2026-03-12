@@ -207,28 +207,11 @@ export default function Index() {
       <Navbar />
 
       {/* ── LIVE ACTIVITY TICKER ── */}
-      <LiveActivityTicker />
-
       {/* ── COMPACT HERO ── */}
-      <section className="relative overflow-hidden pt-4 pb-4 md:pt-8 md:pb-6">
+      <section className="relative overflow-hidden pt-4 pb-4 md:pt-6 md:pb-4">
         <div className="absolute -top-40 -right-40 h-[500px] w-[500px] rounded-full bg-primary/15 blur-[120px] animate-pulse-glow pointer-events-none" />
-        <div className="absolute -bottom-40 -left-40 h-[400px] w-[400px] rounded-full bg-accent/10 blur-[120px] pointer-events-none" />
 
         <div className="container mx-auto px-4 text-center relative z-10">
-          {/* Urgency badge */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.4 }}
-            className="inline-flex items-center gap-2 rounded-full glass px-4 py-1.5 mb-4 text-xs font-semibold"
-          >
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
-            </span>
-            <span className="text-muted-foreground">Ready-made apps for every business</span>
-          </motion.div>
-
           <h1 className="text-3xl md:text-5xl lg:text-6xl font-black tracking-tighter mb-3 leading-[0.95]">
             Buy ready-made apps.{" "}
             <br className="hidden md:block" />
@@ -243,7 +226,7 @@ export default function Index() {
             </span>
           </h1>
           <p className="text-sm md:text-base text-muted-foreground max-w-xl mx-auto mb-5">
-            SaaS tools, AI products, landing pages & utilities — all production-ready. <span className="text-foreground font-semibold">Pick one, customize it, go live in minutes.</span>
+            SaaS tools, AI products, landing pages & utilities — production-ready.
           </p>
 
           {/* Hero search bar */}
@@ -251,7 +234,7 @@ export default function Index() {
             <div className="relative">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="What kind of app do you need? e.g. 'CRM', 'AI chatbot'..."
+                placeholder="What kind of app do you need?"
                 value={heroSearch}
                 onChange={(e) => setHeroSearch(e.target.value)}
                 className="pl-10 pr-24 h-11 glass border-border/40 focus-visible:border-primary/50 focus-visible:shadow-glow transition-all rounded-full text-sm"
@@ -267,7 +250,7 @@ export default function Index() {
           </form>
 
           {/* Popular searches */}
-          <div className="flex flex-wrap items-center justify-center gap-1.5 mb-1">
+          <div className="flex flex-wrap items-center justify-center gap-1.5">
             <span className="text-[10px] text-muted-foreground/60 font-medium mr-1">Popular:</span>
             {["CRM", "AI Chatbot", "Dashboard", "E-commerce", "Portfolio", "Invoice Tool"].map((term) => (
               <button
@@ -279,62 +262,11 @@ export default function Index() {
               </button>
             ))}
           </div>
-
-          {/* Quick category pills */}
-          <div className="flex flex-wrap items-center justify-center gap-2 mt-2 mb-1">
-            {["AI Apps", "SaaS Tools", "Landing Pages", "Utilities"].map((label) => {
-              const slugMap: Record<string, string> = {
-                "AI Apps": "ai-app",
-                "SaaS Tools": "saas-tool",
-                "Landing Pages": "landing-page",
-                "Utilities": "utility",
-              };
-              return (
-                <Link
-                  key={label}
-                  to={`/category/${slugMap[label]}`}
-                  className="rounded-full px-3 py-1 text-xs font-semibold bg-muted/60 text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all border border-border/30"
-                >
-                  {label}
-                </Link>
-              );
-            })}
-            <Link
-              to={user ? "/sell" : "/login"}
-              className="rounded-full px-3 py-1 text-xs font-semibold text-primary hover:underline"
-            >
-              Or sell yours →
-            </Link>
-          </div>
-
-          {/* Live stats */}
-          <LiveStatsBar />
         </div>
       </section>
 
       {/* ── TRENDING (immediately visible) ── */}
       <FeaturedListings />
-
-      {/* ── INDUSTRIES WE SERVE ── */}
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-60px" }}
-        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-      >
-        <IndustryVerticals />
-      </motion.div>
-
-
-      {/* ── HOW IT WORKS (before browse for visibility) ── */}
-      <motion.div
-        initial={{ opacity: 0, y: 40 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-100px" }}
-        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-      >
-        <HowItWorks />
-      </motion.div>
 
       {/* ── BROWSE ALL ── */}
       <section id="browse" className="container mx-auto px-4 pb-24">

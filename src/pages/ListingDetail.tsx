@@ -95,8 +95,7 @@ export default function ListingDetail() {
   // Dynamic SEO meta tags
   useEffect(() => {
     if (!listing) return;
-    const price = "$15/mo";
-    const title = `${listing.title} — ${price} support | OpenDraft`;
+    const title = `${listing.title} — Full Source Code | OpenDraft`;
     const desc = listing.description.slice(0, 155).replace(/\n/g, " ") + (listing.description.length > 155 ? "…" : "");
     const image = listing.screenshots?.[0] || "https://opendraft.co/og-image.png";
 

@@ -17,7 +17,7 @@ import { ChatDrawer } from "@/components/ChatDrawer";
 import { RemixChain } from "@/components/RemixChain";
 import { ImprovementDashboard } from "@/components/ImprovementDashboard";
 import { JsonLd } from "@/components/JsonLd";
-import { CanonicalTag } from "@/components/CanonicalTag";
+import { MetaTags } from "@/components/MetaTags";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { FlagListingButton } from "@/components/FlagListingButton";
 import { BuyerWelcomeModal } from "@/components/BuyerWelcomeModal";
@@ -390,7 +390,14 @@ export default function ListingDetail() {
     <div className="min-h-screen flex flex-col">
       <BuyerWelcomeModal skipForOwners={purchased} />
       <Navbar />
-      {listing && <CanonicalTag path={`/listing/${listing.id}`} />}
+      {listing && (
+        <MetaTags
+          title={`${listing.title} — Buy on OpenDraft`}
+          description={listing.description.slice(0, 155)}
+          path={`/listing/${listing.id}`}
+          ogImage={listing.screenshots?.[0] || "https://opendraft.co/og-image.png"}
+        />
+      )}
       {productSchema && <JsonLd data={productSchema} />}
       {faqSchema && <JsonLd data={faqSchema} />}
       <main className="flex-1 container mx-auto px-4 py-10 page-enter">

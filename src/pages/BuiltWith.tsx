@@ -4,7 +4,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { ListingCard } from "@/components/ListingCard";
 import { supabase } from "@/integrations/supabase/client";
-import { CanonicalTag } from "@/components/CanonicalTag";
+import { MetaTags } from "@/components/MetaTags";
 import { JsonLd } from "@/components/JsonLd";
 import { Button } from "@/components/ui/button";
 import { Rocket } from "lucide-react";
@@ -62,11 +62,7 @@ export default function BuiltWith() {
   const meta = tool ? TOOL_META[tool] : undefined;
   const dbValue = tool ? slugToDb[tool] : undefined;
 
-  useEffect(() => {
-    if (!meta) return;
-    document.title = `Built with ${meta.label} — OpenDraft`;
-    return () => { document.title = "OpenDraft — Buy & Sell Vibe-Coded Projects"; };
-  }, [meta]);
+  // MetaTags handles title dynamically
 
   useEffect(() => {
     if (!dbValue) return;
@@ -110,8 +106,12 @@ export default function BuiltWith() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <MetaTags
+        title={`Apps Built with ${meta.label} — Browse & Buy | OpenDraft`}
+        description={meta.description}
+        path={`/built-with/${tool}`}
+      />
       <Navbar />
-      <CanonicalTag path={`/built-with/${tool}`} />
       <JsonLd data={collectionSchema} />
 
       <section className="border-b border-border bg-card/50 py-14">

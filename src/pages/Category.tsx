@@ -4,8 +4,8 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { ListingCard } from "@/components/ListingCard";
 import { supabase } from "@/integrations/supabase/client";
+import { MetaTags } from "@/components/MetaTags";
 import { JsonLd } from "@/components/JsonLd";
-import { CanonicalTag } from "@/components/CanonicalTag";
 import { Button } from "@/components/ui/button";
 
 const CATEGORY_META: Record<string, { label: string; dbValue: string; description: string; longDescription: string }> = {
@@ -68,11 +68,7 @@ export default function Category() {
 
   const meta = slug ? CATEGORY_META[slug] : undefined;
 
-  useEffect(() => {
-    if (!meta) return;
-    document.title = `${meta.label} — OpenDraft Marketplace`;
-    return () => { document.title = "OpenDraft — Buy & Sell Vibe-Coded Projects"; };
-  }, [meta]);
+  // MetaTags handles title dynamically
 
   useEffect(() => {
     if (!meta) return;
@@ -128,8 +124,12 @@ export default function Category() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <MetaTags
+        title={`Buy ${meta.label} — Ready-to-Launch Apps | OpenDraft`}
+        description={meta.description}
+        path={`/category/${slug}`}
+      />
       <Navbar />
-      <CanonicalTag path={`/category/${slug}`} />
       {faqSchema && <JsonLd data={faqSchema} />}
 
       <section className="border-b border-border bg-card/50 py-14">

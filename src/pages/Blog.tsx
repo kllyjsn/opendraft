@@ -297,8 +297,12 @@ const CATEGORY_COLORS: Record<string, string> = {
 function BlogIndex() {
   return (
     <div className="min-h-screen flex flex-col">
+      <MetaTags
+        title="Blog — Insights for Builders & the Agent Economy | OpenDraft"
+        description="Deep dives on vibe coding, autonomous agents, self-healing deployments, and the economics of AI-built software. Written for builders shipping real products."
+        path="/blog"
+      />
       <Navbar />
-      <CanonicalTag path="/blog" />
 
       <section className="border-b border-border bg-card/50 py-16">
         <div className="container mx-auto px-4 text-center max-w-2xl">

@@ -31,17 +31,20 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { deployId, vercelToken } = await req.json();
+    const { deployId, vercelToken, usePlatformToken } = await req.json();
 
-    if (!deployId || !vercelToken) {
-      return new Response(JSON.stringify({ error: "Missing deployId or vercelToken" }), {
+    // Use platform token if requested, otherwise use user-provided token
+    const token = usePlatformToken ? Deno.env.get("VERCEL_PLATFORM_TOKEN") : vercelToken;
+
+    if (!deployId || !token) {
+      return new Response(JSON.stringify({ error: "Missing deployId or vercel token" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const statusRes = await fetch(`https://api.vercel.com/v13/deployments/${encodeURIComponent(deployId)}`, {
-      headers: { Authorization: `Bearer ${vercelToken}` },
+      headers: { Authorization: `Bearer ${token}` },
     });
 
     if (!statusRes.ok) {
@@ -66,7 +69,7 @@ serve(async (req) => {
     if (state === "error" || state === "canceled" || state === "failed") {
       try {
         const logRes = await fetch(`https://api.vercel.com/v2/deployments/${encodeURIComponent(deployId)}/events`, {
-          headers: { Authorization: `Bearer ${vercelToken}` },
+          headers: { Authorization: `Bearer ${token}` },
         });
 
         if (logRes.ok) {

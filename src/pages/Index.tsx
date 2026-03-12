@@ -211,7 +211,7 @@ export default function Index() {
 
         <div className="container mx-auto px-4 text-center relative z-10">
           <h1 className="text-3xl md:text-5xl lg:text-6xl font-black tracking-tighter mb-3 leading-[0.95]">
-            Buy ready-made apps.{" "}
+            Personalized apps for{" "}
             <br className="hidden md:block" />
             <span
               className="text-gradient animate-gradient-shift inline-block"
@@ -220,7 +220,7 @@ export default function Index() {
                 backgroundSize: "200% 200%",
               }}
             >
-              Launch today.
+              every person and business on the planet.
             </span>
           </h1>
           <p className="text-sm md:text-base text-muted-foreground max-w-xl mx-auto mb-5">

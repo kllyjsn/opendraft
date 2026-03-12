@@ -34,9 +34,9 @@ export default function Login() {
             <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl gradient-hero shadow-glow mb-5">
               <Zap className="h-7 w-7 text-white" />
             </div>
-            <h1 className="text-2xl font-black mb-2">Get your app today</h1>
+            <h1 className="text-2xl font-black mb-2">Claim your free app</h1>
             <p className="text-muted-foreground text-sm leading-relaxed">
-              Join 500+ entrepreneurs who launched<br />their business with a ready-made app.
+              Sign up and claim one app completely free.<br />No credit card required.
             </p>
           </div>
 

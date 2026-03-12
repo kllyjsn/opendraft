@@ -231,7 +231,7 @@ export default function Index() {
                 placeholder="What kind of app do you need?"
                 value={heroSearch}
                 onChange={(e) => setHeroSearch(e.target.value)}
-                className="pl-10 pr-24 h-11 glass border-border/40 focus-visible:border-primary/50 focus-visible:shadow-glow transition-all rounded-full text-sm"
+                className="pl-10 pr-24 h-11 glass border-border/40 focus-visible:border-primary/50 focus-visible:shadow-glow transition-all rounded-full text-sm leading-normal [&]:py-0"
               />
               <Button
                 type="submit"

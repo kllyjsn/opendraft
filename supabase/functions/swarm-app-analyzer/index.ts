@@ -136,6 +136,7 @@ Analyze the current state and suggest specific, actionable improvements that wou
 4. Fix any obvious issues or gaps
 5. Enhance performance or accessibility
 
+${focus_prompt ? `\n**USER'S SPECIFIC REQUEST**: The owner specifically asked you to focus on: "${focus_prompt}"\nPrioritize suggestions that address this request first, then add other improvements.\n` : ""}
 Be specific — include exact component names, CSS changes, or feature descriptions.
 Prioritize suggestions by impact (high → low).`
       },

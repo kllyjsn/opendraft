@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   Sparkles, CheckCircle, XCircle, Clock, ChevronDown, ChevronUp,
   Loader2, Zap, Shield, Palette, Accessibility, Bug, Code,
+  Send, Target, Bot,
 } from "lucide-react";
 
 interface Props {
@@ -58,6 +59,14 @@ const RISK_COLORS: Record<string, string> = {
   high: "text-red-500",
 };
 
+const GREMLIN_PROMPTS = [
+  "Analyze the UX and suggest improvements",
+  "Check for accessibility issues",
+  "Improve the mobile experience",
+  "Suggest performance optimizations",
+  "Review the design consistency",
+];
+
 export function ListingImprovementPanel({ listingId, listingTitle, demoUrl }: Props) {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -66,18 +75,72 @@ export function ListingImprovementPanel({ listingId, listingTitle, demoUrl }: Pr
   const [loading, setLoading] = useState(true);
   const [analyzing, setAnalyzing] = useState(false);
   const [expandedCycle, setExpandedCycle] = useState<string | null>(null);
+  const [message, setMessage] = useState("");
+  const [goalsPrompt, setGoalsPrompt] = useState("");
+  const [hasGoals, setHasGoals] = useState(false);
+  const [savingGoals, setSavingGoals] = useState(false);
+  const [showGoalsEditor, setShowGoalsEditor] = useState(false);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (!user) return;
     loadCycles();
+    loadGoals();
   }, [user, listingId]);
 
+  async function loadGoals() {
+    if (!user) return;
+    const { data } = await supabase
+      .from("project_goals" as any)
+      .select("goals_prompt")
+      .eq("listing_id", listingId)
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (data) {
+      setGoalsPrompt((data as any).goals_prompt || "");
+      setHasGoals(true);
+    } else {
+      setShowGoalsEditor(true); // Encourage setting goals if none exist
+    }
+  }
+
+  async function saveGoals() {
+    if (!user) return;
+    setSavingGoals(true);
+
+    const payload = {
+      user_id: user.id,
+      listing_id: listingId,
+      goals_prompt: goalsPrompt,
+      structured_goals: { source: "manual", updated_at: new Date().toISOString() },
+    };
+
+    const { error } = hasGoals
+      ? await supabase
+          .from("project_goals" as any)
+          .update({ goals_prompt: goalsPrompt, structured_goals: payload.structured_goals })
+          .eq("listing_id", listingId)
+          .eq("user_id", user.id)
+      : await supabase.from("project_goals" as any).insert(payload);
+
+    if (error) {
+      toast({ title: "Failed to save goals", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Goals saved ✓ — Gremlins will use these for smarter suggestions" });
+      setHasGoals(true);
+      setShowGoalsEditor(false);
+    }
+    setSavingGoals(false);
+  }
+
   async function loadCycles() {
+    if (!user) return;
     const { data } = await supabase
       .from("improvement_cycles" as any)
       .select("*")
       .eq("listing_id", listingId)
-      .eq("user_id", user!.id)
+      .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(10);
 
@@ -100,12 +163,20 @@ export function ListingImprovementPanel({ listingId, listingTitle, demoUrl }: Pr
     setChanges((prev) => ({ ...prev, [cycleId]: (data as any[]) ?? [] }));
   }
 
-  async function triggerAnalysis() {
-    if (!user) return;
+  async function sendMessage() {
+    if (!user || (!message.trim() && !demoUrl)) return;
+    const userMessage = message.trim();
+    setMessage("");
     setAnalyzing(true);
+
     try {
       const { data, error } = await supabase.functions.invoke("swarm-app-analyzer", {
-        body: { listing_id: listingId, trigger: "manual", user_id: user.id },
+        body: {
+          listing_id: listingId,
+          trigger: "manual",
+          user_id: user.id,
+          focus_prompt: userMessage || undefined,
+        },
       });
       if (error) throw error;
       toast({ title: `Analysis complete — Score: ${data.score}/100 🔍` });
@@ -114,6 +185,13 @@ export function ListingImprovementPanel({ listingId, listingTitle, demoUrl }: Pr
       toast({ title: "Analysis failed", description: e.message, variant: "destructive" });
     } finally {
       setAnalyzing(false);
+    }
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
     }
   }
 
@@ -161,35 +239,155 @@ export function ListingImprovementPanel({ listingId, listingTitle, demoUrl }: Pr
 
   return (
     <div className="space-y-4">
-      {/* Quick analyze button */}
-      <div className="rounded-2xl border border-border/60 bg-card p-5">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <h3 className="font-bold text-sm flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-primary" />
-              AI Improvement Analysis
-            </h3>
-            <p className="text-xs text-muted-foreground mt-1">
-              Screenshots your app, compares to goals, and suggests improvements.
-            </p>
+      {/* Gremlin Chat Header */}
+      <div className="rounded-2xl border border-border/60 bg-card overflow-hidden">
+        <div className="bg-gradient-to-r from-primary/10 to-accent/10 px-5 py-4 border-b border-border/40">
+          <div className="flex items-center gap-3">
+            <div className="h-9 w-9 rounded-full bg-primary/20 flex items-center justify-center">
+              <Bot className="h-5 w-5 text-primary" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-bold text-sm">Gremlins™ — Project Improver</h3>
+              <p className="text-xs text-muted-foreground">
+                Tell the gremlins what to focus on for <strong>{listingTitle}</strong>
+              </p>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+              <span className="text-[10px] text-muted-foreground font-medium">Online</span>
+            </div>
           </div>
-          <Button
-            size="sm"
-            disabled={analyzing}
-            onClick={triggerAnalysis}
-            className="gradient-hero text-white border-0 shrink-0"
+        </div>
+
+        {/* Goals nudge / editor */}
+        {!hasGoals && !showGoalsEditor && (
+          <button
+            onClick={() => setShowGoalsEditor(true)}
+            className="w-full px-5 py-3 bg-accent/5 border-b border-border/40 text-left hover:bg-accent/10 transition-colors"
           >
-            {analyzing ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
-            ) : (
-              <Sparkles className="h-3.5 w-3.5 mr-1.5" />
-            )}
-            {analyzing ? "Analyzing…" : "Analyze Now"}
-          </Button>
+            <div className="flex items-center gap-2">
+              <Target className="h-4 w-4 text-accent shrink-0" />
+              <div>
+                <p className="text-xs font-semibold text-foreground">Set project goals first!</p>
+                <p className="text-[11px] text-muted-foreground">Gremlins give better suggestions when they know your vision.</p>
+              </div>
+            </div>
+          </button>
+        )}
+
+        {showGoalsEditor && (
+          <div className="px-5 py-4 bg-muted/20 border-b border-border/40 space-y-3">
+            <div className="flex items-center gap-2">
+              <Target className="h-4 w-4 text-primary" />
+              <span className="text-xs font-bold">Project Goals & Direction</span>
+              {hasGoals && (
+                <button
+                  onClick={() => setShowGoalsEditor(false)}
+                  className="ml-auto text-xs text-muted-foreground hover:text-foreground"
+                >
+                  Close
+                </button>
+              )}
+            </div>
+            <textarea
+              className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring min-h-[80px] resize-none"
+              placeholder="What should this app do? Who is it for? What does success look like? e.g. 'A task manager for remote teams. Should feel fast, minimal, and accessible. Focus on mobile-first UX.'"
+              value={goalsPrompt}
+              onChange={(e) => setGoalsPrompt(e.target.value)}
+            />
+            <div className="flex justify-end">
+              <Button
+                size="sm"
+                onClick={saveGoals}
+                disabled={savingGoals || !goalsPrompt.trim()}
+                className="gradient-hero text-white border-0 gap-1.5 text-xs"
+              >
+                {savingGoals ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Target className="h-3.5 w-3.5" />}
+                {savingGoals ? "Saving…" : hasGoals ? "Update Goals" : "Save Goals"}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Goals summary (when set but not editing) */}
+        {hasGoals && !showGoalsEditor && (
+          <button
+            onClick={() => setShowGoalsEditor(true)}
+            className="w-full px-5 py-2.5 bg-muted/10 border-b border-border/40 text-left hover:bg-muted/20 transition-colors group"
+          >
+            <div className="flex items-center gap-2">
+              <Target className="h-3.5 w-3.5 text-primary shrink-0" />
+              <p className="text-xs text-muted-foreground truncate flex-1">
+                <span className="font-semibold text-foreground">Goals: </span>
+                {goalsPrompt.slice(0, 120)}{goalsPrompt.length > 120 ? "…" : ""}
+              </p>
+              <span className="text-[10px] text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">Edit</span>
+            </div>
+          </button>
+        )}
+
+        {/* Chat-like input area */}
+        <div className="px-4 py-3 space-y-3">
+          {/* Quick suggestion chips */}
+          {cycles.length === 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {GREMLIN_PROMPTS.map((prompt) => (
+                <button
+                  key={prompt}
+                  onClick={() => {
+                    setMessage(prompt);
+                    inputRef.current?.focus();
+                  }}
+                  className="rounded-full border border-border/60 bg-muted/30 px-3 py-1 text-[11px] text-muted-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-colors"
+                >
+                  {prompt}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Input */}
+          <div className="flex items-end gap-2">
+            <div className="flex-1 relative">
+              <textarea
+                ref={inputRef}
+                className="w-full rounded-xl border border-input bg-background px-3 py-2.5 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring min-h-[44px] max-h-[120px] resize-none pr-3"
+                placeholder={analyzing ? "Gremlins are analyzing…" : "Tell the gremlins what to improve…"}
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                onKeyDown={handleKeyDown}
+                disabled={analyzing}
+                rows={1}
+              />
+            </div>
+            <Button
+              size="icon"
+              onClick={sendMessage}
+              disabled={analyzing}
+              className="h-[44px] w-[44px] rounded-xl gradient-hero text-white border-0 shrink-0"
+            >
+              {analyzing ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+
+          {analyzing && (
+            <div className="flex items-center gap-2 px-1">
+              <div className="flex gap-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: "0ms" }} />
+                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: "150ms" }} />
+                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: "300ms" }} />
+              </div>
+              <span className="text-xs text-muted-foreground">Gremlins are screenshotting & analyzing your app…</span>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Past cycles for THIS listing only */}
+      {/* Past analysis results */}
       {cycles.length > 0 && (
         <div className="space-y-3">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
@@ -252,7 +450,8 @@ export function ListingImprovementPanel({ listingId, listingTitle, demoUrl }: Pr
                     )}
 
                     {cycle.analysis?.overall_assessment && (
-                      <div className="rounded-lg bg-muted/30 p-3">
+                      <div className="rounded-lg bg-muted/30 p-3 flex gap-2">
+                        <Bot className="h-4 w-4 text-primary shrink-0 mt-0.5" />
                         <p className="text-sm text-muted-foreground">{cycle.analysis.overall_assessment}</p>
                       </div>
                     )}

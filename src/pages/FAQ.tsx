@@ -13,7 +13,7 @@ const sections = [
     faqs: [
       {
         q: "What am I actually buying?",
-        a: "You're not just buying code — you're buying peace of mind. When you subscribe to a project, you get a developer on retainer: ongoing support, bug fixes, feature requests, and monthly updates. It's like having your own micro-SaaS team for a fraction of the cost.",
+        a: "With a subscription plan, you can claim projects and get the complete source code — it's yours forever. You can deploy it anywhere, customize it, and use it however you want. Need ongoing help? Message the builder directly to arrange a support retainer.",
       },
       {
         q: "How is this different from buying code on other marketplaces?",

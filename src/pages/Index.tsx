@@ -250,9 +250,14 @@ export default function Index() {
 
         <div className="container mx-auto px-4 text-center relative z-10">
           <HeroTagline />
-          <p className="text-sm md:text-base text-muted-foreground max-w-xl mx-auto mb-5">
+          <p className="text-sm md:text-base text-muted-foreground max-w-xl mx-auto mb-2">
             SaaS tools, AI products, landing pages & utilities — production-ready.
           </p>
+          {!user && (
+            <p className="text-xs font-semibold text-accent mb-4">
+              ✨ Your first app is free — no credit card required
+            </p>
+          )}
 
           {/* Hero search bar */}
           <form onSubmit={handleHeroSearch} className="max-w-md mx-auto mb-4">

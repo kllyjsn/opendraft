@@ -6,10 +6,10 @@ import { Navigate, Link } from "react-router-dom";
 import { Zap } from "lucide-react";
 
 const TRUST_POINTS = [
+  { icon: "✨", text: "Your first app is completely free" },
   { icon: "⚡", text: "Get your app instantly — no waiting" },
-  { icon: "🔒", text: "Secure payments via Stripe" },
   { icon: "🚀", text: "1,000+ apps ready to launch" },
-  { icon: "💰", text: "Free to browse — only pay when you buy" },
+  { icon: "🔒", text: "Full source code — yours forever" },
 ];
 
 export default function Login() {
@@ -34,9 +34,9 @@ export default function Login() {
             <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl gradient-hero shadow-glow mb-5">
               <Zap className="h-7 w-7 text-white" />
             </div>
-            <h1 className="text-2xl font-black mb-2">Get your app today</h1>
+            <h1 className="text-2xl font-black mb-2">Claim your free app</h1>
             <p className="text-muted-foreground text-sm leading-relaxed">
-              Join 500+ entrepreneurs who launched<br />their business with a ready-made app.
+              Sign up and claim one app completely free.<br />No credit card required.
             </p>
           </div>
 

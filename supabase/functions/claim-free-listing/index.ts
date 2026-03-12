@@ -1,8 +1,11 @@
 /**
  * claim-free-listing Edge Function
  * ----------------------------------
- * Allows authenticated users to claim a free (price = 0) listing
- * by creating a purchase record directly without going through Stripe.
+ * Allows authenticated users to claim a listing by creating a purchase record.
+ * Supports two modes:
+ *   1. Free listings (price = 0) — anyone authenticated can claim
+ *   2. Freemium claim — first-time user claiming any listing (enforces 1 free app limit)
+ *   3. Subscriber claim — active subscribers can claim any listing
  */
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -47,7 +50,7 @@ Deno.serve(async (req) => {
 
     const adminClient = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Fetch listing and verify it's free and live
+    // Fetch listing and verify it's live
     const { data: listing, error: listingError } = await adminClient
       .from("listings")
       .select("id, price, seller_id, title, status")
@@ -56,7 +59,6 @@ Deno.serve(async (req) => {
 
     if (listingError || !listing) throw new Error("Listing not found");
     if (listing.status !== "live") throw new Error("Listing is not available");
-    if (listing.price !== 0) throw new Error("This listing is not free");
     if (listing.seller_id === user.id) throw new Error("You cannot claim your own listing");
 
     // Check for duplicate claim
@@ -69,7 +71,47 @@ Deno.serve(async (req) => {
 
     if (existing) throw new Error("You already own this project");
 
-    // Insert the purchase record (amount_paid = 0, no Stripe)
+    // Determine if user is allowed to claim
+    if (listing.price !== 0) {
+      // Not a free listing — check subscription or freemium eligibility
+      const [subResult, countResult] = await Promise.all([
+        adminClient
+          .from("subscriptions")
+          .select("id")
+          .eq("user_id", user.id)
+          .eq("status", "active")
+          .maybeSingle(),
+        adminClient
+          .from("purchases")
+          .select("id", { count: "exact", head: true })
+          .eq("buyer_id", user.id),
+      ]);
+
+      const isSubscribed = !!subResult.data;
+      const purchaseCount = countResult.count ?? 0;
+
+      if (!isSubscribed && purchaseCount >= 1) {
+        throw new Error("You've used your free app. Subscribe to claim more apps.");
+      }
+
+      // If subscribed, check app limit
+      if (isSubscribed) {
+        const { data: sub } = await adminClient
+          .from("subscriptions")
+          .select("plan")
+          .eq("user_id", user.id)
+          .eq("status", "active")
+          .single();
+        
+        const plan = sub?.plan;
+        const limit = plan === "unlimited" ? Infinity : plan === "growth" ? 20 : plan === "starter" ? 5 : 1;
+        if (purchaseCount >= limit) {
+          throw new Error("You've reached your plan's app limit. Upgrade to claim more.");
+        }
+      }
+    }
+
+    // Insert the purchase record (amount_paid = 0)
     const { error: insertError } = await adminClient.from("purchases").insert({
       listing_id: listingId,
       buyer_id: user.id,
@@ -77,16 +119,18 @@ Deno.serve(async (req) => {
       amount_paid: 0,
       platform_fee: 0,
       seller_amount: 0,
-      payout_transferred: true, // Nothing to transfer
+      payout_transferred: true,
     });
 
     if (insertError) throw new Error(insertError.message);
 
     // Increment sales count
-    await adminClient.rpc("increment_sales_count", { listing_id_param: listingId });
-    await adminClient.rpc("increment_seller_sales", { seller_id_param: listing.seller_id });
+    await Promise.all([
+      adminClient.rpc("increment_sales_count", { listing_id_param: listingId }),
+      adminClient.rpc("increment_seller_sales", { seller_id_param: listing.seller_id }),
+    ]);
 
-    console.log(`Free claim: listing=${listingId}, buyer=${user.id}`);
+    console.log(`Claim: listing=${listingId}, buyer=${user.id}, price=${listing.price}`);
 
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

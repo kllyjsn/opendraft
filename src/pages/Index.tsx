@@ -250,9 +250,14 @@ export default function Index() {
 
         <div className="container mx-auto px-4 text-center relative z-10">
           <HeroTagline />
-          <p className="text-sm md:text-base text-muted-foreground max-w-xl mx-auto mb-5">
+          <p className="text-sm md:text-base text-muted-foreground max-w-xl mx-auto mb-2">
             SaaS tools, AI products, landing pages & utilities — production-ready.
           </p>
+          {!user && (
+            <p className="text-xs font-semibold text-accent mb-4">
+              ✨ Your first app is free — no credit card required
+            </p>
+          )}
 
           {/* Hero search bar */}
           <form onSubmit={handleHeroSearch} className="max-w-md mx-auto mb-4">
@@ -480,16 +485,16 @@ export default function Index() {
               <div className="hidden sm:flex items-center gap-3">
                 <BrandMascot size={32} variant="wave" />
                 <p className="text-sm font-medium text-foreground">
-                  Find the perfect app for your business — <span className="font-bold">sign up free</span>
+                  Your first app is free — <span className="font-bold">claim it now</span>
                 </p>
               </div>
               <p className="text-sm font-medium text-foreground sm:hidden">
-                Find your perfect app — sign up free
+                First app free — no card required
               </p>
               <div className="flex items-center gap-2 shrink-0">
                 <Link to="/login">
                   <Button size="sm" className="gradient-hero text-white border-0 shadow-glow hover:opacity-90 font-bold gap-1.5">
-                    Get started free
+                    Claim free app
                     <ArrowRight className="h-3.5 w-3.5" />
                   </Button>
                 </Link>

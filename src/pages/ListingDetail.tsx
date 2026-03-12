@@ -679,8 +679,8 @@ export default function ListingDetail() {
                   <div className="mt-5 rounded-xl gradient-hero p-[1px]">
                     <div className="rounded-[11px] bg-card p-4 space-y-1.5 text-center">
                       <p className="text-xs font-black uppercase tracking-wide text-primary">What you get</p>
-                      <p className="text-[13px] font-semibold leading-snug">Full source code + auto-healing deploys</p>
-                      <p className="text-[11px] text-muted-foreground leading-relaxed">$15/mo covers AI-powered site monitoring, automated bug fixes, and direct builder access for feature requests and support.</p>
+                      <p className="text-[13px] font-semibold leading-snug">Full source code + one-click deploy</p>
+                      <p className="text-[11px] text-muted-foreground leading-relaxed">Claim this project to get the complete source code, deploy it anywhere, and make it yours forever.</p>
                     </div>
                   </div>
 

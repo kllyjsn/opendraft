@@ -186,7 +186,7 @@ export function Navbar() {
           ) : (
             <Link to="/login" onClick={() => setMenuOpen(false)}>
               <Button className="w-full gradient-hero text-white border-0 shadow-glow">
-                Sign in with Google
+                Sign in
               </Button>
             </Link>
           )}

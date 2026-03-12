@@ -32,7 +32,7 @@ export function BuyerWelcomeModal({ skipForOwners = false }: { skipForOwners?: b
     if (skipForOwners) return;
     const seen = localStorage.getItem(STORAGE_KEY);
     if (!seen) {
-      const timer = setTimeout(() => setOpen(true), 5000);
+      const timer = setTimeout(() => setOpen(true), 1500);
       return () => clearTimeout(timer);
     }
   }, [skipForOwners]);

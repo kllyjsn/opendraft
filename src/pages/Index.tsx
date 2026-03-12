@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Search, TrendingUp, SlidersHorizontal, X, Loader2, ChevronDown, ArrowRight } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { GoogleSignInButton } from "@/components/GoogleSignInButton";
 import { FeaturedListings } from "@/components/FeaturedListings";
 import { BrandMascot } from "@/components/BrandMascot";
 import { JsonLd } from "@/components/JsonLd";
@@ -254,9 +255,14 @@ export default function Index() {
             SaaS tools, AI products, landing pages & utilities — production-ready.
           </p>
           {!user && (
-            <p className="text-xs font-semibold text-accent mb-4">
-              ✨ Your first app is free — no credit card required
-            </p>
+            <div className="mb-4 space-y-2">
+              <p className="text-xs font-semibold text-accent">
+                ✨ Your first app is free — no credit card required
+              </p>
+              <div className="max-w-xs mx-auto">
+                <GoogleSignInButton label="Sign up free with Google" />
+              </div>
+            </div>
           )}
 
           {/* Hero search bar */}
@@ -492,12 +498,9 @@ export default function Index() {
                 First app free — no card required
               </p>
               <div className="flex items-center gap-2 shrink-0">
-                <Link to="/login">
-                  <Button size="sm" className="gradient-hero text-white border-0 shadow-glow hover:opacity-90 font-bold gap-1.5">
-                    Claim free app
-                    <ArrowRight className="h-3.5 w-3.5" />
-                  </Button>
-                </Link>
+                <div className="w-48">
+                  <GoogleSignInButton label="Claim free app" />
+                </div>
                 <button
                   onClick={() => setStickyDismissed(true)}
                   className="text-muted-foreground hover:text-foreground transition-colors p-1"

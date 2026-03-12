@@ -165,21 +165,31 @@ export function DeployPanel({ listingId, listingTitle, hasFile, githubUrl }: Dep
       pollCountRef.current += 1;
       if (pollCountRef.current > 60) {
         stopPolling();
-        setDeployState("ready");
-        setCurrentStep("done");
-        setResult({ siteUrl, adminUrl, provider: "Vercel" });
-        setBuildStatus("timeout — check dashboard");
-        toast({ title: "Build is taking longer than expected", description: "Check your Vercel dashboard for the latest status." });
+        setDeployState("error");
+        setError("Timed out waiting for Vercel build status. Please check your Vercel dashboard and retry.");
+        setBuildStatus("timeout");
+        toast({ title: "Build status timeout", description: "We couldn't confirm deploy status from Vercel in time." });
         return;
       }
 
       try {
-        const res = await fetch(`https://api.vercel.com/v13/deployments/${deployId}`, {
-          headers: { Authorization: `Bearer ${vToken}` },
+        const { data: { session } } = await supabase.auth.getSession();
+        const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/check-vercel-deploy`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+          },
+          body: JSON.stringify({ deployId, vercelToken: vToken }),
         });
-        if (!res.ok) { await res.text(); return; }
-        const data = await res.json();
-        const state = data.readyState?.toLowerCase() || data.state?.toLowerCase() || "unknown";
+
+        if (!res.ok) {
+          await res.text();
+          return;
+        }
+
+        const data: PollResult = await res.json();
+        const state = data.state?.toLowerCase() || "unknown";
         setBuildStatus(state);
 
         if (state === "ready") {
@@ -187,21 +197,18 @@ export function DeployPanel({ listingId, listingTitle, hasFile, githubUrl }: Dep
           setDeployState("ready");
           setCurrentStep("done");
           setShowConfetti(true);
-          const liveSiteUrl = data.url ? `https://${data.url}` : siteUrl;
-          setResult({ siteUrl: liveSiteUrl, adminUrl, provider: "Vercel" });
+          const liveSiteUrl = data.deployUrl || siteUrl;
+          setResult({ siteUrl: liveSiteUrl, adminUrl: data.adminUrl || adminUrl, provider: "Vercel" });
           toast({ title: "Deployed successfully! 🚀", description: `${listingTitle} is now live on Vercel.` });
 
           // Update deployed_sites status
           try {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session) {
-              await supabase
-                .from("deployed_sites")
-                .update({ status: "healthy", site_url: liveSiteUrl })
-                .eq("deploy_id", deployId);
-            }
+            await supabase
+              .from("deployed_sites")
+              .update({ status: "healthy", site_url: liveSiteUrl })
+              .eq("deploy_id", deployId);
           } catch { /* best effort */ }
-        } else if (state === "error" || state === "canceled") {
+        } else if (state === "error" || state === "canceled" || state === "failed") {
           stopPolling();
           setDeployState("error");
 
@@ -214,27 +221,11 @@ export function DeployPanel({ listingId, listingTitle, hasFile, githubUrl }: Dep
           } catch { /* best effort */ }
 
           setError(data.errorMessage || "Vercel build failed — check the build log below for details.");
-          // Fetch error logs
-          try {
-            const logRes = await fetch(`https://api.vercel.com/v2/deployments/${deployId}/events`, {
-              headers: { Authorization: `Bearer ${vToken}` },
-            });
-            if (logRes.ok) {
-              const events = await logRes.json();
-              if (Array.isArray(events)) {
-                const errLines = events
-                  .filter((e: any) => e.type === "stderr" || e.type === "error")
-                  .map((e: any) => e.text || e.payload?.text || "")
-                  .filter(Boolean)
-                  .slice(-40);
-                if (errLines.length > 0) setBuildLog(errLines.join("\n"));
-              }
-            } else {
-              await logRes.text();
-            }
-          } catch { /* ignore */ }
+          setBuildLog(data.buildLog || null);
         }
-      } catch { /* retry */ }
+      } catch {
+        // retry
+      }
     }, 5000);
   }
 

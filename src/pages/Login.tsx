@@ -16,8 +16,7 @@ export default function Login() {
   const { user, loading } = useAuth();
 
   if (!loading && user) {
-    const onboarded = localStorage.getItem("opendraft_onboarding_done");
-    return <Navigate to={onboarded ? "/" : "/onboarding"} replace />;
+    return <Navigate to="/" replace />;
   }
 
   return (

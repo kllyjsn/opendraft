@@ -498,12 +498,9 @@ export default function Index() {
                 First app free — no card required
               </p>
               <div className="flex items-center gap-2 shrink-0">
-                <Link to="/login">
-                  <Button size="sm" className="gradient-hero text-white border-0 shadow-glow hover:opacity-90 font-bold gap-1.5">
-                    Claim free app
-                    <ArrowRight className="h-3.5 w-3.5" />
-                  </Button>
-                </Link>
+                <div className="w-48">
+                  <GoogleSignInButton label="Claim free app" />
+                </div>
                 <button
                   onClick={() => setStickyDismissed(true)}
                   className="text-muted-foreground hover:text-foreground transition-colors p-1"

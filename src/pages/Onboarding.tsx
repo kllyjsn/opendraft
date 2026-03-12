@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Navbar } from "@/components/Navbar";
@@ -24,15 +25,23 @@ export default function Onboarding() {
   const navigate = useNavigate();
   const progress = useGremlinProgress();
 
+  const nextStep = progress.steps.find((s) => !s.completed);
+  const isFullGremlin = progress.percentage === 100;
+
+  // Auto-skip onboarding for users who already completed everything
+  useEffect(() => {
+    if (!progress.loading && isFullGremlin) {
+      localStorage.setItem("opendraft_onboarding_done", "1");
+      navigate("/", { replace: true });
+    }
+  }, [progress.loading, isFullGremlin, navigate]);
+
   if (!authLoading && !user) return <Navigate to="/login" replace />;
 
   function done(path: string) {
     localStorage.setItem("opendraft_onboarding_done", "1");
     navigate(path);
   }
-
-  const nextStep = progress.steps.find((s) => !s.completed);
-  const isFullGremlin = progress.percentage === 100;
 
   return (
     <div className="min-h-screen flex flex-col">

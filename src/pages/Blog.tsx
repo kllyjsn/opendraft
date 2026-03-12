@@ -269,7 +269,7 @@ const POSTS: Record<string, BlogPost> = {
       "When building software takes hours instead of months, the volume of available tools, templates, and micro-SaaS products explodes. Marketplaces like OpenDraft exist because of this supply wave — connecting builders with buyers who need ready-made solutions.",
       "## The Economics",
       "The talent gap is closing — but not how anyone expected. Companies don't need 10 developers. They need 2 developers with AI tools. Vibe coding isn't replacing engineers. It's making every engineer dramatically more productive.",
-      "For indie builders, the economics are transformative: build a project in a weekend, list it on a marketplace, earn $15/month per subscriber in ongoing support revenue. 10 subscribers = $150/month from a single project.",
+      "For indie builders, the economics are transformative: build a project in a weekend, list it on a marketplace, and earn through support retainers and custom work. One project can generate hundreds in monthly recurring revenue.",
       "## What Changed in the Last 90 Days",
       "• Lovable added full backend generation with Lovable Cloud\n• Cursor crossed 1M+ active users\n• Claude Code ships production-grade applications\n• Bolt added team collaboration features\n• OpenDraft launched 26 MCP tools for agent-native commerce\n• AI agents started programmatically purchasing software",
       "## The Creator Economy Meets Software",

@@ -485,16 +485,16 @@ export default function Index() {
               <div className="hidden sm:flex items-center gap-3">
                 <BrandMascot size={32} variant="wave" />
                 <p className="text-sm font-medium text-foreground">
-                  Find the perfect app for your business — <span className="font-bold">sign up free</span>
+                  Your first app is free — <span className="font-bold">claim it now</span>
                 </p>
               </div>
               <p className="text-sm font-medium text-foreground sm:hidden">
-                Find your perfect app — sign up free
+                First app free — no card required
               </p>
               <div className="flex items-center gap-2 shrink-0">
                 <Link to="/login">
                   <Button size="sm" className="gradient-hero text-white border-0 shadow-glow hover:opacity-90 font-bold gap-1.5">
-                    Get started free
+                    Claim free app
                     <ArrowRight className="h-3.5 w-3.5" />
                   </Button>
                 </Link>

@@ -31,10 +31,13 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { deployId, vercelToken } = await req.json();
+    const { deployId, vercelToken, usePlatformToken } = await req.json();
 
-    if (!deployId || !vercelToken) {
-      return new Response(JSON.stringify({ error: "Missing deployId or vercelToken" }), {
+    // Use platform token if requested, otherwise use user-provided token
+    const token = usePlatformToken ? Deno.env.get("VERCEL_PLATFORM_TOKEN") : vercelToken;
+
+    if (!deployId || !token) {
+      return new Response(JSON.stringify({ error: "Missing deployId or vercel token" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

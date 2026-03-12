@@ -778,9 +778,13 @@ export default function ListingDetail() {
           </div>
         </div>
 
-        {/* Improvement panel for owners */}
+        {/* Improvement panel for owners — prominent placement */}
         {user && purchased && (
-          <div className="mt-12" id="gremlins-panel">
+          <div className="mt-10" id="gremlins-panel">
+            <div className="mb-4 flex items-center gap-2">
+              <Bot className="h-5 w-5 text-primary" />
+              <h2 className="text-xl font-black">AI-Powered Improvements</h2>
+            </div>
             <ListingImprovementPanel
               listingId={listing.id}
               listingTitle={listing.title}

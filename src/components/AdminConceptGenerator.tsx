@@ -217,7 +217,7 @@ export function AdminConceptGenerator() {
           <div className="mt-4 space-y-2">
             <p className="text-xs font-semibold text-primary flex items-center gap-1.5">
               <CheckCircle2 className="h-3.5 w-3.5" />
-              {templateResult.generated}/{templateResult.requested} templates created at $15/mo
+              {templateResult.generated}/{templateResult.requested} templates created
             </p>
             {templateResult.results.map((r, i) => (
               <div key={i} className={`flex items-center justify-between rounded-lg border px-3 py-2 ${

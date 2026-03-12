@@ -10,10 +10,7 @@ import { Search, TrendingUp, SlidersHorizontal, X, Loader2, ChevronDown, ArrowRi
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { FeaturedListings } from "@/components/FeaturedListings";
-import { CategoryShowcase } from "@/components/CategoryShowcase";
-import { HowItWorks } from "@/components/HowItWorks";
-import { JsonLd } from "@/components/JsonLd";
-import { CanonicalTag } from "@/components/CanonicalTag";
+import { BrandMascot } from "@/components/BrandMascot";
 import { JsonLd } from "@/components/JsonLd";
 import { CanonicalTag } from "@/components/CanonicalTag";
 

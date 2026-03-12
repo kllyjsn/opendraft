@@ -16,6 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ChatDrawer } from "@/components/ChatDrawer";
 import { RemixChain } from "@/components/RemixChain";
 import { ListingImprovementPanel } from "@/components/ListingImprovementPanel";
+import { GremlinFloatingCTA } from "@/components/GremlinFloatingCTA";
 import { JsonLd } from "@/components/JsonLd";
 import { MetaTags } from "@/components/MetaTags";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
@@ -722,13 +723,22 @@ export default function ListingDetail() {
 
         {/* Improvement panel for owned listings */}
         {user && listing.seller_id === user.id && (
-          <div className="mt-12">
+          <div className="mt-12" id="gremlins-panel">
             <ListingImprovementPanel
               listingId={listing.id}
               listingTitle={listing.title}
               demoUrl={listing.demo_url}
             />
           </div>
+        )}
+
+        {/* Floating CTA for owners to discover gremlins */}
+        {user && listing.seller_id === user.id && (
+          <GremlinFloatingCTA
+            onClick={() => {
+              document.getElementById("gremlins-panel")?.scrollIntoView({ behavior: "smooth" });
+            }}
+          />
         )}
 
         {/* Reviews — full width below the grid */}

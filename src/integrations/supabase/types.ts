@@ -1291,6 +1291,7 @@ export type Database = {
       }
       project_goals: {
         Row: {
+          auto_improve: boolean
           created_at: string
           goals_prompt: string
           id: string
@@ -1300,6 +1301,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          auto_improve?: boolean
           created_at?: string
           goals_prompt: string
           id?: string
@@ -1309,6 +1311,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          auto_improve?: boolean
           created_at?: string
           goals_prompt?: string
           id?: string

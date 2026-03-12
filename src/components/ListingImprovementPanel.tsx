@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   Sparkles, CheckCircle, XCircle, Clock, ChevronDown, ChevronUp,
   Loader2, Zap, Shield, Palette, Accessibility, Bug, Code,
-  Send, Target, Bot,
+  Send, Target, Bot, Rocket, PartyPopper, FileCode,
 } from "lucide-react";
 
 interface Props {

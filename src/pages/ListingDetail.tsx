@@ -71,7 +71,7 @@ interface Profile {
 export default function ListingDetail() {
   const { id } = useParams<{ id: string }>();
   const { user, loading: authLoading } = useAuth();
-  const { isSubscribed } = useSubscription();
+  const { isSubscribed, canClaimFree, purchaseCount } = useSubscription();
   const { toast } = useToast();
   const [listing, setListing] = useState<Listing | null>(null);
   const [seller, setSeller] = useState<Profile | null>(null);

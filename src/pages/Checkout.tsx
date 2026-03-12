@@ -24,7 +24,7 @@ interface Listing {
 export default function Checkout() {
   const { id } = useParams<{ id: string }>();
   const { user, loading: authLoading } = useAuth();
-  const { isSubscribed, loading: subLoading } = useSubscription();
+  const { isSubscribed, canClaimFree, loading: subLoading } = useSubscription();
   const navigate = useNavigate();
   const [listing, setListing] = useState<Listing | null>(null);
   const [loading, setLoading] = useState(true);
@@ -34,10 +34,10 @@ export default function Checkout() {
   useEffect(() => {
     if (authLoading || subLoading) return;
     if (!user) { navigate("/login"); return; }
-    if (!isSubscribed) { navigate("/credits"); return; }
+    if (!isSubscribed && !canClaimFree) { navigate("/credits"); return; }
     if (!id) return;
     fetchListing();
-  }, [id, user, authLoading, subLoading, isSubscribed]);
+  }, [id, user, authLoading, subLoading, isSubscribed, canClaimFree]);
 
   async function fetchListing() {
     const { data } = await supabase

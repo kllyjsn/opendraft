@@ -7,17 +7,28 @@ export function useSubscription() {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [subscription, setSubscription] = useState<any>(null);
+  const [purchaseCount, setPurchaseCount] = useState(0);
 
   async function fetchSubscription() {
-    if (!user) { setIsSubscribed(false); setLoading(false); return; }
-    const { data } = await supabase
-      .from("subscriptions")
-      .select("*")
-      .eq("user_id", user.id)
-      .eq("status", "active")
-      .maybeSingle();
-    setSubscription(data);
-    setIsSubscribed(!!data);
+    if (!user) { setIsSubscribed(false); setLoading(false); setPurchaseCount(0); return; }
+
+    // Fetch subscription and purchase count in parallel
+    const [subResult, countResult] = await Promise.all([
+      supabase
+        .from("subscriptions")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("status", "active")
+        .maybeSingle(),
+      supabase
+        .from("purchases")
+        .select("id", { count: "exact", head: true })
+        .eq("buyer_id", user.id),
+    ]);
+
+    setSubscription(subResult.data);
+    setIsSubscribed(!!subResult.data);
+    setPurchaseCount(countResult.count ?? 0);
     setLoading(false);
   }
 
@@ -25,7 +36,8 @@ export function useSubscription() {
 
   // Derived helpers
   const plan = subscription?.plan as string | null;
-  const appLimit = plan === "unlimited" ? Infinity : plan === "growth" ? 20 : plan === "starter" ? 5 : 0;
+  const appLimit = plan === "unlimited" ? Infinity : plan === "growth" ? 20 : plan === "starter" ? 5 : 1;
+  const canClaimFree = !isSubscribed && purchaseCount < 1;
 
-  return { isSubscribed, loading, subscription, plan, appLimit, refetch: fetchSubscription };
+  return { isSubscribed, loading, subscription, plan, appLimit, purchaseCount, canClaimFree, refetch: fetchSubscription };
 }

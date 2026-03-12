@@ -171,6 +171,10 @@ async function gatherPlatformData(supabase: any) {
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  // Admin-only access
+  const authError = await requireAdmin(req);
+  if (authError) return authError;
+
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!

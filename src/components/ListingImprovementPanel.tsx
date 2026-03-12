@@ -196,7 +196,7 @@ export function ListingImprovementPanel({ listingId, listingTitle, demoUrl }: Pr
     }
   }
 
-  async function approveChange(changeId: string, approved: boolean) {
+  async function approveChange(changeId: string, approved: boolean, description?: string) {
     await supabase
       .from("improvement_changes" as any)
       .update({ approved, applied_at: approved ? new Date().toISOString() : null })
@@ -211,23 +211,62 @@ export function ListingImprovementPanel({ listingId, listingTitle, demoUrl }: Pr
       }
       return updated;
     });
-    toast({ title: approved ? "Change approved ✓" : "Change rejected" });
+
+    if (approved && description) {
+      setAppliedSummary({ changes: [description], cycleId: changeId });
+      // Auto-dismiss after 6 seconds
+      setTimeout(() => setAppliedSummary(null), 6000);
+    }
+
+    toast({
+      title: approved ? "✅ Improvement applied!" : "Change rejected",
+      description: approved
+        ? `"${description || "Change"}" has been queued for your next deploy.`
+        : undefined,
+    });
   }
 
   async function approveAllInCycle(cycleId: string) {
     const cycleChanges = changes[cycleId] || [];
+    const appliedDescriptions: string[] = [];
+
     for (const change of cycleChanges) {
       if (change.approved === null) {
-        await approveChange(change.id, true);
+        await supabase
+          .from("improvement_changes" as any)
+          .update({ approved: true, applied_at: new Date().toISOString() })
+          .eq("id", change.id);
+        appliedDescriptions.push(change.description);
       }
     }
+
+    // Update local state
+    setChanges((prev) => {
+      const updated = { ...prev };
+      if (updated[cycleId]) {
+        updated[cycleId] = updated[cycleId].map((c) =>
+          c.approved === null ? { ...c, approved: true } : c
+        );
+      }
+      return updated;
+    });
+
     await supabase
       .from("improvement_cycles" as any)
       .update({ status: "approved" })
       .eq("id", cycleId);
+
     setCycles((prev) =>
       prev.map((c) => (c.id === cycleId ? { ...c, status: "approved" } : c))
     );
+
+    setAppliedSummary({ changes: appliedDescriptions, cycleId });
+    setTimeout(() => setAppliedSummary(null), 8000);
+
+    toast({
+      title: `🚀 ${appliedDescriptions.length} improvements applied!`,
+      description: "All approved changes are queued for your next deploy.",
+    });
   }
 
   if (loading) {

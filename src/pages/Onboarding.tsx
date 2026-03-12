@@ -25,8 +25,6 @@ export default function Onboarding() {
   const navigate = useNavigate();
   const progress = useGremlinProgress();
 
-  if (!authLoading && !user) return <Navigate to="/login" replace />;
-
   const nextStep = progress.steps.find((s) => !s.completed);
   const isFullGremlin = progress.percentage === 100;
 
@@ -37,6 +35,8 @@ export default function Onboarding() {
       navigate("/", { replace: true });
     }
   }, [progress.loading, isFullGremlin, navigate]);
+
+  if (!authLoading && !user) return <Navigate to="/login" replace />;
 
   function done(path: string) {
     localStorage.setItem("opendraft_onboarding_done", "1");

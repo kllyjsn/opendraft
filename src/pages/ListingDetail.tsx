@@ -594,12 +594,12 @@ export default function ListingDetail() {
                         )}
                       </div>
                     ) : (
-                      <Link to="/login">
-                        <Button className="w-full gradient-hero text-white border-0 shadow-glow hover:opacity-90 h-12 text-base font-bold transition-opacity">
-                          <Gift className="h-4 w-4 mr-2" />
-                          Sign in to claim free
-                        </Button>
-                      </Link>
+                      <div className="space-y-2">
+                        <GoogleSignInButton label="Sign up free to claim" />
+                        <p className="text-center text-[11px] text-muted-foreground">
+                          ✨ No credit card required · Your first app is free
+                        </p>
+                      </div>
                     )
                   ) : (
                     <div className="space-y-3">

@@ -196,16 +196,33 @@ export default function LifestyleCategory() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            className="flex items-start gap-4"
           >
-            <span className="inline-block text-xs font-bold uppercase tracking-widest text-primary mb-3">
-              {meta.label}
-            </span>
-            <h1 className="text-3xl md:text-5xl font-black tracking-tight mb-4 leading-[1.05]">
-              {meta.headline}
-            </h1>
-            <p className="text-muted-foreground text-base md:text-lg leading-relaxed max-w-xl">
-              {meta.editorial}
-            </p>
+            <div className="flex-1">
+              <span className="inline-block text-xs font-bold uppercase tracking-widest text-primary mb-3">
+                {meta.label}
+              </span>
+              <h1 className="text-3xl md:text-5xl font-black tracking-tight mb-4 leading-[1.05]">
+                {meta.headline}
+              </h1>
+              <p className="text-muted-foreground text-base md:text-lg leading-relaxed max-w-xl">
+                {meta.editorial}
+              </p>
+            </div>
+            {/* Category gremlin */}
+            {slug && CATEGORY_GREMLINS[slug] && (() => {
+              const Gremlin = CATEGORY_GREMLINS[slug];
+              return (
+                <motion.div
+                  className="hidden md:block shrink-0 drop-shadow-xl"
+                  initial={{ scale: 0, rotate: -30 }}
+                  animate={{ scale: 1.8, rotate: 0 }}
+                  transition={{ duration: 0.7, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  <Gremlin />
+                </motion.div>
+              );
+            })()}
           </motion.div>
         </div>
       </section>

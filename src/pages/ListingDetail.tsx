@@ -23,6 +23,7 @@ import { MetaTags } from "@/components/MetaTags";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { FlagListingButton } from "@/components/FlagListingButton";
 import { BuyerWelcomeModal } from "@/components/BuyerWelcomeModal";
+import { GoogleSignInButton } from "@/components/GoogleSignInButton";
 const BUILT_WITH_LABELS: Record<string, string> = {
   lovable: "Lovable",
   claude_code: "Claude Code",

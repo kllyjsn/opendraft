@@ -652,10 +652,18 @@ export default function ListingDetail() {
                     </div>
                   )}
 
-                  {/* Trust line */}
-                  <p className="mt-4 text-center text-[11px] text-muted-foreground">
-                    🔒 Secure checkout via Stripe · Cancel anytime
-                  </p>
+                  {/* Social proof */}
+                  <div className="mt-4 flex items-center justify-center gap-4 text-[11px] text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <Package className="h-3 w-3" /> 1,000+ apps
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Download className="h-3 w-3" /> Free source code
+                    </span>
+                    <span className="flex items-center gap-1">
+                      🔒 Secure
+                    </span>
+                  </div>
 
                   {/* Early Adopter Advantage */}
                   {listing.sales_count <= 5 && (

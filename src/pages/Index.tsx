@@ -262,6 +262,13 @@ export default function Index() {
               <div className="max-w-xs mx-auto">
                 <GoogleSignInButton label="Sign up free with Google" />
               </div>
+              <div className="flex items-center justify-center gap-3 text-[11px] text-muted-foreground mt-1">
+                <span>🚀 1,000+ apps</span>
+                <span className="text-border">·</span>
+                <span>🔒 Full source code</span>
+                <span className="text-border">·</span>
+                <span>⚡ Instant access</span>
+              </div>
             </div>
           )}
 
@@ -490,12 +497,17 @@ export default function Index() {
             <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-3">
               <div className="hidden sm:flex items-center gap-3">
                 <BrandMascot size={32} variant="wave" />
-                <p className="text-sm font-medium text-foreground">
-                  Your first app is free — <span className="font-bold">claim it now</span>
-                </p>
+                <div>
+                  <p className="text-sm font-medium text-foreground">
+                    Your first app is free — <span className="font-bold">claim it now</span>
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">
+                    1,000+ apps · Full source code · No credit card
+                  </p>
+                </div>
               </div>
-              <p className="text-sm font-medium text-foreground sm:hidden">
-                First app free — no card required
+              <p className="text-xs font-medium text-foreground sm:hidden">
+                🚀 First app free · No card required
               </p>
               <div className="flex items-center gap-2 shrink-0">
                 <div className="w-48">

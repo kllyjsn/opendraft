@@ -23,6 +23,7 @@ import { MetaTags } from "@/components/MetaTags";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { FlagListingButton } from "@/components/FlagListingButton";
 import { BuyerWelcomeModal } from "@/components/BuyerWelcomeModal";
+import { GoogleSignInButton } from "@/components/GoogleSignInButton";
 const BUILT_WITH_LABELS: Record<string, string> = {
   lovable: "Lovable",
   claude_code: "Claude Code",
@@ -594,12 +595,12 @@ export default function ListingDetail() {
                         )}
                       </div>
                     ) : (
-                      <Link to="/login">
-                        <Button className="w-full gradient-hero text-white border-0 shadow-glow hover:opacity-90 h-12 text-base font-bold transition-opacity">
-                          <Gift className="h-4 w-4 mr-2" />
-                          Sign in to claim free
-                        </Button>
-                      </Link>
+                      <div className="space-y-2">
+                        <GoogleSignInButton label="Sign up free to claim" />
+                        <p className="text-center text-[11px] text-muted-foreground">
+                          ✨ No credit card required · Your first app is free
+                        </p>
+                      </div>
                     )
                   ) : (
                     <div className="space-y-3">
@@ -651,10 +652,18 @@ export default function ListingDetail() {
                     </div>
                   )}
 
-                  {/* Trust line */}
-                  <p className="mt-4 text-center text-[11px] text-muted-foreground">
-                    🔒 Secure checkout via Stripe · Cancel anytime
-                  </p>
+                  {/* Social proof */}
+                  <div className="mt-4 flex items-center justify-center gap-4 text-[11px] text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <Package className="h-3 w-3" /> 1,000+ apps
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Download className="h-3 w-3" /> Free source code
+                    </span>
+                    <span className="flex items-center gap-1">
+                      🔒 Secure
+                    </span>
+                  </div>
 
                   {/* Early Adopter Advantage */}
                   {listing.sales_count <= 5 && (
@@ -757,12 +766,9 @@ export default function ListingDetail() {
                           Ask {seller.username ?? "seller"} a question
                         </Button>
                       ) : (
-                        <Link to="/login">
-                          <Button className="w-full h-11 text-sm font-bold gradient-hero text-white border-0 shadow-glow hover:opacity-90 transition-opacity">
-                            <MessageSquare className="h-4 w-4 mr-2" />
-                            Sign in to ask a question
-                          </Button>
-                        </Link>
+                        <div className="space-y-1.5">
+                          <GoogleSignInButton label={`Sign up to message ${seller.username ?? "seller"}`} />
+                        </div>
                       )
                     )}
                     <RemixChain listingId={listing.id} />

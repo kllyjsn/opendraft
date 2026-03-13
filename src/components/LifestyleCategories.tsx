@@ -63,7 +63,7 @@ export function LifestyleCategories() {
             viewport={{ once: true, margin: "-40px" }}
           >
             <Link
-              to={`/category/${cat.slug}`}
+              to={`/lifestyle/${cat.slug}`}
               className="group relative block overflow-hidden rounded-2xl aspect-[4/3] bg-muted"
             >
               {/* Image */}

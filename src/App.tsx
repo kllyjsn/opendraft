@@ -82,6 +82,7 @@ const App = () => (
           <Route path="/builders" element={<Builders />} />
           <Route path="/builder/:userId" element={<BuilderProfile />} />
           <Route path="/category/:slug" element={<Category />} />
+          <Route path="/lifestyle/:slug" element={<LifestyleCategory />} />
           <Route path="/built-with/:tool" element={<BuiltWith />} />
           <Route path="/guides/sell" element={<GuideSell />} />
           <Route path="/guides/creators" element={<CreatorHandbook />} />

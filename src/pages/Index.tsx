@@ -309,8 +309,11 @@ export default function Index() {
         </div>
       </section>
 
-      {/* ── TRENDING (immediately visible) ── */}
-      <FeaturedListings />
+      {/* ── LIFESTYLE CATEGORIES ── */}
+      <LifestyleCategories />
+
+      {/* ── STAFF PICKS ── */}
+      <StaffPicks />
 
       {/* ── BROWSE ALL ── */}
       <section id="browse" className="container mx-auto px-4 pb-24">

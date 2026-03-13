@@ -766,12 +766,9 @@ export default function ListingDetail() {
                           Ask {seller.username ?? "seller"} a question
                         </Button>
                       ) : (
-                        <Link to="/login">
-                          <Button className="w-full h-11 text-sm font-bold gradient-hero text-white border-0 shadow-glow hover:opacity-90 transition-opacity">
-                            <MessageSquare className="h-4 w-4 mr-2" />
-                            Sign in to ask a question
-                          </Button>
-                        </Link>
+                        <div className="space-y-1.5">
+                          <GoogleSignInButton label={`Sign up to message ${seller.username ?? "seller"}`} />
+                        </div>
                       )
                     )}
                     <RemixChain listingId={listing.id} />

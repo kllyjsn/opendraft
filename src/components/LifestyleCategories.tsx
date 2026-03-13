@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
+import { CATEGORY_GREMLINS } from "./CategoryGremlins";
 
 import homeKitchenImg from "@/assets/category-home-kitchen.jpg";
 import healthFitnessImg from "@/assets/category-health-fitness.jpg";
@@ -53,45 +54,67 @@ export function LifestyleCategories() {
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-        {LIFESTYLE_CATEGORIES.map((cat, i) => (
-          <motion.div
-            key={cat.slug}
-            custom={i}
-            variants={cardVariant}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-40px" }}
-          >
-            <Link
-              to={`/lifestyle/${cat.slug}`}
-              className="group relative block overflow-hidden rounded-2xl aspect-[4/3] bg-muted"
+        {LIFESTYLE_CATEGORIES.map((cat, i) => {
+          const GremlinComponent = CATEGORY_GREMLINS[cat.slug];
+
+          return (
+            <motion.div
+              key={cat.slug}
+              custom={i}
+              variants={cardVariant}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-40px" }}
             >
-              {/* Image */}
-              <img
-                src={cat.image}
-                alt={cat.label}
-                loading="lazy"
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-              />
+              <Link
+                to={`/lifestyle/${cat.slug}`}
+                className="group relative block overflow-hidden rounded-2xl aspect-[4/3] bg-muted"
+              >
+                {/* Image */}
+                <img
+                  src={cat.image}
+                  alt={cat.label}
+                  loading="lazy"
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
 
-              {/* Gradient overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                {/* Gradient overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
 
-              {/* Text */}
-              <div className="absolute bottom-0 left-0 right-0 p-4">
-                <h3 className="text-sm md:text-base font-bold text-white mb-0.5 leading-tight">
-                  {cat.label}
-                </h3>
-                <p className="text-[11px] md:text-xs text-white/70 font-medium">
-                  {cat.tagline}
-                </p>
-                <div className="flex items-center gap-1 mt-2 text-[11px] font-semibold text-white/90 group-hover:text-white transition-colors">
-                  Explore <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
+                {/* Gremlin mascot — peeks from top-right corner */}
+                {GremlinComponent && (
+                  <motion.div
+                    className="absolute top-2 right-2 z-10 drop-shadow-lg"
+                    initial={{ scale: 0, rotate: -20 }}
+                    whileInView={{ scale: 1, rotate: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: 0.3 + i * 0.1, ease: [0.22, 1, 0.36, 1] }}
+                  >
+                    <motion.div
+                      whileHover={{ scale: 1.15, rotate: [0, -5, 5, 0] }}
+                      transition={{ duration: 0.4 }}
+                    >
+                      <GremlinComponent />
+                    </motion.div>
+                  </motion.div>
+                )}
+
+                {/* Text */}
+                <div className="absolute bottom-0 left-0 right-0 p-4">
+                  <h3 className="text-sm md:text-base font-bold text-white mb-0.5 leading-tight">
+                    {cat.label}
+                  </h3>
+                  <p className="text-[11px] md:text-xs text-white/70 font-medium">
+                    {cat.tagline}
+                  </p>
+                  <div className="flex items-center gap-1 mt-2 text-[11px] font-semibold text-white/90 group-hover:text-white transition-colors">
+                    Explore <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
+                  </div>
                 </div>
-              </div>
-            </Link>
-          </motion.div>
-        ))}
+              </Link>
+            </motion.div>
+          );
+        })}
       </div>
     </section>
   );

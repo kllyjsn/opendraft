@@ -262,6 +262,13 @@ export default function Index() {
               <div className="max-w-xs mx-auto">
                 <GoogleSignInButton label="Sign up free with Google" />
               </div>
+              <div className="flex items-center justify-center gap-3 text-[11px] text-muted-foreground mt-1">
+                <span>🚀 1,000+ apps</span>
+                <span className="text-border">·</span>
+                <span>🔒 Full source code</span>
+                <span className="text-border">·</span>
+                <span>⚡ Instant access</span>
+              </div>
             </div>
           )}
 

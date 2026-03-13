@@ -30,6 +30,7 @@ import BountyDetail from "./pages/BountyDetail";
 import Builders from "./pages/Builders";
 import BuilderProfile from "./pages/BuilderProfile";
 import Category from "./pages/Category";
+import LifestyleCategory from "./pages/LifestyleCategory";
 import BuiltWith from "./pages/BuiltWith";
 import GuideSell from "./pages/GuideSell";
 import { BlogIndex, BlogPost } from "./pages/Blog";
@@ -81,6 +82,7 @@ const App = () => (
           <Route path="/builders" element={<Builders />} />
           <Route path="/builder/:userId" element={<BuilderProfile />} />
           <Route path="/category/:slug" element={<Category />} />
+          <Route path="/lifestyle/:slug" element={<LifestyleCategory />} />
           <Route path="/built-with/:tool" element={<BuiltWith />} />
           <Route path="/guides/sell" element={<GuideSell />} />
           <Route path="/guides/creators" element={<CreatorHandbook />} />

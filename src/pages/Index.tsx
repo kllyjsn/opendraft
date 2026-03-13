@@ -10,7 +10,8 @@ import { Search, TrendingUp, SlidersHorizontal, X, Loader2, ChevronDown, ArrowRi
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { GoogleSignInButton } from "@/components/GoogleSignInButton";
-import { FeaturedListings } from "@/components/FeaturedListings";
+import { LifestyleCategories } from "@/components/LifestyleCategories";
+import { StaffPicks } from "@/components/StaffPicks";
 import { BrandMascot } from "@/components/BrandMascot";
 import { JsonLd } from "@/components/JsonLd";
 import { MetaTags } from "@/components/MetaTags";
@@ -308,8 +309,11 @@ export default function Index() {
         </div>
       </section>
 
-      {/* ── TRENDING (immediately visible) ── */}
-      <FeaturedListings />
+      {/* ── LIFESTYLE CATEGORIES ── */}
+      <LifestyleCategories />
+
+      {/* ── STAFF PICKS ── */}
+      <StaffPicks />
 
       {/* ── BROWSE ALL ── */}
       <section id="browse" className="container mx-auto px-4 pb-24">

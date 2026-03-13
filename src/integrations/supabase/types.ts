@@ -870,6 +870,8 @@ export type Database = {
           search_vector: unknown
           security_score: number | null
           seller_id: string
+          staff_pick: boolean
+          staff_pick_category: string | null
           status: Database["public"]["Enums"]["listing_status"]
           tech_stack: string[] | null
           title: string
@@ -896,6 +898,8 @@ export type Database = {
           search_vector?: unknown
           security_score?: number | null
           seller_id: string
+          staff_pick?: boolean
+          staff_pick_category?: string | null
           status?: Database["public"]["Enums"]["listing_status"]
           tech_stack?: string[] | null
           title: string
@@ -922,6 +926,8 @@ export type Database = {
           search_vector?: unknown
           security_score?: number | null
           seller_id?: string
+          staff_pick?: boolean
+          staff_pick_category?: string | null
           status?: Database["public"]["Enums"]["listing_status"]
           tech_stack?: string[] | null
           title?: string

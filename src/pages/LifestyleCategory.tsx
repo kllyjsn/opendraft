@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { MetaTags } from "@/components/MetaTags";
 import { JsonLd } from "@/components/JsonLd";
 import { Button } from "@/components/ui/button";
+import { CATEGORY_GREMLINS } from "@/components/CategoryGremlins";
 
 import homeKitchenImg from "@/assets/category-home-kitchen.jpg";
 import healthFitnessImg from "@/assets/category-health-fitness.jpg";

@@ -399,6 +399,7 @@ export default function ListingDetail() {
               <div className="flex flex-wrap items-center gap-3">
                 <CompletenessBadge level={listing.completeness_badge} />
                 <SecurityBadge score={listing.security_score} />
+                {listing.agent_ready && <AgentReadyBadge />}
                 {avgRating !== null && (
                   <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
                     <Star className="h-4 w-4 fill-accent text-accent" />

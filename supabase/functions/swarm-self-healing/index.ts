@@ -105,7 +105,7 @@ serve(async (req) => {
     // ── PHASE 3: Deep analysis per listing ──
     for (const target of allTargets) {
       const isDeployed = deployedIds.has(target.listing_id);
-      const cooldown = isDeployed ? oneDayAgo : sevenDaysAgo;
+      const cooldown = isDeployed ? eightHoursAgo : twoDaysAgo;
 
       const lastAnalysis = recentMap.get(target.listing_id);
       if (lastAnalysis && lastAnalysis > cooldown) {

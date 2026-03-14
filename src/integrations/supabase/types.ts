@@ -851,6 +851,7 @@ export type Database = {
       }
       listings: {
         Row: {
+          agent_ready: boolean
           built_with: string | null
           category: Database["public"]["Enums"]["listing_category"]
           completeness_badge: Database["public"]["Enums"]["completeness_badge"]
@@ -879,6 +880,7 @@ export type Database = {
           view_count: number | null
         }
         Insert: {
+          agent_ready?: boolean
           built_with?: string | null
           category?: Database["public"]["Enums"]["listing_category"]
           completeness_badge?: Database["public"]["Enums"]["completeness_badge"]
@@ -907,6 +909,7 @@ export type Database = {
           view_count?: number | null
         }
         Update: {
+          agent_ready?: boolean
           built_with?: string | null
           category?: Database["public"]["Enums"]["listing_category"]
           completeness_badge?: Database["public"]["Enums"]["completeness_badge"]

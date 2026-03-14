@@ -21,7 +21,7 @@ const COMPLETENESS = ["All", "Prototype", "MVP", "Production Ready"];
 const SORT_OPTIONS = ["Newest", "Popular"];
 const PAGE_SIZE = 24;
 
-const ROTATING_WORDS = ["person", "business"];
+const ROTATING_WORDS = ["person", "business", "gremlin"];
 
 function HeroTagline() {
   const [index, setIndex] = useState(0);

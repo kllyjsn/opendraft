@@ -104,7 +104,7 @@ Deno.serve(async (req) => {
           .single();
         
         const plan = sub?.plan;
-        const limit = plan === "unlimited" ? Infinity : plan === "growth" ? 20 : plan === "starter" ? 5 : 1;
+        const limit = (plan === "unlimited" || plan === "pro") ? Infinity : plan === "growth" ? 20 : plan === "starter" ? 5 : 1;
         if (purchaseCount >= limit) {
           throw new Error("You've reached your plan's app limit. Upgrade to claim more.");
         }

@@ -22,6 +22,7 @@ interface ListingCardProps {
   seller_id?: string;
   seller_username?: string;
   security_score?: number | null;
+  agent_ready?: boolean;
 }
 
 export type { ListingCardProps };

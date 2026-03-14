@@ -82,6 +82,7 @@ interface Listing {
   seller_id: string;
   security_score: number | null;
   staff_pick: boolean;
+  agent_ready?: boolean;
 }
 
 export default function LifestyleCategory() {

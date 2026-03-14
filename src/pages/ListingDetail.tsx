@@ -52,6 +52,7 @@ interface Listing {
   created_at: string;
   built_with: string | null;
   security_score: number | null;
+  agent_ready?: boolean;
 }
 
 interface Review {

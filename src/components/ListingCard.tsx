@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { CompletenessBadge } from "./CompletenessBadge";
 import { SecurityBadge } from "./SecurityBadge";
+import { AgentReadyBadge } from "./AgentReadyBadge";
 import { Star, Eye, CheckCircle, Rocket } from "lucide-react";
 
 interface ListingCardProps {
@@ -21,6 +22,7 @@ interface ListingCardProps {
   seller_id?: string;
   seller_username?: string;
   security_score?: number | null;
+  agent_ready?: boolean;
 }
 
 export type { ListingCardProps };
@@ -37,7 +39,7 @@ const BUILT_WITH_LABELS: Record<string, string> = {
 export function ListingCard({
   id, title, description, price, pricing_type, completeness_badge,
   tech_stack, screenshots, sales_count, view_count, avg_rating, owned, built_with,
-  seller_id, seller_username, security_score,
+  seller_id, seller_username, security_score, agent_ready,
 }: ListingCardProps) {
   const navigate = useNavigate();
   const thumbnail = screenshots?.[0];
@@ -115,6 +117,11 @@ export function ListingCard({
             {security_score !== null && security_score !== undefined && (
               <span className="ml-1 mt-1.5 inline-block">
                 <SecurityBadge score={security_score} compact />
+              </span>
+            )}
+            {agent_ready && (
+              <span className="ml-1 mt-1.5 inline-block">
+                <AgentReadyBadge compact />
               </span>
             )}
           </div>

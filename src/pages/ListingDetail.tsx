@@ -22,6 +22,7 @@ import { JsonLd } from "@/components/JsonLd";
 import { MetaTags } from "@/components/MetaTags";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { FlagListingButton } from "@/components/FlagListingButton";
+import { AgentReadyBadge } from "@/components/AgentReadyBadge";
 import { BuyerWelcomeModal } from "@/components/BuyerWelcomeModal";
 import { GoogleSignInButton } from "@/components/GoogleSignInButton";
 const BUILT_WITH_LABELS: Record<string, string> = {
@@ -52,6 +53,7 @@ interface Listing {
   created_at: string;
   built_with: string | null;
   security_score: number | null;
+  agent_ready?: boolean;
 }
 
 interface Review {
@@ -398,6 +400,7 @@ export default function ListingDetail() {
               <div className="flex flex-wrap items-center gap-3">
                 <CompletenessBadge level={listing.completeness_badge} />
                 <SecurityBadge score={listing.security_score} />
+                {listing.agent_ready && <AgentReadyBadge />}
                 {avgRating !== null && (
                   <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
                     <Star className="h-4 w-4 fill-accent text-accent" />

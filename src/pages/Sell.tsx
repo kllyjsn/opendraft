@@ -284,10 +284,10 @@ export default function Sell() {
               </div>
               {/* Listing info */}
               <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
-                <p className="text-sm font-bold text-primary mb-1">🚀 Ready to claim</p>
+              <p className="text-sm font-bold text-primary mb-1">🚀 What claimers get</p>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  Subscribers can claim your project and get the full source code. 
-                  You earn visibility and can offer optional paid support retainers separately.
+                  Full source code (React + TypeScript) · Netlify & Vercel deploy configs · 
+                  Auto-generated README · Security audit · Direct messaging with you, the builder.
                 </p>
               </div>
             </>

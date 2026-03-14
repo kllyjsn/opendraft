@@ -131,6 +131,14 @@ export default function Sell() {
   async function handleSubmit() {
     if (!user) return;
     setSubmitting(true);
+
+    // Quality gate: require at least a ZIP file or GitHub URL
+    if (!form.file_path && !form.github_url) {
+      toast({ title: "Deliverable required", description: "Upload a ZIP file or add a GitHub URL so buyers can access your source code.", variant: "destructive" });
+      setSubmitting(false);
+      return;
+    }
+
     const priceFloat = parseFloat(form.price);
     if (isNaN(priceFloat) || priceFloat < 0) {
       toast({ title: "Price must be $0.00 or more", variant: "destructive" });

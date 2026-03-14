@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { Link, useNavigate } from "react-router-dom";
 import { CompletenessBadge } from "@/components/CompletenessBadge";
-import { ArrowRight, Sparkles, Loader2, ShoppingCart, X, Wand2, CheckCircle, AlertCircle, ExternalLink, Search, Zap } from "lucide-react";
+import { ArrowRight, Sparkles, Loader2, ShoppingCart, X, Wand2, CheckCircle, AlertCircle, ExternalLink, Search, Zap, TrendingUp, Clock, Star, Filter } from "lucide-react";
 import { logActivity } from "@/lib/activity-logger";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -15,6 +15,15 @@ const PLACEHOLDERS = [
   "a full-stack todo app with auth...",
   "a React dashboard with charts...",
   "a Twitter clone with Supabase...",
+];
+
+const TRENDING_SEARCHES = [
+  { label: "AI Tools", query: "AI powered tool" },
+  { label: "SaaS Starter", query: "SaaS boilerplate with auth" },
+  { label: "Dashboard", query: "admin dashboard" },
+  { label: "Landing Page", query: "startup landing page" },
+  { label: "MCP Server", query: "MCP server agent" },
+  { label: "E-commerce", query: "online store shopping cart" },
 ];
 
 const STAGE_MAP: Record<string, { label: string; pct: number }> = {
@@ -52,6 +61,18 @@ interface GenerationJob {
   error: string | null;
 }
 
+const RECENT_SEARCHES_KEY = "od_recent_searches";
+function getRecentSearches(): string[] {
+  try {
+    return JSON.parse(localStorage.getItem(RECENT_SEARCHES_KEY) || "[]").slice(0, 5);
+  } catch { return []; }
+}
+function addRecentSearch(query: string) {
+  const recent = getRecentSearches().filter(s => s.toLowerCase() !== query.toLowerCase());
+  recent.unshift(query);
+  localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(recent.slice(0, 5)));
+}
+
 export function BuildSearch() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -66,9 +87,12 @@ export function BuildSearch() {
   const [error, setError] = useState<string | null>(null);
   const [placeholderIdx, setPlaceholderIdx] = useState(0);
   const [isTyping, setIsTyping] = useState(false);
+  const [showRecent, setShowRecent] = useState(false);
+  const [focused, setFocused] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchCacheRef = useRef<Map<string, MatchedListing[]>>(new Map());
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -77,10 +101,18 @@ export function BuildSearch() {
     return () => clearInterval(interval);
   }, []);
 
-  // Debounced instant text search as user types
+  // Debounced instant text search — 200ms for speed
   const runInstantSearch = useCallback(async (query: string) => {
-    if (query.length < 3) {
+    if (query.length < 2) {
       setInstantResults(null);
+      setIsTyping(false);
+      return;
+    }
+
+    // Check cache first
+    const cacheKey = query.toLowerCase().trim();
+    if (searchCacheRef.current.has(cacheKey)) {
+      setInstantResults(searchCacheRef.current.get(cacheKey)!);
       setIsTyping(false);
       return;
     }
@@ -88,14 +120,20 @@ export function BuildSearch() {
     try {
       const { data } = await supabase.rpc("search_listings", {
         search_query: query,
-        page_limit: 5,
+        page_limit: 8,
         page_offset: 0,
         sort_by: "relevance",
       });
 
       if (data && data.length > 0) {
-        setInstantResults(
-          data.map((l: any) => ({
+        // Filter: only show listings with real screenshots and deliverables
+        const quality = data
+          .filter((l: any) => {
+            const hasScreenshot = l.screenshots && l.screenshots.length > 0 
+              && l.screenshots[0] !== '' && !l.screenshots[0]?.endsWith('.svg');
+            return hasScreenshot;
+          })
+          .map((l: any) => ({
             id: l.id,
             title: l.title,
             description: l.description,
@@ -107,8 +145,14 @@ export function BuildSearch() {
             sales_count: l.sales_count || 0,
             score: l.relevance_score || 0.5,
             reason: "Keyword match",
-          }))
-        );
+          }));
+
+        if (quality.length > 0) {
+          searchCacheRef.current.set(cacheKey, quality);
+          setInstantResults(quality);
+        } else {
+          setInstantResults(null);
+        }
       } else {
         setInstantResults(null);
       }
@@ -121,19 +165,43 @@ export function BuildSearch() {
 
   function handlePromptChange(value: string) {
     setPrompt(value);
-    
-    // Clear previous debounce
+    setShowRecent(false);
+
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    
-    if (value.trim().length >= 3 && !results) {
+
+    if (value.trim().length >= 2 && !results) {
       setIsTyping(true);
       debounceRef.current = setTimeout(() => {
         runInstantSearch(value.trim());
-      }, 400);
+      }, 200);
     } else {
       setInstantResults(null);
       setIsTyping(false);
     }
+  }
+
+  function handleFocus() {
+    setFocused(true);
+    if (!prompt.trim() && !results) {
+      setShowRecent(true);
+    }
+  }
+
+  function handleBlur() {
+    // Delay to allow clicks on dropdown items
+    setTimeout(() => {
+      setFocused(false);
+      setShowRecent(false);
+    }, 200);
+  }
+
+  function handleTrendingClick(query: string) {
+    setPrompt(query);
+    setShowRecent(false);
+    setInstantResults(null);
+    // Trigger instant search immediately
+    setIsTyping(true);
+    runInstantSearch(query);
   }
 
   // Subscribe to job updates via realtime
@@ -198,9 +266,12 @@ export function BuildSearch() {
     setLoading(true);
     setResults(null);
     setInstantResults(null);
+    setShowRecent(false);
     setNoMatch(false);
     setError(null);
     setJob(null);
+
+    addRecentSearch(prompt.trim());
 
     try {
       const { data, error: fnError } = await supabase.functions.invoke("match-listings", {
@@ -237,6 +308,7 @@ export function BuildSearch() {
     setPrompt("");
     setResults(null);
     setInstantResults(null);
+    setShowRecent(false);
     setNoMatch(false);
     setError(null);
     setJob(null);
@@ -370,12 +442,31 @@ export function BuildSearch() {
     </Button>
   );
 
-  // Show instant results or full AI results
   const displayResults = results || null;
   const showInstant = !results && !loading && instantResults && instantResults.length > 0;
+  const recentSearches = getRecentSearches();
+  const showRecentDropdown = showRecent && !prompt.trim() && !results && !loading && (recentSearches.length > 0);
 
   return (
     <div className="w-full max-w-2xl mx-auto">
+      {/* Trending search chips */}
+      {!results && !loading && !prompt && (
+        <div className="flex flex-wrap items-center justify-center gap-2 mb-4">
+          <span className="text-xs text-muted-foreground flex items-center gap-1">
+            <TrendingUp className="h-3 w-3" /> Trending:
+          </span>
+          {TRENDING_SEARCHES.map((t) => (
+            <button
+              key={t.query}
+              onClick={() => handleTrendingClick(t.query)}
+              className="text-xs px-3 py-1.5 rounded-full bg-muted/60 text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all duration-200 border border-transparent hover:border-primary/20"
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      )}
+
       <form onSubmit={handleSearch} className="relative">
         <div className="relative rounded-2xl border border-border bg-card shadow-card overflow-hidden focus-within:border-primary/50 focus-within:shadow-glow transition-all duration-300">
           <div className="flex items-start gap-3 p-4">
@@ -388,6 +479,8 @@ export function BuildSearch() {
               value={prompt}
               onChange={(e) => handlePromptChange(e.target.value)}
               onKeyDown={handleKeyDown}
+              onFocus={handleFocus}
+              onBlur={handleBlur}
               placeholder={`I want to build ${PLACEHOLDERS[placeholderIdx]}`}
               className="flex-1 bg-transparent resize-none text-sm md:text-base text-foreground placeholder:text-muted-foreground focus:outline-none leading-relaxed"
             />
@@ -401,8 +494,12 @@ export function BuildSearch() {
             <p className="text-xs text-muted-foreground">
               {isTyping ? (
                 <span className="flex items-center gap-1.5"><Loader2 className="h-3 w-3 animate-spin" /> Searching…</span>
+              ) : prompt.trim().length > 0 ? (
+                <span className="flex items-center gap-1.5">
+                  <Search className="h-3 w-3" /> Press Enter for AI deep search
+                </span>
               ) : (
-                "Press Enter for AI-powered deep search"
+                "Describe what you want to build"
               )}
             </p>
             <Button
@@ -423,35 +520,78 @@ export function BuildSearch() {
         </div>
       </form>
 
-      {/* Instant results dropdown — appears while typing */}
+      {/* Recent searches dropdown */}
+      {showRecentDropdown && (
+        <div className="mt-2 rounded-xl border border-border bg-card shadow-lg overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="px-3 py-2 border-b border-border/50 bg-muted/30 flex items-center gap-2">
+            <Clock className="h-3 w-3 text-muted-foreground" />
+            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Recent searches</span>
+          </div>
+          {recentSearches.map((s, i) => (
+            <button
+              key={i}
+              onClick={() => {
+                setPrompt(s);
+                setShowRecent(false);
+                setIsTyping(true);
+                runInstantSearch(s);
+              }}
+              className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-muted/50 transition-colors border-b border-border/30 last:border-0 text-left"
+            >
+              <Search className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+              <span className="text-sm text-foreground truncate">{s}</span>
+              <ArrowRight className="h-3 w-3 text-muted-foreground ml-auto flex-shrink-0" />
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Instant results dropdown */}
       {showInstant && (
         <div className="mt-2 rounded-xl border border-border bg-card shadow-lg overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
           <div className="px-3 py-2 border-b border-border/50 bg-muted/30 flex items-center gap-2">
             <Zap className="h-3 w-3 text-accent" />
             <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Quick matches</span>
-            <span className="text-[10px] text-muted-foreground ml-auto">Press Enter for AI deep search</span>
+            <span className="text-[10px] text-muted-foreground ml-auto">Enter ↵ for AI deep search</span>
           </div>
-          {instantResults.map((listing) => (
+          {instantResults!.slice(0, 6).map((listing) => (
             <Link
               key={listing.id}
               to={`/listing/${listing.id}`}
-              className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors border-b border-border/30 last:border-0"
+              className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors border-b border-border/30 last:border-0 group"
             >
               {listing.screenshots?.[0] && (
-                <div className="flex-shrink-0 h-10 w-14 rounded-md overflow-hidden bg-muted">
-                  <img src={listing.screenshots[0]} alt={listing.title} className="w-full h-full object-cover" />
+                <div className="flex-shrink-0 h-10 w-14 rounded-md overflow-hidden bg-muted ring-1 ring-border">
+                  <img src={listing.screenshots[0]} alt={listing.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200" />
                 </div>
               )}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold line-clamp-1">{listing.title}</p>
-                <p className="text-xs text-muted-foreground line-clamp-1">{listing.description?.slice(0, 80)}</p>
+                <p className="text-sm font-semibold line-clamp-1 group-hover:text-primary transition-colors">{listing.title}</p>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className="text-xs font-bold text-foreground">
+                    {listing.price === 0 ? "Free" : `$${(listing.price / 100).toFixed(0)}`}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground">•</span>
+                  <span className="text-[10px] text-muted-foreground">{listing.sales_count} claimed</span>
+                  {listing.tech_stack?.slice(0, 2).map((t) => (
+                    <span key={t} className="text-[10px] text-muted-foreground bg-muted rounded px-1">{t}</span>
+                  ))}
+                </div>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
                 <CompletenessBadge level={listing.completeness_badge} showTooltip={false} />
-                <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
+                <ArrowRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
               </div>
             </Link>
           ))}
+          {instantResults!.length > 6 && (
+            <button
+              onClick={handleSearch}
+              className="w-full px-4 py-2.5 text-xs text-primary font-semibold hover:bg-primary/5 transition-colors flex items-center justify-center gap-1.5"
+            >
+              <Sparkles className="h-3 w-3" /> See all {instantResults!.length} results with AI ranking
+            </button>
+          )}
         </div>
       )}
 
@@ -465,8 +605,8 @@ export function BuildSearch() {
                 <Sparkles className="h-5 w-5 text-white animate-pulse" />
               </div>
             </div>
-            <p className="text-sm font-medium text-foreground mt-4">AI is analyzing {'>'}300 projects…</p>
-            <p className="text-xs text-muted-foreground mt-1">Finding the best semantic matches for your idea</p>
+            <p className="text-sm font-medium text-foreground mt-4">AI is analyzing your request…</p>
+            <p className="text-xs text-muted-foreground mt-1">Semantic matching across the entire marketplace</p>
           </div>
         )}
 
@@ -478,58 +618,73 @@ export function BuildSearch() {
 
         {displayResults && displayResults.length > 0 && (
           <div className="mt-6 space-y-3">
-            <p className="text-sm font-semibold text-foreground flex items-center gap-2">
-              <span className="h-5 w-5 rounded-full gradient-hero flex items-center justify-center text-white text-xs">{displayResults.length}</span>
-              matching projects found — claim & ship today
-            </p>
-            {displayResults.map((listing, idx) => (
-              <div
-                key={listing.id}
-                className="rounded-xl border border-border bg-card overflow-hidden hover:border-primary/40 hover:shadow-card transition-all duration-200"
-              >
-                <div className="flex gap-4 p-4">
-                  {listing.screenshots?.[0] && (
-                    <div className="flex-shrink-0 h-16 w-24 rounded-lg overflow-hidden bg-muted">
-                      <img src={listing.screenshots[0]} alt={listing.title} className="w-full h-full object-cover" />
-                    </div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2 mb-1">
-                      <h3 className="font-bold text-sm leading-snug line-clamp-1">{listing.title}</h3>
-                      <div className="flex items-center gap-1.5 flex-shrink-0">
-                        {listing.score >= 0.8 && (
-                          <span className="text-[10px] font-bold text-primary bg-primary/10 rounded-full px-1.5 py-0.5">Top match</span>
-                        )}
-                        <span className="text-sm font-black text-foreground">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <span className="h-5 w-5 rounded-full gradient-hero flex items-center justify-center text-white text-xs">{displayResults.length}</span>
+                AI-ranked matches
+              </p>
+              <p className="text-[10px] text-muted-foreground">Sorted by relevance</p>
+            </div>
+            {displayResults.map((listing, idx) => {
+              const scoreColor = listing.score >= 0.8 ? "text-green-500" : listing.score >= 0.6 ? "text-yellow-500" : "text-muted-foreground";
+              const scoreLabel = listing.score >= 0.8 ? "Excellent" : listing.score >= 0.6 ? "Good" : "Related";
+              return (
+                <div
+                  key={listing.id}
+                  className="rounded-xl border border-border bg-card overflow-hidden hover:border-primary/40 hover:shadow-card transition-all duration-200 group"
+                >
+                  <div className="flex gap-4 p-4">
+                    {listing.screenshots?.[0] && (
+                      <div className="flex-shrink-0 h-20 w-28 rounded-lg overflow-hidden bg-muted ring-1 ring-border">
+                        <img src={listing.screenshots[0]} alt={listing.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2 mb-1">
+                        <div>
+                          <h3 className="font-bold text-sm leading-snug line-clamp-1 group-hover:text-primary transition-colors">{listing.title}</h3>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            {/* Score indicator */}
+                            <div className="flex items-center gap-1">
+                              <div className="flex gap-px">
+                                {[1, 2, 3, 4, 5].map((s) => (
+                                  <div key={s} className={`h-1.5 w-3 rounded-sm ${s <= Math.round(listing.score * 5) ? 'gradient-hero' : 'bg-muted'}`} />
+                                ))}
+                              </div>
+                              <span className={`text-[10px] font-bold ${scoreColor}`}>{scoreLabel}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <span className="text-sm font-black text-foreground flex-shrink-0">
                           {listing.price === 0 ? "Free" : `$${(listing.price / 100).toFixed(0)}`}
                         </span>
                       </div>
-                    </div>
-                    <p className="text-xs text-muted-foreground line-clamp-2 mb-2">{listing.reason}</p>
-                    {listing.sales_count <= 3 && (
-                      <p className="text-[10px] font-bold text-accent flex items-center gap-1 mb-1.5">
-                        🚀 {listing.sales_count === 0 ? "No buyers yet — be first & shape the roadmap" : "Early adopter — influence future features"}
-                      </p>
-                    )}
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2 overflow-hidden">
-                        <CompletenessBadge level={listing.completeness_badge} showTooltip={false} />
-                        {listing.tech_stack?.slice(0, 3).map((t) => (
-                          <span key={t} className="rounded-md bg-muted px-1.5 py-0.5 text-xs text-muted-foreground whitespace-nowrap">{t}</span>
-                        ))}
+                      <p className="text-xs text-muted-foreground line-clamp-2 mb-2">{listing.reason}</p>
+                      {listing.sales_count <= 3 && (
+                        <p className="text-[10px] font-bold text-accent flex items-center gap-1 mb-1.5">
+                          🚀 {listing.sales_count === 0 ? "No buyers yet — be first & shape the roadmap" : "Early adopter — influence future features"}
+                        </p>
+                      )}
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 overflow-hidden">
+                          <CompletenessBadge level={listing.completeness_badge} showTooltip={false} />
+                          {listing.tech_stack?.slice(0, 3).map((t) => (
+                            <span key={t} className="rounded-md bg-muted px-1.5 py-0.5 text-xs text-muted-foreground whitespace-nowrap">{t}</span>
+                          ))}
+                        </div>
+                        <Link to={`/listing/${listing.id}`}>
+                          <Button size="sm" className="gradient-hero text-white border-0 hover:opacity-90 h-7 px-3 text-xs">
+                            <ShoppingCart className="h-3 w-3 mr-1" /> View
+                          </Button>
+                        </Link>
                       </div>
-                      <Link to={`/listing/${listing.id}`}>
-                        <Button size="sm" className="gradient-hero text-white border-0 hover:opacity-90 h-7 px-3 text-xs">
-                          <ShoppingCart className="h-3 w-3 mr-1" /> View
-                        </Button>
-                      </Link>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
 
-            {/* Build your own CTA — after results */}
+            {/* Build your own CTA */}
             <div className="rounded-xl border border-dashed border-border bg-card/50 p-4 text-center space-y-3">
               <p className="text-sm text-muted-foreground">
                 Want something more tailored? <span className="text-foreground font-medium">We'll build it for you.</span>

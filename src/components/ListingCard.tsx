@@ -119,6 +119,11 @@ export function ListingCard({
                 <SecurityBadge score={security_score} compact />
               </span>
             )}
+            {agent_ready && (
+              <span className="ml-1 mt-1.5 inline-block">
+                <AgentReadyBadge compact />
+              </span>
+            )}
           </div>
 
           {tech_stack.length > 0 && (

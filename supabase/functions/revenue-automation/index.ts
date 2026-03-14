@@ -198,6 +198,22 @@ Deno.serve(async (req) => {
       results.push("Failed to trigger payout transfers");
     }
 
+    // ---------------------------------------------------------------
+    // 7. AUTO-ENRICH LISTINGS
+    // Automatically improve weak titles, descriptions, screenshots,
+    // tech stacks, and completeness badges for all live listings
+    // ---------------------------------------------------------------
+    try {
+      await fetch(`${supabaseUrl}/functions/v1/swarm-auto-enrich`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${anonKey}` },
+        body: JSON.stringify({ batch_size: 15, triggered_by: "revenue_automation" }),
+      });
+      results.push("Triggered auto-enrich for listings");
+    } catch (e) {
+      results.push("Failed to trigger auto-enrich");
+    }
+
     console.log("Revenue automation complete:", results.join("; "));
 
     return new Response(JSON.stringify({ success: true, results }), {

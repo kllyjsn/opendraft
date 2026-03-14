@@ -24,6 +24,7 @@ interface PendingListing {
   screenshots: string[];
   demo_url: string | null;
   github_url: string | null;
+  file_path: string | null;
   created_at: string;
   seller_id: string;
 }

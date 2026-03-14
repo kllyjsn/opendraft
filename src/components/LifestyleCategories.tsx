@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
-import { CATEGORY_GREMLINS } from "./CategoryGremlins";
+
 
 import homeKitchenImg from "@/assets/category-home-kitchen.jpg";
 import healthFitnessImg from "@/assets/category-health-fitness.jpg";

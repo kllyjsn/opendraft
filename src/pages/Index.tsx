@@ -12,9 +12,11 @@ import { useAuth } from "@/hooks/useAuth";
 import { GoogleSignInButton } from "@/components/GoogleSignInButton";
 import { LifestyleCategories } from "@/components/LifestyleCategories";
 import { StaffPicks } from "@/components/StaffPicks";
+import { DiscoveryRails } from "@/components/DiscoveryRails";
 import { BrandMascot } from "@/components/BrandMascot";
 import { JsonLd } from "@/components/JsonLd";
 import { MetaTags } from "@/components/MetaTags";
+import { CTA_COPY } from "@/lib/pricing-tiers";
 
 const CATEGORIES = ["All", "SaaS Tool", "AI App", "Landing Page", "Utility", "Game", "Other"];
 const COMPLETENESS = ["All", "Prototype", "MVP", "Production Ready"];

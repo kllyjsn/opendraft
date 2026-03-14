@@ -345,7 +345,7 @@ Rules:
         } catch (e) {
           console.error(`Analysis trigger failed for ${l.id}:`, e);
         }
-        await new Promise(r => setTimeout(r, 3000));
+        await new Promise(r => setTimeout(r, 1500));
       }
     }
 

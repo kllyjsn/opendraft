@@ -28,15 +28,14 @@ serve(async (req) => {
       .from("deployed_sites")
       .select("listing_id, user_id, site_url")
       .in("status", ["healthy", "degraded"])
-      .limit(50);
+      .limit(200);
 
-    // ── PHASE 2: ALL live listings with demo_url (no deploy/goals required) ──
+    // ── PHASE 2: ALL live listings (no deploy/goals/demo required) ──
     const { data: demoListings } = await supabase
       .from("listings")
       .select("id, seller_id, demo_url")
       .eq("status", "live")
-      .not("demo_url", "is", null)
-      .limit(100);
+      .limit(500);
 
     // Merge both sources — deduplicate
     const deployedIds = new Set((deployedSites || []).map(s => s.listing_id));

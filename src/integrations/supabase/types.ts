@@ -1744,6 +1744,10 @@ export type Database = {
         Args: { seller_id_param: string }
         Returns: undefined
       }
+      listing_has_screenshot: {
+        Args: { screenshots: string[] }
+        Returns: boolean
+      }
       search_listings: {
         Args: {
           category_filter?: string

@@ -24,6 +24,7 @@ interface PendingListing {
   screenshots: string[];
   demo_url: string | null;
   github_url: string | null;
+  file_path: string | null;
   created_at: string;
   seller_id: string;
 }
@@ -456,6 +457,12 @@ export default function Admin() {
                     <div className="flex flex-wrap items-center gap-2 mb-3">
                       <CompletenessBadge level={listing.completeness_badge} showTooltip={false} />
                       <span className="rounded-md bg-muted px-1.5 py-0.5 text-xs text-muted-foreground capitalize">{listing.category.replace("_", " ")}</span>
+                      {!listing.file_path && !listing.github_url && (
+                        <span className="rounded-md bg-red-500/15 text-red-500 px-1.5 py-0.5 text-xs font-semibold">⚠ No deliverable</span>
+                      )}
+                      {(!listing.screenshots || listing.screenshots.length === 0 || !listing.screenshots[0]) && (
+                        <span className="rounded-md bg-yellow-500/15 text-yellow-600 px-1.5 py-0.5 text-xs font-semibold">⚠ No screenshot</span>
+                      )}
                       {listing.tech_stack?.slice(0, 3).map((t) => (
                         <span key={t} className="rounded-md bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">{t}</span>
                       ))}

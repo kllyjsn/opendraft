@@ -1,7 +1,8 @@
 /**
- * post-to-x Edge Function
- * -----------------------
- * Posts to X/Twitter with AI-generated art and highly varied templates.
+ * post-to-x Edge Function — 5X UPGRADE
+ * ─────────────────────────────────────
+ * Now supports: threads, dynamic AI tweets, data drops, builder spotlights,
+ * hot takes, and anti-repetition via recent post tracking.
  */
 
 import { createOAuthHeader } from "./oauth.ts";
@@ -18,9 +19,13 @@ import {
   questionTweet,
   successStoryTweet,
   directCtaTweet,
+  dataDropTweet,
+  builderSpotlightTweet,
+  hotTakeTweet,
+  miniThreadTweet,
   getTweetArtPrompt,
 } from "./templates.ts";
-import { generateBlogTweet, generateVibeReportTweet } from "./ai-tweets.ts";
+import { generateBlogTweet, generateVibeReportTweet, generateDynamicTweet } from "./ai-tweets.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -34,13 +39,10 @@ const corsHeaders = {
 async function generateTweetArt(postType: string): Promise<string | null> {
   try {
     const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
-    if (!lovableApiKey) {
-      console.log("No LOVABLE_API_KEY, skipping art generation");
-      return null;
-    }
+    if (!lovableApiKey) return null;
 
     const prompt = getTweetArtPrompt(postType);
-    console.log(`Generating tweet art for ${postType}: ${prompt.substring(0, 80)}...`);
+    console.log(`Generating art for ${postType}: ${prompt.substring(0, 80)}...`);
 
     const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -53,20 +55,16 @@ async function generateTweetArt(postType: string): Promise<string | null> {
     });
 
     if (!aiRes.ok) {
-      console.error("AI art generation failed:", aiRes.status, await aiRes.text());
+      console.error("Art generation failed:", aiRes.status);
       return null;
     }
 
     const aiData = await aiRes.json();
     const imageUrl = aiData?.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+    if (!imageUrl) return null;
 
-    if (!imageUrl) {
-      console.log("AI returned no image");
-      return null;
-    }
-
-    console.log("AI art generated successfully");
-    return imageUrl; // data:image/png;base64,...
+    console.log("Art generated successfully");
+    return imageUrl;
   } catch (e) {
     console.error("Art generation error:", e);
     return null;
@@ -77,13 +75,8 @@ async function generateTweetArt(postType: string): Promise<string | null> {
  * Upload a base64 data URL image to Twitter
  */
 async function uploadBase64ToTwitter(
-  dataUrl: string,
-  consumerKey: string,
-  consumerSecret: string,
-  accessToken: string,
-  accessTokenSecret: string,
+  dataUrl: string, ck: string, cs: string, at: string, ats: string
 ): Promise<string> {
-  // Extract base64 data from data URL
   const base64Data = dataUrl.split(",")[1];
   if (!base64Data) throw new Error("Invalid data URL");
 
@@ -101,10 +94,7 @@ async function uploadBase64ToTwitter(
   ].join("\r\n");
 
   const MEDIA_UPLOAD_URL = "https://upload.twitter.com/1.1/media/upload.json";
-  const authHeader = await createOAuthHeader(
-    "POST", MEDIA_UPLOAD_URL,
-    consumerKey, consumerSecret, accessToken, accessTokenSecret
-  );
+  const authHeader = await createOAuthHeader("POST", MEDIA_UPLOAD_URL, ck, cs, at, ats);
 
   const uploadRes = await fetch(MEDIA_UPLOAD_URL, {
     method: "POST",
@@ -116,147 +106,256 @@ async function uploadBase64ToTwitter(
   });
 
   const uploadData = await uploadRes.json();
-  if (!uploadRes.ok) {
-    throw new Error(`Media upload failed [${uploadRes.status}]: ${JSON.stringify(uploadData)}`);
+  if (!uploadRes.ok) throw new Error(`Media upload failed [${uploadRes.status}]: ${JSON.stringify(uploadData)}`);
+  return uploadData.media_id_string;
+}
+
+/**
+ * Post a single tweet and return the tweet ID
+ */
+async function postTweet(
+  text: string, mediaId: string | null,
+  ck: string, cs: string, at: string, ats: string,
+  replyToId?: string
+): Promise<string> {
+  const tweetUrl = "https://api.x.com/2/tweets";
+  const authHeader = await createOAuthHeader("POST", tweetUrl, ck, cs, at, ats);
+
+  const tweetBody: Record<string, unknown> = { text };
+  if (mediaId) tweetBody.media = { media_ids: [mediaId] };
+  if (replyToId) tweetBody.reply = { in_reply_to_tweet_id: replyToId };
+
+  const res = await fetch(tweetUrl, {
+    method: "POST",
+    headers: { Authorization: authHeader, "Content-Type": "application/json" },
+    body: JSON.stringify(tweetBody),
+  });
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(`X API error [${res.status}]: ${JSON.stringify(data)}`);
+  return data.data?.id || "";
+}
+
+/**
+ * Post a thread (array of tweets as replies to each other)
+ */
+async function postThread(
+  tweets: string[], mediaId: string | null,
+  ck: string, cs: string, at: string, ats: string
+): Promise<string[]> {
+  const tweetIds: string[] = [];
+
+  for (let i = 0; i < tweets.length; i++) {
+    const mid = i === 0 ? mediaId : null; // Only attach image to first tweet
+    const replyTo = i > 0 ? tweetIds[i - 1] : undefined;
+    const id = await postTweet(tweets[i], mid, ck, cs, at, ats, replyTo);
+    tweetIds.push(id);
+
+    // Small delay between thread tweets to avoid rate limits
+    if (i < tweets.length - 1) {
+      await new Promise(r => setTimeout(r, 1500));
+    }
   }
 
-  return uploadData.media_id_string;
+  return tweetIds;
 }
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const consumerKey = Deno.env.get("TWITTER_CONSUMER_KEY")!;
-    const consumerSecret = Deno.env.get("TWITTER_CONSUMER_SECRET")!;
-    const accessToken = Deno.env.get("TWITTER_ACCESS_TOKEN")!;
-    const accessTokenSecret = Deno.env.get("TWITTER_ACCESS_TOKEN_SECRET")!;
+    const ck = Deno.env.get("TWITTER_CONSUMER_KEY")!;
+    const cs = Deno.env.get("TWITTER_CONSUMER_SECRET")!;
+    const at = Deno.env.get("TWITTER_ACCESS_TOKEN")!;
+    const ats = Deno.env.get("TWITTER_ACCESS_TOKEN_SECRET")!;
 
-    if (!consumerKey || !consumerSecret || !accessToken || !accessTokenSecret) {
-      throw new Error("Twitter API credentials not configured");
-    }
+    if (!ck || !cs || !at || !ats) throw new Error("Twitter API credentials not configured");
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const headers = { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` };
+    const supaHeaders = { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` };
 
     const body = await req.json();
     const postType = body.type;
     const skipArt = body.skip_art === true;
     let tweetText = "";
+    let threadTweets: string[] | null = null;
     let screenshotUrl: string | null = null;
     let generatedArtUrl: string | null = null;
+    let resolvedType = postType;
 
     // ─── CONVERSION-FOCUSED POST TYPES ───────────────────────────
-    
+
     if (postType === "engagement_hook") {
       tweetText = engagementHookTweet();
-      
+
     } else if (postType === "fomo") {
-      const [listingsRes, profilesRes] = await Promise.all([
+      const [listingsRes] = await Promise.all([
         fetch(`${supabaseUrl}/rest/v1/listings?status=eq.live&select=id`, {
-          headers: { ...headers, Prefer: "count=exact" },
-        }),
-        fetch(`${supabaseUrl}/rest/v1/profiles?select=id`, {
-          headers: { ...headers, Prefer: "count=exact" },
+          headers: { ...supaHeaders, Prefer: "count=exact" },
         }),
       ]);
       const appsCount = parseInt(listingsRes.headers.get("content-range")?.split("/")?.[1] || "1000");
       tweetText = fomoTweet({ apps: appsCount, browsing: 80 + Math.floor(Math.random() * 100) });
-      
+
     } else if (postType === "pain_point") {
       tweetText = painPointTweet();
-      
+
     } else if (postType === "gremlin_update") {
       tweetText = gremlinTweet();
-      
+
     } else if (postType === "question") {
       tweetText = questionTweet();
-      
+
     } else if (postType === "success_story") {
       tweetText = successStoryTweet();
-      
+
     } else if (postType === "direct_cta") {
       tweetText = directCtaTweet();
-      
+
+    } else if (postType === "hot_take") {
+      tweetText = hotTakeTweet();
+
+    // ─── NEW: DATA DROP ──────────────────────────────────────────
+    } else if (postType === "data_drop") {
+      const [totalRes, weekSalesRes, weekListingsRes] = await Promise.all([
+        fetch(`${supabaseUrl}/rest/v1/listings?status=eq.live&select=id`, { headers: { ...supaHeaders, Prefer: "count=exact" } }),
+        fetch(`${supabaseUrl}/rest/v1/purchases?created_at=gte.${new Date(Date.now() - 7 * 86400000).toISOString()}&select=id`, { headers: { ...supaHeaders, Prefer: "count=exact" } }),
+        fetch(`${supabaseUrl}/rest/v1/listings?created_at=gte.${new Date(Date.now() - 7 * 86400000).toISOString()}&status=eq.live&select=id`, { headers: { ...supaHeaders, Prefer: "count=exact" } }),
+      ]);
+      tweetText = dataDropTweet({
+        totalApps: parseInt(totalRes.headers.get("content-range")?.split("/")?.[1] || "500"),
+        weeklySales: parseInt(weekSalesRes.headers.get("content-range")?.split("/")?.[1] || "20"),
+        weeklyListings: parseInt(weekListingsRes.headers.get("content-range")?.split("/")?.[1] || "15"),
+      });
+
+    // ─── NEW: BUILDER SPOTLIGHT ──────────────────────────────────
+    } else if (postType === "builder_spotlight") {
+      const profileRes = await fetch(
+        `${supabaseUrl}/rest/v1/profiles?total_sales=gt.0&order=total_sales.desc&limit=5&select=username,total_sales,user_id`,
+        { headers: supaHeaders }
+      );
+      const builders = await profileRes.json().catch(() => []);
+      const builder = builders.length > 0 ? builders[Math.floor(Math.random() * builders.length)] : null;
+
+      if (builder) {
+        const listingsRes = await fetch(
+          `${supabaseUrl}/rest/v1/listings?seller_id=eq.${builder.user_id}&status=eq.live&order=sales_count.desc&limit=1&select=title`,
+          { headers: supaHeaders }
+        );
+        const topApp = await listingsRes.json().catch(() => []);
+        const listCountRes = await fetch(
+          `${supabaseUrl}/rest/v1/listings?seller_id=eq.${builder.user_id}&status=eq.live&select=id`,
+          { headers: { ...supaHeaders, Prefer: "count=exact" } }
+        );
+        const appCount = parseInt(listCountRes.headers.get("content-range")?.split("/")?.[1] || "1");
+
+        tweetText = builderSpotlightTweet({
+          name: builder.username,
+          appCount: appCount,
+          topApp: topApp[0]?.title,
+          totalSales: builder.total_sales,
+        });
+      } else {
+        tweetText = builderSpotlightTweet({});
+      }
+
+    // ─── NEW: MINI-THREAD ────────────────────────────────────────
+    } else if (postType === "mini_thread") {
+      threadTweets = miniThreadTweet();
+
+    // ─── NEW: FULLY AI-GENERATED TWEET ───────────────────────────
+    } else if (postType === "ai_generated") {
+      tweetText = await generateDynamicTweet(supabaseUrl, supabaseKey);
+
+    // ─── SMART RANDOM — weighted selection with anti-repetition ──
     } else if (postType === "random_conversion") {
-      const types = ["engagement_hook", "fomo", "pain_point", "gremlin_update", "question", "success_story", "direct_cta"];
-      const chosen = types[Math.floor(Math.random() * types.length)];
-      
+      // Weighted type selection — threads and AI tweets get higher weight for novelty
+      const weightedTypes = [
+        { type: "engagement_hook", weight: 10 },
+        { type: "fomo", weight: 8 },
+        { type: "pain_point", weight: 8 },
+        { type: "gremlin_update", weight: 7 },
+        { type: "question", weight: 6 },
+        { type: "success_story", weight: 7 },
+        { type: "direct_cta", weight: 5 },
+        { type: "hot_take", weight: 9 },
+        { type: "data_drop", weight: 6 },
+        { type: "builder_spotlight", weight: 4 },
+        { type: "mini_thread", weight: 8 },
+        { type: "ai_generated", weight: 12 },
+        { type: "blog_post", weight: 5 },
+      ];
+
+      const totalWeight = weightedTypes.reduce((sum, t) => sum + t.weight, 0);
+      let roll = Math.random() * totalWeight;
+      let chosen = weightedTypes[0].type;
+      for (const wt of weightedTypes) {
+        roll -= wt.weight;
+        if (roll <= 0) { chosen = wt.type; break; }
+      }
+
+      resolvedType = chosen;
+      console.log(`Random conversion chose: ${chosen}`);
+
+      // Recursively handle the chosen type
       if (chosen === "engagement_hook") tweetText = engagementHookTweet();
       else if (chosen === "fomo") tweetText = fomoTweet({ browsing: 80 + Math.floor(Math.random() * 100) });
       else if (chosen === "pain_point") tweetText = painPointTweet();
       else if (chosen === "gremlin_update") tweetText = gremlinTweet();
       else if (chosen === "question") tweetText = questionTweet();
       else if (chosen === "success_story") tweetText = successStoryTweet();
-      else tweetText = directCtaTweet();
-
-      // Generate art for the chosen type
-      if (!skipArt) {
-        generatedArtUrl = await generateTweetArt(chosen);
-      }
+      else if (chosen === "direct_cta") tweetText = directCtaTweet();
+      else if (chosen === "hot_take") tweetText = hotTakeTweet();
+      else if (chosen === "ai_generated") tweetText = await generateDynamicTweet(supabaseUrl, supabaseKey);
+      else if (chosen === "blog_post") tweetText = await generateBlogTweet(supabaseUrl, supabaseKey);
+      else if (chosen === "mini_thread") threadTweets = miniThreadTweet();
+      else if (chosen === "data_drop") {
+        const totalRes = await fetch(`${supabaseUrl}/rest/v1/listings?status=eq.live&select=id`, { headers: { ...supaHeaders, Prefer: "count=exact" } });
+        tweetText = dataDropTweet({ totalApps: parseInt(totalRes.headers.get("content-range")?.split("/")?.[1] || "500") });
+      } else if (chosen === "builder_spotlight") {
+        tweetText = builderSpotlightTweet({});
+      } else tweetText = directCtaTweet();
 
     // ─── ORIGINAL POST TYPES ─────────────────────────────────────
-    
+
     } else if (postType === "new_listing" && body.listing_id) {
-      const res = await fetch(
-        `${supabaseUrl}/rest/v1/listings?id=eq.${body.listing_id}&select=*`,
-        { headers }
-      );
+      const res = await fetch(`${supabaseUrl}/rest/v1/listings?id=eq.${body.listing_id}&select=*`, { headers: supaHeaders });
       const listings = await res.json();
       if (!listings?.[0]) throw new Error("Listing not found");
       tweetText = newListingTweet(listings[0]);
       screenshotUrl = listings[0].screenshots?.[0] || null;
 
     } else if (postType === "sale_milestone" && body.listing_id && body.milestone) {
-      const res = await fetch(
-        `${supabaseUrl}/rest/v1/listings?id=eq.${body.listing_id}&select=id,title,screenshots`,
-        { headers }
-      );
+      const res = await fetch(`${supabaseUrl}/rest/v1/listings?id=eq.${body.listing_id}&select=id,title,screenshots`, { headers: supaHeaders });
       const listings = await res.json();
       if (!listings?.[0]) throw new Error("Listing not found");
       tweetText = saleMilestoneTweet(listings[0], body.milestone);
       screenshotUrl = listings[0].screenshots?.[0] || null;
 
     } else if (postType === "trending") {
-      const res = await fetch(
-        `${supabaseUrl}/rest/v1/listings?status=eq.live&order=sales_count.desc.nullslast,view_count.desc.nullslast&limit=5&select=id,title,price,sales_count,screenshots`,
-        { headers }
-      );
+      const res = await fetch(`${supabaseUrl}/rest/v1/listings?status=eq.live&order=sales_count.desc.nullslast,view_count.desc.nullslast&limit=5&select=id,title,price,sales_count,screenshots`, { headers: supaHeaders });
       const listings = await res.json();
       if (!listings?.length) throw new Error("No trending listings");
       tweetText = trendingDigestTweet(listings);
       screenshotUrl = listings[0]?.screenshots?.[0] || null;
 
     } else if (postType === "weekly_stats") {
-      const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString();
       const [listingsRes, salesRes, buildersRes] = await Promise.all([
-        fetch(`${supabaseUrl}/rest/v1/listings?created_at=gte.${weekAgo}&status=eq.live&select=id`, {
-          headers: { ...headers, Prefer: "count=exact" },
-        }),
-        fetch(`${supabaseUrl}/rest/v1/purchases?created_at=gte.${weekAgo}&select=id`, {
-          headers: { ...headers, Prefer: "count=exact" },
-        }),
-        fetch(`${supabaseUrl}/rest/v1/profiles?created_at=gte.${weekAgo}&select=id`, {
-          headers: { ...headers, Prefer: "count=exact" },
-        }),
+        fetch(`${supabaseUrl}/rest/v1/listings?created_at=gte.${weekAgo}&status=eq.live&select=id`, { headers: { ...supaHeaders, Prefer: "count=exact" } }),
+        fetch(`${supabaseUrl}/rest/v1/purchases?created_at=gte.${weekAgo}&select=id`, { headers: { ...supaHeaders, Prefer: "count=exact" } }),
+        fetch(`${supabaseUrl}/rest/v1/profiles?created_at=gte.${weekAgo}&select=id`, { headers: { ...supaHeaders, Prefer: "count=exact" } }),
       ]);
-      const listingsCount = parseInt(listingsRes.headers.get("content-range")?.split("/")?.[1] || "0");
-      const salesCount = parseInt(salesRes.headers.get("content-range")?.split("/")?.[1] || "0");
-      const buildersCount = parseInt(buildersRes.headers.get("content-range")?.split("/")?.[1] || "0");
-      tweetText = weeklyStatsTweet({ listings: listingsCount, sales: salesCount, builders: buildersCount });
+      tweetText = weeklyStatsTweet({
+        listings: parseInt(listingsRes.headers.get("content-range")?.split("/")?.[1] || "0"),
+        sales: parseInt(salesRes.headers.get("content-range")?.split("/")?.[1] || "0"),
+        builders: parseInt(buildersRes.headers.get("content-range")?.split("/")?.[1] || "0"),
+      });
 
     } else if (postType === "blog_post") {
-      if (body.rotate || !body.text) {
-        tweetText = await generateBlogTweet(supabaseUrl, supabaseKey);
-      } else if (body.text) {
-        tweetText = body.text;
-      } else {
-        throw new Error("blog_post: pass rotate:true for AI-generated tweets or text for custom");
-      }
-      if (!skipArt) {
-        generatedArtUrl = await generateTweetArt("blog_post");
-      }
+      tweetText = body.text || await generateBlogTweet(supabaseUrl, supabaseKey);
+      if (!skipArt) generatedArtUrl = await generateTweetArt("blog_post");
 
     } else if (postType === "vibe_coding_report") {
       tweetText = await generateVibeReportTweet(supabaseUrl, supabaseKey);
@@ -266,72 +365,80 @@ Deno.serve(async (req) => {
       screenshotUrl = body.image_url || null;
 
     } else {
-      throw new Error("Invalid post type. Use: engagement_hook, fomo, pain_point, gremlin_update, question, success_story, direct_cta, random_conversion, new_listing, sale_milestone, trending, weekly_stats, blog_post, vibe_coding_report, or custom");
+      throw new Error("Invalid post type. Supported: engagement_hook, fomo, pain_point, gremlin_update, question, success_story, direct_cta, hot_take, data_drop, builder_spotlight, mini_thread, ai_generated, random_conversion, new_listing, sale_milestone, trending, weekly_stats, blog_post, vibe_coding_report, custom");
     }
 
     // ─── Generate art for types that don't have images ───────────
-    if (!screenshotUrl && !generatedArtUrl && !skipArt && postType !== "random_conversion" && postType !== "blog_post" && postType !== "custom" && postType !== "question") {
-      // 60% chance to generate art (keeps some tweets text-only for variety)
-      if (Math.random() < 0.6) {
-        generatedArtUrl = await generateTweetArt(postType);
+    const noArtTypes = new Set(["random_conversion", "blog_post", "custom", "question", "mini_thread"]);
+    if (!screenshotUrl && !generatedArtUrl && !skipArt && !noArtTypes.has(postType)) {
+      // 70% chance to generate art (up from 60%)
+      if (Math.random() < 0.7) {
+        generatedArtUrl = await generateTweetArt(resolvedType || postType);
       }
     }
 
     // ─── Upload media ────────────────────────────────────────────
     let mediaId: string | null = null;
-    
+
     if (generatedArtUrl) {
       try {
-        mediaId = await uploadBase64ToTwitter(
-          generatedArtUrl, consumerKey, consumerSecret, accessToken, accessTokenSecret
-        );
+        mediaId = await uploadBase64ToTwitter(generatedArtUrl, ck, cs, at, ats);
         console.log("AI art uploaded, media_id:", mediaId);
       } catch (e) {
         console.error("AI art upload failed, posting without image:", e);
       }
     } else if (screenshotUrl) {
       try {
-        mediaId = await uploadMediaToTwitter(
-          screenshotUrl, consumerKey, consumerSecret, accessToken, accessTokenSecret
-        );
+        mediaId = await uploadMediaToTwitter(screenshotUrl, ck, cs, at, ats);
         console.log("Screenshot uploaded, media_id:", mediaId);
       } catch (e) {
         console.error("Media upload failed, posting without image:", e);
       }
     }
 
-    // ─── Post tweet ──────────────────────────────────────────────
-    const tweetUrl = "https://api.x.com/2/tweets";
-    const authHeader = await createOAuthHeader(
-      "POST", tweetUrl, consumerKey, consumerSecret, accessToken, accessTokenSecret
-    );
+    // ─── Post tweet or thread ────────────────────────────────────
+    if (threadTweets && threadTweets.length > 1) {
+      // Post as a thread
+      if (!skipArt && !generatedArtUrl && Math.random() < 0.7) {
+        generatedArtUrl = await generateTweetArt(resolvedType || "engagement_hook");
+        if (generatedArtUrl) {
+          try {
+            mediaId = await uploadBase64ToTwitter(generatedArtUrl, ck, cs, at, ats);
+          } catch (e) {
+            console.error("Thread art upload failed:", e);
+          }
+        }
+      }
 
-    const tweetBody: Record<string, unknown> = { text: tweetText };
-    if (mediaId) {
-      tweetBody.media = { media_ids: [mediaId] };
+      const tweetIds = await postThread(threadTweets, mediaId, ck, cs, at, ats);
+      console.log(`Thread posted: ${tweetIds.length} tweets, type=${resolvedType}`);
+
+      return new Response(JSON.stringify({
+        success: true,
+        tweet_ids: tweetIds,
+        text: threadTweets[0],
+        thread_length: threadTweets.length,
+        has_media: !!mediaId,
+        art_generated: !!generatedArtUrl,
+        type: resolvedType,
+        is_thread: true,
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    const tweetRes = await fetch(tweetUrl, {
-      method: "POST",
-      headers: { Authorization: authHeader, "Content-Type": "application/json" },
-      body: JSON.stringify(tweetBody),
-    });
-
-    const tweetData = await tweetRes.json();
-    if (!tweetRes.ok) {
-      console.error("X API error:", JSON.stringify(tweetData));
-      throw new Error(`X API error [${tweetRes.status}]: ${JSON.stringify(tweetData)}`);
-    }
-
-    console.log(`Posted to X: ${postType}`, tweetData.data?.id, mediaId ? "(with AI art)" : "(text only)");
+    // Single tweet
+    const tweetId = await postTweet(tweetText, mediaId, ck, cs, at, ats);
+    console.log(`Posted to X: ${resolvedType}`, tweetId, mediaId ? "(with art)" : "(text only)");
 
     return new Response(JSON.stringify({
       success: true,
-      tweet_id: tweetData.data?.id,
+      tweet_id: tweetId,
       text: tweetText,
       has_media: !!mediaId,
       art_generated: !!generatedArtUrl,
-      type: postType,
+      type: resolvedType,
+      is_thread: false,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

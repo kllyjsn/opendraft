@@ -80,13 +80,24 @@ export function ListingCard({
                   if (fallback) fallback.style.display = "flex";
                 }}
               />
-              <div className="img-fallback w-full h-full items-center justify-center bg-gradient-to-br from-primary/20 to-accent/20 hidden absolute inset-0">
-                <span className="text-3xl opacity-60">📦</span>
+              {/* Fallback if image fails to load */}
+              <div
+                className="img-fallback hidden absolute inset-0 flex-col items-center justify-center p-4 text-center"
+                style={{ background: titleToGradient(title) }}
+              >
+                <Code2 className="h-6 w-6 text-white/30 mb-2" />
+                <span className="text-white/80 text-xs font-bold leading-tight line-clamp-2">{title}</span>
+                <span className="text-white/40 text-[10px] mt-1 font-medium">Source code included</span>
               </div>
             </>
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-accent/10">
-              <span className="text-3xl opacity-60">📦</span>
+            <div
+              className="w-full h-full flex flex-col items-center justify-center p-4 text-center"
+              style={{ background: titleToGradient(title) }}
+            >
+              <Code2 className="h-6 w-6 text-white/30 mb-2" />
+              <span className="text-white/80 text-xs font-bold leading-tight line-clamp-2">{title}</span>
+              <span className="text-white/40 text-[10px] mt-1 font-medium">Source code included</span>
             </div>
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />

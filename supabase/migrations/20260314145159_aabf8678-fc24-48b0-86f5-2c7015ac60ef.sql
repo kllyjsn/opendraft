@@ -1,0 +1,1 @@
+UPDATE public.subscriptions SET plan = 'unlimited' WHERE user_id = '58914d64-b602-4be0-b0ba-0ddc3fdded50' AND status = 'active';

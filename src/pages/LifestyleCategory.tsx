@@ -112,7 +112,7 @@ export default function LifestyleCategory() {
       // Also fetch staff picks for this lifestyle category
       const { data: staffPicks } = await supabase
         .from("listings")
-        .select("id,title,description,price,completeness_badge,tech_stack,screenshots,sales_count,view_count,built_with,seller_id,security_score,staff_pick")
+        .select("id,title,description,price,completeness_badge,tech_stack,screenshots,sales_count,view_count,built_with,seller_id,security_score,staff_pick,agent_ready")
         .eq("status", "live")
         .eq("staff_pick", true)
         .eq("staff_pick_category", slug!);

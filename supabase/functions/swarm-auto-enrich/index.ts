@@ -313,7 +313,7 @@ Rules:
     }
 
     // ── 6. Auto-trigger app analyzer for listings with demo_url (no goals required) ──
-    const analyzable = listings.filter(l => l.demo_url && !needsWork.some((n: any) => n.id === l.id && n._gaps?.includes("weak_description")));
+    const analyzable = listings.filter(l => (l.demo_url || l.github_url) && !needsWork.some((n: any) => n.id === l.id && n._gaps?.includes("weak_description")));
 
     // Pick up to 10 for deep analysis per run
     for (const l of analyzable.slice(0, 10)) {

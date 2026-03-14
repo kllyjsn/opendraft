@@ -3,7 +3,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { CompletenessBadge } from "./CompletenessBadge";
 import { SecurityBadge } from "./SecurityBadge";
 import { AgentReadyBadge } from "./AgentReadyBadge";
-import { Star, Eye, CheckCircle, Rocket } from "lucide-react";
+import { Star, Eye, CheckCircle, Rocket, Code2 } from "lucide-react";
+
+// Deterministic color from title for the fallback gradient
+function titleToGradient(title: string): string {
+  let hash = 0;
+  for (let i = 0; i < title.length; i++) hash = title.charCodeAt(i) + ((hash << 5) - hash);
+  const hue = Math.abs(hash) % 360;
+  return `linear-gradient(135deg, hsl(${hue} 40% 18%), hsl(${(hue + 40) % 360} 50% 12%))`;
+}
 
 interface ListingCardProps {
   id: string;

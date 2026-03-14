@@ -202,10 +202,55 @@ export function ProductivityGremlin({ className = "" }: { className?: string }) 
   );
 }
 
+/** 🤖 Agent gremlin — orbiting data nodes */
+export function AgentGremlin({ className = "" }: { className?: string }) {
+  return (
+    <motion.div
+      className={`inline-flex ${className}`}
+      animate={{ y: [0, -3, 0] }}
+      transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+    >
+      <svg viewBox={`0 0 ${SIZE} ${SIZE}`} width={SIZE} height={SIZE} fill="none">
+        <BaseBody />
+        <Eyes pupilShiftX={0} pupilShiftY={-1} />
+        {/* Visor / dark glasses */}
+        <rect x={CX - R * 0.55} y={CY - R * 0.3} width={R * 1.1} height={R * 0.28} rx={R * 0.1} fill="hsl(240 20% 15%)" opacity={0.85} />
+        <rect x={CX - R * 0.5} y={CY - R * 0.26} width={R * 1.0} height={R * 0.04} fill="hsl(185 90% 45%)" opacity={0.6} />
+        {/* Orbiting data node 1 */}
+        <motion.g
+          animate={{ rotate: [0, 360] }}
+          transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+          style={{ originX: `${CX}px`, originY: `${CY}px` }}
+        >
+          <circle cx={CX + R * 0.9} cy={CY - R * 0.4} r={R * 0.1} fill="hsl(185 90% 45%)" />
+          <circle cx={CX + R * 0.9} cy={CY - R * 0.4} r={R * 0.16} stroke="hsl(185 90% 45%)" strokeWidth={0.5} fill="none" opacity={0.4} />
+        </motion.g>
+        {/* Orbiting data node 2 */}
+        <motion.g
+          animate={{ rotate: [180, 540] }}
+          transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+          style={{ originX: `${CX}px`, originY: `${CY}px` }}
+        >
+          <circle cx={CX - R * 0.8} cy={CY + R * 0.3} r={R * 0.08} fill="hsl(265 85% 72%)" />
+        </motion.g>
+        {/* Signal pulse from antenna */}
+        <motion.circle
+          cx={CX} cy={CY - R * 1.02}
+          r={R * 0.12}
+          stroke="hsl(185 90% 45%)" strokeWidth={0.8} fill="none"
+          animate={{ r: [R * 0.07, R * 0.3], opacity: [0.8, 0] }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: "easeOut" }}
+        />
+      </svg>
+    </motion.div>
+  );
+}
+
 /** Map slug → component */
 export const CATEGORY_GREMLINS: Record<string, React.FC<{ className?: string }>> = {
   "home-kitchen": ChefGremlin,
   "health-fitness": FitnessGremlin,
   "personal-finance": FinanceGremlin,
   productivity: ProductivityGremlin,
+  "built-for-agents": AgentGremlin,
 };

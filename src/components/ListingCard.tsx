@@ -32,6 +32,7 @@ interface ListingCardProps {
   seller_username?: string;
   security_score?: number | null;
   agent_ready?: boolean;
+  updated_at?: string;
 }
 
 export type { ListingCardProps };

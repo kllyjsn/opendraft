@@ -34,7 +34,7 @@ export function StaffPicks() {
 
   useEffect(() => {
     async function load() {
-      // Fetch staff picks, sorted by quality hierarchy
+      // Fetch staff picks that have real screenshots (no empty/SVG placeholders)
       const { data } = await supabase
         .from("listings")
         .select("id,title,description,price,pricing_type,completeness_badge,tech_stack,screenshots,sales_count,view_count,built_with,seller_id,security_score")
@@ -42,22 +42,31 @@ export function StaffPicks() {
         .eq("staff_pick", true)
         .order("completeness_badge", { ascending: false })
         .order("sales_count", { ascending: false })
-        .limit(8);
+        .limit(12);
 
-      if (!data?.length) {
-        // Fallback: show top production_ready listings with real screenshots
-        const { data: fallback } = await supabase
-          .from("listings")
-          .select("id,title,description,price,pricing_type,completeness_badge,tech_stack,screenshots,sales_count,view_count,built_with,seller_id,security_score")
-          .eq("status", "live")
-          .eq("completeness_badge", "production_ready" as any)
-          .order("sales_count", { ascending: false })
-          .limit(8);
-        setListings((fallback ?? []) as StaffPickListing[]);
+      // Filter to only listings with real PNG screenshots (not empty, not SVGs)
+      const withScreenshots = (data ?? []).filter(
+        (l) => l.screenshots?.[0] && l.screenshots[0] !== "" && !l.screenshots[0].endsWith(".svg")
+      );
+
+      if (withScreenshots.length >= 4) {
+        setListings(withScreenshots.slice(0, 8) as StaffPickListing[]);
         return;
       }
 
-      setListings(data as StaffPickListing[]);
+      // Fallback: top listings with real screenshots
+      const { data: fallback } = await supabase
+        .from("listings")
+        .select("id,title,description,price,pricing_type,completeness_badge,tech_stack,screenshots,sales_count,view_count,built_with,seller_id,security_score")
+        .eq("status", "live")
+        .eq("completeness_badge", "production_ready" as any)
+        .order("sales_count", { ascending: false })
+        .limit(20);
+
+      const filtered = (fallback ?? []).filter(
+        (l) => l.screenshots?.[0] && l.screenshots[0] !== "" && !l.screenshots[0].endsWith(".svg")
+      );
+      setListings(filtered.slice(0, 8) as StaffPickListing[]);
     }
     load();
   }, []);

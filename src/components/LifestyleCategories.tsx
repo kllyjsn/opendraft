@@ -2,11 +2,11 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 
-
 import homeKitchenImg from "@/assets/category-home-kitchen.jpg";
 import healthFitnessImg from "@/assets/category-health-fitness.jpg";
 import personalFinanceImg from "@/assets/category-personal-finance.jpg";
 import productivityImg from "@/assets/category-productivity.jpg";
+import builtForAgentsImg from "@/assets/category-built-for-agents.jpg";
 
 const LIFESTYLE_CATEGORIES = [
   {
@@ -33,6 +33,12 @@ const LIFESTYLE_CATEGORIES = [
     tagline: "Do more. Stress less.",
     image: productivityImg,
   },
+  {
+    slug: "built-for-agents",
+    label: "Built for Agents",
+    tagline: "Software agents want to buy.",
+    image: builtForAgentsImg,
+  },
 ];
 
 const cardVariant = {
@@ -53,7 +59,7 @@ export function LifestyleCategories() {
         </h2>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4">
         {LIFESTYLE_CATEGORIES.map((cat, i) => {
 
           return (
@@ -79,7 +85,6 @@ export function LifestyleCategories() {
 
                 {/* Gradient overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-
 
                 {/* Text */}
                 <div className="absolute bottom-0 left-0 right-0 p-4">

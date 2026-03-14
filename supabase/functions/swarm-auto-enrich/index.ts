@@ -58,6 +58,7 @@ serve(async (req) => {
       descriptions_improved: 0,
       tech_stack_added: 0,
       badges_updated: 0,
+      zip_audits_triggered: 0,
       details: [] as any[],
     };
 
@@ -312,12 +313,54 @@ Rules:
       }
     }
 
-    // ── 6. Auto-trigger app analyzer for listings with demo_url (no goals required) ──
+    // ── 6. Auto-trigger ZIP audits for listings with file_path ──
+    const auditable = listings.filter(l => l.file_path);
+    let zip_audits_triggered = 0;
+
+    for (const l of auditable.slice(0, 10)) {
+      // Check if recently audited (7-day cooldown for ZIP audits)
+      const { data: recentAudit } = await supabase
+        .from("improvement_cycles")
+        .select("id")
+        .eq("listing_id", l.id)
+        .eq("trigger", "zip_audit")
+        .gte("created_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+        .limit(1);
+
+      if (recentAudit?.length) continue;
+
+      if (!dryRun) {
+        try {
+          await fetch(`${SUPABASE_URL}/functions/v1/swarm-zip-auditor`, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              listing_id: l.id,
+              file_path: l.file_path,
+              seller_id: l.seller_id,
+              title: l.title,
+              description: l.description,
+              triggered_by: "auto_enrich",
+            }),
+          });
+          zip_audits_triggered++;
+          results.zip_audits_triggered++;
+          results.details.push({ id: l.id, action: "zip_audit_triggered" });
+        } catch (e) {
+          console.error(`ZIP audit failed for ${l.id}:`, e);
+          results.details.push({ id: l.id, action: "zip_audit_failed", error: String(e) });
+        }
+        await new Promise(r => setTimeout(r, 1500));
+      }
+    }
+
+    // ── 7. Auto-trigger app analyzer for listings with demo_url ──
     const analyzable = listings.filter(l => (l.demo_url || l.github_url) && !needsWork.some((n: any) => n.id === l.id && n._gaps?.includes("weak_description")));
 
-    // Pick up to 10 for deep analysis per run
     for (const l of analyzable.slice(0, 10)) {
-      // Check if recently analyzed (2-day cooldown)
       const { data: recentCycle } = await supabase
         .from("improvement_cycles")
         .select("id")
@@ -349,7 +392,7 @@ Rules:
       }
     }
 
-    // ── 7. Notify sellers about improvements ──
+    // ── 8. Notify sellers about improvements ──
     const enrichedByOwner = new Map<string, string[]>();
     for (const l of listings) {
       const detail = results.details.find(d => d.id === l.id && d.action !== "screenshot_failed");

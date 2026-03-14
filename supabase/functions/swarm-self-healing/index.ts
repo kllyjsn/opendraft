@@ -7,8 +7,9 @@ const corsHeaders = {
 };
 
 /**
- * Daily cron: iterates deployed sites with goals, captures screenshots,
- * and triggers the app analyzer for each.
+ * Daily cron: iterates ALL live listings (deployed or not),
+ * triggers auto-enrichment and app analysis for each.
+ * No longer requires goals or deployed sites — covers everything.
  */
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -22,37 +23,57 @@ serve(async (req) => {
   const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 
   try {
-    // Find deployed sites that have project goals set
+    // ── PHASE 1: Deployed sites with health tracking ──
     const { data: deployedSites } = await supabase
       .from("deployed_sites")
       .select("listing_id, user_id, site_url")
       .in("status", ["healthy", "degraded"])
       .limit(50);
 
-    if (!deployedSites?.length) {
-      return new Response(JSON.stringify({ message: "No deployed sites to analyze", count: 0 }), {
+    // ── PHASE 2: ALL live listings with demo_url (no deploy/goals required) ──
+    const { data: demoListings } = await supabase
+      .from("listings")
+      .select("id, seller_id, demo_url")
+      .eq("status", "live")
+      .not("demo_url", "is", null)
+      .limit(100);
+
+    // Merge both sources — deduplicate
+    const deployedIds = new Set((deployedSites || []).map(s => s.listing_id));
+    const allTargets: { listing_id: string; user_id: string }[] = [];
+
+    for (const s of (deployedSites || [])) {
+      allTargets.push({ listing_id: s.listing_id, user_id: s.user_id });
+    }
+    for (const l of (demoListings || [])) {
+      if (!deployedIds.has(l.id)) {
+        allTargets.push({ listing_id: l.id, user_id: l.seller_id });
+      }
+    }
+
+    if (!allTargets.length) {
+      return new Response(JSON.stringify({ message: "No listings to analyze", count: 0 }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const listingIds = deployedSites.map((s) => s.listing_id);
+    const listingIds = allTargets.map(s => s.listing_id);
 
-    // Only analyze sites that have goals defined
+    // Load goals (optional — enhances analysis but not required)
     const { data: goalsData } = await supabase
       .from("project_goals")
       .select("listing_id, user_id")
       .in("listing_id", listingIds);
 
-    const goalsMap = new Map((goalsData || []).map((g) => [g.listing_id, g.user_id]));
+    const goalsMap = new Map((goalsData || []).map(g => [g.listing_id, g.user_id]));
 
-    // Check which listings were analyzed recently (skip if < 24h ago)
+    // Check recent analysis — deployed: 24h cooldown, non-deployed: 7d cooldown
     const { data: recentCycles } = await supabase
       .from("improvement_cycles")
       .select("listing_id, created_at")
       .in("listing_id", listingIds)
-      .eq("trigger", "cron")
       .order("created_at", { ascending: false })
-      .limit(200);
+      .limit(500);
 
     const recentMap = new Map<string, string>();
     for (const c of recentCycles || []) {
@@ -62,25 +83,37 @@ serve(async (req) => {
     }
 
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
     let triggered = 0;
     const results: { listing_id: string; status: string }[] = [];
 
-    for (const site of deployedSites) {
-      // Skip if no goals
-      if (!goalsMap.has(site.listing_id)) {
-        results.push({ listing_id: site.listing_id, status: "skipped_no_goals" });
+    // ── PHASE 0: Trigger auto-enrichment (text, screenshots, badges) ──
+    try {
+      await fetch(`${SUPABASE_URL}/functions/v1/swarm-auto-enrich`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ batch_size: 20, triggered_by: "cron" }),
+      });
+      results.push({ listing_id: "auto-enrich", status: "triggered" });
+    } catch (e) {
+      results.push({ listing_id: "auto-enrich", status: "failed" });
+    }
+
+    // ── PHASE 3: Deep analysis per listing ──
+    for (const target of allTargets) {
+      const isDeployed = deployedIds.has(target.listing_id);
+      const cooldown = isDeployed ? oneDayAgo : sevenDaysAgo;
+
+      const lastAnalysis = recentMap.get(target.listing_id);
+      if (lastAnalysis && lastAnalysis > cooldown) {
+        results.push({ listing_id: target.listing_id, status: "skipped_recent" });
         continue;
       }
 
-      // Skip if analyzed recently
-      const lastAnalysis = recentMap.get(site.listing_id);
-      if (lastAnalysis && lastAnalysis > oneDayAgo) {
-        results.push({ listing_id: site.listing_id, status: "skipped_recent" });
-        continue;
-      }
-
-      // Trigger analysis
       try {
         const resp = await fetch(`${SUPABASE_URL}/functions/v1/swarm-app-analyzer`, {
           method: "POST",
@@ -89,24 +122,24 @@ serve(async (req) => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            listing_id: site.listing_id,
+            listing_id: target.listing_id,
             trigger: "cron",
-            user_id: goalsMap.get(site.listing_id) || site.user_id,
+            user_id: goalsMap.get(target.listing_id) || target.user_id,
           }),
         });
 
         if (resp.ok) {
           triggered++;
-          results.push({ listing_id: site.listing_id, status: "triggered" });
+          results.push({ listing_id: target.listing_id, status: "triggered" });
         } else {
-          results.push({ listing_id: site.listing_id, status: `error_${resp.status}` });
+          results.push({ listing_id: target.listing_id, status: `error_${resp.status}` });
         }
       } catch (e) {
-        results.push({ listing_id: site.listing_id, status: "error" });
+        results.push({ listing_id: target.listing_id, status: "error" });
       }
 
-      // Rate limit: wait between analyses
-      if (triggered < deployedSites.length) {
+      // Rate limit between analyses
+      if (triggered < allTargets.length) {
         await new Promise((r) => setTimeout(r, 2000));
       }
     }
@@ -116,7 +149,7 @@ serve(async (req) => {
       agent_type: "self_healing",
       action: "daily_analysis",
       status: "completed",
-      input: { total_sites: deployedSites.length, with_goals: goalsMap.size },
+      input: { total_targets: allTargets.length, deployed: deployedIds.size, with_goals: goalsMap.size },
       output: { triggered, results },
       triggered_by: "cron",
       completed_at: new Date().toISOString(),
@@ -124,7 +157,9 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({
       success: true,
-      total_sites: deployedSites.length,
+      total_targets: allTargets.length,
+      deployed_sites: deployedIds.size,
+      demo_only: allTargets.length - deployedIds.size,
       with_goals: goalsMap.size,
       triggered,
       results,

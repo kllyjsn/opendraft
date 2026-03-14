@@ -58,6 +58,7 @@ serve(async (req) => {
       descriptions_improved: 0,
       tech_stack_added: 0,
       badges_updated: 0,
+      zip_audits_triggered: 0,
       details: [] as any[],
     };
 

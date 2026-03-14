@@ -55,7 +55,6 @@ export function LifestyleCategories() {
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
         {LIFESTYLE_CATEGORIES.map((cat, i) => {
-          const GremlinComponent = CATEGORY_GREMLINS[cat.slug];
 
           return (
             <motion.div

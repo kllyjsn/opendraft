@@ -314,6 +314,9 @@ export default function Index() {
       {/* ── LIFESTYLE CATEGORIES ── */}
       <LifestyleCategories />
 
+      {/* ── DISCOVERY RAILS ── */}
+      <DiscoveryRails />
+
       {/* ── STAFF PICKS ── */}
       <StaffPicks />
 

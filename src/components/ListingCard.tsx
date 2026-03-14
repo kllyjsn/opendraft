@@ -133,16 +133,14 @@ export function ListingCard({
                 🛠 {BUILT_WITH_LABELS[built_with]}
               </span>
             )}
-            {security_score !== null && security_score !== undefined && (
-              <span className="ml-1 mt-1.5 inline-block">
-                <SecurityBadge score={security_score} compact />
-              </span>
-            )}
             {agent_ready && (
               <span className="ml-1 mt-1.5 inline-block">
                 <AgentReadyBadge compact />
               </span>
             )}
+            <div className="mt-1.5">
+              <TrustBadges securityScore={security_score} updatedAt={updated_at} compact />
+            </div>
           </div>
 
           {tech_stack.length > 0 && (

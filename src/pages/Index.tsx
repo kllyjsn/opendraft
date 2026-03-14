@@ -508,10 +508,10 @@ export default function Index() {
                 <BrandMascot size={32} variant="wave" />
                 <div>
                   <p className="text-sm font-medium text-foreground">
-                    1,000+ production-ready apps — <span className="font-bold">start building</span>
+                    1,000+ production-ready apps — <span className="font-bold">claim & deploy</span>
                   </p>
                   <p className="text-[10px] text-muted-foreground">
-                    Full source code · Deploy instantly · Builder support
+                    {CTA_COPY.card}
                   </p>
                 </div>
               </div>

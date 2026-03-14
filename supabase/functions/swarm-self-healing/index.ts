@@ -95,7 +95,7 @@ serve(async (req) => {
           Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ batch_size: 20, triggered_by: "cron" }),
+        body: JSON.stringify({ batch_size: 50, triggered_by: "cron" }),
       });
       results.push({ listing_id: "auto-enrich", status: "triggered" });
     } catch (e) {

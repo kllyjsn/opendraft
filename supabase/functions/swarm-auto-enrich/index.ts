@@ -315,14 +315,14 @@ Rules:
     // ── 6. Auto-trigger app analyzer for listings with demo_url (no goals required) ──
     const analyzable = listings.filter(l => l.demo_url && !needsWork.some((n: any) => n.id === l.id && n._gaps?.includes("weak_description")));
 
-    // Pick up to 3 for deep analysis per run
-    for (const l of analyzable.slice(0, 3)) {
-      // Check if recently analyzed
+    // Pick up to 10 for deep analysis per run
+    for (const l of analyzable.slice(0, 10)) {
+      // Check if recently analyzed (2-day cooldown)
       const { data: recentCycle } = await supabase
         .from("improvement_cycles")
         .select("id")
         .eq("listing_id", l.id)
-        .gte("created_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+        .gte("created_at", new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString())
         .limit(1);
 
       if (recentCycle?.length) continue;

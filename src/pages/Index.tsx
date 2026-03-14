@@ -260,7 +260,7 @@ export default function Index() {
           {!user && (
             <div className="mb-4 space-y-2">
               <p className="text-xs font-semibold text-accent">
-                ✨ Production-ready apps — claim & deploy in minutes
+                ✨ {CTA_COPY.hero}
               </p>
               <div className="max-w-xs mx-auto">
                 <GoogleSignInButton label="Get started with Google" />
@@ -270,7 +270,7 @@ export default function Index() {
                 <span className="text-border">·</span>
                 <span>🔒 Full source code</span>
                 <span className="text-border">·</span>
-                <span>⚡ Instant access</span>
+                <span>⚡ Deploy configs included</span>
               </div>
             </div>
           )}

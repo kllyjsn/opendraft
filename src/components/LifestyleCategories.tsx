@@ -61,6 +61,8 @@ export function LifestyleCategories() {
 
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4">
         {LIFESTYLE_CATEGORIES.map((cat, i) => {
+          const isLast = i === LIFESTYLE_CATEGORIES.length - 1;
+          const isOddCount = LIFESTYLE_CATEGORIES.length % 2 === 1;
 
           return (
             <motion.div
@@ -70,10 +72,13 @@ export function LifestyleCategories() {
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true, margin: "-40px" }}
+              className={isLast && isOddCount ? "col-span-2 lg:col-span-1" : ""}
             >
               <Link
                 to={`/lifestyle/${cat.slug}`}
-                className="group relative block overflow-hidden rounded-2xl aspect-[4/3] bg-muted"
+                className={`group relative block overflow-hidden rounded-2xl bg-muted ${
+                  isLast && isOddCount ? "aspect-[8/3] md:aspect-[4/3]" : "aspect-[4/3]"
+                }`}
               >
                 {/* Image */}
                 <img

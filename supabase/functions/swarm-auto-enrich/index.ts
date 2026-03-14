@@ -230,7 +230,7 @@ Rules:
     // ── 4. Trigger screenshot capture for listings with demo_url but no screenshots ──
     const needScreenshot = needsWork.filter((l: any) => l._gaps?.includes("missing_screenshot"));
 
-    for (const l of needScreenshot.slice(0, 5)) { // Max 5 at a time to avoid rate limits
+    for (const l of needScreenshot.slice(0, 15)) { // Max 15 at a time
       if (dryRun) {
         results.details.push({ id: l.id, action: "screenshot_skipped_dry_run" });
         continue;

@@ -81,23 +81,6 @@ export function LifestyleCategories() {
                 {/* Gradient overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
 
-                {/* Gremlin mascot — peeks from top-right corner */}
-                {GremlinComponent && (
-                  <motion.div
-                    className="absolute top-2 right-2 z-10 drop-shadow-lg"
-                    initial={{ scale: 0, rotate: -20 }}
-                    whileInView={{ scale: 1, rotate: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: 0.3 + i * 0.1, ease: [0.22, 1, 0.36, 1] }}
-                  >
-                    <motion.div
-                      whileHover={{ scale: 1.15, rotate: [0, -5, 5, 0] }}
-                      transition={{ duration: 0.4 }}
-                    >
-                      <GremlinComponent />
-                    </motion.div>
-                  </motion.div>
-                )}
 
                 {/* Text */}
                 <div className="absolute bottom-0 left-0 right-0 p-4">

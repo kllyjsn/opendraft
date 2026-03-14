@@ -258,10 +258,10 @@ export default function Index() {
           {!user && (
             <div className="mb-4 space-y-2">
               <p className="text-xs font-semibold text-accent">
-                ✨ Your first app is free — no credit card required
+                ✨ Production-ready apps — claim & deploy in minutes
               </p>
               <div className="max-w-xs mx-auto">
-                <GoogleSignInButton label="Sign up free with Google" />
+                <GoogleSignInButton label="Get started with Google" />
               </div>
               <div className="flex items-center justify-center gap-3 text-[11px] text-muted-foreground mt-1">
                 <span>🚀 1,000+ apps</span>

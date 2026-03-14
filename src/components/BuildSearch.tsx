@@ -689,11 +689,12 @@ export function BuildSearch() {
               );
             })}
 
-            {/* Build your own CTA */}
-            <div className="rounded-xl border border-dashed border-border bg-card/50 p-4 text-center space-y-3">
+            {/* Gremlins build CTA */}
+            <div className="rounded-xl border border-dashed border-primary/20 bg-gradient-to-b from-primary/5 to-transparent p-5 text-center space-y-3">
               <p className="text-sm text-muted-foreground">
-                Want something more tailored? <span className="text-foreground font-medium">We'll build it for you.</span>
+                Not quite right? <span className="text-foreground font-semibold">Let the Gremlins™ build exactly what you need.</span>
               </p>
+              <p className="text-xs text-muted-foreground">Full source code, screenshots & ZIP — ready in ~60 seconds</p>
               {generateCta}
             </div>
           </div>

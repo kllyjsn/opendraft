@@ -54,7 +54,7 @@ export function ListingCard({
     >
       <Card className="overflow-hidden border-border/50 shadow-card hover:shadow-card-hover transition-all duration-500 hover:-translate-y-2 h-full bg-card">
         {/* Thumbnail */}
-        <div className="relative h-32 md:h-44 bg-muted overflow-hidden">
+        <div className="relative h-36 md:h-44 bg-muted overflow-hidden rounded-t-lg">
           {thumbnail ? (
             <>
               <img
@@ -64,9 +64,7 @@ export function ListingCard({
                 width={400}
                 height={225}
                 decoding="async"
-                sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 20vw"
-                srcSet={`${thumbnail}?width=300 300w, ${thumbnail}?width=400 400w, ${thumbnail}?width=600 600w`}
-                className="w-full h-full object-cover group-hover:scale-[1.06] transition-transform duration-700 ease-out"
+                className="w-full h-full object-cover object-top group-hover:scale-[1.04] transition-transform duration-700 ease-out"
                 onError={(e) => {
                   const target = e.currentTarget;
                   target.style.display = "none";
@@ -74,16 +72,16 @@ export function ListingCard({
                   if (fallback) fallback.style.display = "flex";
                 }}
               />
-              <div className="img-fallback w-full h-full items-center justify-center gradient-hero opacity-80 hidden absolute inset-0">
-                <span className="text-4xl">⚡</span>
+              <div className="img-fallback w-full h-full items-center justify-center bg-gradient-to-br from-primary/20 to-accent/20 hidden absolute inset-0">
+                <span className="text-3xl opacity-60">📦</span>
               </div>
             </>
           ) : (
-            <div className="w-full h-full flex items-center justify-center gradient-hero opacity-80">
-              <span className="text-4xl">⚡</span>
+            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-accent/10">
+              <span className="text-3xl opacity-60">📦</span>
             </div>
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
 
           {owned && (
             <div className="absolute top-2.5 right-2.5 flex items-center gap-1 rounded-full bg-primary px-2.5 py-1 text-xs font-bold text-primary-foreground shadow-glow animate-scale-up">

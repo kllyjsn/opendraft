@@ -395,18 +395,23 @@ export function BuildSearch() {
         <CheckCircle className="h-6 w-6 text-primary" />
       </div>
       <div>
-        <h4 className="font-bold text-foreground">"{job.listing_title || prompt}" is ready!</h4>
-        <p className="text-sm text-muted-foreground mt-1">
-          Your app has been generated with source code, screenshots, and a downloadable ZIP.
-          It's pending review and will go live shortly.
+        <h4 className="font-bold text-foreground">🎉 The Gremlins built "{job.listing_title || prompt}"!</h4>
+        <p className="text-sm text-muted-foreground mt-1 max-w-md mx-auto">
+          Your app is ready with full source code, screenshots, and a downloadable ZIP.
         </p>
+        <div className="mt-3 rounded-lg bg-muted/60 border border-border p-3 text-left max-w-sm mx-auto">
+          <p className="text-xs font-semibold text-foreground mb-1">📍 Where to find it:</p>
+          <p className="text-xs text-muted-foreground">
+            Go to <span className="font-bold text-foreground">Dashboard → My Listings</span> to edit details, update screenshots, set pricing, or publish it live.
+          </p>
+        </div>
       </div>
       <div className="flex gap-2 justify-center flex-wrap">
         <Button size="sm" onClick={() => navigate(`/listing/${job.listing_id}/edit`)} className="gradient-hero text-white border-0 shadow-glow hover:opacity-90 gap-2">
-          <ExternalLink className="h-3.5 w-3.5" /> Edit your listing
+          <ExternalLink className="h-3.5 w-3.5" /> Edit listing now
         </Button>
         <Button size="sm" variant="outline" onClick={() => navigate("/dashboard?tab=listings")} className="gap-2">
-          Go to Dashboard
+          Open Dashboard
         </Button>
         <Button size="sm" variant="ghost" onClick={reset}>
           Build another

@@ -14,6 +14,7 @@ import homeKitchenImg from "@/assets/category-home-kitchen.jpg";
 import healthFitnessImg from "@/assets/category-health-fitness.jpg";
 import personalFinanceImg from "@/assets/category-personal-finance.jpg";
 import productivityImg from "@/assets/category-productivity.jpg";
+import builtForAgentsImg from "@/assets/category-built-for-agents.jpg";
 
 interface LifestyleCategoryMeta {
   label: string;
@@ -56,6 +57,14 @@ const LIFESTYLE_META: Record<string, LifestyleCategoryMeta> = {
     editorial: "From Kanban boards to AI-powered note apps, these productivity tools are designed to eliminate busywork. Claim one, customize it, and make it yours.",
     image: productivityImg,
     searchTerms: ["task", "todo", "note", "project", "crm", "dashboard", "planner", "calendar", "schedule", "kanban", "productivity", "workspace", "portfolio"],
+  },
+  "built-for-agents": {
+    label: "Built for Agents",
+    headline: "Software that agents want to buy.",
+    description: "MCP servers, API gateways, automation pipelines, monitoring tools — built for the agent economy.",
+    editorial: "Aaron Levie says all software will have to be built for agents. These tools are designed for autonomous consumption — MCP servers, headless APIs, webhook handlers, and data pipelines that agents can discover, purchase, and deploy without human intervention.",
+    image: builtForAgentsImg,
+    searchTerms: ["mcp", "api", "agent", "webhook", "automation", "pipeline", "monitor", "bot", "headless", "server", "proxy", "sync", "scraper", "cli", "workflow"],
   },
 };
 

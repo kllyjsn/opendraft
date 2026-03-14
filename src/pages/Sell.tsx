@@ -226,7 +226,7 @@ export default function Sell() {
             {remixParent ? "🔄 Remix" : "⚡ Instant payouts"}
           </div>
           <h1 className="text-3xl font-black mb-2">{remixParent ? "Ship your remix" : "Turn your project into income"}</h1>
-          <p className="text-muted-foreground">{remixParent ? "Improve it, relist it, earn from your work. 20% platform fee applies." : "List once. Sell forever. The moment someone buys, you get paid — no waiting, no invoices."}</p>
+          <p className="text-muted-foreground">{remixParent ? "Improve it, relist it, earn from your work. 20% platform fee applies." : "List once. Earn on every claim. Zero infrastructure — we handle delivery, deploy configs, and security audits."}</p>
         </div>
 
         {/* Step indicator */}
@@ -284,10 +284,10 @@ export default function Sell() {
               </div>
               {/* Listing info */}
               <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
-                <p className="text-sm font-bold text-primary mb-1">🚀 Ready to claim</p>
+              <p className="text-sm font-bold text-primary mb-1">🚀 What claimers get</p>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  Subscribers can claim your project and get the full source code. 
-                  You earn visibility and can offer optional paid support retainers separately.
+                  Full source code (React + TypeScript) · Netlify & Vercel deploy configs · 
+                  Auto-generated README · Security audit · Direct messaging with you, the builder.
                 </p>
               </div>
             </>

@@ -1,6 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Package, Users, Star, Share2, Check } from "lucide-react";
+import { Package, Users, Star, Share2, Check, Clock, Wrench } from "lucide-react";
 import { useState } from "react";
 
 interface BuilderStatsCardProps {
@@ -11,6 +11,24 @@ interface BuilderStatsCardProps {
   listingsCount: number;
   totalSales: number;
   userId: string;
+  /** Average response time in hours (null = unknown) */
+  avgResponseHours?: number | null;
+  /** Days since last listing update */
+  lastUpdateDays?: number | null;
+}
+
+function responseLabel(hours: number): string {
+  if (hours <= 2) return "<2h";
+  if (hours <= 12) return "<12h";
+  if (hours <= 24) return "<1d";
+  return `~${Math.round(hours / 24)}d`;
+}
+
+function maintenanceLabel(days: number): { label: string; color: string } {
+  if (days <= 7) return { label: "Active", color: "text-emerald-500" };
+  if (days <= 30) return { label: "Monthly", color: "text-accent" };
+  if (days <= 90) return { label: "Quarterly", color: "text-muted-foreground" };
+  return { label: "Inactive", color: "text-muted-foreground/60" };
 }
 
 export function BuilderStatsCard({
@@ -21,6 +39,8 @@ export function BuilderStatsCard({
   listingsCount,
   totalSales,
   userId,
+  avgResponseHours,
+  lastUpdateDays,
 }: BuilderStatsCardProps) {
   const [copied, setCopied] = useState(false);
   const initial = username?.[0]?.toUpperCase() ?? "?";
@@ -39,6 +59,8 @@ export function BuilderStatsCard({
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const maintenance = lastUpdateDays != null ? maintenanceLabel(lastUpdateDays) : null;
+
   return (
     <div className="relative overflow-hidden rounded-2xl border border-border/40 glass-strong p-6">
       {/* Ambient glow */}
@@ -56,7 +78,7 @@ export function BuilderStatsCard({
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-3 mb-5">
+        <div className="grid grid-cols-3 gap-3 mb-4">
           <div className="rounded-xl bg-muted/50 p-3 text-center">
             <Star className="h-4 w-4 mx-auto mb-1 text-primary" />
             <p className="text-lg font-black">{totalSales}</p>
@@ -73,6 +95,26 @@ export function BuilderStatsCard({
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Followers</p>
           </div>
         </div>
+
+        {/* Response & maintenance metrics */}
+        {(avgResponseHours != null || maintenance) && (
+          <div className="flex items-center gap-3 mb-4 px-1">
+            {avgResponseHours != null && (
+              <div className="flex items-center gap-1.5 text-xs">
+                <Clock className="h-3.5 w-3.5 text-primary" />
+                <span className="font-semibold">{responseLabel(avgResponseHours)}</span>
+                <span className="text-muted-foreground">response</span>
+              </div>
+            )}
+            {maintenance && (
+              <div className="flex items-center gap-1.5 text-xs">
+                <Wrench className="h-3.5 w-3.5 text-primary" />
+                <span className={`font-semibold ${maintenance.color}`}>{maintenance.label}</span>
+                <span className="text-muted-foreground">maintainer</span>
+              </div>
+            )}
+          </div>
+        )}
 
         <Button
           onClick={handleShare}

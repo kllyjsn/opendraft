@@ -12,9 +12,11 @@ import { useAuth } from "@/hooks/useAuth";
 import { GoogleSignInButton } from "@/components/GoogleSignInButton";
 import { LifestyleCategories } from "@/components/LifestyleCategories";
 import { StaffPicks } from "@/components/StaffPicks";
+import { DiscoveryRails } from "@/components/DiscoveryRails";
 import { BrandMascot } from "@/components/BrandMascot";
 import { JsonLd } from "@/components/JsonLd";
 import { MetaTags } from "@/components/MetaTags";
+import { CTA_COPY } from "@/lib/pricing-tiers";
 
 const CATEGORIES = ["All", "SaaS Tool", "AI App", "Landing Page", "Utility", "Game", "Other"];
 const COMPLETENESS = ["All", "Prototype", "MVP", "Production Ready"];
@@ -158,7 +160,7 @@ export default function Index() {
   const buildQuery = useCallback(() => {
     let query = supabase
       .from("listings")
-      .select("id,title,description,price,pricing_type,completeness_badge,tech_stack,screenshots,sales_count,view_count,built_with,seller_id,security_score,agent_ready", { count: "exact" })
+      .select("id,title,description,price,pricing_type,completeness_badge,tech_stack,screenshots,sales_count,view_count,built_with,seller_id,security_score,agent_ready,updated_at", { count: "exact" })
       .eq("status", "live");
     if (category !== "All" && categoryMap[category]) query = query.eq("category", categoryMap[category] as any);
     if (completeness !== "All" && completenessMap[completeness]) query = query.eq("completeness_badge", completenessMap[completeness] as any);
@@ -258,7 +260,7 @@ export default function Index() {
           {!user && (
             <div className="mb-4 space-y-2">
               <p className="text-xs font-semibold text-accent">
-                ✨ Production-ready apps — claim & deploy in minutes
+                ✨ {CTA_COPY.hero}
               </p>
               <div className="max-w-xs mx-auto">
                 <GoogleSignInButton label="Get started with Google" />
@@ -268,7 +270,7 @@ export default function Index() {
                 <span className="text-border">·</span>
                 <span>🔒 Full source code</span>
                 <span className="text-border">·</span>
-                <span>⚡ Instant access</span>
+                <span>⚡ Deploy configs included</span>
               </div>
             </div>
           )}
@@ -311,6 +313,9 @@ export default function Index() {
 
       {/* ── LIFESTYLE CATEGORIES ── */}
       <LifestyleCategories />
+
+      {/* ── DISCOVERY RAILS ── */}
+      <DiscoveryRails />
 
       {/* ── STAFF PICKS ── */}
       <StaffPicks />
@@ -503,10 +508,10 @@ export default function Index() {
                 <BrandMascot size={32} variant="wave" />
                 <div>
                   <p className="text-sm font-medium text-foreground">
-                    1,000+ production-ready apps — <span className="font-bold">start building</span>
+                    1,000+ production-ready apps — <span className="font-bold">claim & deploy</span>
                   </p>
                   <p className="text-[10px] text-muted-foreground">
-                    Full source code · Deploy instantly · Builder support
+                    {CTA_COPY.card}
                   </p>
                 </div>
               </div>

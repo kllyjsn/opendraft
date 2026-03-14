@@ -45,7 +45,7 @@ export default function Credits() {
             Pick your plan
           </h1>
           <p className="text-muted-foreground text-lg max-w-lg mx-auto leading-relaxed">
-            Start free with your first app. Scale when you're ready — every plan includes full source code and marketplace access.
+            Every plan includes full source code, deploy configs, security audits, auto-generated READMEs, and direct builder messaging.
           </p>
         </div>
 

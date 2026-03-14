@@ -24,29 +24,28 @@ serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Strategy: Run text search AND broad fetch in parallel for maximum coverage
+    // Strategy: Run text search + category-filtered + broad fetch in parallel
     const [textSearchResult, broadResult] = await Promise.all([
-      // 1. Text/trigram search — finds exact & fuzzy keyword matches
+      // 1. Text/trigram search — exact & fuzzy keyword matches
       supabase.rpc("search_listings", {
         search_query: prompt.trim(),
-        page_limit: 50,
+        page_limit: 80,
         page_offset: 0,
         sort_by: "relevance",
       }),
-      // 2. Broad fetch — catches semantic matches text search would miss
+      // 2. Broad fetch — top listings by quality for semantic matching
       supabase
         .from("listings")
-        .select("id,title,description,price,completeness_badge,tech_stack,screenshots,category,sales_count")
+        .select("id,title,description,price,completeness_badge,tech_stack,screenshots,category,sales_count,file_path,github_url,demo_url,agent_ready")
         .eq("status", "live")
         .order("sales_count", { ascending: false })
-        .limit(300),
+        .limit(500),
     ]);
 
-    // Merge listings, deduplicating by ID, text-search results first
+    // Merge and deduplicate
     const seenIds = new Set<string>();
     const allListings: any[] = [];
 
-    // Text search results get priority — they already matched keywords
     if (textSearchResult.data) {
       for (const l of textSearchResult.data) {
         if (!seenIds.has(l.id)) {
@@ -56,7 +55,6 @@ serve(async (req) => {
       }
     }
 
-    // Add broad results for semantic coverage
     if (broadResult.data) {
       for (const l of broadResult.data) {
         if (!seenIds.has(l.id)) {
@@ -67,16 +65,45 @@ serve(async (req) => {
     }
 
     if (allListings.length === 0) {
-      return new Response(JSON.stringify({ matches: [], hasResults: false, textMatches: [] }), {
+      return new Response(JSON.stringify({ matches: [], hasResults: false }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Build listing text for AI — include text-match hints to help scoring
-    const listingsText = allListings
+    // Pre-compute quality signals for each listing
+    const enriched = allListings.map((l) => {
+      const hasScreenshot = l.screenshots && l.screenshots.length > 0 
+        && l.screenshots[0] !== '' && !l.screenshots[0]?.endsWith('.svg');
+      const hasDeliverable = !!(l.file_path || l.github_url);
+      const hasDemo = !!l.demo_url;
+      const qualityScore = (hasScreenshot ? 1 : 0) + (hasDeliverable ? 1 : 0) + (hasDemo ? 1 : 0) + (l.sales_count > 0 ? 1 : 0);
+      return { ...l, _hasScreenshot: hasScreenshot, _hasDeliverable: hasDeliverable, _quality: qualityScore };
+    });
+
+    // Sort: quality listings first, then text matches, then the rest
+    enriched.sort((a, b) => {
+      // Text matches with quality first
+      if (a._textMatch && !b._textMatch) return -1;
+      if (!a._textMatch && b._textMatch) return 1;
+      // Then by quality score
+      if (b._quality !== a._quality) return b._quality - a._quality;
+      return (b.sales_count || 0) - (a.sales_count || 0);
+    });
+
+    // Take top 200 for AI analysis (prioritizes quality)
+    const candidates = enriched.slice(0, 200);
+
+    // Build compact listing text for AI
+    const listingsText = candidates
       .map((l, i) => {
-        const textHint = l._textMatch ? ` | TEXT_MATCH (relevance: ${l._relevanceScore.toFixed(2)})` : "";
-        return `[${i}] ID: ${l.id} | Title: "${l.title}" | Desc: "${(l.description || "").slice(0, 200)}" | Cat: ${l.category} | Tech: ${(l.tech_stack || []).join(", ")} | Price: $${(l.price / 100).toFixed(2)} | Badge: ${l.completeness_badge} | Sales: ${l.sales_count || 0}${textHint}`;
+        const signals: string[] = [];
+        if (l._textMatch) signals.push(`KW_MATCH(${l._relevanceScore.toFixed(1)})`);
+        if (l._hasScreenshot) signals.push("HAS_IMG");
+        if (l._hasDeliverable) signals.push("HAS_CODE");
+        if (l.demo_url) signals.push("HAS_DEMO");
+        if (l.agent_ready) signals.push("AGENT_READY");
+        const signalStr = signals.length > 0 ? ` [${signals.join(",")}]` : "";
+        return `[${i}] "${l.title}" — ${(l.description || "").slice(0, 150)} | ${l.category} | ${(l.tech_stack || []).join(",")} | $${(l.price / 100).toFixed(0)} | ${l.completeness_badge} | ${l.sales_count || 0} sales${signalStr}`;
       })
       .join("\n");
 
@@ -91,27 +118,32 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `You are an expert marketplace search assistant. Given a user's build idea and a catalog of available projects, find ALL semantically relevant matches. 
+            content: `You are a marketplace search engine. Match a user's build idea to the BEST available projects.
 
-SCORING RULES:
-- 1.0 = Perfect match (same concept, same tech)
-- 0.8-0.9 = Strong match (same domain/purpose, overlapping tech)
-- 0.6-0.7 = Good match (related concept, could be adapted)
-- 0.5 = Weak but useful (tangentially related, shares some tech or patterns)
-- Items marked TEXT_MATCH already matched keywords — boost their score by 0.1
+SCORING (be precise):
+- 0.95-1.0 = Near-identical concept + matching tech stack
+- 0.80-0.94 = Same domain/purpose, could ship as-is or with minimal changes
+- 0.65-0.79 = Related concept, solid starting point with modifications
+- 0.50-0.64 = Shares patterns/tech, useful foundation
+- Below 0.50 = Don't include
 
-Be GENEROUS with matching. Think about:
-1. Direct matches (user wants X, listing IS X)
-2. Adjacent matches (user wants X, listing is similar to X or could become X)
-3. Tech stack matches (user mentions React/AI/etc, listing uses those)
-4. Template matches (listing provides a foundation the user could build on)
-5. Category matches (same industry/domain even if different specific feature)
+QUALITY BOOST: Items marked HAS_IMG, HAS_CODE, HAS_DEMO are higher quality — boost score by 0.05 for each.
+KEYWORD BOOST: Items marked KW_MATCH already matched keywords — boost by 0.05.
 
-Return up to 8 matches. Only return matches with score >= 0.45.`,
+MATCHING STRATEGY — think creatively:
+1. Direct: "todo app" → todo/task manager apps
+2. Domain: "fitness tracker" → health apps, workout tools, habit trackers
+3. Pattern: "subscription billing" → any SaaS with Stripe, payment templates
+4. Tech: "React dashboard" → any admin panel, analytics dashboard
+5. Adjacent: "social media" → chat apps, feed builders, profile templates
+6. Component: user wants a feature → any app that HAS that feature as part of it
+
+Return 6-10 matches. Quality > quantity. Prefer items with HAS_IMG and HAS_CODE.
+Write a SHORT, compelling "reason" — explain WHY this is useful for their specific idea (not generic).`,
           },
           {
             role: "user",
-            content: `User wants to build: "${prompt}"\n\nAvailable projects (${allListings.length} total):\n${listingsText}`,
+            content: `User wants: "${prompt}"\n\n${candidates.length} candidates:\n${listingsText}`,
           },
         ],
         tools: [
@@ -119,7 +151,7 @@ Return up to 8 matches. Only return matches with score >= 0.45.`,
             type: "function",
             function: {
               name: "return_matches",
-              description: "Return the best matching project indices with relevance scores",
+              description: "Return matched projects with scores",
               parameters: {
                 type: "object",
                 properties: {
@@ -128,9 +160,9 @@ Return up to 8 matches. Only return matches with score >= 0.45.`,
                     items: {
                       type: "object",
                       properties: {
-                        index: { type: "number", description: "Index from the listing list" },
-                        score: { type: "number", description: "Relevance score from 0.0 to 1.0" },
-                        reason: { type: "string", description: "One compelling sentence explaining why this is a great starting point" },
+                        index: { type: "number" },
+                        score: { type: "number" },
+                        reason: { type: "string" },
                       },
                       required: ["index", "score", "reason"],
                       additionalProperties: false,
@@ -147,32 +179,29 @@ Return up to 8 matches. Only return matches with score >= 0.45.`,
       }),
     });
 
-    if (aiResponse.status === 429) {
-      // Fall back to text search results only
-      const fallbackMatches = allListings
-        .filter(l => l._textMatch)
-        .slice(0, 6)
-        .map(l => ({ ...l, score: l._relevanceScore, reason: "Matched by keyword search" }));
-      
-      return new Response(JSON.stringify({ 
-        matches: fallbackMatches, 
+    // Fallback for rate limits or billing
+    if (aiResponse.status === 429 || aiResponse.status === 402) {
+      const fallbackMatches = enriched
+        .filter(l => l._textMatch && l._hasScreenshot)
+        .slice(0, 8)
+        .map(l => ({
+          id: l.id,
+          title: l.title,
+          description: l.description,
+          price: l.price,
+          completeness_badge: l.completeness_badge,
+          tech_stack: l.tech_stack,
+          screenshots: l.screenshots,
+          category: l.category,
+          sales_count: l.sales_count,
+          score: Math.min(0.85, 0.5 + (l._relevanceScore || 0) * 0.3 + l._quality * 0.05),
+          reason: "Matched by keyword relevance",
+        }));
+
+      return new Response(JSON.stringify({
+        matches: fallbackMatches,
         hasResults: fallbackMatches.length > 0,
-        fallback: true 
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-    if (aiResponse.status === 402) {
-      // Same fallback for billing issues
-      const fallbackMatches = allListings
-        .filter(l => l._textMatch)
-        .slice(0, 6)
-        .map(l => ({ ...l, score: l._relevanceScore, reason: "Matched by keyword search" }));
-      
-      return new Response(JSON.stringify({ 
-        matches: fallbackMatches, 
-        hasResults: fallbackMatches.length > 0,
-        fallback: true 
+        fallback: true,
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -185,11 +214,11 @@ Return up to 8 matches. Only return matches with score >= 0.45.`,
     const matchData = JSON.parse(toolCall.function.arguments || '{"matches":[]}');
 
     const topMatches = matchData.matches
-      .filter((m: { index: number; score: number; reason: string }) => m.score >= 0.45 && allListings[m.index])
+      .filter((m: { index: number; score: number }) => m.score >= 0.50 && candidates[m.index])
       .sort((a: { score: number }, b: { score: number }) => b.score - a.score)
-      .slice(0, 8)
+      .slice(0, 10)
       .map((m: { index: number; score: number; reason: string }) => {
-        const listing = allListings[m.index];
+        const listing = candidates[m.index];
         return {
           id: listing.id,
           title: listing.title,
@@ -205,7 +234,7 @@ Return up to 8 matches. Only return matches with score >= 0.45.`,
         };
       });
 
-    // Log demand signal if no good matches found
+    // Log demand signal if no good matches
     if (topMatches.length === 0) {
       supabase.from("agent_demand_signals").insert({
         query: prompt.slice(0, 200),

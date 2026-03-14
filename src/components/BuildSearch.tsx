@@ -703,13 +703,13 @@ export function BuildSearch() {
         {noMatch && (
           <div className="mt-6 space-y-4">
             <div className="rounded-xl border border-primary/20 bg-gradient-to-b from-primary/5 to-transparent p-6 text-center space-y-4">
-              <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl gradient-hero shadow-glow mx-auto">
-                <Wand2 className="h-6 w-6 text-white" />
+              <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl gradient-hero shadow-glow mx-auto text-2xl">
+                🛠️
               </div>
               <div>
-                <h3 className="text-lg font-bold text-foreground">No exact match — but we can build it</h3>
+                <h3 className="text-lg font-bold text-foreground">No match — let the Gremlins™ build it!</h3>
                 <p className="text-sm text-muted-foreground mt-1 max-w-md mx-auto">
-                  We'll generate a full-stack app based on your description, complete with source code and screenshots.
+                  Our AI agents will generate a full-stack app from your description in ~60 seconds — source code, screenshots, and a downloadable ZIP included.
                 </p>
               </div>
               {generateCta}

@@ -22,6 +22,7 @@ import { JsonLd } from "@/components/JsonLd";
 import { MetaTags } from "@/components/MetaTags";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { FlagListingButton } from "@/components/FlagListingButton";
+import { AgentReadyBadge } from "@/components/AgentReadyBadge";
 import { BuyerWelcomeModal } from "@/components/BuyerWelcomeModal";
 import { GoogleSignInButton } from "@/components/GoogleSignInButton";
 const BUILT_WITH_LABELS: Record<string, string> = {

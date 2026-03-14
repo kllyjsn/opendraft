@@ -347,6 +347,7 @@ Rules:
             }),
           });
           zip_audits_triggered++;
+          results.zip_audits_triggered++;
           results.details.push({ id: l.id, action: "zip_audit_triggered" });
         } catch (e) {
           console.error(`ZIP audit failed for ${l.id}:`, e);

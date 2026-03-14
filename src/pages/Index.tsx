@@ -160,7 +160,7 @@ export default function Index() {
   const buildQuery = useCallback(() => {
     let query = supabase
       .from("listings")
-      .select("id,title,description,price,pricing_type,completeness_badge,tech_stack,screenshots,sales_count,view_count,built_with,seller_id,security_score,agent_ready", { count: "exact" })
+      .select("id,title,description,price,pricing_type,completeness_badge,tech_stack,screenshots,sales_count,view_count,built_with,seller_id,security_score,agent_ready,updated_at", { count: "exact" })
       .eq("status", "live");
     if (category !== "All" && categoryMap[category]) query = query.eq("category", categoryMap[category] as any);
     if (completeness !== "All" && completenessMap[completeness]) query = query.eq("completeness_badge", completenessMap[completeness] as any);

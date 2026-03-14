@@ -72,7 +72,12 @@ export default function Builders() {
       });
 
       setTotalListings(total);
-      setBuilders(profiles.map((p) => ({ ...p, listing_count: countMap[p.user_id] || 0 })));
+      // Only show users who have at least one live listing
+      setBuilders(
+        profiles
+          .map((p) => ({ ...p, listing_count: countMap[p.user_id] || 0 }))
+          .filter((p) => p.listing_count > 0)
+      );
       setLoading(false);
     }
     load();

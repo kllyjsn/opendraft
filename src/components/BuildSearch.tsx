@@ -443,7 +443,7 @@ export function BuildSearch() {
       className="gap-2 border-primary/30 text-primary hover:bg-primary/5 hover:border-primary/50"
       onClick={handleGenerate}
     >
-      <Wand2 className="h-3.5 w-3.5" /> Build my own version instead
+      <Wand2 className="h-3.5 w-3.5" /> 🛠️ Let the Gremlins build it
     </Button>
   );
 

@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { CompletenessBadge } from "./CompletenessBadge";
 import { SecurityBadge } from "./SecurityBadge";
+import { AgentReadyBadge } from "./AgentReadyBadge";
 import { Star, Eye, CheckCircle, Rocket } from "lucide-react";
 
 interface ListingCardProps {

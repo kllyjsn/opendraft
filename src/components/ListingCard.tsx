@@ -49,7 +49,7 @@ const BUILT_WITH_LABELS: Record<string, string> = {
 export function ListingCard({
   id, title, description, price, pricing_type, completeness_badge,
   tech_stack, screenshots, sales_count, view_count, avg_rating, owned, built_with,
-  seller_id, seller_username, security_score, agent_ready,
+  seller_id, seller_username, security_score, agent_ready, updated_at,
 }: ListingCardProps) {
   const navigate = useNavigate();
   const thumbnail = screenshots?.[0];

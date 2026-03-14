@@ -207,7 +207,7 @@ Deno.serve(async (req) => {
       await fetch(`${supabaseUrl}/functions/v1/swarm-auto-enrich`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${anonKey}` },
-        body: JSON.stringify({ batch_size: 15, triggered_by: "revenue_automation" }),
+        body: JSON.stringify({ batch_size: 50, triggered_by: "revenue_automation" }),
       });
       results.push("Triggered auto-enrich for listings");
     } catch (e) {

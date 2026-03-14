@@ -39,7 +39,7 @@ serve(async (req) => {
 
   try {
     const body = await req.json().catch(() => ({}));
-    const batchSize = body.batch_size || 20;
+    const batchSize = body.batch_size || 50;
     const dryRun = body.dry_run || false;
 
     // Track this run
@@ -230,7 +230,7 @@ Rules:
     // ── 4. Trigger screenshot capture for listings with demo_url but no screenshots ──
     const needScreenshot = needsWork.filter((l: any) => l._gaps?.includes("missing_screenshot"));
 
-    for (const l of needScreenshot.slice(0, 5)) { // Max 5 at a time to avoid rate limits
+    for (const l of needScreenshot.slice(0, 15)) { // Max 15 at a time
       if (dryRun) {
         results.details.push({ id: l.id, action: "screenshot_skipped_dry_run" });
         continue;
@@ -283,7 +283,7 @@ Rules:
       }
 
       // Rate limit
-      await new Promise(r => setTimeout(r, 2000));
+      await new Promise(r => setTimeout(r, 1000));
     }
 
     // ── 5. Auto-upgrade completeness badges based on signals ──
@@ -313,16 +313,16 @@ Rules:
     }
 
     // ── 6. Auto-trigger app analyzer for listings with demo_url (no goals required) ──
-    const analyzable = listings.filter(l => l.demo_url && !needsWork.some((n: any) => n.id === l.id && n._gaps?.includes("weak_description")));
+    const analyzable = listings.filter(l => (l.demo_url || l.github_url) && !needsWork.some((n: any) => n.id === l.id && n._gaps?.includes("weak_description")));
 
-    // Pick up to 3 for deep analysis per run
-    for (const l of analyzable.slice(0, 3)) {
-      // Check if recently analyzed
+    // Pick up to 10 for deep analysis per run
+    for (const l of analyzable.slice(0, 10)) {
+      // Check if recently analyzed (2-day cooldown)
       const { data: recentCycle } = await supabase
         .from("improvement_cycles")
         .select("id")
         .eq("listing_id", l.id)
-        .gte("created_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+        .gte("created_at", new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString())
         .limit(1);
 
       if (recentCycle?.length) continue;
@@ -345,7 +345,7 @@ Rules:
         } catch (e) {
           console.error(`Analysis trigger failed for ${l.id}:`, e);
         }
-        await new Promise(r => setTimeout(r, 3000));
+        await new Promise(r => setTimeout(r, 1500));
       }
     }
 

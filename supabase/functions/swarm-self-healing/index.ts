@@ -28,15 +28,14 @@ serve(async (req) => {
       .from("deployed_sites")
       .select("listing_id, user_id, site_url")
       .in("status", ["healthy", "degraded"])
-      .limit(50);
+      .limit(200);
 
-    // ── PHASE 2: ALL live listings with demo_url (no deploy/goals required) ──
+    // ── PHASE 2: ALL live listings (no deploy/goals/demo required) ──
     const { data: demoListings } = await supabase
       .from("listings")
       .select("id, seller_id, demo_url")
       .eq("status", "live")
-      .not("demo_url", "is", null)
-      .limit(100);
+      .limit(500);
 
     // Merge both sources — deduplicate
     const deployedIds = new Set((deployedSites || []).map(s => s.listing_id));
@@ -82,8 +81,8 @@ serve(async (req) => {
       }
     }
 
-    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const eightHoursAgo = new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString();
+    const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString();
 
     let triggered = 0;
     const results: { listing_id: string; status: string }[] = [];
@@ -96,7 +95,7 @@ serve(async (req) => {
           Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ batch_size: 20, triggered_by: "cron" }),
+        body: JSON.stringify({ batch_size: 50, triggered_by: "cron" }),
       });
       results.push({ listing_id: "auto-enrich", status: "triggered" });
     } catch (e) {
@@ -106,7 +105,7 @@ serve(async (req) => {
     // ── PHASE 3: Deep analysis per listing ──
     for (const target of allTargets) {
       const isDeployed = deployedIds.has(target.listing_id);
-      const cooldown = isDeployed ? oneDayAgo : sevenDaysAgo;
+      const cooldown = isDeployed ? eightHoursAgo : twoDaysAgo;
 
       const lastAnalysis = recentMap.get(target.listing_id);
       if (lastAnalysis && lastAnalysis > cooldown) {
@@ -140,7 +139,7 @@ serve(async (req) => {
 
       // Rate limit between analyses
       if (triggered < allTargets.length) {
-        await new Promise((r) => setTimeout(r, 2000));
+        await new Promise((r) => setTimeout(r, 1000));
       }
     }
 

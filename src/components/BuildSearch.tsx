@@ -395,18 +395,23 @@ export function BuildSearch() {
         <CheckCircle className="h-6 w-6 text-primary" />
       </div>
       <div>
-        <h4 className="font-bold text-foreground">"{job.listing_title || prompt}" is ready!</h4>
-        <p className="text-sm text-muted-foreground mt-1">
-          Your app has been generated with source code, screenshots, and a downloadable ZIP.
-          It's pending review and will go live shortly.
+        <h4 className="font-bold text-foreground">🎉 The Gremlins built "{job.listing_title || prompt}"!</h4>
+        <p className="text-sm text-muted-foreground mt-1 max-w-md mx-auto">
+          Your app is ready with full source code, screenshots, and a downloadable ZIP.
         </p>
+        <div className="mt-3 rounded-lg bg-muted/60 border border-border p-3 text-left max-w-sm mx-auto">
+          <p className="text-xs font-semibold text-foreground mb-1">📍 Where to find it:</p>
+          <p className="text-xs text-muted-foreground">
+            Go to <span className="font-bold text-foreground">Dashboard → My Listings</span> to edit details, update screenshots, set pricing, or publish it live.
+          </p>
+        </div>
       </div>
       <div className="flex gap-2 justify-center flex-wrap">
         <Button size="sm" onClick={() => navigate(`/listing/${job.listing_id}/edit`)} className="gradient-hero text-white border-0 shadow-glow hover:opacity-90 gap-2">
-          <ExternalLink className="h-3.5 w-3.5" /> Edit your listing
+          <ExternalLink className="h-3.5 w-3.5" /> Edit listing now
         </Button>
         <Button size="sm" variant="outline" onClick={() => navigate("/dashboard?tab=listings")} className="gap-2">
-          Go to Dashboard
+          Open Dashboard
         </Button>
         <Button size="sm" variant="ghost" onClick={reset}>
           Build another
@@ -438,7 +443,7 @@ export function BuildSearch() {
       className="gap-2 border-primary/30 text-primary hover:bg-primary/5 hover:border-primary/50"
       onClick={handleGenerate}
     >
-      <Wand2 className="h-3.5 w-3.5" /> Build my own version instead
+      <Wand2 className="h-3.5 w-3.5" /> 🛠️ Let the Gremlins build it
     </Button>
   );
 
@@ -684,11 +689,12 @@ export function BuildSearch() {
               );
             })}
 
-            {/* Build your own CTA */}
-            <div className="rounded-xl border border-dashed border-border bg-card/50 p-4 text-center space-y-3">
+            {/* Gremlins build CTA */}
+            <div className="rounded-xl border border-dashed border-primary/20 bg-gradient-to-b from-primary/5 to-transparent p-5 text-center space-y-3">
               <p className="text-sm text-muted-foreground">
-                Want something more tailored? <span className="text-foreground font-medium">We'll build it for you.</span>
+                Not quite right? <span className="text-foreground font-semibold">Let the Gremlins™ build exactly what you need.</span>
               </p>
+              <p className="text-xs text-muted-foreground">Full source code, screenshots & ZIP — ready in ~60 seconds</p>
               {generateCta}
             </div>
           </div>
@@ -697,13 +703,13 @@ export function BuildSearch() {
         {noMatch && (
           <div className="mt-6 space-y-4">
             <div className="rounded-xl border border-primary/20 bg-gradient-to-b from-primary/5 to-transparent p-6 text-center space-y-4">
-              <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl gradient-hero shadow-glow mx-auto">
-                <Wand2 className="h-6 w-6 text-white" />
+              <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl gradient-hero shadow-glow mx-auto text-2xl">
+                🛠️
               </div>
               <div>
-                <h3 className="text-lg font-bold text-foreground">No exact match — but we can build it</h3>
+                <h3 className="text-lg font-bold text-foreground">No match — let the Gremlins™ build it!</h3>
                 <p className="text-sm text-muted-foreground mt-1 max-w-md mx-auto">
-                  We'll generate a full-stack app based on your description, complete with source code and screenshots.
+                  Our AI agents will generate a full-stack app from your description in ~60 seconds — source code, screenshots, and a downloadable ZIP included.
                 </p>
               </div>
               {generateCta}

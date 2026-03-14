@@ -226,7 +226,7 @@ export default function Sell() {
             {remixParent ? "🔄 Remix" : "⚡ Instant payouts"}
           </div>
           <h1 className="text-3xl font-black mb-2">{remixParent ? "Ship your remix" : "Turn your project into income"}</h1>
-          <p className="text-muted-foreground">{remixParent ? "Improve it, relist it, earn from your work. 20% platform fee applies." : "List once. Sell forever. The moment someone buys, you get paid — no waiting, no invoices."}</p>
+          <p className="text-muted-foreground">{remixParent ? "Improve it, relist it, earn from your work. 20% platform fee applies." : "List once. Earn on every claim. Zero infrastructure — we handle delivery, deploy configs, and security audits."}</p>
         </div>
 
         {/* Step indicator */}

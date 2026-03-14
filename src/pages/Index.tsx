@@ -503,19 +503,19 @@ export default function Index() {
                 <BrandMascot size={32} variant="wave" />
                 <div>
                   <p className="text-sm font-medium text-foreground">
-                    Your first app is free — <span className="font-bold">claim it now</span>
+                    1,000+ production-ready apps — <span className="font-bold">start building</span>
                   </p>
                   <p className="text-[10px] text-muted-foreground">
-                    1,000+ apps · Full source code · No credit card
+                    Full source code · Deploy instantly · Builder support
                   </p>
                 </div>
               </div>
               <p className="text-xs font-medium text-foreground sm:hidden">
-                🚀 First app free · No card required
+                🚀 1,000+ apps · Start building now
               </p>
               <div className="flex items-center gap-2 shrink-0">
                 <div className="w-48">
-                  <GoogleSignInButton label="Claim free app" />
+                  <GoogleSignInButton label="Get started" />
                 </div>
                 <button
                   onClick={() => setStickyDismissed(true)}

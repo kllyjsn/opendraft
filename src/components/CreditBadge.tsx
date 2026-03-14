@@ -17,8 +17,8 @@ export function CreditBadge({ className }: { className?: string }) {
   const label = isSubscribed
     ? (plan ? (PLAN_LABELS[plan] ?? "Pro") : "Pro")
     : canClaimFree
-      ? "1 Free App"
-      : "Free Used";
+      ? "1 App Credit"
+      : "Claimed";
 
   return (
     <Link

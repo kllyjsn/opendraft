@@ -9,8 +9,8 @@ const STORAGE_KEY = "opendraft_welcome_seen";
 const steps = [
   {
     icon: Crown,
-    title: "Your first app is free",
-    desc: "Claim one app completely free — full source code, no credit card required. Subscribe later for more.",
+    title: "Welcome to OpenDraft",
+    desc: "Browse 1,000+ production-ready apps. Claim one to get the full source code — yours to own, modify, and deploy.",
   },
   {
     icon: Download,

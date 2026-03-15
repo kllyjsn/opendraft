@@ -6,7 +6,7 @@ import { ListingCard } from "@/components/ListingCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, TrendingUp, SlidersHorizontal, X, Loader2, ChevronDown, ArrowRight } from "lucide-react";
+import { Search, TrendingUp, SlidersHorizontal, X, Loader2, ChevronDown, ArrowRight, Wand2, CheckCircle, AlertCircle, ExternalLink } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { GoogleSignInButton } from "@/components/GoogleSignInButton";

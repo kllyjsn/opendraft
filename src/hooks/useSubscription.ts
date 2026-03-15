@@ -36,7 +36,7 @@ export function useSubscription() {
 
   // Derived helpers
   const plan = subscription?.plan as string | null;
-  const appLimit = plan === "unlimited" ? Infinity : plan === "growth" ? 20 : plan === "starter" ? 5 : 1;
+  const appLimit = plan === "unlimited" || plan === "agency" || plan === "enterprise" || plan === "pro" ? Infinity : plan === "growth" ? 20 : plan === "starter" ? 5 : 1;
   const canClaimFree = !isSubscribed && purchaseCount < 1;
 
   return { isSubscribed, loading, subscription, plan, appLimit, purchaseCount, canClaimFree, refetch: fetchSubscription };

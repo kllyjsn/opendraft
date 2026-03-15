@@ -4,6 +4,7 @@ import { CompletenessBadge } from "./CompletenessBadge";
 import { SecurityBadge } from "./SecurityBadge";
 import { AgentReadyBadge } from "./AgentReadyBadge";
 import { TrustBadges } from "./TrustBadges";
+import { UrgencyBadge } from "./UrgencyBadge";
 import { Star, Eye, CheckCircle, Rocket, Code2 } from "lucide-react";
 
 // Deterministic color from title for the fallback gradient
@@ -110,6 +111,11 @@ export function ListingCard({
               Owned
             </div>
           )}
+
+          {/* Urgency badge */}
+          <div className="absolute top-2.5 left-2.5">
+            <UrgencyBadge salesCount={sales_count} viewCount={view_count} price={price} createdAt={updated_at} />
+          </div>
 
           <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-end justify-between gap-1">
             <CompletenessBadge level={completeness_badge} showTooltip={false} />

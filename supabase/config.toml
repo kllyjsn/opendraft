@@ -157,3 +157,7 @@ verify_jwt = false
 # SEO content writer — autonomous blog post generator
 [functions.swarm-seo-writer]
 verify_jwt = false
+
+# Growth hacker agent — re-engagement, milestones, urgency campaigns
+[functions.swarm-growth-hacker]
+verify_jwt = false

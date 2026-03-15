@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { TOPIC_BANK } from "./topics.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -8,37 +9,9 @@ const corsHeaders = {
 
 /**
  * Autonomous SEO Content Agent
- * Runs daily via cron. Generates one long-tail blog post targeting
- * keywords the platform needs to rank for.
+ * Runs 3x daily via growth-hacker cron. Generates long-tail blog posts
+ * targeting 120+ keywords across all verticals.
  */
-
-const TOPIC_BANK = [
-  { keyword: "best vibe coding tools 2026", vertical: "developers", category: "Vibe Coding" },
-  { keyword: "buy react templates online", vertical: "developers", category: "Templates" },
-  { keyword: "ai app marketplace for developers", vertical: "developers", category: "AI Apps" },
-  { keyword: "best website builder for restaurants 2026", vertical: "restaurants", category: "SMB Growth" },
-  { keyword: "salon booking app template", vertical: "salons", category: "SMB Growth" },
-  { keyword: "contractor website template free", vertical: "contractors", category: "SMB Growth" },
-  { keyword: "fitness app template react", vertical: "fitness", category: "Health & Fitness" },
-  { keyword: "healthcare portal template", vertical: "healthcare", category: "Healthcare" },
-  { keyword: "real estate listing app template", vertical: "real-estate", category: "Real Estate" },
-  { keyword: "how to sell code online", vertical: "creators", category: "Creator Economy" },
-  { keyword: "mcp server marketplace", vertical: "agents", category: "Agent Economy" },
-  { keyword: "ai agents buying software autonomously", vertical: "agents", category: "Agent Economy" },
-  { keyword: "best saas starter kit 2026", vertical: "developers", category: "SaaS" },
-  { keyword: "no code app store", vertical: "general", category: "Vibe Coding" },
-  { keyword: "sell lovable apps online", vertical: "creators", category: "Creator Economy" },
-  { keyword: "autonomous ai marketplace", vertical: "agents", category: "Agent Economy" },
-  { keyword: "react dashboard template production ready", vertical: "developers", category: "Templates" },
-  { keyword: "small business app marketplace", vertical: "smb", category: "SMB Growth" },
-  { keyword: "white label saas template", vertical: "enterprise", category: "Enterprise" },
-  { keyword: "ai generated app marketplace", vertical: "general", category: "AI Apps" },
-  { keyword: "vibe coding explained for beginners", vertical: "general", category: "Vibe Coding" },
-  { keyword: "best ai coding assistant 2026", vertical: "developers", category: "AI Apps" },
-  { keyword: "deploy react app one click", vertical: "developers", category: "Templates" },
-  { keyword: "passive income selling code", vertical: "creators", category: "Creator Economy" },
-];
-
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -48,21 +21,19 @@ serve(async (req) => {
   );
 
   try {
-    // Check what slugs already exist
     const { data: existing } = await supabase
       .from("blog_posts")
       .select("slug");
     
     const existingSlugs = new Set((existing || []).map(p => p.slug));
 
-    // Pick a topic we haven't written about
     const available = TOPIC_BANK.filter(t => {
       const slug = t.keyword.replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "").slice(0, 80);
       return !existingSlugs.has(slug);
     });
 
     if (available.length === 0) {
-      return new Response(JSON.stringify({ message: "All topics covered", count: 0 }), {
+      return new Response(JSON.stringify({ message: "All topics covered", count: 0, total: TOPIC_BANK.length }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -74,7 +45,6 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
-    // Generate the blog post using AI
     const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -86,30 +56,26 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `You are a world-class SEO content writer for OpenDraft (opendraft.co), the first agent-native app marketplace. Write blog posts that:
+            content: `You are a world-class SEO content writer for OpenDraft (opendraft.co), the first agent-native app marketplace where developers and vibe coders sell production-ready apps. Write blog posts that:
 - Target the exact keyword naturally (use it 3-5 times)
-- Are 1200-1800 words, practical, and authoritative
+- Are 1500-2500 words, practical, and authoritative
 - Include specific examples, data points, and actionable advice
-- Reference OpenDraft features where natural (marketplace, one-click deploy, AI agents, remix economy)
-- Use markdown headers (## and ###) to structure content
-- End with a CTA to browse or sell on OpenDraft
-- Sound like a sharp, knowledgeable founder — NOT generic AI slop
-- Include contrarian takes and specific numbers where possible`
+- Reference OpenDraft features: marketplace, one-click deploy, AI agents, remix economy, free credits
+- Use markdown headers (## and ###) to structure content with 5-7 sections
+- Include a comparison table or numbered list for scannability
+- End with a strong CTA to browse or sell on OpenDraft
+- Sound like a sharp, opinionated founder — NOT generic AI content
+- Include contrarian takes, specific numbers, and real-world scenarios
+- Mention competitor alternatives fairly but position OpenDraft as the best choice`
           },
           {
             role: "user",
-            content: `Write an SEO-optimized blog post targeting the keyword: "${topic.keyword}"
+            content: `Write an SEO-optimized blog post targeting: "${topic.keyword}"
 
 Category: ${topic.category}
 Vertical: ${topic.vertical}
 
-Return a JSON object with these exact fields:
-{
-  "title": "compelling title including the keyword (under 65 chars)",
-  "description": "meta description with keyword (under 155 chars)",
-  "content": "full markdown content of the blog post",
-  "read_time": "X min read"
-}`
+Return JSON: { "title": "under 65 chars with keyword", "description": "meta description under 155 chars", "content": "full markdown", "read_time": "X min read" }`
           }
         ],
         tools: [{
@@ -120,10 +86,10 @@ Return a JSON object with these exact fields:
             parameters: {
               type: "object",
               properties: {
-                title: { type: "string", description: "Blog post title under 65 chars" },
-                description: { type: "string", description: "Meta description under 155 chars" },
-                content: { type: "string", description: "Full markdown content" },
-                read_time: { type: "string", description: "Estimated read time like '6 min read'" }
+                title: { type: "string" },
+                description: { type: "string" },
+                content: { type: "string" },
+                read_time: { type: "string" }
               },
               required: ["title", "description", "content", "read_time"],
               additionalProperties: false
@@ -146,7 +112,6 @@ Return a JSON object with these exact fields:
 
     const args = JSON.parse(toolCall.function.arguments);
 
-    // Insert into blog_posts table
     const { error: insertErr } = await supabase.from("blog_posts").insert({
       slug,
       title: args.title,
@@ -161,7 +126,7 @@ Return a JSON object with these exact fields:
 
     if (insertErr) throw insertErr;
 
-    // Auto-tweet the new post
+    // Auto-tweet
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
     try {
@@ -173,19 +138,18 @@ Return a JSON object with these exact fields:
         },
         body: JSON.stringify({
           type: "new_listing",
-          custom_text: `📝 New on the blog: "${args.title}"\n\n${args.description}\n\nhttps://opendraft.lovable.app/blog/${slug}`,
+          custom_text: `📝 New: "${args.title}"\n\n${args.description}\n\nhttps://opendraft.lovable.app/blog/${slug}`,
         }),
       });
     } catch (e) {
       console.error("Tweet failed:", e);
     }
 
-    // Log to swarm_tasks
     await supabase.from("swarm_tasks").insert({
       agent_type: "seo_writer",
       action: "generate_blog_post",
       status: "completed",
-      input: { topic, slug },
+      input: { topic, slug, remaining: available.length - 1 },
       output: { title: args.title, word_count: args.content.split(/\s+/).length },
       triggered_by: "cron",
       completed_at: new Date().toISOString(),
@@ -196,6 +160,8 @@ Return a JSON object with these exact fields:
       slug,
       title: args.title,
       keyword: topic.keyword,
+      remaining: available.length - 1,
+      total_topics: TOPIC_BANK.length,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

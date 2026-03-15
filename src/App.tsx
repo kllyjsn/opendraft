@@ -68,7 +68,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <ScrollToTop />
-        <Routes>
+        <FunnelTracker />
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<Login />} />
           <Route path="/listing/:id" element={<ListingDetail />} />

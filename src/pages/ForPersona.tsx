@@ -226,6 +226,7 @@ export default function ForPersona() {
       <MetaTags
         title={`${config.title} | OpenDraft`}
         description={config.metaDescription}
+        path={`/for/${persona}`}
       />
       <CanonicalTag path={`/for/${persona}`} />
       <JsonLd

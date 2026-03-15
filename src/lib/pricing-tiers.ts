@@ -26,6 +26,7 @@ export interface PricingTier {
   appLimitLabel: string; // Human-readable limit
   description: string;
   popular?: boolean;
+  badge?: string;
   features: string[];
 }
 
@@ -104,10 +105,50 @@ export const TIERS: PricingTier[] = [
       "Lifetime access — yours forever",
     ],
   },
+  {
+    id: "agency",
+    name: "Agency",
+    price: 9900,         // $99/mo
+    appLimit: Infinity,
+    appLimitLabel: "Unlimited",
+    badge: "For teams",
+    description: "White-label unlimited apps for your agency. Resell to clients with zero restrictions.",
+    features: [
+      "Unlimited fully serviced apps",
+      "White-label rights — rebrand & resell",
+      "Priority builder messaging",
+      "Bulk deploy to client domains",
+      "Team dashboard (coming soon)",
+      "Dedicated onboarding call",
+    ],
+  },
+  {
+    id: "enterprise",
+    name: "Enterprise",
+    price: 19900,        // $199/mo
+    appLimit: Infinity,
+    appLimitLabel: "Unlimited",
+    badge: "Best value",
+    description: "Fleet licensing for agencies managing 50+ clients. Volume pricing included.",
+    features: [
+      "Everything in Agency",
+      "API access for bulk operations",
+      "Custom integrations support",
+      "Volume discount on premium listings",
+      "Dedicated account manager",
+      "SLA-backed response times",
+    ],
+  },
 ];
 
 /** Paid tiers only (for pricing page subscription cards) */
 export const PAID_TIERS = TIERS.filter((t) => t.price > 0);
+
+/** Core paid tiers (shown on main pricing) */
+export const CORE_PAID_TIERS = TIERS.filter((t) => t.price > 0 && t.price <= 5000);
+
+/** High-ticket tiers (shown separately) */
+export const ENTERPRISE_TIERS = TIERS.filter((t) => t.price > 5000);
 
 /** Look up a tier by its Stripe price (cents) */
 export function getTierByPrice(priceCents: number): PricingTier | undefined {

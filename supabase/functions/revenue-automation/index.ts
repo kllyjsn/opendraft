@@ -214,6 +214,21 @@ Deno.serve(async (req) => {
       results.push("Failed to trigger auto-enrich");
     }
 
+    // ---------------------------------------------------------------
+    // 8. EMAIL DRIP SEQUENCES
+    // Send lifecycle emails: welcome, value showcase, upgrade nudge, winback
+    // ---------------------------------------------------------------
+    try {
+      await fetch(`${supabaseUrl}/functions/v1/email-drip`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${supabaseKey}` },
+        body: JSON.stringify({}),
+      });
+      results.push("Triggered email drip engine");
+    } catch (e) {
+      results.push("Failed to trigger email drip");
+    }
+
     console.log("Revenue automation complete:", results.join("; "));
 
     return new Response(JSON.stringify({ success: true, results }), {

@@ -17,6 +17,7 @@ import { BrandMascot } from "@/components/BrandMascot";
 import { JsonLd } from "@/components/JsonLd";
 import { MetaTags } from "@/components/MetaTags";
 import { CTA_COPY } from "@/lib/pricing-tiers";
+import { CountdownBanner } from "@/components/CountdownBanner";
 
 const CATEGORIES = ["All", "SaaS Tool", "AI App", "Landing Page", "Utility", "Game", "Other"];
 const COMPLETENESS = ["All", "Prototype", "MVP", "Production Ready"];

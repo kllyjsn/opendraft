@@ -110,6 +110,8 @@ export default function Index() {
   const [showStickyBar, setShowStickyBar] = useState(false);
   const [stickyDismissed, setStickyDismissed] = useState(false);
   const [heroSearch, setHeroSearch] = useState("");
+  const [generating, setGenerating] = useState(false);
+  const [genJob, setGenJob] = useState<{ id: string; status: string; stage: string; listing_id: string | null; listing_title: string | null; error: string | null } | null>(null);
 
   const jsonLdData = useMemo(() => [
     {

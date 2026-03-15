@@ -399,9 +399,64 @@ const CATEGORY_COLORS: Record<string, string> = {
   "Engineering": "bg-emerald-500/10 text-emerald-400",
   "Technical Deep Dive": "bg-amber-500/10 text-amber-400",
   "Guides": "bg-pink-500/10 text-pink-400",
+  "Growth": "bg-violet-500/10 text-violet-400",
+  "SMB Growth": "bg-orange-500/10 text-orange-400",
+  "Templates": "bg-blue-500/10 text-blue-400",
+  "AI Apps": "bg-fuchsia-500/10 text-fuchsia-400",
+  "SaaS": "bg-teal-500/10 text-teal-400",
+  "Creator Economy": "bg-rose-500/10 text-rose-400",
+  "Enterprise": "bg-slate-500/10 text-slate-400",
+  "Health & Fitness": "bg-green-500/10 text-green-400",
+  "Healthcare": "bg-red-500/10 text-red-400",
+  "Real Estate": "bg-amber-500/10 text-amber-400",
+  "Vibe Coding": "bg-indigo-500/10 text-indigo-400",
 };
 
+interface DbBlogPost {
+  slug: string;
+  title: string;
+  description: string;
+  category: string;
+  read_time: string;
+  content: string;
+  created_at: string;
+}
+
 function BlogIndex() {
+  const [dbPosts, setDbPosts] = useState<DbBlogPost[]>([]);
+
+  useEffect(() => {
+    supabase
+      .from("blog_posts")
+      .select("slug, title, description, category, read_time, content, created_at")
+      .eq("published", true)
+      .order("created_at", { ascending: false })
+      .limit(50)
+      .then(({ data }) => setDbPosts(data ?? []));
+  }, []);
+
+  // Merge static + DB posts
+  const allPosts = [
+    ...POST_LIST.map(p => ({
+      slug: p.slug,
+      title: p.title,
+      description: p.description,
+      category: p.category,
+      readTime: p.readTime,
+      date: p.date,
+      isStatic: true,
+    })),
+    ...dbPosts.map(p => ({
+      slug: p.slug,
+      title: p.title,
+      description: p.description,
+      category: p.category,
+      readTime: p.read_time,
+      date: p.created_at.split("T")[0],
+      isStatic: false,
+    })),
+  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
   return (
     <div className="min-h-screen flex flex-col">
       <MetaTags

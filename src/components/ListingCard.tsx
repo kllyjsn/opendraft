@@ -4,7 +4,7 @@ import { CompletenessBadge } from "./CompletenessBadge";
 import { SecurityBadge } from "./SecurityBadge";
 import { AgentReadyBadge } from "./AgentReadyBadge";
 import { TrustBadges } from "./TrustBadges";
-import { UrgencyBadge } from "./UrgencyBadge";
+
 import { Star, Eye, CheckCircle, Rocket, Code2 } from "lucide-react";
 
 // Deterministic color from title for the fallback gradient

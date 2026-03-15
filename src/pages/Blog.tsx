@@ -533,7 +533,34 @@ function BlogIndex() {
 
 function BlogPost() {
   const { slug } = useParams<{ slug: string }>();
-  const post = slug ? POSTS[slug] : undefined;
+  const staticPost = slug ? POSTS[slug] : undefined;
+  const [dbPost, setDbPost] = useState<DbBlogPost | null>(null);
+
+  useEffect(() => {
+    if (!slug || staticPost) return;
+    supabase
+      .from("blog_posts")
+      .select("slug, title, description, category, read_time, content, created_at")
+      .eq("slug", slug)
+      .eq("published", true)
+      .single()
+      .then(({ data }) => setDbPost(data));
+  }, [slug, staticPost]);
+
+  // Build a unified post object
+  const post = staticPost
+    ? staticPost
+    : dbPost
+    ? {
+        slug: dbPost.slug,
+        title: dbPost.title,
+        description: dbPost.description,
+        date: dbPost.created_at.split("T")[0],
+        readTime: dbPost.read_time,
+        category: dbPost.category,
+        content: dbPost.content.split("\n"),
+      }
+    : undefined;
 
   const handleShare = () => {
     const url = `https://opendraft.co/blog/${post?.slug}`;

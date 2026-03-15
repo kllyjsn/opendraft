@@ -59,7 +59,7 @@ import Security from "./pages/Security";
 import AdminOutreach from "./pages/AdminOutreach";
 import AdminRevenue from "./pages/AdminRevenue";
 import GremlinsAtWork from "./pages/GremlinsAtWork";
-
+import { GremlinVoiceAgent } from "./components/GremlinVoiceAgent";
 const queryClient = new QueryClient();
 
 const App = () => (

@@ -59,6 +59,9 @@ import Security from "./pages/Security";
 import AdminOutreach from "./pages/AdminOutreach";
 import AdminRevenue from "./pages/AdminRevenue";
 import GremlinsAtWork from "./pages/GremlinsAtWork";
+import { ExitIntentPopup } from "./components/ExitIntentPopup";
+import { SocialProofToast } from "./components/SocialProofToast";
+import { StickyCTA } from "./components/StickyCTA";
 
 const queryClient = new QueryClient();
 
@@ -70,6 +73,9 @@ const App = () => (
       <BrowserRouter>
         <ScrollToTop />
         <FunnelTracker />
+        <ExitIntentPopup />
+        <SocialProofToast />
+        <StickyCTA />
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<Login />} />

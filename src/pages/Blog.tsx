@@ -481,30 +481,30 @@ function BlogIndex() {
       </section>
 
       {/* Featured post */}
-      {POST_LIST[0] && (
+      {allPosts[0] && (
         <section className="container mx-auto px-4 py-10 max-w-3xl">
           <Link
-            to={`/blog/${POST_LIST[0].slug}`}
+            to={`/blog/${allPosts[0].slug}`}
             className="block rounded-2xl border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-transparent p-8 shadow-lg hover:shadow-xl hover:border-primary/50 transition-all"
           >
             <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
-              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${CATEGORY_COLORS[POST_LIST[0].category] || "bg-muted text-muted-foreground"}`}>
-                {POST_LIST[0].category}
+              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${CATEGORY_COLORS[allPosts[0].category] || "bg-muted text-muted-foreground"}`}>
+                {allPosts[0].category}
               </span>
               <Calendar className="h-3.5 w-3.5" />
-              <span>{new Date(POST_LIST[0].date).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</span>
+              <span>{new Date(allPosts[0].date).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</span>
               <span>·</span>
-              <span>{POST_LIST[0].readTime}</span>
+              <span>{allPosts[0].readTime}</span>
             </div>
-            <h2 className="text-2xl md:text-3xl font-black mb-3 leading-tight">{POST_LIST[0].title}</h2>
-            <p className="text-muted-foreground leading-relaxed">{POST_LIST[0].description}</p>
+            <h2 className="text-2xl md:text-3xl font-black mb-3 leading-tight">{allPosts[0].title}</h2>
+            <p className="text-muted-foreground leading-relaxed">{allPosts[0].description}</p>
           </Link>
         </section>
       )}
 
       <section className="container mx-auto px-4 pb-14 max-w-3xl">
         <div className="space-y-5">
-          {POST_LIST.slice(1).map((post) => (
+          {allPosts.slice(1).map((post) => (
             <Link
               key={post.slug}
               to={`/blog/${post.slug}`}

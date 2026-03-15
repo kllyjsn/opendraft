@@ -365,7 +365,7 @@ export default function ListingDetail() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <BuyerWelcomeModal skipForOwners={purchased} />
+      
       <Navbar />
       {listing && (
         <MetaTags

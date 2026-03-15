@@ -239,6 +239,86 @@ export default function Index() {
 
   const hasMore = listings.length < totalCount;
   const hasFilters = search || category !== "All" || completeness !== "All" || freeOnly;
+  const searchQuery = search || heroSearch;
+
+  const STAGE_MAP: Record<string, { label: string; pct: number }> = {
+    queued: { label: "Queuing your build…", pct: 5 },
+    researching: { label: "Researching market demand…", pct: 15 },
+    generating_code: { label: "Generating source code…", pct: 35 },
+    generating_screenshots: { label: "Creating screenshots…", pct: 60 },
+    packaging: { label: "Packaging ZIP bundle…", pct: 78 },
+    uploading: { label: "Uploading files…", pct: 88 },
+    creating_listing: { label: "Creating your listing…", pct: 95 },
+    done: { label: "Complete!", pct: 100 },
+    error: { label: "Something went wrong", pct: 0 },
+  };
+
+  // Subscribe to generation job updates
+  useEffect(() => {
+    if (!genJob || genJob.status === "complete" || genJob.status === "failed") return;
+
+    const channel = supabase
+      .channel(`browse-job-${genJob.id}`)
+      .on("postgres_changes", {
+        event: "UPDATE",
+        schema: "public",
+        table: "generation_jobs",
+        filter: `id=eq.${genJob.id}`,
+      }, (payload) => {
+        const updated = payload.new as typeof genJob;
+        setGenJob(updated);
+        if (updated.status === "complete" || updated.status === "failed") setGenerating(false);
+      })
+      .subscribe();
+
+    const poll = setInterval(async () => {
+      const { data } = await supabase.from("generation_jobs").select("id, status, stage, listing_id, listing_title, error").eq("id", genJob.id).single();
+      if (data) {
+        setGenJob(data as typeof genJob);
+        if (data.status === "complete" || data.status === "failed") { setGenerating(false); clearInterval(poll); }
+      }
+    }, 5000);
+
+    const timeout = setTimeout(() => {
+      setGenJob(prev => {
+        if (prev && prev.status !== "complete" && prev.status !== "failed") {
+          setGenerating(false);
+          return { ...prev, status: "failed", stage: "error", error: "Taking longer than expected. Check your dashboard." };
+        }
+        return prev;
+      });
+    }, 180000);
+
+    return () => { supabase.removeChannel(channel); clearInterval(poll); clearTimeout(timeout); };
+  }, [genJob?.id, genJob?.status]);
+
+  async function handleGenerate() {
+    if (!user) { navigate("/login"); return; }
+    const prompt = searchQuery.trim();
+    if (!prompt) return;
+    setGenerating(true);
+    setGenJob(null);
+
+    try {
+      const { data: jobRow, error: jobErr } = await supabase
+        .from("generation_jobs")
+        .insert({ user_id: user.id, prompt, status: "pending", stage: "queued" })
+        .select("id, status, stage, listing_id, listing_title, error")
+        .single();
+
+      if (jobErr || !jobRow) throw new Error("Failed to create generation job");
+      setGenJob(jobRow as typeof genJob);
+
+      supabase.functions.invoke("generate-template-app", {
+        body: { count: 1, themes: [prompt], job_id: jobRow.id },
+      }).catch(console.error);
+    } catch (err) {
+      setGenJob({ id: "", status: "failed", stage: "error", listing_id: null, listing_title: null, error: err instanceof Error ? err.message : "Unknown error" });
+      setGenerating(false);
+    }
+  }
+
+  const genStage = genJob ? (STAGE_MAP[genJob.stage] || STAGE_MAP.queued) : STAGE_MAP.queued;
 
   return (
     <div className="min-h-screen flex flex-col">

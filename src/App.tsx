@@ -69,6 +69,7 @@ const App = () => (
       <BrowserRouter>
         <ScrollToTop />
         <FunnelTracker />
+        <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<Login />} />
           <Route path="/listing/:id" element={<ListingDetail />} />

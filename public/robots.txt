@@ -66,7 +66,7 @@ Allow: /
 User-agent: *
 Allow: /
 
-Sitemap: https://api.opendraft.co/sitemap
+Sitemap: https://xwumrdcagsuwqeelyxih.supabase.co/functions/v1/sitemap
 
 # AI Agent Discovery
 # LLM context: https://opendraft.co/llms.txt

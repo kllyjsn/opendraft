@@ -5,9 +5,16 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 
+import { useFunnelTracker } from "@/hooks/useFunnelTracker";
+
 function ScrollToTop() {
   const { pathname } = useLocation();
   useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  return null;
+}
+
+function FunnelTracker() {
+  useFunnelTracker();
   return null;
 }
 import Index from "./pages/Index";

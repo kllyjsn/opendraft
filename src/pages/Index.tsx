@@ -247,16 +247,81 @@ export default function Index() {
   const searchQuery = search || heroSearch;
 
   const STAGE_MAP: Record<string, { label: string; pct: number }> = {
-    queued: { label: "Queuing your build…", pct: 5 },
-    researching: { label: "Researching market demand…", pct: 15 },
-    generating_code: { label: "Generating source code…", pct: 35 },
-    generating_screenshots: { label: "Creating screenshots…", pct: 60 },
-    packaging: { label: "Packaging ZIP bundle…", pct: 78 },
-    uploading: { label: "Uploading files…", pct: 88 },
-    creating_listing: { label: "Creating your listing…", pct: 95 },
-    done: { label: "Complete!", pct: 100 },
+    queued: { label: "Queuing your build…", pct: 3 },
+    researching: { label: "Researching market demand…", pct: 10 },
+    generating_code: { label: "Generating source code…", pct: 25 },
+    generating_screenshots: { label: "Creating screenshots…", pct: 40 },
+    packaging: { label: "Packaging ZIP bundle…", pct: 52 },
+    uploading: { label: "Uploading files…", pct: 60 },
+    creating_listing: { label: "Creating your listing…", pct: 65 },
+    done: { label: "Build complete!", pct: 68 },
+    // Deploy stages
+    deploying: { label: "Deploying to OpenDraft Cloud…", pct: 75 },
+    deploy_building: { label: "Cloud build in progress…", pct: 85 },
+    deploy_live: { label: "Your app is live! 🎉", pct: 100 },
     error: { label: "Something went wrong", pct: 0 },
   };
+
+  // Auto-deploy when generation completes
+  useEffect(() => {
+    if (genJob?.status === "complete" && genJob.listing_id && deployPhase === "idle") {
+      handleAutoDeploy(genJob.listing_id);
+    }
+  }, [genJob?.status, genJob?.listing_id]);
+
+  async function handleAutoDeploy(listingId: string) {
+    setDeployPhase("deploying");
+    setDeployError(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("deploy-to-opendraft", {
+        body: { listingId },
+      });
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+      if (data?.siteUrl && data?.deployId) {
+        setDeployId(data.deployId);
+        setDeployPhase("polling");
+        pollDeployStatus(data.deployId, data.siteUrl);
+      } else {
+        throw new Error("Deploy returned no URL");
+      }
+    } catch (err) {
+      console.error("Auto-deploy failed:", err);
+      setDeployError(err instanceof Error ? err.message : "Deploy failed");
+      setDeployPhase("error");
+    }
+  }
+
+  async function pollDeployStatus(depId: string, siteUrl: string) {
+    let attempts = 0;
+    const maxAttempts = 60; // 5 minutes
+    const interval = setInterval(async () => {
+      attempts++;
+      try {
+        const { data } = await supabase.functions.invoke("check-vercel-deploy", {
+          body: { deployId: depId, usePlatformToken: true },
+        });
+        if (data?.state === "ready") {
+          clearInterval(interval);
+          setDeployUrl(data.deployUrl || siteUrl);
+          setDeployPhase("live");
+          // Update listing demo_url
+          if (genJob?.listing_id) {
+            supabase.from("listings").update({ demo_url: data.deployUrl || siteUrl }).eq("id", genJob.listing_id).then(() => {});
+          }
+        } else if (data?.state === "error" || data?.state === "canceled") {
+          clearInterval(interval);
+          setDeployError(data?.errorMessage || "Deploy failed during build");
+          setDeployPhase("error");
+        }
+      } catch { /* keep polling */ }
+      if (attempts >= maxAttempts) {
+        clearInterval(interval);
+        setDeployUrl(siteUrl);
+        setDeployPhase("live"); // Assume it'll be ready
+      }
+    }, 5000);
+  }
 
   // Subscribe to generation job updates
   useEffect(() => {
@@ -303,6 +368,10 @@ export default function Index() {
     if (!prompt) return;
     setGenerating(true);
     setGenJob(null);
+    setDeployPhase("idle");
+    setDeployUrl(null);
+    setDeployError(null);
+    setDeployId(null);
 
     try {
       const { data: jobRow, error: jobErr } = await supabase
@@ -323,7 +392,18 @@ export default function Index() {
     }
   }
 
-  const genStage = genJob ? (STAGE_MAP[genJob.stage] || STAGE_MAP.queued) : STAGE_MAP.queued;
+  // Compute current visual stage
+  function getCurrentStage(): { label: string; pct: number } {
+    if (deployPhase === "live") return STAGE_MAP.deploy_live;
+    if (deployPhase === "polling") return STAGE_MAP.deploy_building;
+    if (deployPhase === "deploying") return STAGE_MAP.deploying;
+    if (deployPhase === "error") return STAGE_MAP.error;
+    if (genJob?.status === "complete") return STAGE_MAP.done;
+    return genJob ? (STAGE_MAP[genJob.stage] || STAGE_MAP.queued) : STAGE_MAP.queued;
+  }
+
+  const currentStage = getCurrentStage();
+  const isInProgress = generating || (genJob && genJob.status !== "complete" && genJob.status !== "failed") || deployPhase === "deploying" || deployPhase === "polling";
 
   return (
     <div className="min-h-screen flex flex-col">

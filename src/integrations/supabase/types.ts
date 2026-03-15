@@ -184,6 +184,51 @@ export type Database = {
         }
         Relationships: []
       }
+      blog_posts: {
+        Row: {
+          category: string
+          content: string
+          created_at: string | null
+          description: string
+          generated_by: string | null
+          id: string
+          keywords: string[] | null
+          published: boolean | null
+          read_time: string
+          slug: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          category?: string
+          content: string
+          created_at?: string | null
+          description: string
+          generated_by?: string | null
+          id?: string
+          keywords?: string[] | null
+          published?: boolean | null
+          read_time?: string
+          slug: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          content?: string
+          created_at?: string | null
+          description?: string
+          generated_by?: string | null
+          id?: string
+          keywords?: string[] | null
+          published?: boolean | null
+          read_time?: string
+          slug?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       bounties: {
         Row: {
           budget: number

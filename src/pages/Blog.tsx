@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -6,6 +7,7 @@ import { JsonLd } from "@/components/JsonLd";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Calendar, Share2 } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface BlogPost {
   slug: string;
@@ -399,9 +401,64 @@ const CATEGORY_COLORS: Record<string, string> = {
   "Engineering": "bg-emerald-500/10 text-emerald-400",
   "Technical Deep Dive": "bg-amber-500/10 text-amber-400",
   "Guides": "bg-pink-500/10 text-pink-400",
+  "Growth": "bg-violet-500/10 text-violet-400",
+  "SMB Growth": "bg-orange-500/10 text-orange-400",
+  "Templates": "bg-blue-500/10 text-blue-400",
+  "AI Apps": "bg-fuchsia-500/10 text-fuchsia-400",
+  "SaaS": "bg-teal-500/10 text-teal-400",
+  "Creator Economy": "bg-rose-500/10 text-rose-400",
+  "Enterprise": "bg-slate-500/10 text-slate-400",
+  "Health & Fitness": "bg-green-500/10 text-green-400",
+  "Healthcare": "bg-red-500/10 text-red-400",
+  "Real Estate": "bg-amber-500/10 text-amber-400",
+  "Vibe Coding": "bg-indigo-500/10 text-indigo-400",
 };
 
+interface DbBlogPost {
+  slug: string;
+  title: string;
+  description: string;
+  category: string;
+  read_time: string;
+  content: string;
+  created_at: string;
+}
+
 function BlogIndex() {
+  const [dbPosts, setDbPosts] = useState<DbBlogPost[]>([]);
+
+  useEffect(() => {
+    supabase
+      .from("blog_posts")
+      .select("slug, title, description, category, read_time, content, created_at")
+      .eq("published", true)
+      .order("created_at", { ascending: false })
+      .limit(50)
+      .then(({ data }) => setDbPosts(data ?? []));
+  }, []);
+
+  // Merge static + DB posts
+  const allPosts = [
+    ...POST_LIST.map(p => ({
+      slug: p.slug,
+      title: p.title,
+      description: p.description,
+      category: p.category,
+      readTime: p.readTime,
+      date: p.date,
+      isStatic: true,
+    })),
+    ...dbPosts.map(p => ({
+      slug: p.slug,
+      title: p.title,
+      description: p.description,
+      category: p.category,
+      readTime: p.read_time,
+      date: p.created_at.split("T")[0],
+      isStatic: false,
+    })),
+  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
   return (
     <div className="min-h-screen flex flex-col">
       <MetaTags
@@ -424,30 +481,30 @@ function BlogIndex() {
       </section>
 
       {/* Featured post */}
-      {POST_LIST[0] && (
+      {allPosts[0] && (
         <section className="container mx-auto px-4 py-10 max-w-3xl">
           <Link
-            to={`/blog/${POST_LIST[0].slug}`}
+            to={`/blog/${allPosts[0].slug}`}
             className="block rounded-2xl border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-transparent p-8 shadow-lg hover:shadow-xl hover:border-primary/50 transition-all"
           >
             <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
-              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${CATEGORY_COLORS[POST_LIST[0].category] || "bg-muted text-muted-foreground"}`}>
-                {POST_LIST[0].category}
+              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${CATEGORY_COLORS[allPosts[0].category] || "bg-muted text-muted-foreground"}`}>
+                {allPosts[0].category}
               </span>
               <Calendar className="h-3.5 w-3.5" />
-              <span>{new Date(POST_LIST[0].date).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</span>
+              <span>{new Date(allPosts[0].date).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</span>
               <span>·</span>
-              <span>{POST_LIST[0].readTime}</span>
+              <span>{allPosts[0].readTime}</span>
             </div>
-            <h2 className="text-2xl md:text-3xl font-black mb-3 leading-tight">{POST_LIST[0].title}</h2>
-            <p className="text-muted-foreground leading-relaxed">{POST_LIST[0].description}</p>
+            <h2 className="text-2xl md:text-3xl font-black mb-3 leading-tight">{allPosts[0].title}</h2>
+            <p className="text-muted-foreground leading-relaxed">{allPosts[0].description}</p>
           </Link>
         </section>
       )}
 
       <section className="container mx-auto px-4 pb-14 max-w-3xl">
         <div className="space-y-5">
-          {POST_LIST.slice(1).map((post) => (
+          {allPosts.slice(1).map((post) => (
             <Link
               key={post.slug}
               to={`/blog/${post.slug}`}
@@ -476,7 +533,34 @@ function BlogIndex() {
 
 function BlogPost() {
   const { slug } = useParams<{ slug: string }>();
-  const post = slug ? POSTS[slug] : undefined;
+  const staticPost = slug ? POSTS[slug] : undefined;
+  const [dbPost, setDbPost] = useState<DbBlogPost | null>(null);
+
+  useEffect(() => {
+    if (!slug || staticPost) return;
+    supabase
+      .from("blog_posts")
+      .select("slug, title, description, category, read_time, content, created_at")
+      .eq("slug", slug)
+      .eq("published", true)
+      .single()
+      .then(({ data }) => setDbPost(data));
+  }, [slug, staticPost]);
+
+  // Build a unified post object
+  const post = staticPost
+    ? staticPost
+    : dbPost
+    ? {
+        slug: dbPost.slug,
+        title: dbPost.title,
+        description: dbPost.description,
+        date: dbPost.created_at.split("T")[0],
+        readTime: dbPost.read_time,
+        category: dbPost.category,
+        content: dbPost.content.split("\n"),
+      }
+    : undefined;
 
   const handleShare = () => {
     const url = `https://opendraft.co/blog/${post?.slug}`;

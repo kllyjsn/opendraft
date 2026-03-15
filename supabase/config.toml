@@ -153,3 +153,7 @@ verify_jwt = false
 # Self-healing cron — daily screenshot + analysis loop
 [functions.swarm-self-healing]
 verify_jwt = false
+
+# SEO content writer — autonomous blog post generator
+[functions.swarm-seo-writer]
+verify_jwt = false

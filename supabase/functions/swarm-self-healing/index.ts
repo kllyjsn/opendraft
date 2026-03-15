@@ -102,6 +102,21 @@ serve(async (req) => {
       results.push({ listing_id: "auto-enrich", status: "failed" });
     }
 
+    // ── PHASE 0.5: Generate SEO blog post (1 per day) ──
+    try {
+      await fetch(`${SUPABASE_URL}/functions/v1/swarm-seo-writer`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ triggered_by: "cron" }),
+      });
+      results.push({ listing_id: "seo-writer", status: "triggered" });
+    } catch (e) {
+      results.push({ listing_id: "seo-writer", status: "failed" });
+    }
+
     // ── PHASE 3: Deep analysis per listing ──
     for (const target of allTargets) {
       const isDeployed = deployedIds.has(target.listing_id);

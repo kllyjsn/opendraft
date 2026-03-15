@@ -615,61 +615,162 @@ export default function Index() {
             animate={{ opacity: 1, scale: 1 }}
             className="text-center py-16"
           >
-            {generating || (genJob && genJob.status !== "complete" && genJob.status !== "failed") ? (
-              <div className="max-w-sm mx-auto space-y-4">
-                <div className="relative h-14 w-14 mx-auto">
+            {isInProgress ? (
+              /* ── UNIFIED PROGRESS: Build → Deploy → Live ── */
+              <div className="max-w-md mx-auto space-y-6">
+                {/* Spinning icon */}
+                <div className="relative h-16 w-16 mx-auto">
                   <div className="absolute inset-0 rounded-full gradient-hero animate-spin" style={{ animationDuration: "2s" }} />
                   <div className="absolute inset-[2px] rounded-full bg-card" />
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <Wand2 className="h-6 w-6 text-primary" />
+                    {deployPhase === "deploying" || deployPhase === "polling" ? (
+                      <Rocket className="h-6 w-6 text-primary" />
+                    ) : (
+                      <Wand2 className="h-6 w-6 text-primary" />
+                    )}
                   </div>
                 </div>
+
+                {/* Phase label */}
                 <div>
-                  <p className="text-sm font-bold">{genStage.label}</p>
+                  <p className="text-base font-bold">{currentStage.label}</p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {genJob?.listing_title ? `Building "${genJob.listing_title}"` : "This usually takes 30–60 seconds"}
+                    {genJob?.listing_title ? `"${genJob.listing_title}"` : "This usually takes 60–90 seconds"}
                   </p>
                 </div>
+
+                {/* Progress bar */}
                 <div className="w-full max-w-xs mx-auto">
-                  <div className="h-2 rounded-full bg-muted overflow-hidden">
-                    <div className="h-full rounded-full gradient-hero transition-all duration-1000 ease-out" style={{ width: `${genStage.pct}%` }} />
+                  <div className="h-2.5 rounded-full bg-muted overflow-hidden">
+                    <div className="h-full rounded-full gradient-hero transition-all duration-1000 ease-out" style={{ width: `${currentStage.pct}%` }} />
                   </div>
-                  <div className="flex justify-between mt-1">
-                    <span className="text-[10px] text-muted-foreground">Building your app</span>
-                    <span className="text-[10px] font-semibold text-primary">{genStage.pct}%</span>
+                  <div className="flex justify-between mt-1.5">
+                    <span className="text-[10px] text-muted-foreground">
+                      {deployPhase === "deploying" || deployPhase === "polling" ? "Deploying to cloud" : "Building your app"}
+                    </span>
+                    <span className="text-[10px] font-semibold text-primary">{currentStage.pct}%</span>
                   </div>
+                </div>
+
+                {/* Step indicators */}
+                <div className="flex items-center justify-center gap-2 text-[10px]">
+                  <span className={`flex items-center gap-1 ${genJob?.status === "complete" ? "text-primary font-bold" : "text-muted-foreground"}`}>
+                    {genJob?.status === "complete" ? <CheckCircle className="h-3 w-3" /> : <Wand2 className="h-3 w-3" />}
+                    Build
+                  </span>
+                  <span className="text-border">→</span>
+                  <span className={`flex items-center gap-1 ${deployPhase === "polling" || deployPhase === "live" ? "text-primary font-bold" : "text-muted-foreground"}`}>
+                    {deployPhase === "live" ? <CheckCircle className="h-3 w-3" /> : <Rocket className="h-3 w-3" />}
+                    Deploy
+                  </span>
+                  <span className="text-border">→</span>
+                  <span className={`flex items-center gap-1 ${deployPhase === "live" ? "text-primary font-bold" : "text-muted-foreground"}`}>
+                    <Globe className="h-3 w-3" />
+                    Live
+                  </span>
                 </div>
               </div>
-            ) : genJob?.status === "complete" && genJob.listing_id ? (
-              <div className="max-w-md mx-auto rounded-xl border border-primary/30 bg-primary/5 p-6 space-y-3">
-                <div className="inline-flex items-center justify-center h-12 w-12 rounded-full bg-primary/10 mx-auto">
-                  <CheckCircle className="h-6 w-6 text-primary" />
+
+            ) : deployPhase === "live" && deployUrl ? (
+              /* ── LIVE: App is deployed ── */
+              <div className="max-w-md mx-auto space-y-5">
+                <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-primary/10 mx-auto">
+                  <CheckCircle className="h-8 w-8 text-primary" />
                 </div>
-                <h4 className="font-bold text-foreground">🎉 "{genJob.listing_title || searchQuery}" is ready!</h4>
-                <p className="text-sm text-muted-foreground">Full source code, screenshots, and downloadable ZIP included.</p>
+                <div>
+                  <h3 className="text-xl font-black text-foreground">🎉 Your app is live!</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    "{genJob?.listing_title || searchQuery}" has been built and deployed to OpenDraft Cloud.
+                  </p>
+                </div>
+
+                {/* Live URL */}
+                <a
+                  href={deployUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-4 py-2.5 text-sm font-semibold text-primary hover:bg-primary/10 transition-colors mx-auto"
+                >
+                  <Globe className="h-4 w-4" />
+                  {deployUrl.replace("https://", "")}
+                  <ExternalLink className="h-3.5 w-3.5" />
+                </a>
+
+                {/* Action buttons */}
                 <div className="flex gap-2 justify-center flex-wrap">
-                  <Button size="sm" onClick={() => navigate(`/listing/${genJob.listing_id}`)} className="gradient-hero text-white border-0 shadow-glow hover:opacity-90 gap-2">
-                    <ExternalLink className="h-3.5 w-3.5" /> View your app
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={() => navigate("/dashboard?tab=listings")} className="gap-2">
-                    Open Dashboard
+                  {genJob?.listing_id && (
+                    <Button
+                      size="sm"
+                      onClick={() => navigate(`/listing/${genJob.listing_id}/edit`)}
+                      className="gradient-hero text-white border-0 shadow-glow hover:opacity-90 gap-2"
+                    >
+                      <Pencil className="h-3.5 w-3.5" /> Edit your app
+                    </Button>
+                  )}
+                  {genJob?.listing_id && (
+                    <Button size="sm" variant="outline" onClick={() => navigate(`/listing/${genJob.listing_id}`)} className="gap-2">
+                      <ExternalLink className="h-3.5 w-3.5" /> View listing
+                    </Button>
+                  )}
+                  <Button size="sm" variant="ghost" onClick={() => {
+                    setGenJob(null);
+                    setDeployPhase("idle");
+                    setDeployUrl(null);
+                    setDeployId(null);
+                  }}>
+                    Build another
                   </Button>
                 </div>
+
+                {/* Inline iframe preview */}
+                <div className="rounded-xl border border-border overflow-hidden shadow-card mt-4">
+                  <div className="bg-muted/50 px-3 py-1.5 flex items-center gap-2 border-b border-border">
+                    <div className="flex gap-1">
+                      <span className="h-2 w-2 rounded-full bg-destructive/50" />
+                      <span className="h-2 w-2 rounded-full bg-yellow-500/50" />
+                      <span className="h-2 w-2 rounded-full bg-green-500/50" />
+                    </div>
+                    <span className="text-[10px] text-muted-foreground truncate flex-1">{deployUrl}</span>
+                  </div>
+                  <iframe
+                    src={deployUrl}
+                    className="w-full h-[300px] bg-background"
+                    title="Live preview"
+                    sandbox="allow-scripts allow-same-origin"
+                  />
+                </div>
               </div>
-            ) : genJob?.status === "failed" ? (
+
+            ) : (deployPhase === "error" || genJob?.status === "failed") ? (
+              /* ── ERROR STATE ── */
               <div className="max-w-md mx-auto rounded-xl border border-destructive/30 bg-destructive/5 p-5 space-y-3">
                 <div className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-destructive/10 mx-auto">
                   <AlertCircle className="h-5 w-5 text-destructive" />
                 </div>
-                <p className="text-sm font-semibold">Generation failed</p>
-                <p className="text-xs text-muted-foreground">{genJob.error}</p>
-                <div className="flex gap-2 justify-center">
-                  <Button size="sm" variant="outline" onClick={handleGenerate} className="gap-2">
-                    <Wand2 className="h-3.5 w-3.5" /> Try again
-                  </Button>
+                <p className="text-sm font-semibold">
+                  {deployPhase === "error" ? "Deploy failed" : "Build failed"}
+                </p>
+                <p className="text-xs text-muted-foreground">{deployError || genJob?.error}</p>
+                <div className="flex gap-2 justify-center flex-wrap">
+                  {deployPhase === "error" && genJob?.listing_id ? (
+                    <>
+                      <Button size="sm" variant="outline" onClick={() => handleAutoDeploy(genJob.listing_id!)} className="gap-2">
+                        <Rocket className="h-3.5 w-3.5" /> Retry deploy
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => navigate(`/listing/${genJob.listing_id}`)}>
+                        View listing instead
+                      </Button>
+                    </>
+                  ) : (
+                    <Button size="sm" variant="outline" onClick={handleGenerate} className="gap-2">
+                      <Wand2 className="h-3.5 w-3.5" /> Try again
+                    </Button>
+                  )}
                 </div>
               </div>
+
             ) : (
+              /* ── DEFAULT: No results, offer to build ── */
               <>
                 <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl gradient-hero shadow-glow mx-auto text-3xl mb-4">
                   🛠️
@@ -679,16 +780,16 @@ export default function Index() {
                 </h3>
                 <p className="text-muted-foreground mb-2 text-sm max-w-md mx-auto">
                   {hasFilters
-                    ? "We don't have that yet — but the Gremlins™ can build it for you in ~60 seconds."
+                    ? "We don't have that yet — but the Gremlins™ can build it and deploy it for you in ~90 seconds."
                     : "Be the first to list a project!"}
                 </p>
                 {hasFilters && searchQuery && (
-                  <p className="text-xs text-muted-foreground mb-4">Full source code, screenshots & ZIP included</p>
+                  <p className="text-xs text-muted-foreground mb-4">Full source code + auto-deployed to OpenDraft Cloud</p>
                 )}
                 <div className="flex gap-3 justify-center flex-wrap">
                   {hasFilters && searchQuery && (
                     <Button onClick={handleGenerate} className="gradient-hero text-white border-0 shadow-glow hover:opacity-90 gap-2">
-                      <Wand2 className="h-4 w-4" /> Build "{search || heroSearch}" for me
+                      <Wand2 className="h-4 w-4" /> Build & deploy "{search || heroSearch}"
                     </Button>
                   )}
                   <Link to="/sell">

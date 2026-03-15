@@ -528,18 +528,90 @@ export default function Index() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="text-center py-24"
+            className="text-center py-16"
           >
-            <BrandMascot size={100} variant="confused" />
-            <h3 className="text-xl font-bold mb-2 mt-4">No listings found</h3>
-            <p className="text-muted-foreground mb-6 text-sm">
-              {hasFilters ? "Try adjusting your filters — I'll keep looking!" : "Be the first to list a project!"}
-            </p>
-            <Link to="/sell">
-              <Button className="gradient-hero text-white border-0 shadow-glow hover:opacity-90">
-                List your project
-              </Button>
-            </Link>
+            {generating || (genJob && genJob.status !== "complete" && genJob.status !== "failed") ? (
+              <div className="max-w-sm mx-auto space-y-4">
+                <div className="relative h-14 w-14 mx-auto">
+                  <div className="absolute inset-0 rounded-full gradient-hero animate-spin" style={{ animationDuration: "2s" }} />
+                  <div className="absolute inset-[2px] rounded-full bg-card" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Wand2 className="h-6 w-6 text-primary" />
+                  </div>
+                </div>
+                <div>
+                  <p className="text-sm font-bold">{genStage.label}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {genJob?.listing_title ? `Building "${genJob.listing_title}"` : "This usually takes 30–60 seconds"}
+                  </p>
+                </div>
+                <div className="w-full max-w-xs mx-auto">
+                  <div className="h-2 rounded-full bg-muted overflow-hidden">
+                    <div className="h-full rounded-full gradient-hero transition-all duration-1000 ease-out" style={{ width: `${genStage.pct}%` }} />
+                  </div>
+                  <div className="flex justify-between mt-1">
+                    <span className="text-[10px] text-muted-foreground">Building your app</span>
+                    <span className="text-[10px] font-semibold text-primary">{genStage.pct}%</span>
+                  </div>
+                </div>
+              </div>
+            ) : genJob?.status === "complete" && genJob.listing_id ? (
+              <div className="max-w-md mx-auto rounded-xl border border-primary/30 bg-primary/5 p-6 space-y-3">
+                <div className="inline-flex items-center justify-center h-12 w-12 rounded-full bg-primary/10 mx-auto">
+                  <CheckCircle className="h-6 w-6 text-primary" />
+                </div>
+                <h4 className="font-bold text-foreground">🎉 "{genJob.listing_title || searchQuery}" is ready!</h4>
+                <p className="text-sm text-muted-foreground">Full source code, screenshots, and downloadable ZIP included.</p>
+                <div className="flex gap-2 justify-center flex-wrap">
+                  <Button size="sm" onClick={() => navigate(`/listing/${genJob.listing_id}`)} className="gradient-hero text-white border-0 shadow-glow hover:opacity-90 gap-2">
+                    <ExternalLink className="h-3.5 w-3.5" /> View your app
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => navigate("/dashboard?tab=listings")} className="gap-2">
+                    Open Dashboard
+                  </Button>
+                </div>
+              </div>
+            ) : genJob?.status === "failed" ? (
+              <div className="max-w-md mx-auto rounded-xl border border-destructive/30 bg-destructive/5 p-5 space-y-3">
+                <div className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-destructive/10 mx-auto">
+                  <AlertCircle className="h-5 w-5 text-destructive" />
+                </div>
+                <p className="text-sm font-semibold">Generation failed</p>
+                <p className="text-xs text-muted-foreground">{genJob.error}</p>
+                <div className="flex gap-2 justify-center">
+                  <Button size="sm" variant="outline" onClick={handleGenerate} className="gap-2">
+                    <Wand2 className="h-3.5 w-3.5" /> Try again
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl gradient-hero shadow-glow mx-auto text-3xl mb-4">
+                  🛠️
+                </div>
+                <h3 className="text-xl font-bold mb-2">
+                  {hasFilters ? `No results for "${search}"` : "No listings found"}
+                </h3>
+                <p className="text-muted-foreground mb-2 text-sm max-w-md mx-auto">
+                  {hasFilters
+                    ? "We don't have that yet — but the Gremlins™ can build it for you in ~60 seconds."
+                    : "Be the first to list a project!"}
+                </p>
+                {hasFilters && searchQuery && (
+                  <p className="text-xs text-muted-foreground mb-4">Full source code, screenshots & ZIP included</p>
+                )}
+                <div className="flex gap-3 justify-center flex-wrap">
+                  {hasFilters && searchQuery && (
+                    <Button onClick={handleGenerate} className="gradient-hero text-white border-0 shadow-glow hover:opacity-90 gap-2">
+                      <Wand2 className="h-4 w-4" /> Build "{search || heroSearch}" for me
+                    </Button>
+                  )}
+                  <Link to="/sell">
+                    <Button variant="outline">List your own project</Button>
+                  </Link>
+                </div>
+              </>
+            )}
           </motion.div>
         ) : (
           <>

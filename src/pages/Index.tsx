@@ -112,6 +112,11 @@ export default function Index() {
   const [heroSearch, setHeroSearch] = useState("");
   const [generating, setGenerating] = useState(false);
   const [genJob, setGenJob] = useState<{ id: string; status: string; stage: string; listing_id: string | null; listing_title: string | null; error: string | null } | null>(null);
+  // Deploy state
+  const [deployPhase, setDeployPhase] = useState<"idle" | "deploying" | "polling" | "live" | "error">("idle");
+  const [deployUrl, setDeployUrl] = useState<string | null>(null);
+  const [deployError, setDeployError] = useState<string | null>(null);
+  const [deployId, setDeployId] = useState<string | null>(null);
 
   const jsonLdData = useMemo(() => [
     {

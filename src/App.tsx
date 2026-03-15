@@ -70,9 +70,6 @@ const App = () => (
       <BrowserRouter>
         <ScrollToTop />
         <FunnelTracker />
-        <ExitIntentPopup />
-        <SocialProofToast />
-        <StickyCTA />
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<Login />} />

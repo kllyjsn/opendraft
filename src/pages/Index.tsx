@@ -246,7 +246,7 @@ export default function Index() {
         path="/"
       />
       <JsonLd data={jsonLdData} />
-      <CountdownBanner />
+      
       <Navbar />
 
       {/* ── LIVE ACTIVITY TICKER ── */}

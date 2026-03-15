@@ -112,10 +112,6 @@ export function ListingCard({
             </div>
           )}
 
-          {/* Urgency badge */}
-          <div className="absolute top-2.5 left-2.5">
-            <UrgencyBadge salesCount={sales_count} viewCount={view_count} price={price} createdAt={updated_at} />
-          </div>
 
           <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-end justify-between gap-1">
             <CompletenessBadge level={completeness_badge} showTooltip={false} />

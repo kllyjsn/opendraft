@@ -47,7 +47,7 @@ export function LiveStatsBar() {
       const builderCount = profilesRes.count ?? 0;
 
       const items: StatItem[] = [
-        { icon: Package, value: String(appCount), label: "Ready-to-launch apps" },
+        { icon: Package, value: String(appCount), label: "Expert-built apps" },
         ...(salesCount >= 50 ? [{ icon: ShoppingBag, value: String(salesCount), label: "Apps sold" }] : []),
         { icon: Bot, value: "14", label: "AI agents automating ops", link: "/gremlins" },
         { icon: Building2, value: "12", label: "Industries covered", link: "/swarm" },

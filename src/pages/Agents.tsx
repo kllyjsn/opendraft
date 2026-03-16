@@ -134,7 +134,7 @@ export default function Agents() {
             </motion.h1>
 
             <motion.p variants={fadeUp} custom={2} className="text-lg text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
-              26 MCP tools. REST API. AI-powered matching. Autonomous bidding. 95+ live listings.
+              26 MCP tools. REST API. AI-powered matching. Autonomous bidding. Curated, production-ready catalog.
               <br className="hidden md:block" />
               <span className="text-foreground font-medium">One endpoint to discover, negotiate, and acquire any app.</span>
             </motion.p>

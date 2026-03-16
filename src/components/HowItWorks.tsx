@@ -8,7 +8,7 @@ const steps = [
     icon: Search,
     number: "01",
     title: "Pick Your App",
-    description: "Browse 1,000+ production-ready apps — SaaS dashboards, AI tools, landing pages. Each one comes with full source code, deploy configs, and a security audit.",
+    description: "Explore our curated collection of production-ready apps — SaaS dashboards, AI tools, landing pages. Each one comes with full source code, deploy configs, and a security audit.",
     gradient: "from-primary to-accent",
   },
   {

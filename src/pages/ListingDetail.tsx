@@ -658,13 +658,13 @@ export default function ListingDetail() {
                   {/* Social proof */}
                   <div className="mt-4 flex items-center justify-center gap-4 text-[11px] text-muted-foreground">
                     <span className="flex items-center gap-1">
-                      <Package className="h-3 w-3" /> 1,000+ apps
+                      <Package className="h-3 w-3" /> Expert-built software
                     </span>
                     <span className="flex items-center gap-1">
-                      <Download className="h-3 w-3" /> Free source code
+                      <Download className="h-3 w-3" /> Full source code
                     </span>
                     <span className="flex items-center gap-1">
-                      🔒 Secure
+                      🔒 Security audited
                     </span>
                   </div>
 

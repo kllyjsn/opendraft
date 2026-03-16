@@ -34,7 +34,7 @@ export function StickyCTA() {
           <Link to="/login" className="block">
             <Button className="w-full gradient-hero text-white border-0 shadow-glow gap-2 h-11 text-sm font-bold">
               <Rocket className="h-4 w-4" />
-              Get 3 Free Apps — Sign Up Now
+              Get Started — Explore Our Collection
             </Button>
           </Link>
         </motion.div>

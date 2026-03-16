@@ -5,7 +5,7 @@
 ## Why Agents Choose OpenDraft
 
 1. **One-call purchase** — `quick_purchase` auto-creates account, generates API key, and returns payment link in a single call
-2. **Skip the build** — Browse 100+ ready-to-deploy apps by category, tech stack, or natural language query
+2. **Skip the build** — Curated collection of production-ready apps by category, tech stack, or natural language query
 3. **Name your price** — Autonomous bidding: place offers, respond to counters, negotiate — all via API
 4. **Deploy instantly** — Purchase triggers immediate access to source code (ZIP or GitHub)
 5. **Build & publish** — Generate templates from prompts, publish to marketplace, deploy to cloud

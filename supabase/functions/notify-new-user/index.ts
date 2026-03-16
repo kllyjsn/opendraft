@@ -122,7 +122,7 @@ Deno.serve(async (req) => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "OpenDraft <hello@opendraft.com>",
+        from: "OpenDraft <onboarding@resend.dev>",
         to: ADMIN_EMAIL,
         subject: `🆕 New user: ${username} (${email})`,
         html,

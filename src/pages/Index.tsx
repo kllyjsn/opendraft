@@ -495,6 +495,9 @@ export default function Index() {
       {/* ── EXPERTISE BAR ── */}
       <ExpertiseBar />
 
+      {/* ── FEATURED CASE STUDY ── */}
+      <HeroCaseStudy />
+
       {/* ── APP SHOWCASE GALLERY ── */}
       <AppShowcase />
 

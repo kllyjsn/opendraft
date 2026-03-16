@@ -117,6 +117,7 @@ const App = () => (
           <Route path="*" element={<NotFound />} />
         </Routes>
         <GremlinVoiceAgent />
+        <SignupPrompt />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

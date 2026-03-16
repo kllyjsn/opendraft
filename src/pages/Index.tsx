@@ -26,7 +26,7 @@ const COMPLETENESS = ["All", "Prototype", "MVP", "Production Ready"];
 const SORT_OPTIONS = ["Newest", "Popular"];
 const PAGE_SIZE = 24;
 
-const ROTATING_WORDS = ["person", "business", "gremlin"];
+const ROTATING_WORDS = ["restaurant", "agency", "clinic", "startup"];
 
 function HeroTagline() {
   const [index, setIndex] = useState(0);
@@ -40,9 +40,9 @@ function HeroTagline() {
 
   return (
     <h1 className="text-3xl md:text-5xl lg:text-6xl font-black tracking-tighter mb-3 leading-[0.95]">
-      Personalized apps for every{" "}
+      Your idea.{" "}
       <br className="hidden md:block" />
-      <span className="inline-block relative overflow-hidden align-bottom" style={{ minWidth: "5ch" }}>
+      <span className="inline-block relative overflow-hidden align-bottom" style={{ minWidth: "7ch" }}>
         <AnimatePresence mode="wait">
           <motion.span
             key={ROTATING_WORDS[index]}
@@ -60,7 +60,7 @@ function HeroTagline() {
           </motion.span>
         </AnimatePresence>
       </span>{" "}
-      on the planet.
+      ready.
     </h1>
   );
 }

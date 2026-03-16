@@ -866,8 +866,8 @@ export default function Index() {
               <div className="hidden sm:flex items-center gap-3">
                 <BrandMascot size={32} variant="wave" />
                 <div>
-                  <p className="text-sm font-medium text-foreground">
-                    1,000+ production-ready apps — <span className="font-bold">claim & deploy</span>
+                <p className="text-sm font-medium text-foreground">
+                    Expertly crafted apps — <span className="font-bold">ready to launch</span>
                   </p>
                   <p className="text-[10px] text-muted-foreground">
                     {CTA_COPY.card}

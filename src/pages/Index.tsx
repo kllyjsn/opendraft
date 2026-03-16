@@ -19,6 +19,7 @@ import { MetaTags } from "@/components/MetaTags";
 import { CTA_COPY } from "@/lib/pricing-tiers";
 import { AppShowcase } from "@/components/AppShowcase";
 import { ExpertiseBar } from "@/components/ExpertiseBar";
+import { HeroCaseStudy } from "@/components/HeroCaseStudy";
 
 
 const CATEGORIES = ["All", "SaaS Tool", "AI App", "Landing Page", "Utility", "Game", "Other"];

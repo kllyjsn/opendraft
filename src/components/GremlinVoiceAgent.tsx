@@ -274,6 +274,8 @@ export function GremlinVoiceAgent() {
     setOpen(false);
   };
 
+  if (isHomePage) return null;
+
   return (
     <>
       {/* Floating mic button */}

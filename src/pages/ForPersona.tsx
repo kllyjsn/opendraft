@@ -316,8 +316,8 @@ export default function ForPersona() {
       <section className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-3 gap-4 max-w-lg mx-auto text-center">
           <div>
-            <p className="text-3xl font-black text-primary">1,000+</p>
-            <p className="text-xs text-muted-foreground mt-1">Apps available</p>
+            <p className="text-3xl font-black text-primary">100%</p>
+            <p className="text-xs text-muted-foreground mt-1">Expert-built</p>
           </div>
           <div>
             <p className="text-3xl font-black text-primary">$0</p>

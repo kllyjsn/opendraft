@@ -8,7 +8,7 @@ import { Zap } from "lucide-react";
 const TRUST_POINTS = [
   { icon: "✨", text: "Your first app is completely free" },
   { icon: "⚡", text: "Get your app instantly — no waiting" },
-  { icon: "🚀", text: "1,000+ apps ready to launch" },
+  { icon: "🚀", text: "Expert-built apps, ready to launch" },
   { icon: "🔒", text: "Full source code — yours forever" },
 ];
 

@@ -126,7 +126,7 @@ export default function Index() {
       "@type": "WebSite",
       "name": "OpenDraft",
       "url": "https://opendraft.co",
-      "description": "Browse 1,000+ ready-to-launch apps. Buy SaaS tools, AI products, landing pages & utilities.",
+      "description": "Expert-built, production-ready apps. SaaS tools, AI products, landing pages & business software — designed, coded, and tested by professionals.",
       "potentialAction": {
         "@type": "SearchAction",
         "target": "https://opendraft.co/?q={search_term_string}",

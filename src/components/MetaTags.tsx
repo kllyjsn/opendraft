@@ -69,7 +69,7 @@ export function MetaTags({
     return () => {
       canonical.remove();
       // Restore defaults on unmount
-      document.title = "Buy Ready-Made Apps & Templates — SaaS, AI, Landing Pages | OpenDraft";
+      document.title = "Expert-Built Apps — SaaS, AI & Business Software | OpenDraft";
       [descEl, robotsEl, ogTitleEl, ogDescEl, ogUrlEl, ogImageEl, ogTypeEl, twTitleEl, twDescEl, twImageEl].forEach(el => {
         // Only remove dynamically created ones — leave originals from index.html
       });

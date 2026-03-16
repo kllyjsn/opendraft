@@ -410,8 +410,8 @@ export default function Index() {
   return (
     <div className="min-h-screen flex flex-col">
       <MetaTags
-        title="Buy Ready-Made Apps & Templates — SaaS, AI, Landing Pages | OpenDraft"
-        description="Browse 1,000+ production-ready apps. Buy SaaS tools, AI products, landing pages & utilities built with Lovable, Cursor, Bolt. Launch your business today."
+        title="Production-Ready Apps — Expertly Built SaaS, AI & More | OpenDraft"
+        description="We build extraordinary apps. Browse expertly crafted SaaS tools, AI products, and business software — designed, tested, and ready to launch."
         path="/"
       />
       <JsonLd data={jsonLdData} />

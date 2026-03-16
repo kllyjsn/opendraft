@@ -60,6 +60,7 @@ import AdminOutreach from "./pages/AdminOutreach";
 import AdminRevenue from "./pages/AdminRevenue";
 import GremlinsAtWork from "./pages/GremlinsAtWork";
 import { GremlinVoiceAgent } from "./components/GremlinVoiceAgent";
+import { SignupPrompt } from "./components/SignupPrompt";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -116,6 +117,7 @@ const App = () => (
           <Route path="*" element={<NotFound />} />
         </Routes>
         <GremlinVoiceAgent />
+        <SignupPrompt />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

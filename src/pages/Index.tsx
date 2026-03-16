@@ -494,14 +494,17 @@ export default function Index() {
       {/* ── EXPERTISE BAR ── */}
       <ExpertiseBar />
 
+      {/* ── APP SHOWCASE GALLERY ── */}
+      <AppShowcase />
+
       {/* ── LIFESTYLE CATEGORIES ── */}
       <LifestyleCategories />
 
-      {/* ── DISCOVERY RAILS ── */}
-      <DiscoveryRails />
-
       {/* ── STAFF PICKS ── */}
       <StaffPicks />
+
+      {/* ── DISCOVERY RAILS ── */}
+      <DiscoveryRails />
 
       {/* ── BROWSE ALL ── */}
       <section id="browse" className="container mx-auto px-4 pb-24">

@@ -47,6 +47,8 @@ export function GremlinVoiceAgent() {
   const location = useLocation();
   const navigate = useNavigate();
 
+  const isHomePage = location.pathname === "/";
+
   const [open, setOpen] = useState(false);
   const [listening, setListening] = useState(false);
   const [processing, setProcessing] = useState(false);

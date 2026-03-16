@@ -516,7 +516,7 @@ export default function Index() {
         >
           <div className="flex items-baseline justify-between mb-5">
             <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-              {totalCount > 0 && !loading ? `${totalCount} projects` : "All projects"}
+              {totalCount > 0 && !loading ? `${totalCount} projects` : "Our collection"}
             </h2>
             {totalCount > PAGE_SIZE && (
               <span className="text-xs text-muted-foreground">

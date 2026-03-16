@@ -875,7 +875,7 @@ export default function Index() {
                 </div>
               </div>
               <p className="text-xs font-medium text-foreground sm:hidden">
-                🚀 1,000+ apps · Start building now
+                🚀 Expert-built apps · Launch today
               </p>
               <div className="flex items-center gap-2 shrink-0">
                 <div className="w-48">

@@ -418,40 +418,39 @@ export default function Index() {
       
       <Navbar />
 
-      {/* ── LIVE ACTIVITY TICKER ── */}
-      {/* ── COMPACT HERO ── */}
-      <section className="relative overflow-hidden pt-4 pb-4 md:pt-6 md:pb-4">
-        <div className="absolute -top-40 -right-40 h-[500px] w-[500px] rounded-full bg-primary/15 blur-[120px] animate-pulse-glow pointer-events-none" />
+      {/* ── ART-FORWARD HERO ── */}
+      <section className="relative overflow-hidden pt-8 pb-6 md:pt-14 md:pb-8">
+        {/* Ambient blurs */}
+        <div className="absolute -top-40 -right-40 h-[500px] w-[500px] rounded-full bg-primary/12 blur-[140px] animate-pulse-glow pointer-events-none" />
+        <div className="absolute -bottom-20 -left-40 h-[400px] w-[400px] rounded-full bg-accent/10 blur-[120px] pointer-events-none" />
 
         <div className="container mx-auto px-4 text-center relative z-10">
-          <HeroTagline />
-          <p className="text-sm md:text-base text-muted-foreground max-w-xl mx-auto mb-2">
-            SaaS tools, AI products, landing pages & utilities — production-ready.
-          </p>
-          {!user && (
-            <div className="mb-4 space-y-2">
-              <p className="text-xs font-semibold text-accent">
-                ✨ {CTA_COPY.hero}
-              </p>
-              <div className="max-w-xs mx-auto">
-                <GoogleSignInButton label="Get started with Google" />
-              </div>
-              <div className="flex items-center justify-center gap-3 text-[11px] text-muted-foreground mt-1">
-                <span>🚀 1,000+ apps</span>
-                <span className="text-border">·</span>
-                <span>🔒 Full source code</span>
-                <span className="text-border">·</span>
-                <span>⚡ Deploy configs included</span>
-              </div>
-            </div>
-          )}
+          {/* Studio badge */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="mb-5"
+          >
+            <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.15em] text-primary">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+              Expertly crafted software
+            </span>
+          </motion.div>
 
-          {/* Hero search bar */}
-          <form onSubmit={handleHeroSearch} className="max-w-md mx-auto mb-4">
+          <HeroTagline />
+
+          <p className="text-sm md:text-base text-muted-foreground max-w-lg mx-auto mb-6 leading-relaxed">
+            We don't do templates. Every app is designed, coded, and stress-tested 
+            by experts — so you can launch a real business, not a prototype.
+          </p>
+
+          {/* Search bar */}
+          <form onSubmit={handleHeroSearch} className="max-w-md mx-auto mb-5">
             <div className="relative">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="What kind of app do you need?"
+                placeholder="What does your business need?"
                 value={heroSearch}
                 onChange={(e) => setHeroSearch(e.target.value)}
                 className="pl-10 pr-24 h-11 glass border-border/40 focus-visible:border-primary/50 focus-visible:shadow-glow transition-all rounded-full text-sm leading-normal [&]:py-0"
@@ -459,28 +458,41 @@ export default function Index() {
               <Button
                 type="submit"
                 size="sm"
-                className="absolute right-1.5 top-1/2 -translate-y-1/2 gradient-hero text-white border-0 shadow-glow hover:opacity-90 rounded-full h-8 px-4 text-xs font-bold"
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 gradient-hero text-primary-foreground border-0 shadow-glow hover:opacity-90 rounded-full h-8 px-4 text-xs font-bold"
               >
-                Search
+                Explore
               </Button>
             </div>
           </form>
 
-          {/* Popular searches */}
-          <div className="flex flex-wrap items-center justify-center gap-1.5">
-            <span className="text-[10px] text-muted-foreground/60 font-medium mr-1">Popular:</span>
-            {["CRM", "AI Chatbot", "Dashboard", "E-commerce", "Portfolio", "Invoice Tool"].map((term) => (
-              <button
-                key={term}
-                onClick={() => { setHeroSearch(term); setSearch(term); document.getElementById("browse")?.scrollIntoView({ behavior: "smooth" }); }}
-                className="rounded-full px-2.5 py-0.5 text-[11px] font-medium bg-muted/50 text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all border border-border/20"
-              >
-                {term}
-              </button>
-            ))}
+          {!user && (
+            <div className="mb-4 space-y-2">
+              <div className="max-w-xs mx-auto">
+                <GoogleSignInButton label="Get started" />
+              </div>
+            </div>
+          )}
+
+          {/* Craft signals instead of marketplace stats */}
+          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 text-[11px] text-muted-foreground">
+            <span className="flex items-center gap-1.5">
+              <span className="h-1 w-1 rounded-full bg-primary/60" />
+              Full source code ownership
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="h-1 w-1 rounded-full bg-accent/60" />
+              Security audited
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="h-1 w-1 rounded-full bg-secondary/60" />
+              Deploy-ready in minutes
+            </span>
           </div>
         </div>
       </section>
+
+      {/* ── EXPERTISE BAR ── */}
+      <ExpertiseBar />
 
       {/* ── LIFESTYLE CATEGORIES ── */}
       <LifestyleCategories />

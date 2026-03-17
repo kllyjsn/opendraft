@@ -130,7 +130,7 @@ export default function Index() {
             transition={{ duration: 0.7, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
             className="text-sm md:text-base text-muted-foreground max-w-md mx-auto mb-8 md:mb-12"
           >
-            Paste your website. We'll build you an app.
+            Paste your site. Get a custom app you own — no per-seat fees, ever.
           </motion.p>
 
           {/* URL Input — sole CTA */}

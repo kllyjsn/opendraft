@@ -223,6 +223,7 @@ export function BusinessAnalyzer() {
     setError(null);
     setNotice(null);
     setUrl("");
+    clearAnalysis();
   }
 
   // ── Input Form ──

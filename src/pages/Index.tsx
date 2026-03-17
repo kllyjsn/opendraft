@@ -331,7 +331,7 @@ export default function Index() {
             transition={{ duration: 0.7, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
             className="mb-8"
           >
-            <BusinessAnalyzer />
+            <BusinessAnalyzer onGenerate={handleGenerate} />
           </motion.div>
 
           {!user && (

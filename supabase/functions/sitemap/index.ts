@@ -8,7 +8,7 @@ const corsHeaders = {
 const CATEGORIES = ["saas-tool", "ai-app", "landing-page", "utility", "game", "other"];
 const TOOLS = ["lovable", "cursor", "claude-code", "bolt", "replit"];
 
-const BLOG_SLUGS = [
+const STATIC_BLOG_SLUGS = [
   "autonomous-revenue-zero-employees",
   "ai-agents-buying-software",
   "site-doctor-self-healing-deploys",
@@ -24,6 +24,15 @@ const BLOG_SLUGS = [
 const PERSONAS = [
   "founders", "developers", "designers", "product-managers", "agencies",
   "freelancers", "indie-hackers", "students", "startups", "enterprise",
+];
+
+const LIFESTYLE_CATEGORIES = [
+  "productivity", "health-fitness", "personal-finance", "home-kitchen", "built-for-agents",
+];
+
+const APP_VERTICALS = [
+  "restaurants", "fitness", "real-estate", "ecommerce", "healthcare",
+  "education", "legal", "marketing", "finance", "saas",
 ];
 
 Deno.serve(async (req) => {
@@ -65,9 +74,25 @@ Deno.serve(async (req) => {
     urls.push(`<url><loc>${base}${page.loc}</loc><changefreq>${page.changefreq}</changefreq><priority>${page.priority}</priority></url>`);
   }
 
-  // ── Blog posts ──
-  for (const slug of BLOG_SLUGS) {
+  // ── Static blog posts ──
+  const staticBlogSlugs = new Set(STATIC_BLOG_SLUGS);
+  for (const slug of STATIC_BLOG_SLUGS) {
     urls.push(`<url><loc>${base}/blog/${slug}</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>`);
+  }
+
+  // ── Dynamic blog posts from database ──
+  const { data: dbPosts } = await supabase
+    .from("blog_posts")
+    .select("slug, updated_at")
+    .eq("published", true)
+    .order("created_at", { ascending: false })
+    .limit(1000);
+
+  for (const post of dbPosts ?? []) {
+    if (!staticBlogSlugs.has(post.slug)) {
+      const lastmod = post.updated_at?.split("T")[0] ?? now;
+      urls.push(`<url><loc>${base}/blog/${post.slug}</loc><lastmod>${lastmod}</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>`);
+    }
   }
 
   // ── Category pages ──
@@ -83,6 +108,16 @@ Deno.serve(async (req) => {
   // ── Persona pages ──
   for (const persona of PERSONAS) {
     urls.push(`<url><loc>${base}/for/${persona}</loc><changefreq>weekly</changefreq><priority>0.6</priority></url>`);
+  }
+
+  // ── Lifestyle category pages ──
+  for (const cat of LIFESTYLE_CATEGORIES) {
+    urls.push(`<url><loc>${base}/lifestyle/${cat}</loc><changefreq>weekly</changefreq><priority>0.6</priority></url>`);
+  }
+
+  // ── App vertical pages ──
+  for (const vertical of APP_VERTICALS) {
+    urls.push(`<url><loc>${base}/apps/${vertical}</loc><changefreq>weekly</changefreq><priority>0.6</priority></url>`);
   }
 
   // ── Live listings ──
@@ -109,12 +144,25 @@ Deno.serve(async (req) => {
     urls.push(`<url><loc>${base}/builder/${p.user_id}</loc><lastmod>${lastmod}</lastmod><changefreq>weekly</changefreq><priority>0.6</priority></url>`);
   }
 
+  // ── Open bounties ──
+  const { data: bounties } = await supabase
+    .from("bounties")
+    .select("id, updated_at")
+    .eq("status", "open")
+    .order("created_at", { ascending: false })
+    .limit(500);
+
+  for (const b of bounties ?? []) {
+    const lastmod = b.updated_at?.split("T")[0] ?? now;
+    urls.push(`<url><loc>${base}/bounty/${b.id}</loc><lastmod>${lastmod}</lastmod><changefreq>weekly</changefreq><priority>0.5</priority></url>`);
+  }
+
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls.join("\n")}
 </urlset>`;
 
   return new Response(xml, {
-    headers: { ...corsHeaders, "Content-Type": "application/xml" },
+    headers: { ...corsHeaders, "Content-Type": "application/xml", "Cache-Control": "public, max-age=3600" },
   });
 });

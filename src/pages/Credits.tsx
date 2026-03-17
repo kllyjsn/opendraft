@@ -153,6 +153,11 @@ export default function Credits() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <MetaTags
+        title="Pricing Plans — Free & Pro Access | OpenDraft"
+        description="Get full source code, deploy configs, and direct builder messaging. Start free or upgrade for unlimited access to expert-built apps."
+        path="/credits"
+      />
       <Navbar />
       <main className="flex-1 container mx-auto px-4 py-16 max-w-6xl page-enter">
         {/* Header */}

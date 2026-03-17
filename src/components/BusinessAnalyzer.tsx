@@ -154,7 +154,7 @@ export function BusinessAnalyzer() {
 
     try {
       const invokePromise = supabase.functions.invoke("analyze-business-url", {
-        body: { url: url.trim() },
+        body: { url: normalizedUrl },
       });
 
       const timeoutPromise = new Promise<never>((_, reject) => {
@@ -167,7 +167,7 @@ export function BusinessAnalyzer() {
       if (!data?.recommended_builds?.length) throw new Error("No build recommendations returned.");
       setResult(data);
     } catch (err) {
-      setResult(buildInstantFallback(url.trim()));
+      setResult(buildInstantFallback(normalizedUrl));
       setNotice("Live analysis was slow, so we loaded instant build ideas you can generate now.");
       setError(err instanceof Error ? err.message : "Analysis failed");
     } finally {

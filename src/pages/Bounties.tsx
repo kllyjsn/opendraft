@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { MetaTags } from "@/components/MetaTags";
 import { Search, Target, SlidersHorizontal } from "lucide-react";
 import { Link } from "react-router-dom";
 

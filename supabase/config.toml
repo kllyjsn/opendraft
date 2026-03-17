@@ -161,3 +161,7 @@ verify_jwt = false
 # Growth hacker agent — re-engagement, milestones, urgency campaigns
 [functions.swarm-growth-hacker]
 verify_jwt = false
+
+# Business URL analyzer — public, no auth required
+[functions.analyze-business-url]
+verify_jwt = false

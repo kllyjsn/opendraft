@@ -121,7 +121,7 @@ const App = () => (
         </Routes>
         <GremlinVoiceAgent />
         <SignupPrompt />
-        <FavoriteAppPicker />
+        
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

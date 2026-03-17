@@ -37,29 +37,28 @@ function HeroTagline() {
   }, []);
 
   return (
-    <h1 className="text-4xl md:text-6xl lg:text-[5rem] font-black tracking-[-0.04em] mb-4 leading-[0.92]">
-      Your{" "}
-      <span className="inline-block relative overflow-hidden align-bottom" style={{ minWidth: "7ch" }}>
-        <AnimatePresence mode="wait">
-          <motion.span
-            key={ROTATING_WORDS[index]}
-            initial={{ opacity: 0, y: 30, filter: "blur(8px)" }}
-            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-            exit={{ opacity: 0, y: -30, filter: "blur(8px)" }}
-            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            className="inline-block text-gradient animate-gradient-shift"
-            style={{
-              backgroundImage: "linear-gradient(135deg, hsl(265 90% 62%), hsl(320 95% 60%), hsl(175 95% 50%), hsl(265 90% 62%))",
-              backgroundSize: "200% 200%",
-            }}
-          >
-            {ROTATING_WORDS[index]}
-          </motion.span>
-        </AnimatePresence>
+    <h1 className="text-4xl md:text-6xl lg:text-[5rem] font-black tracking-[-0.04em] mb-4 leading-[1.05] md:leading-[0.92]">
+      <span className="block">Your{" "}
+        <span className="inline-block relative overflow-hidden align-bottom" style={{ minWidth: "7ch" }}>
+          <AnimatePresence mode="wait">
+            <motion.span
+              key={ROTATING_WORDS[index]}
+              initial={{ opacity: 0, y: 30, filter: "blur(8px)" }}
+              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              exit={{ opacity: 0, y: -30, filter: "blur(8px)" }}
+              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              className="inline-block text-gradient animate-gradient-shift"
+              style={{
+                backgroundImage: "linear-gradient(135deg, hsl(265 90% 62%), hsl(320 95% 60%), hsl(175 95% 50%), hsl(265 90% 62%))",
+                backgroundSize: "200% 200%",
+              }}
+            >
+              {ROTATING_WORDS[index]}
+            </motion.span>
+          </AnimatePresence>
+        </span>
       </span>
-      {","}
-      <br className="hidden md:block" />
-      already built.
+      <span className="block">already built.</span>
     </h1>
   );
 }

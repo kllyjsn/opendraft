@@ -114,6 +114,30 @@ export default function Index() {
   // Generation & deploy — extracted hook
   const { generating, genJob, deployPhase, deployUrl, deployError, currentStage, isInProgress, handleGenerate, handleAutoDeploy, reset } = useGenerationJob();
 
+  // Auto-trigger generation from ?generate= param or pending session storage
+  useEffect(() => {
+    if (!user) return;
+
+    // Check URL param first
+    const params = new URLSearchParams(window.location.search);
+    const genParam = params.get("generate");
+    if (genParam) {
+      // Clean the URL
+      params.delete("generate");
+      const newUrl = params.toString() ? `/?${params.toString()}` : "/";
+      window.history.replaceState({}, "", newUrl);
+      handleGenerate(genParam);
+      return;
+    }
+
+    // Check pending generation from pre-login flow
+    const pending = sessionStorage.getItem("opendraft_pending_generate");
+    if (pending) {
+      sessionStorage.removeItem("opendraft_pending_generate");
+      handleGenerate(pending);
+    }
+  }, [user]);
+
   const jsonLdData = useMemo(() => [
     {
       "@context": "https://schema.org",

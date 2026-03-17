@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { CompletenessBadge } from "@/components/CompletenessBadge";
 import { MagicImport } from "@/components/MagicImport";
+import { MetaTags } from "@/components/MetaTags";
 import { Upload, Plus, X, Link as LinkIcon, Github, FileArchive, CheckCircle2, GitFork } from "lucide-react";
 import { Navigate } from "react-router-dom";
 import { logActivity } from "@/lib/activity-logger";

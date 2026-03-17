@@ -2,446 +2,502 @@ import { motion, useInView, AnimatePresence } from "framer-motion";
 import { useRef, useEffect, useState, useMemo } from "react";
 
 /* ═══════════════════════════════════════════════════
-   GREMLIN WORKSHOP — Immersive animated scene
-   Inspired by: blueprint orchestras + pixel potion labs
+   GREMLIN WORKSHOP — Interstellar Coolness Mode ✦
+   Cosmic forge where AI gremlins craft apps among
+   stars, nebulae, and holographic workstations
    ═══════════════════════════════════════════════════ */
 
-// ── Utility: seeded pseudo-random for deterministic layouts ──
-function seededRandom(seed: number) {
+// ── Seeded PRNG for deterministic layouts ──
+function sr(seed: number) {
   let s = seed;
-  return () => {
-    s = (s * 16807 + 0) % 2147483647;
-    return (s - 1) / 2147483646;
-  };
+  return () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; };
 }
 
-// ── Floating code symbols that drift upward ──
-function FloatingSymbol({ symbol, x, delay, duration, color }: {
-  symbol: string; x: number; delay: number; duration: number; color: string;
-}) {
+// ── Starfield background ──
+function Starfield() {
+  const rng = sr(77);
+  const stars = Array.from({ length: 80 }, () => ({
+    cx: rng() * 760, cy: rng() * 380, r: rng() * 1.2 + 0.2,
+    opacity: rng() * 0.5 + 0.1, twinkle: rng() * 4 + 2,
+  }));
   return (
-    <motion.span
-      className="absolute text-xs font-mono select-none pointer-events-none"
-      style={{ left: `${x}%`, bottom: "10%", color, textShadow: `0 0 8px ${color}` }}
-      initial={{ opacity: 0, y: 0 }}
-      animate={{ opacity: [0, 0.7, 0.7, 0], y: [0, -60, -120, -180] }}
-      transition={{ delay, duration, repeat: Infinity, repeatDelay: duration * 0.3, ease: "easeOut" }}
-    >
-      {symbol}
-    </motion.span>
+    <g>
+      {stars.map((s, i) => (
+        <motion.circle
+          key={i} cx={s.cx} cy={s.cy} r={s.r}
+          fill="white" opacity={s.opacity}
+          animate={{ opacity: [s.opacity, s.opacity * 2.5, s.opacity] }}
+          transition={{ duration: s.twinkle, repeat: Infinity, delay: i * 0.07 }}
+        />
+      ))}
+    </g>
   );
 }
 
-// ── Spark / ember particles rising from the forge ──
-function Ember({ x, delay, color, size = 3 }: { x: number; delay: number; color: string; size?: number }) {
+// ── Nebula clouds ──
+function Nebula() {
   return (
-    <motion.div
-      className="absolute rounded-full pointer-events-none"
-      style={{
-        width: size, height: size, left: `${x}%`, bottom: "5%",
-        background: color, boxShadow: `0 0 ${size * 2}px ${color}`,
-      }}
-      initial={{ opacity: 0 }}
-      animate={{
-        opacity: [0, 1, 0.8, 0],
-        y: [0, -40, -100, -160],
-        x: [(Math.sin(delay * 3) * 20), (Math.cos(delay * 5) * 15)],
-      }}
-      transition={{ delay, duration: 2.5 + delay * 0.3, repeat: Infinity, repeatDelay: 1.5, ease: "easeOut" }}
-    />
+    <g>
+      <defs>
+        <radialGradient id="neb1" cx="30%" cy="40%"><stop offset="0%" stopColor="hsl(265 90% 62%)" stopOpacity="0.12" /><stop offset="100%" stopColor="transparent" /></radialGradient>
+        <radialGradient id="neb2" cx="70%" cy="60%"><stop offset="0%" stopColor="hsl(175 95% 50%)" stopOpacity="0.08" /><stop offset="100%" stopColor="transparent" /></radialGradient>
+        <radialGradient id="neb3" cx="50%" cy="30%"><stop offset="0%" stopColor="hsl(320 95% 60%)" stopOpacity="0.06" /><stop offset="100%" stopColor="transparent" /></radialGradient>
+        <filter id="nebBlur"><feGaussianBlur stdDeviation="25" /></filter>
+      </defs>
+      <motion.ellipse cx="200" cy="150" rx="200" ry="120" fill="url(#neb1)" filter="url(#nebBlur)"
+        animate={{ rx: [200, 220, 200], ry: [120, 130, 120] }}
+        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+      />
+      <motion.ellipse cx="550" cy="220" rx="180" ry="100" fill="url(#neb2)" filter="url(#nebBlur)"
+        animate={{ rx: [180, 200, 180], cy: [220, 210, 220] }}
+        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+      />
+      <motion.ellipse cx="380" cy="100" rx="150" ry="80" fill="url(#neb3)" filter="url(#nebBlur)"
+        animate={{ cx: [380, 400, 380], opacity: [1, 0.7, 1] }}
+        transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+      />
+    </g>
   );
 }
 
-// ── Potion jar on a shelf ──
-function PotionJar({ x, y, liquidColor, size = 28, delay = 0 }: {
-  x: number; y: number; liquidColor: string; size?: number; delay?: number;
+// ── Energy conduit (glowing pulsing line between two points) ──
+function EnergyConduit({ x1, y1, x2, y2, color, delay = 0 }: {
+  x1: number; y1: number; x2: number; y2: number; color: string; delay?: number;
 }) {
+  const midX = (x1 + x2) / 2;
+  const midY = Math.min(y1, y2) - 20;
+  const path = `M${x1},${y1} Q${midX},${midY} ${x2},${y2}`;
+  return (
+    <g>
+      <path d={path} stroke={color} strokeWidth="1" fill="none" opacity="0.1" />
+      <motion.path d={path} stroke={color} strokeWidth="1.5" fill="none" opacity="0"
+        strokeLinecap="round"
+        animate={{ opacity: [0, 0.6, 0], strokeWidth: [1, 2.5, 1] }}
+        transition={{ duration: 2, repeat: Infinity, delay, ease: "easeInOut" }}
+      />
+      {/* Traveling particle along the conduit */}
+      <motion.circle r="2.5" fill={color} opacity="0"
+        animate={{
+          cx: [x1, midX, x2], cy: [y1, midY, y2],
+          opacity: [0, 0.9, 0],
+        }}
+        transition={{ duration: 1.8, repeat: Infinity, delay: delay + 0.5, ease: "easeInOut" }}
+      />
+      <motion.circle r="5" fill={color} opacity="0"
+        animate={{
+          cx: [x1, midX, x2], cy: [y1, midY, y2],
+          opacity: [0, 0.15, 0],
+        }}
+        transition={{ duration: 1.8, repeat: Infinity, delay: delay + 0.5, ease: "easeInOut" }}
+      />
+    </g>
+  );
+}
+
+// ── Holographic screen / display ──
+function HoloScreen({ x, y, w, h, color, label, delay = 0 }: {
+  x: number; y: number; w: number; h: number; color: string; label: string; delay?: number;
+}) {
+  const rng = sr(x * 17 + y);
+  const lines = Array.from({ length: 5 }, () => ({ indent: rng() * 6, width: 8 + rng() * (w - 20) }));
   return (
     <motion.g
-      initial={{ opacity: 0, y: -5 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay, duration: 0.6 }}
+      initial={{ opacity: 0, scale: 0.8 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ delay: delay + 0.3, duration: 0.6, type: "spring" }}
     >
-      {/* Jar body */}
-      <rect x={x} y={y + 6} width={size * 0.65} height={size * 0.6} rx={3} fill="hsl(var(--muted))" stroke="hsl(var(--border))" strokeWidth="0.5" opacity="0.6" />
-      {/* Jar neck */}
-      <rect x={x + size * 0.18} y={y} width={size * 0.3} height={size * 0.25} rx={1.5} fill="hsl(var(--muted))" stroke="hsl(var(--border))" strokeWidth="0.5" opacity="0.6" />
-      {/* Cork */}
-      <rect x={x + size * 0.15} y={y - 2} width={size * 0.35} height={4} rx={2} fill="hsl(30 40% 35%)" />
-      {/* Liquid */}
-      <motion.rect
-        x={x + 2} y={y + size * 0.35} width={size * 0.65 - 4} height={size * 0.3}
-        rx={2} fill={liquidColor} opacity="0.6"
-        animate={{ opacity: [0.4, 0.7, 0.4] }}
-        transition={{ duration: 2 + delay, repeat: Infinity }}
+      {/* Glow behind */}
+      <rect x={x - 3} y={y - 3} width={w + 6} height={h + 6} rx={5} fill={color} opacity="0.05" />
+      {/* Screen frame */}
+      <rect x={x} y={y} width={w} height={h} rx={3} fill="hsl(240 20% 5%)" opacity="0.85"
+        stroke={color} strokeWidth="0.8" strokeOpacity="0.4" />
+      {/* Scanline effect */}
+      <motion.rect x={x} y={y} width={w} height={2} fill={color} opacity="0"
+        animate={{ y: [y, y + h, y], opacity: [0, 0.08, 0] }}
+        transition={{ duration: 3, repeat: Infinity, delay }}
       />
-      {/* Glow */}
-      <motion.circle
-        cx={x + size * 0.32} cy={y + size * 0.5} r={size * 0.2}
-        fill={liquidColor} opacity="0"
-        animate={{ opacity: [0, 0.15, 0] }}
-        transition={{ duration: 3, delay: delay + 1, repeat: Infinity }}
-      />
+      {/* Content lines */}
+      {lines.map((l, i) => (
+        <motion.rect
+          key={i}
+          x={x + 4 + l.indent} y={y + 5 + i * (h / 6.5)}
+          width={l.width} height={2} rx={1}
+          fill={color} opacity="0.25"
+          animate={{ opacity: [0.15, 0.45, 0.15], width: [l.width, l.width + 3, l.width] }}
+          transition={{ delay: delay + i * 0.3, duration: 1.5 + i * 0.2, repeat: Infinity }}
+        />
+      ))}
+      {/* Label */}
+      <text x={x + w / 2} y={y + h + 10} textAnchor="middle" fontSize="7" fontWeight="700"
+        fill={color} opacity="0.6" letterSpacing="0.15em"
+        className="uppercase font-mono"
+      >{label}</text>
     </motion.g>
   );
 }
 
-// ── Hanging tool from the ceiling ──
-function HangingTool({ x, y, type }: { x: number; y: number; type: "wrench" | "gear" | "hammer" }) {
-  const paths: Record<string, string> = {
-    wrench: "M0,0 L0,12 L3,15 L6,12 L6,0 L4,0 L4,10 L2,10 L2,0Z",
-    gear: "M5,0 L7,2 L10,1 L10,4 L12,6 L10,8 L10,11 L7,10 L5,12 L3,10 L0,11 L0,8 L-2,6 L0,4 L0,1 L3,2Z",
-    hammer: "M2,0 L2,10 L0,10 L0,14 L8,14 L8,10 L4,10 L4,0Z",
-  };
-  return (
-    <motion.g
-      animate={{ rotate: [0, 2, -2, 0] }}
-      transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-      style={{ transformOrigin: `${x + 4}px ${y}px` }}
-    >
-      {/* String */}
-      <line x1={x + 4} y1={y - 15} x2={x + 4} y2={y} stroke="hsl(var(--muted-foreground))" strokeWidth="0.5" opacity="0.4" />
-      <g transform={`translate(${x},${y}) scale(0.7)`}>
-        <path d={paths[type]} fill="hsl(var(--muted-foreground))" opacity="0.35" />
-      </g>
-    </motion.g>
-  );
-}
-
-// ── SVG Gremlin character — detailed version ──
-function DetailedGremlin({ x, y, color, scale = 1, expression = "happy", task, animDelay = 0 }: {
+// ── Space Gremlin character — upgraded with helmet / visor ──
+function SpaceGremlin({ x, y, color, scale = 1, expression = "happy", task, animDelay = 0, hasHelmet = false, hasJetpack = false }: {
   x: number; y: number; color: string; scale?: number;
   expression?: "happy" | "focused" | "excited" | "mischief";
-  task?: string; animDelay?: number;
+  task?: string; animDelay?: number; hasHelmet?: boolean; hasJetpack?: boolean;
 }) {
   const bobAnim = expression === "excited"
-    ? { y: [y, y - 5, y], rotate: [0, 3, -3, 0] }
-    : { y: [y, y - 3, y] };
-  const bobDuration = expression === "excited" ? 1.8 : 2.5;
+    ? { y: [0, -6, 0], rotate: [0, 4, -4, 0] }
+    : hasJetpack ? { y: [0, -8, -2, -6, 0] } : { y: [0, -3, 0] };
+  const bobDuration = expression === "excited" ? 1.6 : hasJetpack ? 3 : 2.5;
 
   return (
     <motion.g
-      animate={bobAnim}
-      transition={{ duration: bobDuration, repeat: Infinity, ease: "easeInOut", delay: animDelay }}
+      initial={{ opacity: 0, scale: 0 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ delay: animDelay + 0.5, type: "spring", damping: 12 }}
     >
-      <g transform={`translate(${x}, ${y}) scale(${scale})`}>
-        {/* ─ Body ─ */}
-        <ellipse cx="0" cy="20" rx="10" ry="8" fill={color} opacity="0.9" />
-        {/* ─ Left arm ─ */}
-        <motion.line
-          x1="-9" y1="16" x2="-15" y2="10"
-          stroke={color} strokeWidth="3" strokeLinecap="round"
-          animate={expression === "focused" ? { x2: [-15, -13, -15] } : { x2: [-15, -17, -15], y2: [10, 7, 10] }}
-          transition={{ duration: 1.2, repeat: Infinity, delay: animDelay }}
-        />
-        {/* ─ Right arm ─ */}
-        <motion.line
-          x1="9" y1="16" x2="15" y2="10"
-          stroke={color} strokeWidth="3" strokeLinecap="round"
-          animate={expression === "focused" ? { x2: [15, 17, 15], y2: [10, 8, 10] } : { x2: [15, 13, 15] }}
-          transition={{ duration: 1, repeat: Infinity, delay: animDelay + 0.3 }}
-        />
-        {/* ─ Legs ─ */}
-        <line x1="-4" y1="27" x2="-6" y2="34" stroke={color} strokeWidth="2.5" strokeLinecap="round" />
-        <line x1="4" y1="27" x2="6" y2="34" stroke={color} strokeWidth="2.5" strokeLinecap="round" />
-        {/* ─ Feet ─ */}
-        <ellipse cx="-7" cy="35" rx="4" ry="2" fill={color} opacity="0.8" />
-        <ellipse cx="7" cy="35" rx="4" ry="2" fill={color} opacity="0.8" />
-        {/* ─ Head ─ */}
-        <circle cx="0" cy="4" r="11" fill={color} />
-        {/* ─ Ears (large, pointy) ─ */}
-        <motion.path
-          d="M-10,0 L-18,-8 L-9,-4Z" fill={color}
-          animate={{ d: ["M-10,0 L-18,-8 L-9,-4Z", "M-10,0 L-19,-10 L-9,-4Z", "M-10,0 L-18,-8 L-9,-4Z"] }}
-          transition={{ duration: 3, repeat: Infinity }}
-        />
-        <motion.path
-          d="M10,0 L18,-8 L9,-4Z" fill={color}
-          animate={{ d: ["M10,0 L18,-8 L9,-4Z", "M10,0 L19,-10 L9,-4Z", "M10,0 L18,-8 L9,-4Z"] }}
-          transition={{ duration: 3, repeat: Infinity, delay: 0.5 }}
-        />
-        {/* ─ Face ─ */}
-        {/* Eye whites */}
-        <ellipse cx="-4" cy="2" rx="3.5" ry="3" fill="hsl(var(--foreground))" />
-        <ellipse cx="5" cy="2" rx="3.5" ry="3" fill="hsl(var(--foreground))" />
-        {/* Pupils */}
-        <motion.circle
-          cx="-3.5" cy="2.5" r="1.8" fill="hsl(var(--background))"
-          animate={expression === "focused" ? { cx: [-3, -4.5, -3] } : {}}
-          transition={{ duration: 2, repeat: Infinity }}
-        />
-        <motion.circle
-          cx="5.5" cy="2.5" r="1.8" fill="hsl(var(--background))"
-          animate={expression === "focused" ? { cx: [6, 4.5, 6] } : {}}
-          transition={{ duration: 2, repeat: Infinity }}
-        />
-        {/* Eye shine */}
-        <circle cx="-3" cy="1.5" r="0.6" fill="white" opacity="0.8" />
-        <circle cx="6" cy="1.5" r="0.6" fill="white" opacity="0.8" />
-        {/* Mouth */}
-        {expression === "excited" ? (
-          <ellipse cx="0.5" cy="8" rx="3.5" ry="2.5" fill="hsl(var(--background))" />
-        ) : expression === "mischief" ? (
-          <path d="M-4,7 Q0,11 5,7" stroke="hsl(var(--background))" strokeWidth="1.3" fill="none" strokeLinecap="round" />
-        ) : (
-          <path d="M-3,7 Q0,10 4,7" stroke="hsl(var(--background))" strokeWidth="1.2" fill="none" strokeLinecap="round" />
-        )}
-        {/* Eyebrows for focused */}
-        {expression === "focused" && (
-          <>
-            <line x1="-7" y1="-2" x2="-1" y2="-1" stroke="hsl(var(--background))" strokeWidth="0.8" opacity="0.6" />
-            <line x1="2" y1="-1" x2="8" y2="-2" stroke="hsl(var(--background))" strokeWidth="0.8" opacity="0.6" />
-          </>
-        )}
-      </g>
+      <motion.g
+        style={{ transformOrigin: `${x}px ${y}px` }}
+        animate={bobAnim}
+        transition={{ duration: bobDuration, repeat: Infinity, ease: "easeInOut", delay: animDelay }}
+      >
+        <g transform={`translate(${x}, ${y}) scale(${scale})`}>
+          {/* ─ Jetpack flames ─ */}
+          {hasJetpack && (
+            <>
+              <rect x={-14} y={10} width={6} height={12} rx={2} fill="hsl(var(--muted))" opacity="0.4" />
+              <rect x={8} y={10} width={6} height={12} rx={2} fill="hsl(var(--muted))" opacity="0.4" />
+              <motion.path d="M-11,22 L-11,32 L-8,28Z" fill="hsl(25 95% 55%)" opacity="0.6"
+                animate={{ d: ["M-11,22 L-11,35 L-8,28Z", "M-11,22 L-12,30 L-7,26Z", "M-11,22 L-11,35 L-8,28Z"], opacity: [0.3, 0.8, 0.3] }}
+                transition={{ duration: 0.4, repeat: Infinity }}
+              />
+              <motion.path d="M11,22 L11,32 L14,28Z" fill="hsl(40 95% 60%)" opacity="0.6"
+                animate={{ d: ["M11,22 L11,35 L14,28Z", "M11,22 L12,30 L15,26Z", "M11,22 L11,35 L14,28Z"], opacity: [0.3, 0.8, 0.3] }}
+                transition={{ duration: 0.4, repeat: Infinity, delay: 0.2 }}
+              />
+            </>
+          )}
+
+          {/* ─ Body ─ */}
+          <ellipse cx="0" cy="20" rx="10" ry="8" fill={color} opacity="0.9" />
+          {/* Body highlight */}
+          <ellipse cx="-3" cy="17" rx="4" ry="3" fill="white" opacity="0.08" />
+
+          {/* ─ Left arm ─ */}
+          <motion.line x1="-9" y1="16" x2="-15" y2="10"
+            stroke={color} strokeWidth="3" strokeLinecap="round"
+            animate={expression === "focused" ? { x2: [-15, -13, -15] } : { x2: [-15, -17, -15], y2: [10, 7, 10] }}
+            transition={{ duration: 1.2, repeat: Infinity, delay: animDelay }}
+          />
+          {/* ─ Right arm ─ */}
+          <motion.line x1="9" y1="16" x2="15" y2="10"
+            stroke={color} strokeWidth="3" strokeLinecap="round"
+            animate={expression === "focused" ? { x2: [15, 17, 15], y2: [10, 8, 10] } : { x2: [15, 13, 15] }}
+            transition={{ duration: 1, repeat: Infinity, delay: animDelay + 0.3 }}
+          />
+
+          {/* ─ Legs ─ */}
+          <line x1="-4" y1="27" x2="-6" y2="34" stroke={color} strokeWidth="2.5" strokeLinecap="round" />
+          <line x1="4" y1="27" x2="6" y2="34" stroke={color} strokeWidth="2.5" strokeLinecap="round" />
+          {/* ─ Boots ─ */}
+          <ellipse cx="-7" cy="35" rx="4.5" ry="2.5" fill={color} opacity="0.7" />
+          <ellipse cx="7" cy="35" rx="4.5" ry="2.5" fill={color} opacity="0.7" />
+          <ellipse cx="-7" cy="35" rx="4.5" ry="1" fill="white" opacity="0.1" />
+          <ellipse cx="7" cy="35" rx="4.5" ry="1" fill="white" opacity="0.1" />
+
+          {/* ─ Head ─ */}
+          <circle cx="0" cy="4" r="11" fill={color} />
+
+          {/* ─ Helmet/visor ─ */}
+          {hasHelmet && (
+            <>
+              <circle cx="0" cy="4" r="13" fill="none" stroke="hsl(var(--muted-foreground))" strokeWidth="1" opacity="0.3" />
+              <path d="M-10,1 Q-12,-10 0,-13 Q12,-10 10,1" fill="hsl(175 95% 50%)" opacity="0.06" />
+              <motion.path d="M-10,1 Q-12,-10 0,-13 Q12,-10 10,1" fill="hsl(175 95% 50%)" opacity="0"
+                animate={{ opacity: [0, 0.1, 0] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              />
+            </>
+          )}
+
+          {/* ─ Ears (large, pointy) ─ */}
+          <motion.path d="M-10,0 L-18,-8 L-9,-4Z" fill={color}
+            animate={{ d: ["M-10,0 L-18,-8 L-9,-4Z", "M-10,0 L-19,-10 L-9,-4Z", "M-10,0 L-18,-8 L-9,-4Z"] }}
+            transition={{ duration: 3, repeat: Infinity }}
+          />
+          <motion.path d="M10,0 L18,-8 L9,-4Z" fill={color}
+            animate={{ d: ["M10,0 L18,-8 L9,-4Z", "M10,0 L19,-10 L9,-4Z", "M10,0 L18,-8 L9,-4Z"] }}
+            transition={{ duration: 3, repeat: Infinity, delay: 0.5 }}
+          />
+          {/* Ear inner glow */}
+          <path d="M-10,-1 L-15,-6 L-9,-3Z" fill="hsl(320 95% 60%)" opacity="0.2" />
+          <path d="M10,-1 L15,-6 L9,-3Z" fill="hsl(320 95% 60%)" opacity="0.2" />
+
+          {/* ─ Face ─ */}
+          {/* Eye whites */}
+          <ellipse cx="-4" cy="2" rx="3.5" ry="3.2" fill="white" opacity="0.95" />
+          <ellipse cx="5" cy="2" rx="3.5" ry="3.2" fill="white" opacity="0.95" />
+          {/* Pupils */}
+          <motion.circle cx="-3.5" cy="2.5" r="2" fill="hsl(240 20% 10%)"
+            animate={expression === "focused" ? { cx: [-3, -5, -3] } : { cy: [2.5, 3, 2.5] }}
+            transition={{ duration: 2.5, repeat: Infinity }}
+          />
+          <motion.circle cx="5.5" cy="2.5" r="2" fill="hsl(240 20% 10%)"
+            animate={expression === "focused" ? { cx: [6, 4, 6] } : { cy: [2.5, 3, 2.5] }}
+            transition={{ duration: 2.5, repeat: Infinity }}
+          />
+          {/* Iris ring */}
+          <circle cx="-3.5" cy="2.5" r="2" fill="none" stroke={color} strokeWidth="0.4" opacity="0.5" />
+          <circle cx="5.5" cy="2.5" r="2" fill="none" stroke={color} strokeWidth="0.4" opacity="0.5" />
+          {/* Eye shine */}
+          <circle cx="-2.5" cy="1.5" r="0.8" fill="white" opacity="0.9" />
+          <circle cx="6.5" cy="1.5" r="0.8" fill="white" opacity="0.9" />
+          {/* Second shine */}
+          <circle cx="-4" cy="3.5" r="0.4" fill="white" opacity="0.5" />
+          <circle cx="5" cy="3.5" r="0.4" fill="white" opacity="0.5" />
+
+          {/* Mouth */}
+          {expression === "excited" ? (
+            <>
+              <ellipse cx="0.5" cy="8.5" rx="4" ry="3" fill="hsl(240 20% 8%)" />
+              <ellipse cx="0.5" cy="7.5" rx="3" ry="1.5" fill="white" opacity="0.15" />
+            </>
+          ) : expression === "mischief" ? (
+            <path d="M-4,7 Q0,12 5,7" stroke="hsl(240 20% 10%)" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+          ) : expression === "focused" ? (
+            <>
+              <path d="M-2,8 L3,8" stroke="hsl(240 20% 10%)" strokeWidth="1.2" strokeLinecap="round" />
+              <line x1="-7" y1="-2" x2="-1" y2="-1" stroke="hsl(240 20% 10%)" strokeWidth="0.8" opacity="0.5" />
+              <line x1="2" y1="-1" x2="8" y2="-2" stroke="hsl(240 20% 10%)" strokeWidth="0.8" opacity="0.5" />
+            </>
+          ) : (
+            <path d="M-3,7 Q0.5,11 4,7" stroke="hsl(240 20% 10%)" strokeWidth="1.3" fill="none" strokeLinecap="round" />
+          )}
+
+          {/* Cheek blush */}
+          <circle cx="-7" cy="5" r="2" fill="hsl(320 95% 60%)" opacity="0.15" />
+          <circle cx="8" cy="5" r="2" fill="hsl(320 95% 60%)" opacity="0.15" />
+
+          {/* ─ Antenna with glow ─ */}
+          <line x1="0" y1="-11" x2="0" y2="-16" stroke={color} strokeWidth="1.2" strokeLinecap="round" opacity="0.6" />
+          <motion.circle cx="0" cy="-17" r="2" fill={color}
+            animate={{ opacity: [0.4, 1, 0.4], r: [2, 2.8, 2] }}
+            transition={{ duration: 1.5, repeat: Infinity, delay: animDelay * 0.7 }}
+          />
+          <motion.circle cx="0" cy="-17" r="5" fill={color} opacity="0"
+            animate={{ opacity: [0, 0.1, 0] }}
+            transition={{ duration: 1.5, repeat: Infinity, delay: animDelay * 0.7 }}
+          />
+        </g>
+      </motion.g>
+
       {/* Task label */}
       {task && (
-        <text x={x} y={y + 44} textAnchor="middle" className="text-[7px] font-bold uppercase tracking-[0.15em]" fill={color} opacity="0.7">
-          {task}
-        </text>
+        <motion.text x={x} y={y + 48 * scale} textAnchor="middle"
+          fontSize="7" fontWeight="800" letterSpacing="0.2em"
+          fill={color} opacity="0.7" className="uppercase font-mono"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.7 }}
+          transition={{ delay: animDelay + 1 }}
+        >{task}</motion.text>
       )}
     </motion.g>
   );
 }
 
-// ── Cauldron with bubbling code ──
-function CodeCauldron({ cx, cy }: { cx: number; cy: number }) {
-  const rng = seededRandom(42);
-  const bubbles = Array.from({ length: 8 }, (_, i) => ({
-    x: cx - 25 + rng() * 50,
-    delay: rng() * 3,
-    size: 2 + rng() * 4,
+// ── Cosmic Forge (replaces stone forge with plasma reactor) ──
+function PlasmaForge({ x, y }: { x: number; y: number }) {
+  return (
+    <g>
+      {/* Reactor housing */}
+      <rect x={x} y={y + 5} width={55} height={50} rx={4} fill="hsl(240 20% 6%)" stroke="hsl(var(--border))" strokeWidth="0.8" opacity="0.9" />
+      {/* Side panels */}
+      <rect x={x + 3} y={y + 8} width={8} height={44} rx={2} fill="hsl(265 90% 62%)" opacity="0.05" />
+      <rect x={x + 44} y={y + 8} width={8} height={44} rx={2} fill="hsl(265 90% 62%)" opacity="0.05" />
+      {/* Inner chamber */}
+      <rect x={x + 8} y={y + 10} width={39} height={40} rx={3} fill="hsl(240 30% 3%)" />
+      {/* Core orb */}
+      <motion.circle cx={x + 27.5} cy={y + 30} r="12" fill="hsl(265 90% 62%)" opacity="0.03"
+        animate={{ r: [12, 15, 12], opacity: [0.03, 0.08, 0.03] }}
+        transition={{ duration: 2, repeat: Infinity }}
+      />
+      <motion.circle cx={x + 27.5} cy={y + 30} r="8" fill="hsl(175 95% 50%)" opacity="0.08"
+        animate={{ r: [8, 10, 8], opacity: [0.05, 0.15, 0.05] }}
+        transition={{ duration: 1.5, repeat: Infinity, delay: 0.3 }}
+      />
+      <motion.circle cx={x + 27.5} cy={y + 30} r="4" fill="white" opacity="0.1"
+        animate={{ opacity: [0.05, 0.25, 0.05], r: [3, 5, 3] }}
+        transition={{ duration: 1, repeat: Infinity }}
+      />
+      {/* Energy rings */}
+      <motion.ellipse cx={x + 27.5} cy={y + 30} rx="14" ry="5" fill="none"
+        stroke="hsl(175 95% 50%)" strokeWidth="0.5" opacity="0.15"
+        animate={{ ry: [5, 7, 5], opacity: [0.1, 0.25, 0.1], rotate: [0, 360] }}
+        transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+        style={{ transformOrigin: `${x + 27.5}px ${y + 30}px` }}
+      />
+      <motion.ellipse cx={x + 27.5} cy={y + 30} rx="16" ry="6" fill="none"
+        stroke="hsl(265 90% 62%)" strokeWidth="0.5" opacity="0.1"
+        animate={{ ry: [6, 4, 6], opacity: [0.05, 0.2, 0.05], rotate: [360, 0] }}
+        transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
+        style={{ transformOrigin: `${x + 27.5}px ${y + 30}px` }}
+      />
+      {/* Plasma sparks */}
+      {[0, 1, 2, 3].map(i => (
+        <motion.circle key={i} cx={x + 27.5} cy={y + 30} r="1" fill="hsl(175 95% 50%)"
+          animate={{
+            cx: [x + 27.5, x + 15 + i * 10, x + 27.5],
+            cy: [y + 30, y + 15 + i * 5, y + 30],
+            opacity: [0, 0.7, 0],
+          }}
+          transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.4 }}
+        />
+      ))}
+      {/* Top vent glow */}
+      <motion.rect x={x + 18} y={y + 2} width={19} height={3} rx={1.5}
+        fill="hsl(175 95% 50%)" opacity="0"
+        animate={{ opacity: [0, 0.3, 0] }}
+        transition={{ duration: 2, repeat: Infinity }}
+      />
+    </g>
+  );
+}
+
+// ── Holographic Cauldron / Code Synthesizer ──
+function CodeSynthesizer({ cx, cy }: { cx: number; cy: number }) {
+  const rng = sr(42);
+  const bubbles = Array.from({ length: 10 }, () => ({
+    x: cx - 30 + rng() * 60, delay: rng() * 3, size: 1.5 + rng() * 3,
   }));
-  const codeSymbols = ["{ }", "< />", "=>", "fn", "[]", "::"];
+  const codeFrags = ["{ }", "</>", "=>", "fn()", "[ ]", ":::", "npm", "tsx"];
 
   return (
     <g>
-      {/* Cauldron body */}
-      <ellipse cx={cx} cy={cy + 12} rx="38" ry="8" fill="hsl(var(--muted))" opacity="0.3" />
-      <path d={`M${cx - 35},${cy - 5} Q${cx - 38},${cy + 15} ${cx - 30},${cy + 20} L${cx + 30},${cy + 20} Q${cx + 38},${cy + 15} ${cx + 35},${cy - 5}Z`}
-        fill="hsl(240 16% 10%)" stroke="hsl(var(--border))" strokeWidth="1" />
-      {/* Rim */}
-      <ellipse cx={cx} cy={cy - 5} rx="36" ry="7" fill="hsl(240 16% 12%)" stroke="hsl(var(--border))" strokeWidth="1" />
-      {/* Liquid surface */}
-      <motion.ellipse
-        cx={cx} cy={cy - 3} rx="32" ry="5"
-        fill="hsl(175 95% 50%)" opacity="0.25"
-        animate={{ opacity: [0.2, 0.35, 0.2], ry: [5, 5.5, 5] }}
+      {/* Base platform */}
+      <ellipse cx={cx} cy={cy + 20} rx="45" ry="8" fill="hsl(240 20% 6%)" stroke="hsl(var(--border))" strokeWidth="0.5" />
+      {/* Glowing ring on platform */}
+      <motion.ellipse cx={cx} cy={cy + 20} rx="42" ry="7" fill="none"
+        stroke="hsl(175 95% 50%)" strokeWidth="1" opacity="0.1"
+        animate={{ opacity: [0.05, 0.2, 0.05], strokeWidth: [0.5, 1.5, 0.5] }}
         transition={{ duration: 2, repeat: Infinity }}
       />
-      {/* Liquid glow */}
-      <motion.ellipse
-        cx={cx} cy={cy - 3} rx="24" ry="4"
-        fill="hsl(265 90% 62%)" opacity="0"
-        animate={{ opacity: [0, 0.15, 0] }}
+      {/* Vessel body — translucent */}
+      <path d={`M${cx - 38},${cy} Q${cx - 42},${cy + 15} ${cx - 35},${cy + 20} L${cx + 35},${cy + 20} Q${cx + 42},${cy + 15} ${cx + 38},${cy}Z`}
+        fill="hsl(240 20% 6%)" stroke="hsl(var(--border))" strokeWidth="0.8" opacity="0.8" />
+      {/* Inner glass sheen */}
+      <path d={`M${cx - 35},${cy + 2} Q${cx - 38},${cy + 14} ${cx - 33},${cy + 18} L${cx - 20},${cy + 18} Q${cx - 25},${cy + 14} ${cx - 28},${cy + 2}Z`}
+        fill="white" opacity="0.02" />
+      {/* Rim */}
+      <ellipse cx={cx} cy={cy} rx="39" ry="7" fill="hsl(240 20% 8%)" stroke="hsl(265 90% 62%)" strokeWidth="0.5" strokeOpacity="0.3" />
+      {/* Liquid surface */}
+      <motion.ellipse cx={cx} cy={cy + 2} rx="35" ry="5.5" fill="hsl(175 95% 50%)" opacity="0.15"
+        animate={{ opacity: [0.1, 0.25, 0.1], ry: [5.5, 6, 5.5] }}
+        transition={{ duration: 2.5, repeat: Infinity }}
+      />
+      {/* Secondary liquid glow */}
+      <motion.ellipse cx={cx} cy={cy + 2} rx="25" ry="4" fill="hsl(265 90% 62%)" opacity="0"
+        animate={{ opacity: [0, 0.12, 0] }}
         transition={{ duration: 3, repeat: Infinity, delay: 1 }}
       />
       {/* Bubbles */}
       {bubbles.map((b, i) => (
-        <motion.circle
-          key={i} cx={b.x} cy={cy - 5} r={b.size}
-          fill="hsl(175 95% 50%)" opacity="0"
+        <motion.circle key={i} cx={b.x} cy={cy} r={b.size} fill="hsl(175 95% 50%)" opacity="0"
           animate={{
-            cy: [cy - 5, cy - 15, cy - 30],
-            opacity: [0, 0.5, 0],
-            r: [b.size, b.size * 1.3, b.size * 0.5],
+            cy: [cy, cy - 15, cy - 35], opacity: [0, 0.5, 0],
+            r: [b.size, b.size * 1.5, b.size * 0.3],
           }}
-          transition={{ delay: b.delay, duration: 1.5, repeat: Infinity, repeatDelay: 2 + b.delay * 0.5 }}
+          transition={{ delay: b.delay, duration: 1.8, repeat: Infinity, repeatDelay: 2 + b.delay * 0.4 }}
         />
       ))}
-      {/* Floating code fragments above cauldron */}
-      {codeSymbols.map((sym, i) => (
-        <motion.text
-          key={i}
-          x={cx - 25 + i * 10}
-          y={cy - 15}
-          className="text-[6px] font-mono"
-          fill="hsl(175 95% 50%)"
-          opacity="0"
+      {/* Holographic code projections rising from cauldron */}
+      {codeFrags.map((frag, i) => (
+        <motion.text key={i}
+          x={cx - 28 + i * 8} y={cy - 10}
+          fontSize="6" fontWeight="700" fontFamily="monospace"
+          fill={i % 2 === 0 ? "hsl(175 95% 50%)" : "hsl(265 90% 62%)"} opacity="0"
           animate={{
-            y: [cy - 10, cy - 35, cy - 55],
-            opacity: [0, 0.6, 0],
-            x: [cx - 25 + i * 10, cx - 25 + i * 10 + (i % 2 === 0 ? 5 : -5)],
+            y: [cy - 5, cy - 40, cy - 65],
+            opacity: [0, 0.7, 0],
+            x: [cx - 28 + i * 8, cx - 28 + i * 8 + (i % 2 === 0 ? 4 : -4)],
           }}
-          transition={{ delay: i * 0.6 + 0.5, duration: 2.5, repeat: Infinity, repeatDelay: 3 }}
-        >
-          {sym}
-        </motion.text>
+          transition={{ delay: i * 0.5, duration: 3, repeat: Infinity, repeatDelay: 4 }}
+        >{frag}</motion.text>
       ))}
       {/* Handles */}
-      <path d={`M${cx - 35},${cy} Q${cx - 45},${cy - 5} ${cx - 38},${cy - 12}`}
+      <path d={`M${cx - 38},${cy + 5} Q${cx - 50},${cy} ${cx - 42},${cy - 8}`}
         stroke="hsl(var(--border))" strokeWidth="2" fill="none" strokeLinecap="round" />
-      <path d={`M${cx + 35},${cy} Q${cx + 45},${cy - 5} ${cx + 38},${cy - 12}`}
+      <path d={`M${cx + 38},${cy + 5} Q${cx + 50},${cy} ${cx + 42},${cy - 8}`}
         stroke="hsl(var(--border))" strokeWidth="2" fill="none" strokeLinecap="round" />
     </g>
   );
 }
 
-// ── Shelf with items ──
-function Shelf({ x, y, width }: { x: number; y: number; width: number }) {
+// ── Orbital Ring / Portal behind the scene ──
+function OrbitalRing({ cx, cy, rx, ry, color, duration = 8, reverse = false }: {
+  cx: number; cy: number; rx: number; ry: number; color: string; duration?: number; reverse?: boolean;
+}) {
   return (
-    <g>
-      {/* Shelf plank */}
-      <rect x={x} y={y} width={width} height={3} rx={1} fill="hsl(25 30% 22%)" stroke="hsl(var(--border))" strokeWidth="0.5" />
-      {/* Bracket left */}
-      <path d={`M${x + 4},${y + 3} L${x + 4},${y + 12} L${x + 10},${y + 12}`}
-        stroke="hsl(var(--muted-foreground))" strokeWidth="1" fill="none" opacity="0.3" />
-      {/* Bracket right */}
-      <path d={`M${x + width - 4},${y + 3} L${x + width - 4},${y + 12} L${x + width - 10},${y + 12}`}
-        stroke="hsl(var(--muted-foreground))" strokeWidth="1" fill="none" opacity="0.3" />
-    </g>
+    <motion.ellipse cx={cx} cy={cy} rx={rx} ry={ry}
+      fill="none" stroke={color} strokeWidth="0.5" opacity="0.12"
+      strokeDasharray="4 8"
+      animate={{ rotate: reverse ? [360, 0] : [0, 360] }}
+      transition={{ duration, repeat: Infinity, ease: "linear" }}
+      style={{ transformOrigin: `${cx}px ${cy}px` }}
+    />
   );
 }
 
-// ── Workbench with monitor ──
-function Workbench({ x, y, screenColor }: { x: number; y: number; screenColor: string }) {
+// ── Floating holographic crystal / data shard ──
+function DataCrystal({ x, y, color, delay = 0 }: { x: number; y: number; color: string; delay?: number }) {
   return (
-    <g>
-      {/* Desk */}
-      <rect x={x} y={y} width={55} height={4} rx={1} fill="hsl(25 30% 18%)" stroke="hsl(var(--border))" strokeWidth="0.5" />
-      {/* Legs */}
-      <rect x={x + 4} y={y + 4} width={3} height={20} fill="hsl(25 30% 15%)" />
-      <rect x={x + 48} y={y + 4} width={3} height={20} fill="hsl(25 30% 15%)" />
-      {/* Monitor */}
-      <rect x={x + 10} y={y - 28} width={35} height={25} rx={2} fill="hsl(240 16% 8%)" stroke="hsl(var(--border))" strokeWidth="0.8" />
-      {/* Screen */}
-      <motion.rect
-        x={x + 12} y={y - 26} width={31} height={21} rx={1}
-        fill={screenColor} opacity="0.15"
-        animate={{ opacity: [0.1, 0.2, 0.1] }}
-        transition={{ duration: 2, repeat: Infinity }}
+    <motion.g
+      animate={{ y: [y, y - 6, y], rotate: [0, 10, -10, 0] }}
+      transition={{ duration: 4, repeat: Infinity, delay, ease: "easeInOut" }}
+      style={{ transformOrigin: `${x}px ${y}px` }}
+    >
+      <motion.polygon
+        points={`${x},${y - 8} ${x + 5},${y} ${x},${y + 8} ${x - 5},${y}`}
+        fill={color} opacity="0.15" stroke={color} strokeWidth="0.5" strokeOpacity="0.3"
       />
-      {/* Code lines on screen */}
-      {[0, 1, 2, 3, 4].map((i) => (
-        <motion.rect
-          key={i}
-          x={x + 14 + (i % 2 === 0 ? 0 : 4)}
-          y={y - 24 + i * 4}
-          width={12 + (i % 3) * 5}
-          height={1.5}
-          rx={0.5}
-          fill={screenColor}
-          opacity="0.3"
-          animate={{ opacity: [0.2, 0.5, 0.2], width: [12 + (i % 3) * 5, 14 + (i % 3) * 5, 12 + (i % 3) * 5] }}
-          transition={{ delay: i * 0.4, duration: 1.5, repeat: Infinity }}
-        />
-      ))}
-      {/* Monitor stand */}
-      <rect x={x + 25} y={y - 3} width={5} height={3} fill="hsl(240 16% 10%)" />
-    </g>
-  );
-}
-
-// ── Fireplace / Forge ──
-function Forge({ x, y }: { x: number; y: number }) {
-  return (
-    <g>
-      {/* Stone arch */}
-      <path
-        d={`M${x},${y + 40} L${x},${y + 5} Q${x},${y - 5} ${x + 10},${y - 8} L${x + 35},${y - 8} Q${x + 45},${y - 5} ${x + 45},${y + 5} L${x + 45},${y + 40}`}
-        fill="hsl(240 12% 10%)" stroke="hsl(var(--border))" strokeWidth="1"
+      <motion.polygon
+        points={`${x},${y - 8} ${x + 5},${y} ${x},${y + 8} ${x - 5},${y}`}
+        fill={color} opacity="0"
+        animate={{ opacity: [0, 0.2, 0] }}
+        transition={{ duration: 2, repeat: Infinity, delay }}
       />
-      {/* Inner dark */}
-      <rect x={x + 5} y={y} width={35} height={38} rx={2} fill="hsl(240 20% 5%)" />
-      {/* Fire glow */}
-      <motion.ellipse
-        cx={x + 22.5} cy={y + 30} rx="16" ry="10"
-        fill="hsl(25 95% 50%)" opacity="0"
-        animate={{ opacity: [0.05, 0.15, 0.05] }}
-        transition={{ duration: 1.5, repeat: Infinity }}
-      />
-      {/* Flames */}
-      {[0, 1, 2, 3, 4].map((i) => (
-        <motion.path
-          key={i}
-          d={`M${x + 10 + i * 7},${y + 38} Q${x + 10 + i * 7 + 2},${y + 28} ${x + 10 + i * 7 + (i % 2 === 0 ? 3 : -2)},${y + 22}`}
-          stroke={i % 2 === 0 ? "hsl(25 95% 55%)" : "hsl(40 95% 60%)"}
-          strokeWidth="2"
-          fill="none"
-          strokeLinecap="round"
-          opacity="0.5"
-          animate={{
-            d: [
-              `M${x + 10 + i * 7},${y + 38} Q${x + 10 + i * 7 + 2},${y + 28} ${x + 10 + i * 7 + 3},${y + 22}`,
-              `M${x + 10 + i * 7},${y + 38} Q${x + 10 + i * 7 - 1},${y + 26} ${x + 10 + i * 7 - 2},${y + 20}`,
-              `M${x + 10 + i * 7},${y + 38} Q${x + 10 + i * 7 + 2},${y + 28} ${x + 10 + i * 7 + 3},${y + 22}`,
-            ],
-            opacity: [0.3, 0.7, 0.3],
-          }}
-          transition={{ duration: 0.8 + i * 0.2, repeat: Infinity, ease: "easeInOut" }}
-        />
-      ))}
-      {/* Embers */}
-      {[0, 1, 2].map((i) => (
-        <motion.circle
-          key={`ember-${i}`}
-          cx={x + 15 + i * 8} cy={y + 35} r="1.5"
-          fill="hsl(30 95% 60%)"
-          animate={{ cy: [y + 35, y + 10, y - 5], opacity: [0.8, 0.4, 0], cx: [x + 15 + i * 8, x + 15 + i * 8 + (i - 1) * 4] }}
-          transition={{ delay: i * 0.7, duration: 2, repeat: Infinity, repeatDelay: 2 }}
-        />
-      ))}
-    </g>
+    </motion.g>
   );
 }
 
-// ── Brick wall texture ──
-function BrickWall({ x, y, width, height }: { x: number; y: number; width: number; height: number }) {
-  const bricks: { bx: number; by: number; bw: number }[] = [];
-  const rng = seededRandom(99);
-  for (let row = 0; row < Math.floor(height / 8); row++) {
-    const offset = row % 2 === 0 ? 0 : 10;
-    for (let col = -1; col < Math.ceil(width / 20) + 1; col++) {
-      const bw = 16 + rng() * 6;
-      bricks.push({
-        bx: x + offset + col * 22,
-        by: y + row * 8,
-        bw,
-      });
-    }
-  }
-  return (
-    <g opacity="0.08">
-      {bricks.map((b, i) => (
-        <rect key={i} x={b.bx} y={b.by} width={b.bw} height={6} rx={0.5}
-          stroke="hsl(var(--foreground))" strokeWidth="0.3" fill="none" />
-      ))}
-    </g>
-  );
-}
-
-// ── Status ticker at the bottom ──
+// ── Status ticker ──
 function StatusTicker({ isInView }: { isInView: boolean }) {
   const [tick, setTick] = useState(0);
-
   useEffect(() => {
     if (!isInView) return;
-    const interval = setInterval(() => setTick((t) => t + 1), 2800);
-    return () => clearInterval(interval);
+    const iv = setInterval(() => setTick(t => t + 1), 2800);
+    return () => clearInterval(iv);
   }, [isInView]);
 
-  const messages = [
-    "🧪 Brewing React components…",
-    "🔧 Wrenching API routes into place…",
-    "🎨 Painting pixel-perfect layouts…",
-    "🔒 Running security enchantments…",
-    "🚀 Fueling the deploy rockets…",
-    "📦 Packaging your app bundle…",
-    "⚡ Optimizing with lightning spells…",
-    "🧩 Fitting the last puzzle piece…",
+  const msgs = [
+    "🧪 Synthesizing React components…",
+    "⚡ Charging deploy warp drive…",
+    "🔮 Conjuring pixel-perfect layouts…",
+    "🛡️ Activating security force fields…",
+    "🚀 Igniting production boosters…",
+    "📦 Compressing quantum app bundle…",
+    "💎 Polishing diamond-grade code…",
+    "🌌 Warping through CI/CD pipeline…",
+    "🔧 Calibrating API conduits…",
+    "🎯 Locking onto deployment target…",
   ];
 
   return (
     <motion.div
-      className="mt-8 rounded-xl border border-border/30 bg-card/50 backdrop-blur-sm px-4 py-3 flex items-center gap-3 overflow-hidden"
+      className="mt-6 rounded-xl border border-border/30 bg-card/50 backdrop-blur-sm px-4 py-3 flex items-center gap-3 overflow-hidden"
       initial={{ opacity: 0, y: 10 }}
       animate={isInView ? { opacity: 1, y: 0 } : {}}
-      transition={{ delay: 1.2, duration: 0.5 }}
+      transition={{ delay: 1.5, duration: 0.5 }}
     >
       <div className="flex items-center gap-2 shrink-0">
-        <motion.div
-          className="h-2.5 w-2.5 rounded-full bg-green-500"
-          animate={{ scale: [1, 1.4, 1], opacity: [1, 0.6, 1] }}
+        <motion.div className="h-2.5 w-2.5 rounded-full bg-green-500"
+          animate={{ scale: [1, 1.4, 1], opacity: [1, 0.5, 1] }}
           transition={{ duration: 1.5, repeat: Infinity }}
         />
         <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Live</span>
@@ -449,20 +505,15 @@ function StatusTicker({ isInView }: { isInView: boolean }) {
       <div className="h-4 w-px bg-border/40" />
       <div className="overflow-hidden flex-1 h-5 relative">
         <AnimatePresence mode="wait">
-          <motion.p
-            key={tick}
+          <motion.p key={tick}
             className="text-[11px] font-mono text-muted-foreground whitespace-nowrap absolute inset-y-0 flex items-center"
-            initial={{ opacity: 0, x: 30 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -30 }}
-            transition={{ duration: 0.35 }}
-          >
-            {messages[tick % messages.length]}
-          </motion.p>
+            initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -30 }} transition={{ duration: 0.35 }}
+          >{msgs[tick % msgs.length]}</motion.p>
         </AnimatePresence>
       </div>
       <span className="text-[9px] text-primary font-bold shrink-0 tabular-nums font-mono">
-        {((tick % 8) + 1)}/8
+        {((tick % 10) + 1)}/10
       </span>
     </motion.div>
   );
@@ -475,35 +526,13 @@ export function GremlinWorkshop() {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: false, margin: "-40px" });
 
-  const codeSymbols = useMemo(() => {
-    const symbols = ["{ }", "< />", "=>", "const", "import", "async", "[]", "::", "tsx", "sql", "npm", "git"];
-    const rng = seededRandom(7);
-    return symbols.map((s, i) => ({
-      symbol: s,
-      x: 5 + rng() * 90,
-      delay: rng() * 5,
-      duration: 3 + rng() * 2,
-      color: i % 3 === 0 ? "hsl(265 90% 62%)" : i % 3 === 1 ? "hsl(175 95% 50%)" : "hsl(320 95% 60%)",
-    }));
-  }, []);
-
-  const embers = useMemo(() => {
-    const rng = seededRandom(13);
-    return Array.from({ length: 12 }, (_, i) => ({
-      x: 8 + rng() * 14,
-      delay: rng() * 4,
-      color: i % 2 === 0 ? "hsl(25 95% 55%)" : "hsl(40 95% 60%)",
-      size: 2 + rng() * 3,
-    }));
-  }, []);
-
   return (
     <section ref={ref} className="relative py-16 md:py-28 overflow-hidden">
       {/* ── Background glows ── */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] rounded-full bg-primary/5 blur-[150px]" />
-        <div className="absolute top-1/4 left-1/6 w-[300px] h-[300px] rounded-full bg-secondary/4 blur-[100px]" />
-        <div className="absolute bottom-1/4 right-1/6 w-[300px] h-[300px] rounded-full bg-accent/4 blur-[100px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[500px] rounded-full bg-primary/5 blur-[180px]" />
+        <div className="absolute top-1/4 left-[15%] w-[350px] h-[350px] rounded-full bg-secondary/3 blur-[120px]" />
+        <div className="absolute bottom-1/4 right-[15%] w-[300px] h-[300px] rounded-full bg-accent/3 blur-[100px]" />
       </div>
 
       {/* ── Section heading ── */}
@@ -513,12 +542,14 @@ export function GremlinWorkshop() {
         transition={{ duration: 0.8 }}
         className="text-center mb-10 md:mb-16 px-4 relative z-10"
       >
-        <p className="text-[10px] md:text-xs font-bold uppercase tracking-[0.25em] text-primary mb-3">Behind the scenes</p>
+        <motion.p className="text-[10px] md:text-xs font-bold uppercase tracking-[0.3em] text-primary mb-3"
+          animate={isInView ? { opacity: [0, 1] } : {}} transition={{ delay: 0.2 }}
+        >✦ Behind the scenes ✦</motion.p>
         <h2 className="text-2xl md:text-4xl lg:text-5xl font-black tracking-tight text-foreground">
           Gremlins build your app in real time
         </h2>
         <p className="text-xs md:text-sm text-muted-foreground mt-3 max-w-lg mx-auto leading-relaxed">
-          A swarm of AI agents analyze your site, design components, write code, and deploy — all in under 90 seconds.
+          A swarm of AI agents analyze, design, code, and deploy — all in under 90 seconds.
         </p>
       </motion.div>
 
@@ -528,173 +559,117 @@ export function GremlinWorkshop() {
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 1, delay: 0.2 }}
-          className="relative rounded-2xl border border-border/30 bg-card/30 backdrop-blur-md overflow-hidden"
+          className="relative rounded-2xl border border-border/20 bg-[hsl(240_20%_3%)] overflow-hidden"
+          style={{ boxShadow: "0 0 80px -20px hsl(265 90% 62% / 0.1), 0 0 40px -10px hsl(175 95% 50% / 0.05)" }}
         >
-          {/* Blueprint grid overlay */}
-          <div className="absolute inset-0 pointer-events-none opacity-[0.03]" style={{
+          {/* Subtle grid overlay */}
+          <div className="absolute inset-0 pointer-events-none opacity-[0.02]" style={{
             backgroundImage: "linear-gradient(hsl(175 95% 50%) 0.5px, transparent 0.5px), linear-gradient(90deg, hsl(175 95% 50%) 0.5px, transparent 0.5px)",
-            backgroundSize: "24px 24px",
+            backgroundSize: "20px 20px",
           }} />
 
-          {/* Floating code symbols */}
-          <div className="absolute inset-0 pointer-events-none overflow-hidden">
-            {codeSymbols.map((s, i) => (
-              <FloatingSymbol key={i} {...s} />
-            ))}
-          </div>
-
           {/* SVG Scene */}
-          <svg viewBox="0 0 520 300" className="w-full h-auto" preserveAspectRatio="xMidYMid meet">
-            {/* Brick wall background */}
-            <BrickWall x={0} y={0} width={520} height={180} />
+          <svg viewBox="0 0 760 380" className="w-full h-auto" preserveAspectRatio="xMidYMid meet">
+            {/* ── Deep space background ── */}
+            <rect width="760" height="380" fill="hsl(240 20% 3%)" />
+            <Starfield />
+            <Nebula />
 
-            {/* ── Shelves with potions ── */}
-            <Shelf x={15} y={30} width={90} />
-            <PotionJar x={22} y={8} liquidColor="hsl(265 90% 62%)" size={22} delay={0.3} />
-            <PotionJar x={48} y={10} liquidColor="hsl(175 95% 50%)" size={18} delay={0.5} />
-            <PotionJar x={72} y={8} liquidColor="hsl(320 95% 60%)" size={24} delay={0.7} />
+            {/* ── Orbital rings ── */}
+            <OrbitalRing cx={380} cy={190} rx={340} ry={50} color="hsl(265 90% 62%)" duration={20} />
+            <OrbitalRing cx={380} cy={190} rx={280} ry={35} color="hsl(175 95% 50%)" duration={15} reverse />
+            <OrbitalRing cx={380} cy={190} rx={200} ry={25} color="hsl(320 95% 60%)" duration={25} />
 
-            <Shelf x={415} y={35} width={90} />
-            <PotionJar x={422} y={13} liquidColor="hsl(40 95% 60%)" size={20} delay={0.4} />
-            <PotionJar x={448} y={11} liquidColor="hsl(265 90% 62%)" size={24} delay={0.6} />
-            <PotionJar x={478} y={14} liquidColor="hsl(175 95% 50%)" size={18} delay={0.8} />
-
-            {/* Second shelf row */}
-            <Shelf x={20} y={65} width={75} />
-            <PotionJar x={28} y={43} liquidColor="hsl(140 70% 45%)" size={20} delay={1} />
-            <PotionJar x={55} y={45} liquidColor="hsl(320 95% 60%)" size={18} delay={1.2} />
-
-            <Shelf x={425} y={70} width={75} />
-            <PotionJar x={432} y={48} liquidColor="hsl(200 90% 50%)" size={22} delay={0.9} />
-            <PotionJar x={462} y={50} liquidColor="hsl(25 95% 55%)" size={18} delay={1.1} />
-
-            {/* ── Hanging tools ── */}
-            <HangingTool x={140} y={18} type="wrench" />
-            <HangingTool x={170} y={22} type="gear" />
-            <HangingTool x={340} y={20} type="hammer" />
-            <HangingTool x={370} y={16} type="wrench" />
-
-            {/* ── Forge on the left ── */}
-            <Forge x={20} y={120} />
-
-            {/* ── Central cauldron ── */}
-            <CodeCauldron cx={260} cy={195} />
-
-            {/* ── Workbenches on the sides ── */}
-            <Workbench x={130} y={175} screenColor="hsl(265 90% 62%)" />
-            <Workbench x={340} y={175} screenColor="hsl(175 95% 50%)" />
-
-            {/* ── Floor ── */}
-            <rect x={0} y={260} width={520} height={40} fill="hsl(25 15% 12%)" opacity="0.5" />
-            <line x1={0} y1={260} x2={520} y2={260} stroke="hsl(var(--border))" strokeWidth="0.5" opacity="0.4" />
-            {/* Floor planks */}
-            {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-              <line key={i} x1={10 + i * 60} y1={260} x2={10 + i * 60} y2={300} stroke="hsl(var(--border))" strokeWidth="0.3" opacity="0.15" />
+            {/* ── Floor / ground plane ── */}
+            <defs>
+              <linearGradient id="floor" x1="0" y1="300" x2="0" y2="380">
+                <stop offset="0%" stopColor="hsl(240 20% 8%)" />
+                <stop offset="100%" stopColor="hsl(240 20% 3%)" />
+              </linearGradient>
+            </defs>
+            <rect x={0} y={295} width={760} height={85} fill="url(#floor)" />
+            <line x1={0} y1={295} x2={760} y2={295} stroke="hsl(var(--border))" strokeWidth="0.5" opacity="0.15" />
+            {/* Floor grid lines */}
+            {Array.from({ length: 15 }, (_, i) => (
+              <line key={i} x1={20 + i * 52} y1={295} x2={20 + i * 52} y2={380}
+                stroke="hsl(175 95% 50%)" strokeWidth="0.3" opacity="0.04" />
             ))}
+            {[305, 320, 340, 360].map(y => (
+              <line key={y} x1={0} y1={y} x2={760} y2={y}
+                stroke="hsl(175 95% 50%)" strokeWidth="0.3" opacity="0.03" />
+            ))}
+
+            {/* ── Plasma Forge (left) ── */}
+            <PlasmaForge x={40} y={230} />
+
+            {/* ── Central Code Synthesizer ── */}
+            <CodeSynthesizer cx={380} cy={255} />
+
+            {/* ── Holographic screens ── */}
+            <HoloScreen x={155} y={170} w={55} h={40} color="hsl(265 90% 62%)" label="frontend" delay={0.3} />
+            <HoloScreen x={555} y={175} w={55} h={40} color="hsl(175 95% 50%)" label="backend" delay={0.6} />
+            <HoloScreen x={285} y={120} w={48} h={35} color="hsl(320 95% 60%)" label="design" delay={0.9} />
+            <HoloScreen x={430} y={125} w={48} h={35} color="hsl(40 95% 60%)" label="deploy" delay={1.2} />
+
+            {/* ── Energy conduits connecting stations ── */}
+            <EnergyConduit x1={183} y1={210} x2={345} y2={250} color="hsl(265 90% 62%)" delay={0} />
+            <EnergyConduit x1={583} y1={215} x2={420} y2={250} color="hsl(175 95% 50%)" delay={1} />
+            <EnergyConduit x1={309} y1={155} x2={360} y2={245} color="hsl(320 95% 60%)" delay={2} />
+            <EnergyConduit x1={454} y1={160} x2={400} y2={245} color="hsl(40 95% 60%)" delay={3} />
+            <EnergyConduit x1={67} y1={230} x2={345} y2={255} color="hsl(265 70% 55%)" delay={1.5} />
+
+            {/* ── Floating data crystals ── */}
+            <DataCrystal x={130} y={100} color="hsl(265 90% 62%)" delay={0} />
+            <DataCrystal x={650} y={90} color="hsl(175 95% 50%)" delay={1} />
+            <DataCrystal x={720} y={150} color="hsl(320 95% 60%)" delay={2} />
+            <DataCrystal x={50} y={130} color="hsl(40 95% 60%)" delay={0.5} />
+            <DataCrystal x={380} y={70} color="hsl(265 90% 62%)" delay={1.5} />
 
             {/* ═══ GREMLIN CHARACTERS ═══ */}
 
-            {/* Chef Gremlin — stirring the cauldron */}
-            <DetailedGremlin
-              x={225} y={145} color="hsl(265 90% 62%)" scale={0.95}
-              expression="mischief" task="brewer" animDelay={0}
-            />
-            {/* Chef hat */}
-            <motion.g animate={{ y: [145, 142, 145] }} transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}>
-              <ellipse cx={225} cy={132} rx={11} ry={3} fill="white" opacity="0.85" />
-              <rect x={217} y={120} width={16} height={12} rx={4} fill="white" opacity="0.85" />
-            </motion.g>
-            {/* Spoon */}
-            <motion.g
-              animate={{ rotate: [0, 8, -8, 0] }}
-              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-              style={{ transformOrigin: "240px 160px" }}
+            {/* Lead Brewer — stirring the synthesizer */}
+            <SpaceGremlin x={340} y={205} color="hsl(265 90% 62%)" scale={1}
+              expression="mischief" task="architect" animDelay={0} hasHelmet />
+            {/* Stirring wand */}
+            <motion.g animate={{ rotate: [0, 8, -8, 0] }}
+              transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+              style={{ transformOrigin: "355px 220px" }}
             >
-              <line x1={240} y1={155} x2={265} y2={190} stroke="hsl(30 30% 45%)" strokeWidth="2" strokeLinecap="round" />
-              <ellipse cx={267} cy={193} rx={5} ry={3} fill="hsl(30 30% 40%)" />
+              <line x1={355} y1={215} x2={385} y2={252} stroke="hsl(175 95% 50%)" strokeWidth="1.5" strokeLinecap="round" opacity="0.6" />
+              <motion.circle cx={387} cy={254} r="3" fill="hsl(175 95% 50%)" opacity="0.3"
+                animate={{ opacity: [0.2, 0.5, 0.2] }}
+                transition={{ duration: 1, repeat: Infinity }}
+              />
             </motion.g>
 
-            {/* Coder Gremlin — at left workbench */}
-            <DetailedGremlin
-              x={157} y={130} color="hsl(320 95% 60%)" scale={0.8}
-              expression="focused" task="coder" animDelay={0.5}
-            />
+            {/* Coder — at left screen */}
+            <SpaceGremlin x={183} y={215} color="hsl(320 95% 60%)" scale={0.8}
+              expression="focused" task="coder" animDelay={0.5} />
 
-            {/* Deployer Gremlin — at right workbench */}
-            <DetailedGremlin
-              x={367} y={130} color="hsl(175 95% 50%)" scale={0.8}
-              expression="excited" task="deployer" animDelay={1}
-            />
+            {/* Deployer — at right screen */}
+            <SpaceGremlin x={583} y={220} color="hsl(175 95% 50%)" scale={0.8}
+              expression="excited" task="deployer" animDelay={1} hasHelmet />
 
-            {/* Small helper gremlin near the forge */}
-            <DetailedGremlin
-              x={55} y={155} color="hsl(40 90% 55%)" scale={0.55}
-              expression="happy" task="smith" animDelay={1.5}
-            />
+            {/* Designer — near design screen */}
+            <SpaceGremlin x={310} y={160} color="hsl(40 95% 55%)" scale={0.65}
+              expression="happy" task="designer" animDelay={1.5} />
 
-            {/* Tiny gremlin carrying a box on the far right */}
-            <motion.g
-              animate={{ x: [0, -20, 0] }}
-              transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+            {/* Smith — near the forge */}
+            <SpaceGremlin x={68} y={225} color="hsl(265 70% 55%)" scale={0.6}
+              expression="happy" task="smith" animDelay={2} />
+
+            {/* Jetpack courier */}
+            <SpaceGremlin x={670} y={200} color="hsl(320 70% 60%)" scale={0.55}
+              expression="excited" task="courier" animDelay={2.5} hasJetpack />
+
+            {/* Tiny QA gremlin patrolling */}
+            <motion.g animate={{ x: [0, 60, 0] }}
+              transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
             >
-              <DetailedGremlin
-                x={470} y={220} color="hsl(265 70% 55%)" scale={0.5}
-                expression="happy" animDelay={2}
-              />
-              {/* Package */}
-              <motion.rect
-                x={462} y={213} width={10} height={8} rx={1}
-                fill="hsl(30 40% 35%)" stroke="hsl(var(--border))" strokeWidth="0.5"
-                animate={{ y: [213, 211, 213] }}
-                transition={{ duration: 2.5, repeat: Infinity, delay: 2 }}
-              />
-              <motion.text x={464} y={219} className="text-[4px] font-bold" fill="hsl(175 95% 50%)"
-                animate={{ y: [219, 217, 219] }}
-                transition={{ duration: 2.5, repeat: Infinity, delay: 2 }}
-              >
-                📦
-              </motion.text>
+              <SpaceGremlin x={460} y={275} color="hsl(145 70% 50%)" scale={0.45}
+                expression="focused" task="qa" animDelay={3} />
             </motion.g>
-
-            {/* ── Ambient decoration ── */}
-            {/* Scroll / recipe pinned to wall */}
-            <g opacity="0.4">
-              <rect x={115} y={50} width={28} height={38} rx={2} fill="hsl(40 40% 25%)" />
-              <rect x={118} y={54} width={22} height={2} rx={0.5} fill="hsl(var(--muted-foreground))" opacity="0.3" />
-              <rect x={118} y={58} width={18} height={2} rx={0.5} fill="hsl(var(--muted-foreground))" opacity="0.3" />
-              <rect x={118} y={62} width={20} height={2} rx={0.5} fill="hsl(var(--muted-foreground))" opacity="0.3" />
-              <rect x={118} y={66} width={14} height={2} rx={0.5} fill="hsl(var(--muted-foreground))" opacity="0.3" />
-              {/* Pin */}
-              <circle cx={129} cy={48} r={2} fill="hsl(0 85% 60%)" opacity="0.6" />
-            </g>
-
-            {/* Second recipe scroll */}
-            <g opacity="0.35">
-              <rect x={380} y={55} width={25} height={32} rx={2} fill="hsl(40 40% 25%)" />
-              <rect x={383} y={59} width={19} height={1.5} rx={0.5} fill="hsl(var(--muted-foreground))" opacity="0.3" />
-              <rect x={383} y={63} width={15} height={1.5} rx={0.5} fill="hsl(var(--muted-foreground))" opacity="0.3" />
-              <rect x={383} y={67} width={17} height={1.5} rx={0.5} fill="hsl(var(--muted-foreground))" opacity="0.3" />
-              <circle cx={392} cy={53} r={2} fill="hsl(265 90% 62%)" opacity="0.5" />
-            </g>
-
-            {/* Chains / pipes on ceiling */}
-            <line x1={200} y1={0} x2={200} y2={12} stroke="hsl(var(--muted-foreground))" strokeWidth="1" opacity="0.15" />
-            <line x1={320} y1={0} x2={320} y2={10} stroke="hsl(var(--muted-foreground))" strokeWidth="1" opacity="0.15" />
-            <line x1={260} y1={0} x2={260} y2={8} stroke="hsl(var(--muted-foreground))" strokeWidth="1" opacity="0.15" />
-            {/* Chandelier hint */}
-            <motion.circle
-              cx={260} cy={12} r={3} fill="hsl(40 90% 55%)" opacity="0"
-              animate={{ opacity: [0.1, 0.3, 0.1] }}
-              transition={{ duration: 3, repeat: Infinity }}
-            />
           </svg>
-
-          {/* Ember particles (HTML layer for better performance) */}
-          <div className="absolute inset-0 pointer-events-none overflow-hidden">
-            {embers.map((e, i) => (
-              <Ember key={i} {...e} />
-            ))}
-          </div>
 
           {/* Status ticker */}
           <div className="px-4 md:px-6 pb-4 md:pb-6">

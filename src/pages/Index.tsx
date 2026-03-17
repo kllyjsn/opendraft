@@ -12,7 +12,7 @@ import { useGenerationJob } from "@/hooks/useGenerationJob";
 import { CheckCircle, AlertCircle, ExternalLink, Rocket, Globe, Pencil, Wand2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const ROTATING_WORDS = ["restaurant", "agency", "clinic", "startup", "gym", "studio"];
+const ROTATING_WORDS = ["CRM", "scheduler", "dashboard", "portal", "tracker", "helpdesk"];
 
 function HeroTagline() {
   const [index, setIndex] = useState(0);
@@ -26,7 +26,8 @@ function HeroTagline() {
 
   return (
     <h1 className="text-4xl md:text-6xl lg:text-[5rem] font-black tracking-[-0.04em] mb-5 leading-[1.05] md:leading-[0.95]">
-      <span className="block">Your{" "}
+      <span className="block">Stop renting</span>
+      <span className="block">your{" "}
         <span className="inline-block relative overflow-hidden align-bottom" style={{ minWidth: "7ch" }}>
           <AnimatePresence mode="wait">
             <motion.span
@@ -44,9 +45,8 @@ function HeroTagline() {
               {ROTATING_WORDS[index]}
             </motion.span>
           </AnimatePresence>
-        </span>,
+        </span>.
       </span>
-      <span className="block">deployed.</span>
     </h1>
   );
 }
@@ -97,8 +97,8 @@ export default function Index() {
   return (
     <div className="min-h-screen flex flex-col">
       <MetaTags
-        title="Your Business, Deployed | OpenDraft"
-        description="Paste your website. We'll build you a production-ready app in 90 seconds. Full source code. One click deploy."
+        title="Stop Renting Software | OpenDraft"
+        description="Replace generic SaaS with custom apps built from your website. Own the code. Cut your COGS. Deploy in 90 seconds."
         path="/"
       />
       <JsonLd data={jsonLdData} />
@@ -128,9 +128,9 @@ export default function Index() {
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-            className="text-sm md:text-base text-muted-foreground max-w-md mx-auto mb-8 md:mb-12"
+            className="text-sm md:text-base text-muted-foreground max-w-lg mx-auto mb-8 md:mb-12"
           >
-            Paste your website. We'll build you an app.
+            Paste your site. Get a custom app you own — no per-seat fees, ever.
           </motion.p>
 
           {/* URL Input — sole CTA */}
@@ -310,7 +310,7 @@ export default function Index() {
               className="mt-4"
             >
               <p className="text-[11px] text-muted-foreground/60">
-                Full source code · One-click deploy · No lock-in
+                Own the code · Zero per-seat fees · Deploy in 90s
               </p>
             </motion.div>
           )}

@@ -330,24 +330,7 @@ export default function Index() {
             transition={{ duration: 0.7, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
             className="mb-5 md:mb-8"
           >
-            <div className="hidden md:block">
-              <BusinessAnalyzer onGenerate={handleGenerate} />
-            </div>
-            {/* Mobile: simple search that scrolls to browse */}
-            <form onSubmit={handleHeroSearch} className="md:hidden max-w-sm mx-auto flex gap-2">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search apps..."
-                  value={heroSearch}
-                  onChange={(e) => setHeroSearch(e.target.value)}
-                  className="pl-9 h-11 border-border/40 focus-visible:border-primary/50"
-                />
-              </div>
-              <Button type="submit" size="icon" className="h-11 w-11 gradient-hero text-white border-0 shrink-0">
-                <Search className="h-4 w-4" />
-              </Button>
-            </form>
+            <BusinessAnalyzer onGenerate={handleGenerate} />
           </motion.div>
 
           {/* Quick-tap category chips — drives engagement on mobile */}

@@ -274,6 +274,12 @@ export function BusinessAnalyzer() {
           </motion.div>
           <h2 className="text-xl md:text-2xl font-black tracking-tight">{result.business_name}</h2>
           <p className="text-xs text-muted-foreground mt-1 max-w-lg">{result.summary}</p>
+          {notice && (
+            <p className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-accent/30 bg-accent/10 px-2.5 py-1 text-[10px] font-semibold text-accent">
+              <AlertCircle className="h-3 w-3" />
+              {notice}
+            </p>
+          )}
         </div>
         <Button variant="ghost" size="sm" onClick={reset} className="text-muted-foreground h-8 shrink-0">
           <X className="h-3.5 w-3.5 mr-1" />

@@ -69,7 +69,7 @@ function clearAnalysis() {
   try { sessionStorage.removeItem(STORAGE_KEY); } catch {}
 }
 
-export function BusinessAnalyzer() {
+export function BusinessAnalyzer({ onGenerate }: { onGenerate?: (prompt: string) => void }) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [url, setUrl] = useState("");

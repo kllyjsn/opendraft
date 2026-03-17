@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { GremlinWorkshop } from "@/components/GremlinWorkshop";
 import { BusinessAnalyzer } from "@/components/BusinessAnalyzer";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";

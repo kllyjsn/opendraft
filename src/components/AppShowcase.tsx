@@ -23,7 +23,7 @@ const showcaseItems = [
 
 export function AppShowcase() {
   return (
-    <section className="py-20 md:py-32 relative overflow-hidden">
+    <section className="py-12 md:py-20 relative overflow-hidden">
       {/* Ambient glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[800px] w-[1000px] rounded-full bg-primary/5 blur-[200px] pointer-events-none" />
 

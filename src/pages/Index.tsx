@@ -405,11 +405,11 @@ export default function Index() {
         </div>
       </section>
 
+      {/* ── STAFF PICKS (real cards first — drives engagement) ── */}
+      <StaffPicks />
+
       {/* ── APP SHOWCASE ── */}
       <AppShowcase />
-
-      {/* ── STAFF PICKS ── */}
-      <StaffPicks />
 
       {/* ── BROWSE ALL ── */}
       <section id="browse" className="container mx-auto px-4 pb-24">

@@ -24,7 +24,7 @@ export function Footer() {
           <div>
             <h4 className="text-[11px] font-bold uppercase tracking-widest text-foreground mb-4">Marketplace</h4>
             <ul className="space-y-3 text-sm">
-              <li><Link to="/" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Browse projects</Link></li>
+              <li><Link to="/category/saas-tool" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Browse projects</Link></li>
               <li><Link to="/sell" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Sell a project</Link></li>
               <li><Link to="/builders" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Discover builders</Link></li>
               <li><Link to="/bounties" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Bounties</Link></li>

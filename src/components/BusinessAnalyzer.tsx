@@ -54,6 +54,21 @@ const PRIORITY_TAG: Record<string, string> = {
   low: "bg-muted text-muted-foreground",
 };
 
+const STORAGE_KEY = "opendraft_biz_analysis";
+
+function saveAnalysis(result: AnalysisResult) {
+  try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(result)); } catch {}
+}
+function loadAnalysis(): AnalysisResult | null {
+  try {
+    const raw = sessionStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+function clearAnalysis() {
+  try { sessionStorage.removeItem(STORAGE_KEY); } catch {}
+}
+
 export function BusinessAnalyzer() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -62,6 +77,15 @@ export function BusinessAnalyzer() {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+
+  // Restore analysis after sign-in redirect
+  useEffect(() => {
+    const saved = loadAnalysis();
+    if (saved && !result) {
+      setResult(saved);
+      setUrl(saved.url || "");
+    }
+  }, []);
 
   function buildInstantFallback(rawUrl: string): AnalysisResult {
     const formatted = rawUrl.startsWith("http://") || rawUrl.startsWith("https://") ? rawUrl : `https://${rawUrl}`;

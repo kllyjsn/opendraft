@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Globe, Loader2, Lightbulb, Rocket, Search, AlertCircle, X,
@@ -54,6 +54,21 @@ const PRIORITY_TAG: Record<string, string> = {
   low: "bg-muted text-muted-foreground",
 };
 
+const STORAGE_KEY = "opendraft_biz_analysis";
+
+function saveAnalysis(result: AnalysisResult) {
+  try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(result)); } catch {}
+}
+function loadAnalysis(): AnalysisResult | null {
+  try {
+    const raw = sessionStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+function clearAnalysis() {
+  try { sessionStorage.removeItem(STORAGE_KEY); } catch {}
+}
+
 export function BusinessAnalyzer() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -62,6 +77,15 @@ export function BusinessAnalyzer() {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+
+  // Restore analysis after sign-in redirect
+  useEffect(() => {
+    const saved = loadAnalysis();
+    if (saved && !result) {
+      setResult(saved);
+      setUrl(saved.url || "");
+    }
+  }, []);
 
   function buildInstantFallback(rawUrl: string): AnalysisResult {
     const formatted = rawUrl.startsWith("http://") || rawUrl.startsWith("https://") ? rawUrl : `https://${rawUrl}`;
@@ -166,8 +190,11 @@ export function BusinessAnalyzer() {
       if (data?.error) throw new Error(data.error);
       if (!data?.recommended_builds?.length) throw new Error("No build recommendations returned.");
       setResult(data);
+      saveAnalysis(data);
     } catch (err) {
-      setResult(buildInstantFallback(normalizedUrl));
+      const fallback = buildInstantFallback(normalizedUrl);
+      setResult(fallback);
+      saveAnalysis(fallback);
       setNotice("Live analysis was slow, so we loaded instant build ideas you can generate now.");
       setError(err instanceof Error ? err.message : "Analysis failed");
     } finally {
@@ -177,9 +204,12 @@ export function BusinessAnalyzer() {
 
   function handleGenerate(prompt: string) {
     if (!user) {
+      // Persist analysis so it survives the sign-in redirect
+      if (result) saveAnalysis(result);
       navigate("/login");
       return;
     }
+    clearAnalysis();
     navigate(`/?generate=${encodeURIComponent(prompt)}`);
   }
 
@@ -193,6 +223,7 @@ export function BusinessAnalyzer() {
     setError(null);
     setNotice(null);
     setUrl("");
+    clearAnalysis();
   }
 
   // ── Input Form ──

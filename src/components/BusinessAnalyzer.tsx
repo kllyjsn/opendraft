@@ -221,7 +221,6 @@ export function BusinessAnalyzer({ onGenerate }: { onGenerate?: (prompt: string)
 
   function handleSearchClick(query: string) {
     navigate(`/?q=${encodeURIComponent(query)}`);
-    setTimeout(() => document.getElementById("browse")?.scrollIntoView({ behavior: "smooth" }), 100);
   }
 
   function reset() {

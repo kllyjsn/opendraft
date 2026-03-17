@@ -12,7 +12,7 @@ import { useGenerationJob } from "@/hooks/useGenerationJob";
 import { CheckCircle, AlertCircle, ExternalLink, Rocket, Globe, Pencil, Wand2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const ROTATING_WORDS = ["restaurant", "agency", "clinic", "startup", "gym", "studio"];
+const ROTATING_WORDS = ["CRM", "scheduler", "dashboard", "portal", "tracker", "helpdesk"];
 
 function HeroTagline() {
   const [index, setIndex] = useState(0);
@@ -26,7 +26,8 @@ function HeroTagline() {
 
   return (
     <h1 className="text-4xl md:text-6xl lg:text-[5rem] font-black tracking-[-0.04em] mb-5 leading-[1.05] md:leading-[0.95]">
-      <span className="block">Your{" "}
+      <span className="block">Stop renting</span>
+      <span className="block">your{" "}
         <span className="inline-block relative overflow-hidden align-bottom" style={{ minWidth: "7ch" }}>
           <AnimatePresence mode="wait">
             <motion.span
@@ -44,9 +45,8 @@ function HeroTagline() {
               {ROTATING_WORDS[index]}
             </motion.span>
           </AnimatePresence>
-        </span>,
+        </span>.
       </span>
-      <span className="block">deployed.</span>
     </h1>
   );
 }

@@ -205,8 +205,12 @@ export function BusinessAnalyzer() {
             <div className="relative flex items-center">
               <Globe className="absolute left-4 h-4 w-4 text-muted-foreground" />
               <Input
-                type="url"
-                placeholder="Enter your company URL…"
+                type="text"
+                inputMode="url"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                placeholder="Enter your company URL (e.g. workday.com)…"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 className="pl-11 pr-28 h-13 bg-card border-border/50 focus-visible:border-primary/40 focus-visible:shadow-glow transition-all rounded-xl text-sm leading-normal [&]:py-0"

@@ -297,37 +297,18 @@ export default function Index() {
             transition={{ duration: 0.7, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
             className="text-sm md:text-lg text-muted-foreground max-w-xl mx-auto mb-8 leading-relaxed"
           >
-            Every app is designed, coded, and stress-tested by experts — so you can launch a real business, not a prototype.
+            Enter your website — we'll analyze your business and recommend the perfect apps.
           </motion.p>
 
-          {/* Search bar */}
-          <motion.form
-            onSubmit={handleHeroSearch}
+          {/* Business URL Analyzer */}
+          <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-            className="max-w-lg mx-auto mb-8"
+            className="mb-8"
           >
-            <div className="relative group">
-              <div className="absolute -inset-0.5 rounded-2xl bg-gradient-to-r from-primary/20 via-accent/20 to-secondary/20 opacity-0 group-focus-within:opacity-100 blur-sm transition-opacity duration-500" />
-              <div className="relative flex items-center">
-                <Search className="absolute left-4 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="What does your business need?"
-                  value={heroSearch}
-                  onChange={(e) => setHeroSearch(e.target.value)}
-                  className="pl-11 pr-28 h-13 bg-card border-border/50 focus-visible:border-primary/40 focus-visible:shadow-glow transition-all rounded-xl text-sm leading-normal [&]:py-0"
-                />
-                <Button
-                  type="submit"
-                  size="sm"
-                  className="absolute right-2 gradient-hero text-primary-foreground border-0 shadow-glow hover:opacity-90 rounded-lg h-9 px-5 text-xs font-bold"
-                >
-                  Explore
-                </Button>
-              </div>
-            </div>
-          </motion.form>
+            <BusinessAnalyzer />
+          </motion.div>
 
           {!user && (
             <motion.div

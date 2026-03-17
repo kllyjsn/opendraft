@@ -62,7 +62,7 @@ import GremlinsAtWork from "./pages/GremlinsAtWork";
 import AppsVertical from "./pages/AppsVertical";
 import { GremlinVoiceAgent } from "./components/GremlinVoiceAgent";
 import { SignupPrompt } from "./components/SignupPrompt";
-import { FavoriteAppPicker } from "./components/FavoriteAppPicker";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -121,7 +121,7 @@ const App = () => (
         </Routes>
         <GremlinVoiceAgent />
         <SignupPrompt />
-        <FavoriteAppPicker />
+        
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

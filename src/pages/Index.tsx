@@ -320,7 +320,7 @@ export default function Index() {
             transition={{ duration: 0.7, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
             className="text-sm md:text-lg text-muted-foreground max-w-xl mx-auto mb-5 md:mb-8 leading-relaxed"
           >
-            Tell us your business — we'll build a custom app for the price of lunch.
+            Paste your URL. Get a production-ready app — built, secured, and ready to ship.
           </motion.p>
 
           {/* Business Analyzer — hidden on mobile, search drives to #browse instead */}

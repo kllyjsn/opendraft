@@ -59,8 +59,10 @@ import Security from "./pages/Security";
 import AdminOutreach from "./pages/AdminOutreach";
 import AdminRevenue from "./pages/AdminRevenue";
 import GremlinsAtWork from "./pages/GremlinsAtWork";
+import AppsVertical from "./pages/AppsVertical";
 import { GremlinVoiceAgent } from "./components/GremlinVoiceAgent";
 import { SignupPrompt } from "./components/SignupPrompt";
+import { FavoriteAppPicker } from "./components/FavoriteAppPicker";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -114,10 +116,12 @@ const App = () => (
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/security" element={<Security />} />
           <Route path="/gremlins" element={<GremlinsAtWork />} />
+          <Route path="/apps/:vertical" element={<AppsVertical />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <GremlinVoiceAgent />
         <SignupPrompt />
+        <FavoriteAppPicker />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

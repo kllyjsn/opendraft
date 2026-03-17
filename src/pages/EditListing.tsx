@@ -1,15 +1,18 @@
-import { useState, useEffect } from "react";
-import { useParams, useNavigate, Navigate } from "react-router-dom";
-import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { useParams, useNavigate, Navigate, Link } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { CompletenessBadge } from "@/components/CompletenessBadge";
-import { ProjectGoalsEditor } from "@/components/ProjectGoalsEditor";
-import { Upload, Plus, X, Link as LinkIcon, Github, FileArchive, CheckCircle2, Loader2, Save } from "lucide-react";
+import {
+  Upload, Plus, X, Github, FileArchive, CheckCircle2, Loader2,
+  Save, ArrowLeft, Send, Sparkles, Eye, Settings2, Image as ImageIcon,
+  Code, Globe, ChevronDown, ChevronRight, Pencil, Bot, ExternalLink,
+  Link as LinkIcon,
+} from "lucide-react";
 
 const TECH_SUGGESTIONS = ["React", "Next.js", "Tailwind", "TypeScript", "Python", "Supabase", "OpenAI", "Stripe", "Node.js", "PostgreSQL"];
 const CATEGORIES = [
@@ -29,6 +32,8 @@ const BUILT_WITH_OPTIONS = [
   { value: "other", label: "Other" },
 ];
 
+type Panel = "details" | "media" | "code";
+
 export default function EditListing() {
   const { id } = useParams<{ id: string }>();
   const { user, loading: authLoading } = useAuth();
@@ -39,6 +44,11 @@ export default function EditListing() {
   const [techInput, setTechInput] = useState("");
   const [uploadingScreenshot, setUploadingScreenshot] = useState(false);
   const [uploadingFile, setUploadingFile] = useState(false);
+  const [activePanel, setActivePanel] = useState<Panel>("details");
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const chatInputRef = useRef<HTMLTextAreaElement>(null);
 
   const [form, setForm] = useState({
     title: "",
@@ -91,6 +101,7 @@ export default function EditListing() {
 
   function update(field: string, value: unknown) {
     setForm((f) => ({ ...f, [field]: value }));
+    setHasUnsavedChanges(true);
   }
 
   function addTech(tag: string) {
@@ -105,7 +116,6 @@ export default function EditListing() {
     const remaining = 10 - form.screenshots.length;
     const toUpload = Array.from(files).slice(0, remaining);
     const newUrls: string[] = [];
-
     for (const file of toUpload) {
       const path = `${user.id}/${Date.now()}-${file.name}`;
       const { data, error } = await supabase.storage.from("listing-screenshots").upload(path, file, { upsert: true });
@@ -116,7 +126,7 @@ export default function EditListing() {
     }
     if (newUrls.length) {
       update("screenshots", [...form.screenshots, ...newUrls]);
-      toast({ title: `${newUrls.length} image${newUrls.length > 1 ? "s" : ""} uploaded ✓` });
+      toast({ title: `${newUrls.length} image${newUrls.length > 1 ? "s" : ""} uploaded` });
     }
     setUploadingScreenshot(false);
   }
@@ -128,7 +138,7 @@ export default function EditListing() {
     const { data, error } = await supabase.storage.from("listing-files").upload(path, file, { upsert: true });
     if (!error && data) {
       update("file_path", data.path);
-      toast({ title: "ZIP uploaded ✓" });
+      toast({ title: "ZIP uploaded" });
     }
     setUploadingFile(false);
   }
@@ -165,222 +175,516 @@ export default function EditListing() {
     if (error) {
       toast({ title: "Failed to save", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Listing updated ✓" });
-      navigate("/dashboard?tab=listings");
+      toast({ title: "Changes saved" });
+      setHasUnsavedChanges(false);
     }
     setSaving(false);
   }
 
+  async function handleAiRequest() {
+    if (!aiPrompt.trim() || !user || !id) return;
+    const prompt = aiPrompt.trim();
+    setAiPrompt("");
+    setAiLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("swarm-app-analyzer", {
+        body: { listing_id: id, trigger: "manual", user_id: user.id, focus_prompt: prompt },
+      });
+      if (error) throw error;
+      toast({ title: `Analysis complete — Score: ${data.score}/100` });
+    } catch (e: any) {
+      toast({ title: "Analysis failed", description: e.message, variant: "destructive" });
+    } finally {
+      setAiLoading(false);
+    }
+  }
+
+  const panels: { key: Panel; label: string; icon: React.ReactNode }[] = [
+    { key: "details", label: "Details", icon: <Pencil className="h-3.5 w-3.5" /> },
+    { key: "media", label: "Media", icon: <ImageIcon className="h-3.5 w-3.5" /> },
+    { key: "code", label: "Source", icon: <Code className="h-3.5 w-3.5" /> },
+  ];
+
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col">
-        <Navbar />
-        <div className="flex-1 flex items-center justify-center">
+      <div className="h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-3">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">Loading workspace…</p>
         </div>
-        <Footer />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
-      <main className="flex-1 container mx-auto px-4 py-10 max-w-2xl">
-        <div className="mb-8">
-          <h1 className="text-3xl font-black mb-2">Edit Listing</h1>
-          <p className="text-muted-foreground text-sm">Update your listing details, screenshots, and files.</p>
+    <div className="h-screen flex flex-col bg-background overflow-hidden">
+      {/* ─── Minimal Top Bar ─── */}
+      <header className="shrink-0 h-14 border-b border-border/50 bg-card/80 backdrop-blur-xl flex items-center justify-between px-4 z-50">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate(hasUnsavedChanges ? "#" : `/listing/${id}`)}
+            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span className="hidden sm:inline">Back</span>
+          </button>
+          <div className="h-5 w-px bg-border/60" />
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="h-6 w-6 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
+              <Pencil className="h-3 w-3 text-primary" />
+            </div>
+            <span className="text-sm font-bold truncate max-w-[200px] sm:max-w-xs">{form.title || "Untitled"}</span>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          {form.demo_url && (
+            <a href={form.demo_url} target="_blank" rel="noopener noreferrer">
+              <Button variant="ghost" size="sm" className="h-8 gap-1.5 text-xs text-muted-foreground">
+                <ExternalLink className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Preview</span>
+              </Button>
+            </a>
+          )}
+          <Button
+            onClick={handleSave}
+            disabled={saving || !form.title || !form.description}
+            size="sm"
+            className="h-8 gap-1.5 text-xs font-bold gradient-hero text-white border-0 shadow-glow hover:opacity-90"
+          >
+            {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+            {saving ? "Saving…" : hasUnsavedChanges ? "Save changes" : "Saved"}
+          </Button>
+        </div>
+      </header>
+
+      {/* ─── Main Workspace ─── */}
+      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+
+        {/* ─── Left: Editor Panel ─── */}
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+          {/* Panel tabs */}
+          <div className="shrink-0 border-b border-border/40 bg-card/50 px-4">
+            <div className="flex gap-1 -mb-px">
+              {panels.map((p) => (
+                <button
+                  key={p.key}
+                  onClick={() => setActivePanel(p.key)}
+                  className={`flex items-center gap-1.5 px-3 py-2.5 text-xs font-semibold transition-colors border-b-2 ${
+                    activePanel === p.key
+                      ? "border-primary text-primary"
+                      : "border-transparent text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {p.icon}
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Panel content */}
+          <div className="flex-1 overflow-y-auto">
+            <div className="max-w-2xl mx-auto p-5 space-y-5">
+              <AnimatePresence mode="wait">
+                {activePanel === "details" && (
+                  <motion.div
+                    key="details"
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 10 }}
+                    transition={{ duration: 0.2 }}
+                    className="space-y-5"
+                  >
+                    {/* Title */}
+                    <div>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-2">Title</label>
+                      <Input
+                        value={form.title}
+                        onChange={(e) => update("title", e.target.value)}
+                        className="h-11 text-base font-semibold bg-background/50 border-border/60 focus:border-primary/50"
+                        placeholder="My awesome app"
+                      />
+                    </div>
+
+                    {/* Description */}
+                    <div>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-2">Description</label>
+                      <textarea
+                        className="w-full rounded-lg border border-border/60 bg-background/50 px-3 py-3 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:border-primary/50 min-h-[140px] resize-none leading-relaxed transition-colors"
+                        value={form.description}
+                        onChange={(e) => update("description", e.target.value)}
+                        placeholder="Describe what your app does, who it's for, and why it's valuable…"
+                      />
+                    </div>
+
+                    {/* Category + Built With — pill selectors */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                      <div>
+                        <label className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-2">Category</label>
+                        <div className="flex flex-wrap gap-1.5">
+                          {CATEGORIES.map(({ value, label }) => (
+                            <button
+                              key={value}
+                              onClick={() => update("category", value)}
+                              className={`rounded-full px-3 py-1 text-xs font-semibold transition-all ${
+                                form.category === value
+                                  ? "bg-primary text-primary-foreground shadow-sm"
+                                  : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
+                              }`}
+                            >
+                              {label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-2">Built with</label>
+                        <div className="flex flex-wrap gap-1.5">
+                          {BUILT_WITH_OPTIONS.map(({ value, label }) => (
+                            <button
+                              key={value}
+                              onClick={() => update("built_with", value)}
+                              className={`rounded-full px-3 py-1 text-xs font-semibold transition-all ${
+                                form.built_with === value
+                                  ? "bg-primary text-primary-foreground shadow-sm"
+                                  : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
+                              }`}
+                            >
+                              {label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Completeness badge */}
+                    <div>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-2">Completeness</label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {(["prototype", "mvp", "production_ready"] as const).map((b) => (
+                          <button
+                            key={b}
+                            onClick={() => update("completeness_badge", b)}
+                            className={`rounded-xl border-2 p-3 text-center transition-all ${
+                              form.completeness_badge === b
+                                ? "border-primary bg-primary/5 shadow-sm"
+                                : "border-border/40 hover:border-border"
+                            }`}
+                          >
+                            <CompletenessBadge level={b} showTooltip={false} />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Tech stack */}
+                    <div>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-2">Tech stack</label>
+                      {form.tech_stack.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mb-2.5">
+                          {form.tech_stack.map((tag) => (
+                            <span key={tag} className="inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary px-2.5 py-0.5 text-xs font-semibold">
+                              {tag}
+                              <button onClick={() => update("tech_stack", form.tech_stack.filter((t) => t !== tag))} className="hover:text-primary/70">
+                                <X className="h-3 w-3" />
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Add technology…"
+                          value={techInput}
+                          onChange={(e) => setTechInput(e.target.value)}
+                          onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addTech(techInput))}
+                          className="h-9 text-sm bg-background/50 border-border/60"
+                        />
+                        <Button variant="outline" size="sm" className="h-9 px-3" onClick={() => addTech(techInput)}>
+                          <Plus className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {TECH_SUGGESTIONS.filter((t) => !form.tech_stack.includes(t)).slice(0, 6).map((tag) => (
+                          <button
+                            key={tag}
+                            onClick={() => addTech(tag)}
+                            className="rounded-md bg-muted/40 px-2 py-0.5 text-[10px] text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                          >
+                            + {tag}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Pricing */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-2">Pricing</label>
+                        <div className="flex gap-1.5">
+                          {(["one_time", "monthly"] as const).map((v) => (
+                            <button
+                              key={v}
+                              onClick={() => update("pricing_type", v)}
+                              className={`flex-1 rounded-lg border-2 py-2 text-xs font-bold transition-all ${
+                                form.pricing_type === v ? "border-primary bg-primary/5 text-primary" : "border-border/40 text-muted-foreground"
+                              }`}
+                            >
+                              {v === "one_time" ? "One-time" : "Monthly"}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-2">Price</label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                          <Input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={form.price}
+                            onChange={(e) => update("price", e.target.value)}
+                            className="pl-7 h-9 bg-background/50 border-border/60"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* URLs */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
+                          <Github className="h-3.5 w-3.5" /> GitHub URL
+                        </label>
+                        <Input
+                          value={form.github_url}
+                          onChange={(e) => update("github_url", e.target.value)}
+                          className="h-9 text-sm bg-background/50 border-border/60"
+                          placeholder="https://github.com/…"
+                        />
+                      </div>
+                      <div>
+                        <label className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
+                          <Globe className="h-3.5 w-3.5" /> Demo URL
+                        </label>
+                        <Input
+                          value={form.demo_url}
+                          onChange={(e) => update("demo_url", e.target.value)}
+                          className="h-9 text-sm bg-background/50 border-border/60"
+                          placeholder="https://…"
+                        />
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {activePanel === "media" && (
+                  <motion.div
+                    key="media"
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 10 }}
+                    transition={{ duration: 0.2 }}
+                    className="space-y-5"
+                  >
+                    <div>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-3">Screenshots</label>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        {form.screenshots.map((src, i) => (
+                          <div key={i} className="relative aspect-video rounded-xl overflow-hidden group border border-border/40 bg-muted/20">
+                            <img src={src} alt={`Screenshot ${i + 1}`} className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
+                              <button
+                                onClick={() => update("screenshots", form.screenshots.filter((_, idx) => idx !== i))}
+                                className="h-8 w-8 rounded-full bg-background/90 text-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                              >
+                                <X className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                        {form.screenshots.length < 10 && (
+                          <label className="aspect-video rounded-xl border-2 border-dashed border-border/60 hover:border-primary/50 flex flex-col items-center justify-center cursor-pointer transition-colors text-muted-foreground hover:text-primary bg-muted/10">
+                            {uploadingScreenshot ? (
+                              <Loader2 className="h-5 w-5 animate-spin" />
+                            ) : (
+                              <>
+                                <Upload className="h-5 w-5 mb-1" />
+                                <span className="text-[10px] font-semibold">Add images</span>
+                              </>
+                            )}
+                            <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => e.target.files?.length && uploadScreenshots(e.target.files)} />
+                          </label>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-muted-foreground mt-2">{form.screenshots.length}/10 · Select multiple files</p>
+                    </div>
+                  </motion.div>
+                )}
+
+                {activePanel === "code" && (
+                  <motion.div
+                    key="code"
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 10 }}
+                    transition={{ duration: 0.2 }}
+                    className="space-y-5"
+                  >
+                    <div>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-3">Project ZIP</label>
+                      {form.file_path ? (
+                        <div className="flex items-center gap-3 rounded-xl border border-primary/30 bg-primary/5 p-4">
+                          <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-primary truncate">{form.file_path.split("/").pop()}</p>
+                            <p className="text-[10px] text-muted-foreground">ZIP file uploaded</p>
+                          </div>
+                          <button onClick={() => update("file_path", null)} className="text-muted-foreground hover:text-foreground transition-colors">
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <label className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-border/60 hover:border-primary/50 cursor-pointer transition-colors p-10 text-muted-foreground hover:text-primary bg-muted/10">
+                          {uploadingFile ? (
+                            <Loader2 className="h-6 w-6 animate-spin mb-2" />
+                          ) : (
+                            <FileArchive className="h-8 w-8 mb-2" />
+                          )}
+                          <span className="text-sm font-semibold">{uploadingFile ? "Uploading…" : "Drop your ZIP here"}</span>
+                          <span className="text-[10px] text-muted-foreground mt-1">or click to browse</span>
+                          <input type="file" accept=".zip" className="hidden" disabled={uploadingFile} onChange={(e) => e.target.files?.[0] && uploadProjectFile(e.target.files[0])} />
+                        </label>
+                      )}
+                    </div>
+
+                    {/* GitHub link */}
+                    <div>
+                      <label className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
+                        <Github className="h-3.5 w-3.5" /> Repository
+                      </label>
+                      <Input
+                        value={form.github_url}
+                        onChange={(e) => update("github_url", e.target.value)}
+                        className="h-9 text-sm bg-background/50 border-border/60"
+                        placeholder="https://github.com/you/project"
+                      />
+                      <p className="text-[10px] text-muted-foreground mt-1.5">Buyers get access to the repo or ZIP — your choice</p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
+
+          {/* ─── AI Chat Input (Lovable-style) ─── */}
+          <div className="shrink-0 border-t border-border/40 bg-card/80 backdrop-blur-xl p-3 sm:p-4">
+            <div className="max-w-2xl mx-auto">
+              <div className="relative">
+                <textarea
+                  ref={chatInputRef}
+                  value={aiPrompt}
+                  onChange={(e) => setAiPrompt(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleAiRequest(); }
+                  }}
+                  rows={1}
+                  placeholder="Ask AI to improve your listing…"
+                  className="w-full rounded-xl border border-border/60 bg-background/50 pl-4 pr-12 py-3 text-sm placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary/50 resize-none transition-all"
+                />
+                <button
+                  onClick={handleAiRequest}
+                  disabled={!aiPrompt.trim() || aiLoading}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center hover:opacity-90 disabled:opacity-30 transition-opacity"
+                >
+                  {aiLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                </button>
+              </div>
+              <div className="flex items-center gap-2 mt-2">
+                <Sparkles className="h-3 w-3 text-muted-foreground/50" />
+                <p className="text-[10px] text-muted-foreground/60">
+                  AI analyzes your live app and suggests improvements
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div className="rounded-2xl border border-border bg-card p-6 shadow-card space-y-5">
-          {/* Title */}
-          <div>
-            <label className="block text-sm font-semibold mb-1.5">Project title *</label>
-            <Input value={form.title} onChange={(e) => update("title", e.target.value)} />
+        {/* ─── Right: Live Preview (desktop only) ─── */}
+        <div className="hidden lg:flex w-[380px] shrink-0 border-l border-border/40 flex-col bg-background/50">
+          <div className="shrink-0 px-4 py-2.5 border-b border-border/40 flex items-center gap-2">
+            <Eye className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Preview</span>
           </div>
-
-          {/* Description */}
-          <div>
-            <label className="block text-sm font-semibold mb-1.5">Description *</label>
-            <textarea
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring min-h-32 resize-none"
-              value={form.description}
-              onChange={(e) => update("description", e.target.value)}
-            />
-          </div>
-
-          {/* Pricing */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-semibold mb-2">Pricing type</label>
-              <div className="flex gap-2">
-                {(["one_time", "monthly"] as const).map((v) => (
-                  <button
-                    key={v}
-                    onClick={() => update("pricing_type", v)}
-                    className={`flex-1 rounded-lg border-2 p-2 text-xs font-bold transition-all ${
-                      form.pricing_type === v ? "border-primary bg-primary/5" : "border-border"
-                    }`}
-                  >
-                    {v === "one_time" ? "One-time" : "Monthly"}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-semibold mb-2">Price (USD)</label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-                <Input type="number" min="0" step="0.01" value={form.price} onChange={(e) => update("price", e.target.value)} className="pl-7" />
-              </div>
-            </div>
-          </div>
-
-          {/* Completeness */}
-          <div>
-            <label className="block text-sm font-semibold mb-3">Completeness badge</label>
-            <div className="flex gap-2">
-              {(["prototype", "mvp", "production_ready"] as const).map((b) => (
-                <button
-                  key={b}
-                  onClick={() => update("completeness_badge", b)}
-                  className={`flex-1 rounded-lg border-2 p-3 text-left transition-all ${
-                    form.completeness_badge === b ? "border-primary bg-primary/5" : "border-border"
-                  }`}
-                >
-                  <CompletenessBadge level={b} showTooltip={false} />
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Category */}
-          <div>
-            <label className="block text-sm font-semibold mb-2">Category</label>
-            <div className="flex flex-wrap gap-2">
-              {CATEGORIES.map(({ value, label }) => (
-                <button
-                  key={value}
-                  onClick={() => update("category", value)}
-                  className={`rounded-full px-4 py-1.5 text-sm font-medium transition-all border ${
-                    form.category === value ? "gradient-hero text-white border-transparent shadow-sm" : "border-border text-muted-foreground"
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Built with */}
-          <div>
-            <label className="block text-sm font-semibold mb-2">Built with</label>
-            <div className="flex flex-wrap gap-2">
-              {BUILT_WITH_OPTIONS.map(({ value, label }) => (
-                <button
-                  key={value}
-                  onClick={() => update("built_with", value)}
-                  className={`rounded-full px-4 py-1.5 text-sm font-medium transition-all border ${
-                    form.built_with === value ? "gradient-hero text-white border-transparent shadow-sm" : "border-border text-muted-foreground"
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Tech stack */}
-          <div>
-            <label className="block text-sm font-semibold mb-2">Tech stack</label>
-            <div className="flex flex-wrap gap-2 mb-2">
-              {form.tech_stack.map((tag) => (
-                <span key={tag} className="flex items-center gap-1 rounded-full bg-primary/10 text-primary px-3 py-1 text-sm font-medium">
-                  {tag}
-                  <button onClick={() => update("tech_stack", form.tech_stack.filter((t) => t !== tag))}><X className="h-3 w-3" /></button>
-                </span>
-              ))}
-            </div>
-            <div className="flex gap-2">
-              <Input placeholder="Add tag" value={techInput} onChange={(e) => setTechInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addTech(techInput)} />
-              <Button variant="outline" size="icon" onClick={() => addTech(techInput)}><Plus className="h-4 w-4" /></Button>
-            </div>
-            <div className="flex flex-wrap gap-1.5 mt-2">
-              {TECH_SUGGESTIONS.filter((t) => !form.tech_stack.includes(t)).slice(0, 6).map((tag) => (
-                <button key={tag} onClick={() => addTech(tag)} className="rounded-md bg-muted px-2 py-0.5 text-xs text-muted-foreground hover:bg-muted/70">+ {tag}</button>
-              ))}
-            </div>
-          </div>
-
-          {/* URLs */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-semibold mb-1.5 flex items-center gap-2"><Github className="h-4 w-4" /> GitHub URL</label>
-              <Input value={form.github_url} onChange={(e) => update("github_url", e.target.value)} />
-            </div>
-            <div>
-              <label className="block text-sm font-semibold mb-1.5 flex items-center gap-2"><LinkIcon className="h-4 w-4" /> Demo URL</label>
-              <Input value={form.demo_url} onChange={(e) => update("demo_url", e.target.value)} />
-            </div>
-          </div>
-
-          {/* Screenshots — bulk upload */}
-          <div>
-            <label className="block text-sm font-semibold mb-1.5">Screenshots (up to 10)</label>
-            <div className="flex flex-wrap gap-3 mb-3">
-              {form.screenshots.map((src, i) => (
-                <div key={i} className="relative h-24 w-36 rounded-lg overflow-hidden group">
-                  <img src={src} alt={`Screenshot ${i + 1}`} className="w-full h-full object-cover" />
-                  <button
-                    onClick={() => update("screenshots", form.screenshots.filter((_, idx) => idx !== i))}
-                    className="absolute top-1 right-1 h-5 w-5 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
+          <div className="flex-1 overflow-y-auto p-4">
+            {/* Live card preview */}
+            <div className="rounded-2xl border border-border/60 bg-card overflow-hidden shadow-card">
+              {form.screenshots.length > 0 ? (
+                <div className="aspect-video bg-muted">
+                  <img src={form.screenshots[0]} alt="Preview" className="w-full h-full object-cover" />
                 </div>
-              ))}
-              {form.screenshots.length < 10 && (
-                <label className="h-24 w-36 rounded-lg border-2 border-dashed border-border hover:border-primary flex flex-col items-center justify-center cursor-pointer transition-colors text-muted-foreground hover:text-primary">
-                  {uploadingScreenshot ? <div className="h-5 w-5 rounded-full border-2 border-primary border-t-transparent animate-spin" /> : <><Upload className="h-5 w-5 mb-1" /><span className="text-xs">Upload images</span></>}
-                  <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => e.target.files?.length && uploadScreenshots(e.target.files)} />
-                </label>
+              ) : (
+                <div className="aspect-video bg-gradient-to-br from-primary/20 via-accent/10 to-secondary/20 flex items-center justify-center">
+                  <span className="text-2xl font-black text-foreground/20">{form.title?.[0] || "?"}</span>
+                </div>
+              )}
+              <div className="p-4 space-y-3">
+                <div>
+                  <h3 className="font-bold text-sm leading-tight">{form.title || "Untitled listing"}</h3>
+                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2 leading-relaxed">
+                    {form.description || "Add a description…"}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CompletenessBadge level={form.completeness_badge} showTooltip={false} />
+                  {form.built_with && (
+                    <span className="text-[10px] text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-full">
+                      {BUILT_WITH_OPTIONS.find((o) => o.value === form.built_with)?.label}
+                    </span>
+                  )}
+                </div>
+                {form.tech_stack.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {form.tech_stack.slice(0, 5).map((tag) => (
+                      <span key={tag} className="rounded-md bg-muted/50 px-2 py-0.5 text-[10px] text-muted-foreground">{tag}</span>
+                    ))}
+                    {form.tech_stack.length > 5 && (
+                      <span className="text-[10px] text-muted-foreground">+{form.tech_stack.length - 5}</span>
+                    )}
+                  </div>
+                )}
+                <div className="pt-2 border-t border-border/40">
+                  <span className="text-lg font-black">
+                    {parseFloat(form.price) > 0 ? `$${parseFloat(form.price).toFixed(0)}` : "Free"}
+                  </span>
+                  {form.pricing_type === "monthly" && parseFloat(form.price) > 0 && (
+                    <span className="text-xs text-muted-foreground">/mo</span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Quick links */}
+            <div className="mt-4 space-y-2">
+              <Link to={`/listing/${id}`}>
+                <Button variant="outline" size="sm" className="w-full justify-start gap-2 text-xs h-9 border-border/40">
+                  <Eye className="h-3.5 w-3.5" />
+                  View live listing
+                </Button>
+              </Link>
+              {form.demo_url && (
+                <a href={form.demo_url} target="_blank" rel="noopener noreferrer">
+                  <Button variant="outline" size="sm" className="w-full justify-start gap-2 text-xs h-9 border-border/40">
+                    <ExternalLink className="h-3.5 w-3.5" />
+                    Open demo
+                  </Button>
+                </a>
               )}
             </div>
-            <p className="text-xs text-muted-foreground">{form.screenshots.length}/10 — Select multiple files at once</p>
-          </div>
-
-          {/* ZIP */}
-          <div>
-            <label className="block text-sm font-semibold mb-1.5 flex items-center gap-2"><FileArchive className="h-4 w-4" /> Project ZIP</label>
-            {form.file_path ? (
-              <div className="flex items-center gap-3 rounded-xl border border-primary/40 bg-primary/5 p-3">
-                <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0" />
-                <p className="text-sm font-medium text-primary flex-1 truncate">{form.file_path.split("/").pop()}</p>
-                <button onClick={() => update("file_path", null)} className="text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>
-              </div>
-            ) : (
-              <label className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-border hover:border-primary cursor-pointer transition-colors p-6 text-muted-foreground hover:text-primary">
-                {uploadingFile ? <div className="h-6 w-6 rounded-full border-2 border-primary border-t-transparent animate-spin mb-2" /> : <FileArchive className="h-8 w-8 mb-2" />}
-                <span className="text-sm font-medium">{uploadingFile ? "Uploading…" : "Upload ZIP"}</span>
-                <input type="file" accept=".zip" className="hidden" disabled={uploadingFile} onChange={(e) => e.target.files?.[0] && uploadProjectFile(e.target.files[0])} />
-              </label>
-            )}
-          </div>
-
-          {/* Project Goals */}
-          {id && <ProjectGoalsEditor listingId={id} />}
-
-          {/* Save */}
-          <div className="flex justify-end gap-3 pt-2">
-            <Button variant="outline" onClick={() => navigate("/dashboard?tab=listings")}>Cancel</Button>
-            <Button onClick={handleSave} disabled={saving || !form.title || !form.description} className="gradient-hero text-white border-0 shadow-glow hover:opacity-90 gap-2">
-              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-              {saving ? "Saving…" : "Save changes"}
-            </Button>
           </div>
         </div>
-      </main>
-      <Footer />
+      </div>
     </div>
   );
 }

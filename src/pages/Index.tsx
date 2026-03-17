@@ -24,7 +24,7 @@ const COMPLETENESS = ["All", "Prototype", "MVP", "Production Ready"];
 const SORT_OPTIONS = ["Newest", "Popular"];
 const PAGE_SIZE = 24;
 
-const ROTATING_WORDS = ["restaurant", "agency", "clinic", "startup"];
+const ROTATING_WORDS = ["restaurant", "agency", "clinic", "startup", "gym", "studio"];
 
 function HeroTagline() {
   const [index, setIndex] = useState(0);
@@ -32,14 +32,13 @@ function HeroTagline() {
   useEffect(() => {
     const interval = setInterval(() => {
       setIndex((prev) => (prev + 1) % ROTATING_WORDS.length);
-    }, 2800);
+    }, 2400);
     return () => clearInterval(interval);
   }, []);
 
   return (
     <h1 className="text-4xl md:text-6xl lg:text-[5rem] font-black tracking-[-0.04em] mb-4 leading-[0.92]">
-      Your idea.{" "}
-      <br className="hidden md:block" />
+      Your{" "}
       <span className="inline-block relative overflow-hidden align-bottom" style={{ minWidth: "7ch" }}>
         <AnimatePresence mode="wait">
           <motion.span
@@ -57,8 +56,10 @@ function HeroTagline() {
             {ROTATING_WORDS[index]}
           </motion.span>
         </AnimatePresence>
-      </span>{" "}
-      ready.
+      </span>
+      {","}
+      <br className="hidden md:block" />
+      already built.
     </h1>
   );
 }

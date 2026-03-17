@@ -34,7 +34,7 @@ export function GoogleSignInButton({ label = "Continue with Google", redirectTo,
     <Button
       onClick={handleSignIn}
       disabled={loading}
-      className={`w-full flex items-center gap-3 bg-white text-gray-800 border border-gray-300 hover:bg-gray-50 shadow-sm font-medium ${className}`}
+      className={`w-full flex items-center gap-3 bg-card text-foreground border border-border/50 hover:bg-muted shadow-sm font-medium ${className}`}
       variant="outline"
     >
       {loading ? (

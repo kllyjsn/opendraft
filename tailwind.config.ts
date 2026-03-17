@@ -58,9 +58,9 @@ export default {
           ring: "hsl(var(--sidebar-ring))",
         },
         // Vibe Market semantic tokens
-        "vibe-violet": "hsl(265 85% 58%)",
-        "vibe-cyan": "hsl(185 90% 45%)",
-        "vibe-pink": "hsl(330 90% 60%)",
+        "vibe-violet": "hsl(265 90% 62%)",
+        "vibe-cyan": "hsl(175 95% 50%)",
+        "vibe-pink": "hsl(320 95% 60%)",
       },
       borderRadius: {
         lg: "var(--radius)",

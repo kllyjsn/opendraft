@@ -204,9 +204,12 @@ export function BusinessAnalyzer() {
 
   function handleGenerate(prompt: string) {
     if (!user) {
+      // Persist analysis so it survives the sign-in redirect
+      if (result) saveAnalysis(result);
       navigate("/login");
       return;
     }
+    clearAnalysis();
     navigate(`/?generate=${encodeURIComponent(prompt)}`);
   }
 

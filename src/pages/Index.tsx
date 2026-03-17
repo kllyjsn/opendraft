@@ -24,7 +24,7 @@ const COMPLETENESS = ["All", "Prototype", "MVP", "Production Ready"];
 const SORT_OPTIONS = ["Newest", "Popular"];
 const PAGE_SIZE = 24;
 
-const ROTATING_WORDS = ["restaurant", "agency", "clinic", "startup"];
+const ROTATING_WORDS = ["restaurant", "agency", "clinic", "startup", "gym", "studio"];
 
 function HeroTagline() {
   const [index, setIndex] = useState(0);
@@ -32,14 +32,13 @@ function HeroTagline() {
   useEffect(() => {
     const interval = setInterval(() => {
       setIndex((prev) => (prev + 1) % ROTATING_WORDS.length);
-    }, 2800);
+    }, 2400);
     return () => clearInterval(interval);
   }, []);
 
   return (
     <h1 className="text-4xl md:text-6xl lg:text-[5rem] font-black tracking-[-0.04em] mb-4 leading-[0.92]">
-      Your idea.{" "}
-      <br className="hidden md:block" />
+      Your{" "}
       <span className="inline-block relative overflow-hidden align-bottom" style={{ minWidth: "7ch" }}>
         <AnimatePresence mode="wait">
           <motion.span
@@ -57,8 +56,10 @@ function HeroTagline() {
             {ROTATING_WORDS[index]}
           </motion.span>
         </AnimatePresence>
-      </span>{" "}
-      ready.
+      </span>
+      {","}
+      <br className="hidden md:block" />
+      already built.
     </h1>
   );
 }
@@ -321,7 +322,7 @@ export default function Index() {
             transition={{ duration: 0.7, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
             className="text-sm md:text-lg text-muted-foreground max-w-xl mx-auto mb-8 leading-relaxed"
           >
-            Enter your website — we'll analyze your business and recommend the perfect apps.
+            Tell us your business — we'll build a custom app for the price of lunch.
           </motion.p>
 
           {/* Business URL Analyzer */}

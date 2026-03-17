@@ -124,9 +124,29 @@ export function BusinessAnalyzer() {
     };
   }
 
+  function normalizeBusinessUrl(rawInput: string): string | null {
+    const candidate = rawInput.trim();
+    if (!candidate) return null;
+
+    const withProtocol = /^https?:\/\//i.test(candidate) ? candidate : `https://${candidate}`;
+
+    try {
+      const parsed = new URL(withProtocol);
+      if (!parsed.hostname || !parsed.hostname.includes(".")) return null;
+      return parsed.toString();
+    } catch {
+      return null;
+    }
+  }
+
   async function handleAnalyze(e: React.FormEvent) {
     e.preventDefault();
-    if (!url.trim()) return;
+
+    const normalizedUrl = normalizeBusinessUrl(url);
+    if (!normalizedUrl) {
+      setError("Enter a valid website (e.g. workday.com)");
+      return;
+    }
     setLoading(true);
     setError(null);
     setNotice(null);
@@ -134,7 +154,7 @@ export function BusinessAnalyzer() {
 
     try {
       const invokePromise = supabase.functions.invoke("analyze-business-url", {
-        body: { url: url.trim() },
+        body: { url: normalizedUrl },
       });
 
       const timeoutPromise = new Promise<never>((_, reject) => {
@@ -147,7 +167,7 @@ export function BusinessAnalyzer() {
       if (!data?.recommended_builds?.length) throw new Error("No build recommendations returned.");
       setResult(data);
     } catch (err) {
-      setResult(buildInstantFallback(url.trim()));
+      setResult(buildInstantFallback(normalizedUrl));
       setNotice("Live analysis was slow, so we loaded instant build ideas you can generate now.");
       setError(err instanceof Error ? err.message : "Analysis failed");
     } finally {
@@ -185,8 +205,12 @@ export function BusinessAnalyzer() {
             <div className="relative flex items-center">
               <Globe className="absolute left-4 h-4 w-4 text-muted-foreground" />
               <Input
-                type="url"
-                placeholder="Enter your company URL…"
+                type="text"
+                inputMode="url"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                placeholder="Enter your company URL (e.g. workday.com)…"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 className="pl-11 pr-28 h-13 bg-card border-border/50 focus-visible:border-primary/40 focus-visible:shadow-glow transition-all rounded-xl text-sm leading-normal [&]:py-0"

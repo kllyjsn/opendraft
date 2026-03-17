@@ -310,7 +310,7 @@ export default function Index() {
               className="mt-4"
             >
               <p className="text-[11px] text-muted-foreground/60">
-                Full source code · One-click deploy · No lock-in
+                Own the code · Zero per-seat fees · Deploy in 90s
               </p>
             </motion.div>
           )}

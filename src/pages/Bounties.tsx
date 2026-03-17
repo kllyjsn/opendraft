@@ -75,6 +75,11 @@ export default function Bounties() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <MetaTags
+        title="App Bounties — Request Custom Software | OpenDraft"
+        description="Post what you need, set a budget, and expert builders compete to build it for you. Get custom SaaS tools, AI apps, and more."
+        path="/bounties"
+      />
       <Navbar />
 
       {/* Hero */}

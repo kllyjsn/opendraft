@@ -95,32 +95,7 @@ export default function ListingDetail() {
     ]);
   }, [id, user]);
 
-  // Dynamic SEO meta tags
-  useEffect(() => {
-    if (!listing) return;
-    const title = `${listing.title} — Full Source Code | OpenDraft`;
-    const desc = listing.description.slice(0, 155).replace(/\n/g, " ") + (listing.description.length > 155 ? "…" : "");
-    const image = listing.screenshots?.[0] || "https://opendraft.co/og-image.png";
-
-    document.title = title;
-
-    const setMeta = (attr: string, key: string, content: string) => {
-      let el = document.querySelector(`meta[${attr}="${key}"]`) as HTMLMetaElement;
-      if (!el) { el = document.createElement("meta"); el.setAttribute(attr, key); document.head.appendChild(el); }
-      el.setAttribute("content", content);
-    };
-
-    setMeta("name", "description", desc);
-    setMeta("property", "og:title", title);
-    setMeta("property", "og:description", desc);
-    setMeta("property", "og:image", image);
-    setMeta("property", "og:url", `https://opendraft.co/listing/${listing.id}`);
-    setMeta("name", "twitter:title", title);
-    setMeta("name", "twitter:description", desc);
-    setMeta("name", "twitter:image", image);
-
-    return () => { document.title = "OpenDraft — Buy & Sell Vibe-Coded Projects"; };
-  }, [listing]);
+  // SEO meta tags handled by MetaTags component below
 
   async function fetchListing() {
     setLoading(true);

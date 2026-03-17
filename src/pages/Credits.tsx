@@ -6,6 +6,7 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { MetaTags } from "@/components/MetaTags";
 import { Check, Loader2, Crown, Zap, Wrench, Sparkles, Gift, Building2, Briefcase } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FREE_TIER, CORE_PAID_TIERS, ENTERPRISE_TIERS, type PricingTier } from "@/lib/pricing-tiers";

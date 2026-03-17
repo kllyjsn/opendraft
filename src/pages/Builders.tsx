@@ -89,6 +89,19 @@ export default function Builders() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <MetaTags
+        title="Top App Builders & Developers | OpenDraft"
+        description="Browse top creators shipping production-ready SaaS tools, AI apps, and business software. Follow builders, discover projects, and hire experts."
+        path="/builders"
+      />
+      <JsonLd data={{
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        name: "Top Builders",
+        description: "Browse top creators shipping production-ready apps on OpenDraft.",
+        url: "https://opendraft.co/builders",
+        isPartOf: { "@type": "WebSite", name: "OpenDraft", url: "https://opendraft.co" },
+      }} />
       <Navbar />
 
       {/* Hero */}

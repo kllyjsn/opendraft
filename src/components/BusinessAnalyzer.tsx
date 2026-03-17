@@ -61,22 +61,94 @@ export function BusinessAnalyzer() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+
+  function buildInstantFallback(rawUrl: string): AnalysisResult {
+    const formatted = rawUrl.startsWith("http://") || rawUrl.startsWith("https://") ? rawUrl : `https://${rawUrl}`;
+
+    let domain = rawUrl;
+    try {
+      domain = new URL(formatted).hostname.replace("www.", "");
+    } catch {
+      domain = rawUrl;
+    }
+
+    const businessName = domain.split(".")[0]?.replace(/[-_]/g, " ") || domain;
+    const prettyName = businessName
+      .split(" ")
+      .filter(Boolean)
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(" ");
+
+    return {
+      business_name: prettyName || "Your Business",
+      industry: "Digital Business Operations",
+      summary: "We generated instant recommendations you can build right now in OpenDraft while live analysis catches up.",
+      insights: [
+        { title: "Automate repetitive workflows", description: "Use app workflows to remove manual handoffs in onboarding, approvals, and reporting." },
+        { title: "Build customer self-serve", description: "Ship portals that let users get answers, submit requests, and track progress without support delays." },
+        { title: "Use AI for speed", description: "Add AI assistants for lead triage, drafting, and knowledge retrieval to increase team throughput." },
+      ],
+      recommended_builds: [
+        {
+          name: "Client Onboarding Portal",
+          description: "A milestone-based onboarding app with tasks, documents, and status tracking.",
+          category: "saas_tool",
+          priority: "high",
+          search_query: `${domain} onboarding portal app`,
+        },
+        {
+          name: "AI Lead Qualification Assistant",
+          description: "Score inbound leads and auto-route high-intent prospects to sales instantly.",
+          category: "ai_app",
+          priority: "high",
+          search_query: `${domain} ai lead qualification app`,
+        },
+        {
+          name: "Customer Health Dashboard",
+          description: "Track activation, usage, and renewal risk in one operational dashboard.",
+          category: "utility",
+          priority: "medium",
+          search_query: `${domain} customer health dashboard`,
+        },
+        {
+          name: "ROI Proof Landing Page",
+          description: "A high-converting landing experience with calculator, proof points, and demo CTA.",
+          category: "landing_page",
+          priority: "medium",
+          search_query: `${domain} roi landing page`,
+        },
+      ],
+      pageTitle: prettyName || domain,
+      url: formatted,
+    };
+  }
 
   async function handleAnalyze(e: React.FormEvent) {
     e.preventDefault();
     if (!url.trim()) return;
     setLoading(true);
     setError(null);
+    setNotice(null);
     setResult(null);
 
     try {
-      const { data, error: fnError } = await supabase.functions.invoke("analyze-business-url", {
+      const invokePromise = supabase.functions.invoke("analyze-business-url", {
         body: { url: url.trim() },
       });
+
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        window.setTimeout(() => reject(new Error("Analysis is taking longer than expected.")), 22000);
+      });
+
+      const { data, error: fnError } = await Promise.race([invokePromise, timeoutPromise]);
       if (fnError) throw new Error(fnError.message);
       if (data?.error) throw new Error(data.error);
+      if (!data?.recommended_builds?.length) throw new Error("No build recommendations returned.");
       setResult(data);
     } catch (err) {
+      setResult(buildInstantFallback(url.trim()));
+      setNotice("Live analysis was slow, so we loaded instant build ideas you can generate now.");
       setError(err instanceof Error ? err.message : "Analysis failed");
     } finally {
       setLoading(false);
@@ -99,6 +171,7 @@ export function BusinessAnalyzer() {
   function reset() {
     setResult(null);
     setError(null);
+    setNotice(null);
     setUrl("");
   }
 

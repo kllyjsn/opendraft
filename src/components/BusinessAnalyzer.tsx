@@ -69,7 +69,7 @@ function clearAnalysis() {
   try { sessionStorage.removeItem(STORAGE_KEY); } catch {}
 }
 
-export function BusinessAnalyzer() {
+export function BusinessAnalyzer({ onGenerate }: { onGenerate?: (prompt: string) => void }) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [url, setUrl] = useState("");
@@ -202,15 +202,21 @@ export function BusinessAnalyzer() {
     }
   }
 
-  function handleGenerate(prompt: string) {
+  function handleGenerateClick(prompt: string) {
     if (!user) {
       // Persist analysis so it survives the sign-in redirect
       if (result) saveAnalysis(result);
+      // Store the prompt so Index can auto-trigger after login
+      sessionStorage.setItem("opendraft_pending_generate", prompt);
       navigate("/login");
       return;
     }
     clearAnalysis();
-    navigate(`/?generate=${encodeURIComponent(prompt)}`);
+    if (onGenerate) {
+      onGenerate(prompt);
+    } else {
+      navigate(`/?generate=${encodeURIComponent(prompt)}`);
+    }
   }
 
   function handleSearchClick(query: string) {
@@ -407,7 +413,7 @@ export function BusinessAnalyzer() {
                 <div className="flex items-center gap-2">
                   <Button
                     size="sm"
-                    onClick={() => handleGenerate(build.search_query)}
+                    onClick={() => handleGenerateClick(build.search_query)}
                     className="flex-1 gradient-hero text-primary-foreground border-0 shadow-glow hover:opacity-90 h-8 text-[11px] font-bold rounded-lg"
                   >
                     <Wand2 className="h-3 w-3 mr-1" />

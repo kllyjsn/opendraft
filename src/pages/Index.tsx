@@ -322,7 +322,7 @@ export default function Index() {
             transition={{ duration: 0.7, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
             className="text-sm md:text-lg text-muted-foreground max-w-xl mx-auto mb-8 leading-relaxed"
           >
-            Enter your website — we'll analyze your business and recommend the perfect apps.
+            Tell us your business — we'll build a custom app for the price of lunch.
           </motion.p>
 
           {/* Business URL Analyzer */}

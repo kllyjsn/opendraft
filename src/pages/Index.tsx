@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { Search, TrendingUp, SlidersHorizontal, X, Loader2, ChevronDown, Wand2, CheckCircle, AlertCircle, ExternalLink, Rocket, Globe, Pencil } from "lucide-react";
+import { BusinessAnalyzer } from "@/components/BusinessAnalyzer";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { GoogleSignInButton } from "@/components/GoogleSignInButton";

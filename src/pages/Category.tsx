@@ -106,6 +106,18 @@ export default function Category() {
     };
   }, [meta]);
 
+  const breadcrumbSchema = useMemo(() => {
+    if (!meta || !slug) return null;
+    return {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Home", item: "https://opendraft.co" },
+        { "@type": "ListItem", position: 2, name: meta.label, item: `https://opendraft.co/category/${slug}` },
+      ],
+    };
+  }, [meta, slug]);
+
   if (!meta) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -131,6 +143,7 @@ export default function Category() {
       />
       <Navbar />
       {faqSchema && <JsonLd data={faqSchema} />}
+      {breadcrumbSchema && <JsonLd data={breadcrumbSchema} />}
 
       <section className="border-b border-border bg-card/50 py-14">
         <div className="container mx-auto px-4 max-w-3xl">

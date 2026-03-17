@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { MetaTags } from "@/components/MetaTags";
 import { Search, Target, SlidersHorizontal } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -74,6 +75,11 @@ export default function Bounties() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <MetaTags
+        title="App Bounties — Request Custom Software | OpenDraft"
+        description="Post what you need, set a budget, and expert builders compete to build it for you. Get custom SaaS tools, AI apps, and more."
+        path="/bounties"
+      />
       <Navbar />
 
       {/* Hero */}

@@ -6,13 +6,11 @@ import { BusinessAnalyzer } from "@/components/BusinessAnalyzer";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { GoogleSignInButton } from "@/components/GoogleSignInButton";
-import { BrandMascot } from "@/components/BrandMascot";
 import { JsonLd } from "@/components/JsonLd";
 import { MetaTags } from "@/components/MetaTags";
 import { useGenerationJob } from "@/hooks/useGenerationJob";
 import { CheckCircle, AlertCircle, ExternalLink, Rocket, Globe, Pencil, Wand2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { CTA_COPY } from "@/lib/pricing-tiers";
 
 const ROTATING_WORDS = ["restaurant", "agency", "clinic", "startup", "gym", "studio"];
 
@@ -27,16 +25,16 @@ function HeroTagline() {
   }, []);
 
   return (
-    <h1 className="text-4xl md:text-6xl lg:text-[5rem] font-black tracking-[-0.04em] mb-4 leading-[1.05] md:leading-[0.92]">
+    <h1 className="text-4xl md:text-6xl lg:text-[5rem] font-black tracking-[-0.04em] mb-5 leading-[1.05] md:leading-[0.95]">
       <span className="block">Your{" "}
         <span className="inline-block relative overflow-hidden align-bottom" style={{ minWidth: "7ch" }}>
           <AnimatePresence mode="wait">
             <motion.span
               key={ROTATING_WORDS[index]}
-              initial={{ opacity: 0, y: 30, filter: "blur(8px)" }}
+              initial={{ opacity: 0, y: 28, filter: "blur(6px)" }}
               animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-              exit={{ opacity: 0, y: -30, filter: "blur(8px)" }}
-              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              exit={{ opacity: 0, y: -28, filter: "blur(6px)" }}
+              transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
               className="inline-block text-gradient animate-gradient-shift"
               style={{
                 backgroundImage: "linear-gradient(135deg, hsl(265 90% 62%), hsl(320 95% 60%), hsl(175 95% 50%), hsl(265 90% 62%))",
@@ -56,8 +54,6 @@ function HeroTagline() {
 export default function Index() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [showStickyBar, setShowStickyBar] = useState(false);
-  const [stickyDismissed, setStickyDismissed] = useState(false);
 
   const { generating, genJob, deployPhase, deployUrl, deployError, currentStage, isInProgress, handleGenerate, handleAutoDeploy, reset } = useGenerationJob();
 
@@ -86,7 +82,7 @@ export default function Index() {
       "@type": "WebSite",
       "name": "OpenDraft",
       "url": "https://opendraft.co",
-      "description": "Paste your business URL. Get a production-ready app — built, secured, and deployed in 90 seconds.",
+      "description": "Paste your website. We build you an app.",
     },
     {
       "@context": "https://schema.org",
@@ -98,74 +94,51 @@ export default function Index() {
     },
   ], []);
 
-  useEffect(() => {
-    if (user || stickyDismissed) return;
-    const onScroll = () => setShowStickyBar(window.scrollY > 400);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, [user, stickyDismissed]);
-
   return (
     <div className="min-h-screen flex flex-col">
       <MetaTags
-        title="Your Business, Deployed — Production-Ready Apps in 90 Seconds | OpenDraft"
-        description="Paste your URL. Get a production-ready app — built, secured, and ready to ship. No templates. Real software."
+        title="Your Business, Deployed | OpenDraft"
+        description="Paste your website. We'll build you a production-ready app in 90 seconds. Full source code. One click deploy."
         path="/"
       />
       <JsonLd data={jsonLdData} />
       <Navbar />
 
       {/* ── HERO ── */}
-      <section className="relative overflow-hidden flex-1 flex items-center justify-center min-h-[85vh] md:min-h-[90vh]">
-        {/* Cinematic background effects */}
+      <section className="relative overflow-hidden flex-1 flex items-center justify-center min-h-[80vh] md:min-h-[88vh]">
+        {/* Background */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1200px] h-[600px] rounded-full bg-primary/8 blur-[200px]" />
-          <div className="absolute -bottom-20 -right-40 w-[500px] h-[500px] rounded-full bg-accent/6 blur-[160px]" />
-          <div className="absolute inset-0 opacity-[0.03]" style={{
+          <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[500px] rounded-full bg-primary/6 blur-[180px]" />
+          <div className="absolute inset-0 opacity-[0.025]" style={{
             backgroundImage: "linear-gradient(hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)",
             backgroundSize: "80px 80px",
           }} />
         </div>
 
-        <div className="container mx-auto px-4 text-center relative z-10 py-12 md:py-0">
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-            className="mb-4 md:mb-6"
-          >
-            <span className="inline-flex items-center gap-2.5 rounded-full border border-primary/15 bg-primary/5 px-5 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-primary backdrop-blur-sm">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
-              </span>
-              From URL to live app in 90 seconds
-            </span>
-          </motion.div>
-
+        <div className="container mx-auto px-4 text-center relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           >
             <HeroTagline />
           </motion.div>
 
           <motion.p
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-            className="text-sm md:text-lg text-muted-foreground max-w-xl mx-auto mb-6 md:mb-10 leading-relaxed"
+            transition={{ duration: 0.7, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+            className="text-sm md:text-base text-muted-foreground max-w-md mx-auto mb-8 md:mb-12"
           >
-            Paste your URL. Get a production-ready app — built, secured, and ready to ship.
+            Paste your website. We'll build you an app.
           </motion.p>
 
-          {/* URL Input — the single CTA */}
+          {/* URL Input — sole CTA */}
           <motion.div
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-            className="mb-8 md:mb-12"
+            transition={{ duration: 0.7, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
+            className="mb-10 md:mb-14"
           >
             <BusinessAnalyzer onGenerate={handleGenerate} />
           </motion.div>
@@ -197,17 +170,17 @@ export default function Index() {
                   </p>
                 </div>
                 <div className="w-full max-w-xs mx-auto">
-                  <div className="h-2.5 rounded-full bg-muted overflow-hidden">
+                  <div className="h-2 rounded-full bg-muted overflow-hidden">
                     <div className="h-full rounded-full gradient-hero transition-all duration-1000 ease-out" style={{ width: `${currentStage.pct}%` }} />
                   </div>
                   <div className="flex justify-between mt-1.5">
                     <span className="text-[10px] text-muted-foreground">
-                      {deployPhase === "deploying" || deployPhase === "polling" ? "Deploying to cloud" : "Building your app"}
+                      {deployPhase === "deploying" || deployPhase === "polling" ? "Deploying" : "Building"}
                     </span>
                     <span className="text-[10px] font-semibold text-primary">{currentStage.pct}%</span>
                   </div>
                 </div>
-                <div className="flex items-center justify-center gap-2 text-[10px]">
+                <div className="flex items-center justify-center gap-3 text-[10px]">
                   <span className={`flex items-center gap-1 ${genJob?.status === "complete" ? "text-primary font-bold" : "text-muted-foreground"}`}>
                     {genJob?.status === "complete" ? <CheckCircle className="h-3 w-3" /> : <Wand2 className="h-3 w-3" />}
                     Build
@@ -239,9 +212,9 @@ export default function Index() {
                   <CheckCircle className="h-7 w-7 text-primary" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-black text-foreground">🎉 Your app is live!</h3>
+                  <h3 className="text-xl font-black text-foreground">Your app is live.</h3>
                   <p className="text-sm text-muted-foreground mt-1">
-                    "{genJob?.listing_title}" has been built and deployed.
+                    {genJob?.listing_title && `"${genJob.listing_title}" — `}Built, deployed, ready.
                   </p>
                 </div>
                 <a
@@ -261,7 +234,7 @@ export default function Index() {
                       onClick={() => navigate(`/listing/${genJob.listing_id}/edit`)}
                       className="gradient-hero text-white border-0 shadow-glow hover:opacity-90 gap-2"
                     >
-                      <Pencil className="h-3.5 w-3.5" /> Edit your app
+                      <Pencil className="h-3.5 w-3.5" /> Edit
                     </Button>
                   )}
                   {genJob?.listing_id && (
@@ -312,10 +285,10 @@ export default function Index() {
                   {deployPhase === "error" && genJob?.listing_id ? (
                     <>
                       <Button size="sm" variant="outline" onClick={() => handleAutoDeploy(genJob.listing_id!)} className="gap-2">
-                        <Rocket className="h-3.5 w-3.5" /> Retry deploy
+                        <Rocket className="h-3.5 w-3.5" /> Retry
                       </Button>
                       <Button size="sm" variant="ghost" onClick={() => navigate(`/listing/${genJob.listing_id}`)}>
-                        View listing instead
+                        View listing
                       </Button>
                     </>
                   ) : (
@@ -328,77 +301,23 @@ export default function Index() {
             )}
           </AnimatePresence>
 
-          {/* Social proof — signed out only */}
+          {/* Minimal social proof — signed out only */}
           {!user && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-              className="space-y-6"
+              transition={{ duration: 0.5, delay: 0.5 }}
+              className="mt-4"
             >
-              <div className="max-w-xs mx-auto">
-                <GoogleSignInButton label="Get started — it's free" />
-              </div>
-
-              <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[11px] text-muted-foreground">
-                {[
-                  "Full source code ownership",
-                  "Security audited",
-                  "Deploy-ready in minutes",
-                ].map((item) => (
-                  <span key={item} className="flex items-center gap-2">
-                    <CheckCircle className="h-3 w-3 text-primary/50" />
-                    {item}
-                  </span>
-                ))}
-              </div>
+              <p className="text-[11px] text-muted-foreground/60">
+                Full source code · One-click deploy · No lock-in
+              </p>
             </motion.div>
           )}
         </div>
       </section>
 
       <Footer />
-
-      {/* Sticky sign-up bar for visitors */}
-      <AnimatePresence>
-        {showStickyBar && !user && !stickyDismissed && (
-          <motion.div
-            initial={{ y: 80, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 80, opacity: 0 }}
-            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-            className="fixed bottom-0 inset-x-0 z-50 border-t border-border/40 bg-card/95 backdrop-blur-xl shadow-lg"
-          >
-            <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-3">
-              <div className="hidden sm:flex items-center gap-3">
-                <BrandMascot size={32} variant="wave" />
-                <div>
-                  <p className="text-sm font-medium text-foreground">
-                    Your business, <span className="font-bold">deployed</span>
-                  </p>
-                  <p className="text-[10px] text-muted-foreground">
-                    {CTA_COPY.card}
-                  </p>
-                </div>
-              </div>
-              <p className="text-xs font-medium text-foreground sm:hidden">
-                🚀 Paste URL · Get a live app
-              </p>
-              <div className="flex items-center gap-2 shrink-0">
-                <div className="w-48">
-                  <GoogleSignInButton label="Get started" />
-                </div>
-                <button
-                  onClick={() => setStickyDismissed(true)}
-                  className="text-muted-foreground hover:text-foreground transition-colors p-1"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

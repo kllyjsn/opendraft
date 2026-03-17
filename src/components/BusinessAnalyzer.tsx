@@ -221,7 +221,6 @@ export function BusinessAnalyzer({ onGenerate }: { onGenerate?: (prompt: string)
 
   function handleSearchClick(query: string) {
     navigate(`/?q=${encodeURIComponent(query)}`);
-    setTimeout(() => document.getElementById("browse")?.scrollIntoView({ behavior: "smooth" }), 100);
   }
 
   function reset() {
@@ -435,23 +434,6 @@ export function BusinessAnalyzer({ onGenerate }: { onGenerate?: (prompt: string)
         </div>
       </motion.div>
 
-      {/* Bottom CTA */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.7 }}
-        className="text-center"
-      >
-        <Button
-          onClick={() => document.getElementById("browse")?.scrollIntoView({ behavior: "smooth" })}
-          variant="outline"
-          size="sm"
-          className="text-xs"
-        >
-          <ArrowRight className="h-3 w-3 mr-1" />
-          Or browse all apps
-        </Button>
-      </motion.div>
     </motion.div>
   );
 }

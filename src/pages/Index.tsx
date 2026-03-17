@@ -56,9 +56,9 @@ function HeroTagline() {
               {ROTATING_WORDS[index]}
             </motion.span>
           </AnimatePresence>
-        </span>
+        </span>,
       </span>
-      <span className="block">already built.</span>
+      <span className="block">deployed.</span>
     </h1>
   );
 }

@@ -202,15 +202,21 @@ export function BusinessAnalyzer({ onGenerate }: { onGenerate?: (prompt: string)
     }
   }
 
-  function handleGenerate(prompt: string) {
+  function handleGenerateClick(prompt: string) {
     if (!user) {
       // Persist analysis so it survives the sign-in redirect
       if (result) saveAnalysis(result);
+      // Store the prompt so Index can auto-trigger after login
+      sessionStorage.setItem("opendraft_pending_generate", prompt);
       navigate("/login");
       return;
     }
     clearAnalysis();
-    navigate(`/?generate=${encodeURIComponent(prompt)}`);
+    if (onGenerate) {
+      onGenerate(prompt);
+    } else {
+      navigate(`/?generate=${encodeURIComponent(prompt)}`);
+    }
   }
 
   function handleSearchClick(query: string) {

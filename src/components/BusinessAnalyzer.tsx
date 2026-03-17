@@ -190,8 +190,11 @@ export function BusinessAnalyzer() {
       if (data?.error) throw new Error(data.error);
       if (!data?.recommended_builds?.length) throw new Error("No build recommendations returned.");
       setResult(data);
+      saveAnalysis(data);
     } catch (err) {
-      setResult(buildInstantFallback(normalizedUrl));
+      const fallback = buildInstantFallback(normalizedUrl);
+      setResult(fallback);
+      saveAnalysis(fallback);
       setNotice("Live analysis was slow, so we loaded instant build ideas you can generate now.");
       setError(err instanceof Error ? err.message : "Analysis failed");
     } finally {

@@ -116,10 +116,12 @@ const App = () => (
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/security" element={<Security />} />
           <Route path="/gremlins" element={<GremlinsAtWork />} />
+          <Route path="/apps/:vertical" element={<AppsVertical />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <GremlinVoiceAgent />
         <SignupPrompt />
+        <FavoriteAppPicker />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

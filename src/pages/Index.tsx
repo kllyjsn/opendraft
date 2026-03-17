@@ -36,20 +36,20 @@ function HeroTagline() {
   }, []);
 
   return (
-    <h1 className="text-3xl md:text-5xl lg:text-6xl font-black tracking-tighter mb-3 leading-[0.95]">
+    <h1 className="text-4xl md:text-6xl lg:text-[5rem] font-black tracking-[-0.04em] mb-4 leading-[0.92]">
       Your idea.{" "}
       <br className="hidden md:block" />
       <span className="inline-block relative overflow-hidden align-bottom" style={{ minWidth: "7ch" }}>
         <AnimatePresence mode="wait">
           <motion.span
             key={ROTATING_WORDS[index]}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.45, ease: "easeInOut" }}
+            initial={{ opacity: 0, y: 30, filter: "blur(8px)" }}
+            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+            exit={{ opacity: 0, y: -30, filter: "blur(8px)" }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
             className="inline-block text-gradient animate-gradient-shift"
             style={{
-              backgroundImage: "linear-gradient(135deg, hsl(265 85% 58%), hsl(330 90% 60%), hsl(185 90% 45%), hsl(265 85% 58%))",
+              backgroundImage: "linear-gradient(135deg, hsl(265 90% 62%), hsl(320 95% 60%), hsl(175 95% 50%), hsl(265 90% 62%))",
               backgroundSize: "200% 200%",
             }}
           >

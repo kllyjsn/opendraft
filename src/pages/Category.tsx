@@ -143,6 +143,7 @@ export default function Category() {
       />
       <Navbar />
       {faqSchema && <JsonLd data={faqSchema} />}
+      {breadcrumbSchema && <JsonLd data={breadcrumbSchema} />}
 
       <section className="border-b border-border bg-card/50 py-14">
         <div className="container mx-auto px-4 max-w-3xl">

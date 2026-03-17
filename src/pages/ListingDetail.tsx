@@ -434,21 +434,29 @@ export default function ListingDetail() {
             {purchased ? (
               /* ───── OWNER EXPERIENCE ───── */
               <div className="space-y-4 sticky top-20">
-                {/* Ownership confirmation */}
-                <div className="rounded-2xl border border-primary/30 bg-primary/5 p-5 shadow-card">
-                  <div className="rounded-xl bg-primary/10 border border-primary/20 px-4 py-3 text-center mb-4">
-                    <p className="font-bold text-primary text-sm">✓ You own this project</p>
+                {/* Ownership hero card */}
+                <div className="rounded-2xl border border-primary/20 bg-card overflow-hidden shadow-card">
+                  <div className="relative overflow-hidden">
+                    <div className="absolute inset-0 bg-[var(--gradient-hero)] opacity-8" />
+                    <div className="relative px-5 py-4 flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                        <CheckCircle className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-bold text-sm">You own this project</p>
+                        <p className="text-[11px] text-muted-foreground">Full source code · Deploy anywhere</p>
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Core actions */}
-                  <div className="space-y-2.5">
+                  <div className="p-4 space-y-2 border-t border-border/30">
                     <Button
                       onClick={handleDownload}
                       disabled={downloading}
                       className="w-full gradient-hero text-white border-0 shadow-glow hover:opacity-90 h-11 text-sm font-bold"
                     >
                       <Download className="h-4 w-4 mr-2" />
-                      {downloading ? "Preparing…" : "Download Project"}
+                      {downloading ? "Preparing…" : "Download source code"}
                     </Button>
                     <DeployPanel
                       listingId={listing.id}
@@ -456,46 +464,59 @@ export default function ListingDetail() {
                       hasFile={!!listing.file_path}
                       githubUrl={listing.github_url}
                     />
-                    {(listing.demo_url || listing.github_url) && (
-                      <div className="space-y-2">
-                        {listing.demo_url && (
-                          <a href={listing.demo_url} target="_blank" rel="noopener noreferrer">
-                            <Button variant="outline" className="w-full border-border/60 hover:border-primary/40 transition-colors">
-                              <ExternalLink className="h-4 w-4 mr-2" />
-                              View Live Demo
-                            </Button>
-                          </a>
-                        )}
-                        {listing.github_url && (
-                          <a href={listing.github_url} target="_blank" rel="noopener noreferrer">
-                            <Button variant="outline" className="w-full border-border/60 hover:border-primary/40 transition-colors">
-                              <Github className="h-4 w-4 mr-2" />
-                              View on GitHub
-                            </Button>
-                          </a>
-                        )}
-                      </div>
-                    )}
                   </div>
                 </div>
 
-                {/* Personalization tools — front and center for owners */}
-                <div className="rounded-2xl border border-accent/30 bg-accent/5 p-5 shadow-card space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 text-accent" />
-                    <p className="text-xs font-black uppercase tracking-wide text-accent">Personalize Your App</p>
-                  </div>
-                  <p className="text-[13px] text-muted-foreground leading-relaxed">
-                    Use AI-powered Gremlins™ to customize this app for your exact needs — no coding required.
-                  </p>
-                  <Button
+                {/* Edit in workspace — the Lovable-style CTA */}
+                {user?.id === listing.seller_id && (
+                  <Link to={`/listing/${listing.id}/edit`}>
+                    <Button className="w-full h-12 text-sm font-bold bg-card border-2 border-primary/30 text-primary hover:bg-primary/5 hover:border-primary/50 transition-all gap-2 rounded-2xl">
+                      <Pencil className="h-4 w-4" />
+                      Edit in workspace
+                    </Button>
+                  </Link>
+                )}
+
+                {/* AI Improvement — prominent for owners */}
+                <div className="rounded-2xl border border-accent/20 bg-card overflow-hidden shadow-card">
+                  <button
                     onClick={() => document.getElementById("gremlins-panel")?.scrollIntoView({ behavior: "smooth" })}
-                    className="w-full h-11 text-sm font-bold gradient-hero text-white border-0 shadow-glow hover:opacity-90"
+                    className="w-full text-left p-4 hover:bg-accent/5 transition-colors group"
                   >
-                    <Bot className="h-4 w-4 mr-2" />
-                    Improve with Gremlins™
-                  </Button>
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-xl bg-accent/10 flex items-center justify-center shrink-0 group-hover:bg-accent/15 transition-colors">
+                        <Bot className="h-5 w-5 text-accent" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-sm">Improve with AI</p>
+                        <p className="text-[11px] text-muted-foreground">Get suggestions to make your app better</p>
+                      </div>
+                      <Sparkles className="h-4 w-4 text-accent/50 group-hover:text-accent transition-colors" />
+                    </div>
+                  </button>
                 </div>
+
+                {/* Demo + GitHub links */}
+                {(listing.demo_url || listing.github_url) && (
+                  <div className="space-y-2">
+                    {listing.demo_url && (
+                      <a href={listing.demo_url} target="_blank" rel="noopener noreferrer">
+                        <Button variant="outline" className="w-full border-border/60 hover:border-primary/40 transition-colors text-sm">
+                          <ExternalLink className="h-4 w-4 mr-2" />
+                          View live demo
+                        </Button>
+                      </a>
+                    )}
+                    {listing.github_url && (
+                      <a href={listing.github_url} target="_blank" rel="noopener noreferrer">
+                        <Button variant="outline" className="w-full border-border/60 hover:border-primary/40 transition-colors text-sm">
+                          <Github className="h-4 w-4 mr-2" />
+                          View on GitHub
+                        </Button>
+                      </a>
+                    )}
+                  </div>
+                )}
 
                 {/* Project Goals */}
                 <ProjectGoalsEditor listingId={listing.id} />

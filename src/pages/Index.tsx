@@ -253,72 +253,111 @@ export default function Index() {
       <Navbar />
 
       {/* ── HERO ── */}
-      <section className="relative overflow-hidden pt-8 pb-6 md:pt-14 md:pb-8">
-        <div className="absolute -top-40 -right-40 h-[500px] w-[500px] rounded-full bg-primary/12 blur-[140px] animate-pulse-glow pointer-events-none" />
-        <div className="absolute -bottom-20 -left-40 h-[400px] w-[400px] rounded-full bg-accent/10 blur-[120px] pointer-events-none" />
+      <section className="relative overflow-hidden pt-16 pb-10 md:pt-28 md:pb-16">
+        {/* Cinematic background effects */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1200px] h-[600px] rounded-full bg-primary/8 blur-[200px]" />
+          <div className="absolute -bottom-20 -right-40 w-[500px] h-[500px] rounded-full bg-accent/6 blur-[160px]" />
+          <div className="absolute top-1/3 -left-20 w-[300px] h-[300px] rounded-full bg-secondary/5 blur-[120px]" />
+          {/* Grid overlay */}
+          <div className="absolute inset-0 opacity-[0.03]" style={{
+            backgroundImage: "linear-gradient(hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)",
+            backgroundSize: "80px 80px",
+          }} />
+        </div>
 
         <div className="container mx-auto px-4 text-center relative z-10">
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="mb-5"
+            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+            className="mb-6"
           >
-            <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.15em] text-primary">
-              <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+            <span className="inline-flex items-center gap-2.5 rounded-full border border-primary/15 bg-primary/5 px-5 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-primary backdrop-blur-sm">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
+              </span>
               Expertly crafted software
             </span>
           </motion.div>
 
-          <HeroTagline />
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <HeroTagline />
+          </motion.div>
 
-          <p className="text-sm md:text-base text-muted-foreground max-w-lg mx-auto mb-6 leading-relaxed">
-            We don't do templates. Every app is designed, coded, and stress-tested 
-            by experts — so you can launch a real business, not a prototype.
-          </p>
+          <motion.p
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="text-sm md:text-lg text-muted-foreground max-w-xl mx-auto mb-8 leading-relaxed"
+          >
+            Every app is designed, coded, and stress-tested by experts — so you can launch a real business, not a prototype.
+          </motion.p>
 
           {/* Search bar */}
-          <form onSubmit={handleHeroSearch} className="max-w-md mx-auto mb-5">
-            <div className="relative">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="What does your business need?"
-                value={heroSearch}
-                onChange={(e) => setHeroSearch(e.target.value)}
-                className="pl-10 pr-24 h-11 glass border-border/40 focus-visible:border-primary/50 focus-visible:shadow-glow transition-all rounded-full text-sm leading-normal [&]:py-0"
-              />
-              <Button
-                type="submit"
-                size="sm"
-                className="absolute right-1.5 top-1/2 -translate-y-1/2 gradient-hero text-primary-foreground border-0 shadow-glow hover:opacity-90 rounded-full h-8 px-4 text-xs font-bold"
-              >
-                Explore
-              </Button>
+          <motion.form
+            onSubmit={handleHeroSearch}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            className="max-w-lg mx-auto mb-8"
+          >
+            <div className="relative group">
+              <div className="absolute -inset-0.5 rounded-2xl bg-gradient-to-r from-primary/20 via-accent/20 to-secondary/20 opacity-0 group-focus-within:opacity-100 blur-sm transition-opacity duration-500" />
+              <div className="relative flex items-center">
+                <Search className="absolute left-4 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="What does your business need?"
+                  value={heroSearch}
+                  onChange={(e) => setHeroSearch(e.target.value)}
+                  className="pl-11 pr-28 h-13 bg-card border-border/50 focus-visible:border-primary/40 focus-visible:shadow-glow transition-all rounded-xl text-sm leading-normal [&]:py-0"
+                />
+                <Button
+                  type="submit"
+                  size="sm"
+                  className="absolute right-2 gradient-hero text-primary-foreground border-0 shadow-glow hover:opacity-90 rounded-lg h-9 px-5 text-xs font-bold"
+                >
+                  Explore
+                </Button>
+              </div>
             </div>
-          </form>
+          </motion.form>
 
           {!user && (
-            <div className="mb-4 space-y-2">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.45 }}
+              className="mb-6"
+            >
               <div className="max-w-xs mx-auto">
                 <GoogleSignInButton label="Get started" />
               </div>
-            </div>
+            </motion.div>
           )}
 
-          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 text-[11px] text-muted-foreground">
-            <span className="flex items-center gap-1.5">
-              <span className="h-1 w-1 rounded-full bg-primary/60" />
-              Full source code ownership
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="h-1 w-1 rounded-full bg-accent/60" />
-              Security audited
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="h-1 w-1 rounded-full bg-secondary/60" />
-              Deploy-ready in minutes
-            </span>
-          </div>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.5 }}
+            className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[11px] text-muted-foreground"
+          >
+            {[
+              { label: "Full source code ownership", color: "bg-primary" },
+              { label: "Security audited", color: "bg-accent" },
+              { label: "Deploy-ready in minutes", color: "bg-secondary" },
+            ].map((item) => (
+              <span key={item.label} className="flex items-center gap-2">
+                <span className={`h-1 w-1 rounded-full ${item.color}/60`} />
+                {item.label}
+              </span>
+            ))}
+          </motion.div>
         </div>
       </section>
 

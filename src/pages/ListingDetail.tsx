@@ -247,14 +247,16 @@ export default function ListingDetail() {
 
   const productSchema = useMemo(() => {
     if (!listing) return null;
-    const priceVal = "15.00";
+    const priceVal = listing.price > 0 ? listing.price.toFixed(2) : "0.00";
     const schema: Record<string, unknown> = {
       "@context": "https://schema.org",
-      "@type": "Product",
+      "@type": "SoftwareApplication",
       name: listing.title,
       description: listing.description.slice(0, 300),
       image: listing.screenshots?.[0] || "https://opendraft.co/og-image.png",
       url: `https://opendraft.co/listing/${listing.id}`,
+      applicationCategory: "WebApplication",
+      operatingSystem: "Web",
       offers: {
         "@type": "Offer",
         price: priceVal,
@@ -262,16 +264,22 @@ export default function ListingDetail() {
         availability: "https://schema.org/InStock",
         seller: { "@type": "Person", name: seller?.username ?? "Anonymous" },
       },
+      brand: { "@type": "Brand", name: "OpenDraft" },
     };
+    if (listing.tech_stack?.length) {
+      schema.keywords = listing.tech_stack.join(", ");
+    }
     if (avgRating !== null && reviews.length > 0) {
       schema.aggregateRating = {
         "@type": "AggregateRating",
         ratingValue: avgRating.toFixed(1),
         reviewCount: reviews.length,
+        bestRating: "5",
+        worstRating: "1",
       };
       schema.review = reviews.slice(0, 5).map((r) => ({
         "@type": "Review",
-        reviewRating: { "@type": "Rating", ratingValue: r.rating },
+        reviewRating: { "@type": "Rating", ratingValue: r.rating, bestRating: 5 },
         reviewBody: r.review_text ?? "",
         datePublished: r.created_at.split("T")[0],
       }));

@@ -2,12 +2,86 @@
  * analyze-business-url Edge Function
  * Scrapes a company URL via Firecrawl, then uses AI to analyze the business
  * and recommend software builds + industry insights.
+ * Falls back to AI-only analysis if Firecrawl is unavailable.
  */
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+};
+
+async function tryScrape(url: string, firecrawlKey: string): Promise<{ markdown: string; pageTitle: string } | null> {
+  try {
+    const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${firecrawlKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ url, formats: ["markdown", "links"], onlyMainContent: true }),
+    });
+    if (!res.ok) {
+      const errText = await res.text();
+      console.warn("Firecrawl unavailable:", res.status, errText);
+      return null;
+    }
+    const data = await res.json();
+    const markdown = data.data?.markdown || data.markdown || "";
+    const metadata = data.data?.metadata || data.metadata || {};
+    if (markdown.length < 50) return null;
+    return { markdown: markdown.slice(0, 6000), pageTitle: metadata.title || url };
+  } catch (err) {
+    console.warn("Firecrawl fetch failed:", err);
+    return null;
+  }
+}
+
+const TOOL_SCHEMA = {
+  type: "function",
+  function: {
+    name: "suggest_apps",
+    description: "Return business analysis with app recommendations",
+    parameters: {
+      type: "object",
+      properties: {
+        business_name: { type: "string", description: "The business name" },
+        industry: { type: "string", description: "Primary industry/vertical" },
+        summary: { type: "string", description: "1-2 sentence business summary" },
+        insights: {
+          type: "array",
+          description: "3-4 key industry insights about their tech needs",
+          items: {
+            type: "object",
+            properties: {
+              title: { type: "string" },
+              description: { type: "string" },
+            },
+            required: ["title", "description"],
+            additionalProperties: false,
+          },
+        },
+        recommended_builds: {
+          type: "array",
+          description: "4-6 specific app/tool recommendations they should build",
+          items: {
+            type: "object",
+            properties: {
+              name: { type: "string", description: "App name, e.g. 'Customer Booking Portal'" },
+              description: { type: "string", description: "What it does and why they need it" },
+              category: { type: "string", enum: ["saas_tool", "ai_app", "landing_page", "utility", "other"] },
+              priority: { type: "string", enum: ["high", "medium", "low"] },
+              search_query: { type: "string", description: "Search query to find this type of app on the marketplace" },
+            },
+            required: ["name", "description", "category", "priority", "search_query"],
+            additionalProperties: false,
+          },
+        },
+      },
+      required: ["business_name", "industry", "summary", "insights", "recommended_builds"],
+      additionalProperties: false,
+    },
+  },
 };
 
 Deno.serve(async (req) => {
@@ -17,55 +91,30 @@ Deno.serve(async (req) => {
     const { url } = await req.json();
     if (!url) throw new Error("URL is required");
 
-    const firecrawlKey = Deno.env.get("FIRECRAWL_API_KEY");
-    if (!firecrawlKey) throw new Error("Firecrawl is not configured");
-
     const lovableKey = Deno.env.get("LOVABLE_API_KEY");
     if (!lovableKey) throw new Error("AI is not configured");
 
-    // Format URL
     let formattedUrl = url.trim();
     if (!formattedUrl.startsWith("http://") && !formattedUrl.startsWith("https://")) {
       formattedUrl = `https://${formattedUrl}`;
     }
 
-    console.log("Scraping business URL:", formattedUrl);
+    // Extract domain for fallback
+    const domain = new URL(formattedUrl).hostname.replace("www.", "");
 
-    // Step 1: Scrape with Firecrawl
-    const scrapeRes = await fetch("https://api.firecrawl.dev/v1/scrape", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${firecrawlKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        url: formattedUrl,
-        formats: ["markdown", "links"],
-        onlyMainContent: true,
-      }),
-    });
+    console.log("Analyzing business URL:", formattedUrl);
 
-    if (!scrapeRes.ok) {
-      const errData = await scrapeRes.text();
-      console.error("Firecrawl error:", scrapeRes.status, errData);
-      throw new Error("Could not analyze that URL. Please check the address and try again.");
+    // Try Firecrawl scrape, fall back gracefully
+    const firecrawlKey = Deno.env.get("FIRECRAWL_API_KEY");
+    let scraped: { markdown: string; pageTitle: string } | null = null;
+    if (firecrawlKey) {
+      scraped = await tryScrape(formattedUrl, firecrawlKey);
     }
 
-    const scrapeData = await scrapeRes.json();
-    const markdown = scrapeData.data?.markdown || scrapeData.markdown || "";
-    const metadata = scrapeData.data?.metadata || scrapeData.metadata || {};
-    const pageTitle = metadata.title || formattedUrl;
+    const contentBlock = scraped
+      ? `Website: ${formattedUrl}\nTitle: ${scraped.pageTitle}\n\nContent:\n${scraped.markdown}`
+      : `Website URL: ${formattedUrl}\nDomain: ${domain}\n\nNote: I could not scrape the full page content. Analyze based on the domain name, common knowledge about this company, and general industry patterns. Be specific and helpful.`;
 
-    if (!markdown || markdown.length < 50) {
-      throw new Error("Could not extract enough content from that site. Try a different URL.");
-    }
-
-    // Truncate content to avoid token limits
-    const truncated = markdown.slice(0, 6000);
-
-    console.log("Scraped", truncated.length, "chars. Analyzing with AI...");
-
-    // Step 2: AI analysis
     const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -77,75 +126,14 @@ Deno.serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `You are a business technology advisor for OpenDraft, a marketplace of production-ready web applications. Analyze the business website content and recommend software that would help them grow. Be specific and actionable. Focus on tools they likely DON'T already have.`,
+            content: `You are a business technology advisor for OpenDraft, a platform where users can generate and deploy production-ready web applications instantly. Analyze the business and recommend specific apps/tools they should BUILD to grow their business. Focus on internal tools, customer-facing apps, and automation they likely don't have. Be creative and specific — name the apps like real products.`,
           },
           {
             role: "user",
-            content: `Analyze this business website and recommend apps they should build or buy:
-
-Website: ${formattedUrl}
-Title: ${pageTitle}
-
-Content:
-${truncated}
-
-Respond using the suggest_apps tool.`,
+            content: `Analyze this business and recommend apps they should build:\n\n${contentBlock}\n\nRespond using the suggest_apps tool.`,
           },
         ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "suggest_apps",
-              description: "Return business analysis with app recommendations",
-              parameters: {
-                type: "object",
-                properties: {
-                  business_name: { type: "string", description: "The business name" },
-                  industry: { type: "string", description: "Primary industry/vertical" },
-                  summary: { type: "string", description: "1-2 sentence business summary" },
-                  insights: {
-                    type: "array",
-                    description: "3-4 key industry insights about their tech needs",
-                    items: {
-                      type: "object",
-                      properties: {
-                        title: { type: "string" },
-                        description: { type: "string" },
-                      },
-                      required: ["title", "description"],
-                      additionalProperties: false,
-                    },
-                  },
-                  recommended_builds: {
-                    type: "array",
-                    description: "4-6 specific app/tool recommendations they should have",
-                    items: {
-                      type: "object",
-                      properties: {
-                        name: { type: "string", description: "App name, e.g. 'Customer Booking Portal'" },
-                        description: { type: "string", description: "What it does and why they need it" },
-                        category: {
-                          type: "string",
-                          enum: ["saas_tool", "ai_app", "landing_page", "utility", "other"],
-                        },
-                        priority: { type: "string", enum: ["high", "medium", "low"] },
-                        search_query: {
-                          type: "string",
-                          description: "Search query to find this type of app on the marketplace",
-                        },
-                      },
-                      required: ["name", "description", "category", "priority", "search_query"],
-                      additionalProperties: false,
-                    },
-                  },
-                },
-                required: ["business_name", "industry", "summary", "insights", "recommended_builds"],
-                additionalProperties: false,
-              },
-            },
-          },
-        ],
+        tools: [TOOL_SCHEMA],
         tool_choice: { type: "function", function: { name: "suggest_apps" } },
       }),
     });
@@ -180,7 +168,7 @@ Respond using the suggest_apps tool.`,
       JSON.stringify({
         success: true,
         url: formattedUrl,
-        pageTitle,
+        pageTitle: scraped?.pageTitle || domain,
         ...analysis,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }

@@ -106,6 +106,18 @@ export default function Category() {
     };
   }, [meta]);
 
+  const breadcrumbSchema = useMemo(() => {
+    if (!meta || !slug) return null;
+    return {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Home", item: "https://opendraft.co" },
+        { "@type": "ListItem", position: 2, name: meta.label, item: `https://opendraft.co/category/${slug}` },
+      ],
+    };
+  }, [meta, slug]);
+
   if (!meta) {
     return (
       <div className="min-h-screen flex flex-col">

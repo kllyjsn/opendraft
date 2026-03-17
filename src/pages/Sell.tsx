@@ -205,6 +205,11 @@ export default function Sell() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <MetaTags
+        title="Sell Your App — List & Earn | OpenDraft"
+        description="Turn your side project into income. List SaaS tools, AI apps, and utilities on OpenDraft. Instant payouts, zero infrastructure."
+        path="/sell"
+      />
       <Navbar />
       <main className="flex-1 container mx-auto px-4 py-10 max-w-2xl">
 

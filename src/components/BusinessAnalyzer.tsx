@@ -124,9 +124,29 @@ export function BusinessAnalyzer() {
     };
   }
 
+  function normalizeBusinessUrl(rawInput: string): string | null {
+    const candidate = rawInput.trim();
+    if (!candidate) return null;
+
+    const withProtocol = /^https?:\/\//i.test(candidate) ? candidate : `https://${candidate}`;
+
+    try {
+      const parsed = new URL(withProtocol);
+      if (!parsed.hostname || !parsed.hostname.includes(".")) return null;
+      return parsed.toString();
+    } catch {
+      return null;
+    }
+  }
+
   async function handleAnalyze(e: React.FormEvent) {
     e.preventDefault();
-    if (!url.trim()) return;
+
+    const normalizedUrl = normalizeBusinessUrl(url);
+    if (!normalizedUrl) {
+      setError("Enter a valid website (e.g. workday.com)");
+      return;
+    }
     setLoading(true);
     setError(null);
     setNotice(null);

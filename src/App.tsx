@@ -59,8 +59,10 @@ import Security from "./pages/Security";
 import AdminOutreach from "./pages/AdminOutreach";
 import AdminRevenue from "./pages/AdminRevenue";
 import GremlinsAtWork from "./pages/GremlinsAtWork";
+import AppsVertical from "./pages/AppsVertical";
 import { GremlinVoiceAgent } from "./components/GremlinVoiceAgent";
 import { SignupPrompt } from "./components/SignupPrompt";
+import { FavoriteAppPicker } from "./components/FavoriteAppPicker";
 const queryClient = new QueryClient();
 
 const App = () => (

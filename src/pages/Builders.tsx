@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { FollowButton } from "@/components/FollowButton";
 import { ChatDrawer } from "@/components/ChatDrawer";
 import { BrandMascot } from "@/components/BrandMascot";
+import { MetaTags } from "@/components/MetaTags";
+import { JsonLd } from "@/components/JsonLd";
 
 import { useAuth } from "@/hooks/useAuth";
 import { Search, Users, MessageCircle, ArrowRight, Sparkles, TrendingUp, Package } from "lucide-react";

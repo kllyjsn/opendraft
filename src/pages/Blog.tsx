@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Calendar, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { BlogInlineCTA } from "@/components/BlogInlineCTA";
 
 interface BlogPost {
   slug: string;

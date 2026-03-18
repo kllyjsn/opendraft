@@ -249,7 +249,7 @@ export function BusinessAnalyzer({ onGenerate }: { onGenerate?: (prompt: string)
                 placeholder="Enter your company URL (e.g. workday.com)…"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
-                className="pl-11 pr-28 h-13 bg-card border-border/50 focus-visible:border-primary/40 focus-visible:shadow-glow transition-all rounded-xl text-sm leading-normal [&]:py-0"
+                className="pl-11 pr-28 h-12 bg-card border-border/50 focus-visible:border-primary/40 focus-visible:shadow-glow transition-all rounded-xl text-sm leading-normal [&]:py-0"
                 disabled={loading}
                 required
               />

@@ -77,7 +77,7 @@ export function Footer() {
         <div className="divider-gradient mb-6" />
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
           <span className="text-xs text-muted-foreground">© 2026 OpenDraft. All rights reserved.</span>
-          <span className="text-xs text-muted-foreground">Instant delivery · Get paid the moment you sell</span>
+          <span className="text-xs text-muted-foreground">Own the code · Zero per-seat fees · Deploy in 90s</span>
         </div>
       </div>
     </footer>

@@ -26,7 +26,7 @@ function HeroTagline() {
   }, []);
 
   return (
-    <h1 className="text-4xl md:text-6xl lg:text-[5rem] font-black tracking-[-0.04em] mb-5 leading-[1.05] md:leading-[0.95]">
+    <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-[5rem] font-black tracking-[-0.04em] mb-5 leading-[1.08] md:leading-[0.95]">
       <span className="block">Stop renting</span>
       <span className="block">your{" "}
         <span className="inline-block relative overflow-hidden align-bottom" style={{ minWidth: "7ch" }}>

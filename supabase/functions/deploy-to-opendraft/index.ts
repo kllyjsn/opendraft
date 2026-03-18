@@ -126,11 +126,11 @@ function collectImportedPackages(content: string): Set<string> {
 async function autoPatchMissingDependencies(
   zip: JSZip,
   prefix: string
-): Promise<{ packageJson: any | null; autoAddedDependencies: string[] }> {
+): Promise<{ packageJson: any | null; autoAddedDependencies: string[]; autoAddedFiles: string[] }> {
   const pkgJsonPath = prefix ? `${prefix}package.json` : "package.json";
   const pkgJsonEntry = zip.files[pkgJsonPath];
   if (!pkgJsonEntry || pkgJsonEntry.dir) {
-    return { packageJson: null, autoAddedDependencies: [] };
+    return { packageJson: null, autoAddedDependencies: [], autoAddedFiles: [] };
   }
 
   try {
@@ -140,11 +140,297 @@ async function autoPatchMissingDependencies(
     const hasReact = Boolean(
       packageJson?.dependencies?.react || packageJson?.devDependencies?.react
     );
-    if (!hasReact) {
-      return { packageJson, autoAddedDependencies: [] };
-    }
 
-    const importedPackages = new Set<string>();
+    const isValidIdentifier = (value: string) => /^[A-Za-z_$][\w$]*$/.test(value);
+    const toSafeIdentifier = (value: string, fallback: string) =>
+      isValidIdentifier(value) ? value : fallback;
+
+    const normalizePath = (value: string) => {
+      const parts = value.replace(/\\/g, "/").split("/");
+      const stack: string[] = [];
+      for (const part of parts) {
+        if (!part || part === ".") continue;
+        if (part === "..") {
+          stack.pop();
+        } else {
+          stack.push(part);
+        }
+      }
+      return stack.join("/");
+    };
+
+    const hasZipFile = (relativePath: string) => {
+      const fullPath = prefix ? `${prefix}${relativePath}` : relativePath;
+      const entry = zip.files[fullPath];
+      return Boolean(entry && !entry.dir);
+    };
+
+    const parseImportClause = (rawClause: string) => {
+      const clause = rawClause.trim();
+      const result: {
+        defaultImport: string | null;
+        namedImports: string[];
+        namespaceImport: string | null;
+      } = {
+        defaultImport: null,
+        namedImports: [],
+        namespaceImport: null,
+      };
+
+      if (!clause) return result;
+
+      let rest = clause;
+      const defaultAndRestMatch = clause.match(/^([A-Za-z_$][\w$]*)\s*,\s*(.+)$/s);
+      if (defaultAndRestMatch) {
+        result.defaultImport = defaultAndRestMatch[1];
+        rest = defaultAndRestMatch[2].trim();
+      }
+
+      if (rest.startsWith("* as ")) {
+        result.namespaceImport = rest.replace(/^\*\s+as\s+/, "").trim();
+        return result;
+      }
+
+      if (rest.startsWith("{")) {
+        const namedBlockMatch = rest.match(/^\{([\s\S]*)\}$/);
+        const namedBlock = namedBlockMatch ? namedBlockMatch[1] : "";
+        const names = namedBlock
+          .split(",")
+          .map((token) => token.trim())
+          .filter(Boolean)
+          .map((token) => token.replace(/^type\s+/, "").trim())
+          .map((token) => {
+            const aliasMatch = token.match(/^(.+?)\s+as\s+(.+)$/);
+            return aliasMatch ? aliasMatch[2].trim() : token;
+          })
+          .filter((name) => isValidIdentifier(name));
+
+        result.namedImports = names;
+        return result;
+      }
+
+      if (!result.defaultImport && isValidIdentifier(rest)) {
+        result.defaultImport = rest;
+      }
+
+      return result;
+    };
+
+    const codeExtensions = [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".json"];
+    const styleExtensions = [".css", ".scss", ".sass", ".less"];
+    const assetExtensions = [".svg", ".png", ".jpg", ".jpeg", ".webp", ".gif", ".ico", ".avif"];
+
+    const resolveRelativeImport = (
+      importerPath: string,
+      specifier: string,
+      sideEffect: boolean
+    ): { exists: boolean; targetPath: string } => {
+      const cleanSpecifier = specifier.split("?")[0].split("#")[0];
+      const importerSegments = importerPath.split("/");
+      importerSegments.pop();
+      const importerDir = importerSegments.join("/");
+      const unresolvedPath = normalizePath(importerDir ? `${importerDir}/${cleanSpecifier}` : cleanSpecifier);
+      const hasExplicitExtension = /\.[a-z0-9]+$/i.test(unresolvedPath);
+
+      const candidates: string[] = [];
+      if (hasExplicitExtension) {
+        candidates.push(unresolvedPath);
+      } else {
+        if (sideEffect) {
+          candidates.push(...styleExtensions.map((ext) => `${unresolvedPath}${ext}`));
+        }
+        candidates.push(...codeExtensions.map((ext) => `${unresolvedPath}${ext}`));
+        candidates.push(...codeExtensions.map((ext) => `${unresolvedPath}/index${ext}`));
+      }
+
+      for (const candidate of candidates) {
+        if (hasZipFile(candidate)) {
+          return { exists: true, targetPath: candidate };
+        }
+      }
+
+      if (hasExplicitExtension) {
+        return { exists: false, targetPath: unresolvedPath };
+      }
+
+      if (sideEffect) {
+        return { exists: false, targetPath: `${unresolvedPath}.css` };
+      }
+
+      return { exists: false, targetPath: `${unresolvedPath}.tsx` };
+    };
+
+    const toPascalCase = (value: string) =>
+      value
+        .replace(/\.[^/.]+$/, "")
+        .split(/[^a-zA-Z0-9]+/)
+        .filter(Boolean)
+        .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
+        .join("") || "AutoGeneratedComponent";
+
+    const createPlaceholderContent = (targetPath: string, record: {
+      importerPath: string;
+      specifier: string;
+      sideEffect: boolean;
+      defaultImport: string | null;
+      namedImports: Set<string>;
+      namespaceImport: string | null;
+    }) => {
+      const extension = targetPath.slice(targetPath.lastIndexOf(".")).toLowerCase();
+      const header = `/* Auto-generated missing module for ${record.specifier} imported by ${record.importerPath} */`;
+
+      if (styleExtensions.includes(extension)) {
+        return `${header}\n`;
+      }
+
+      if (extension === ".svg") {
+        return `<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1" viewBox="0 0 1 1"></svg>`;
+      }
+
+      if (assetExtensions.includes(extension)) {
+        return "";
+      }
+
+      const lines: string[] = [header];
+      const fileBase = targetPath.split("/").pop() || "auto-generated";
+      const fallbackComponent = toSafeIdentifier(toPascalCase(fileBase), "AutoGeneratedComponent");
+
+      if (record.defaultImport) {
+        const defaultName = toSafeIdentifier(record.defaultImport, fallbackComponent);
+        lines.push(`export default function ${defaultName}() { return null; }`);
+      } else if (!record.namespaceImport) {
+        lines.push(`export default function ${fallbackComponent}() { return null; }`);
+      }
+
+      for (const namedImport of record.namedImports) {
+        const safeName = toSafeIdentifier(namedImport, "AutoGeneratedExport");
+        if (safeName === "default") continue;
+        lines.push(`export const ${safeName} = () => null;`);
+      }
+
+      if (record.namespaceImport && record.namedImports.size === 0 && !record.defaultImport) {
+        lines.push("export const placeholder = null;");
+      }
+
+      return `${lines.join("\n")}\n`;
+    };
+
+    const analyzeSyntaxBalance = (content: string) => {
+      let inSingle = false;
+      let inDouble = false;
+      let inTemplate = false;
+      let inLineComment = false;
+      let inBlockComment = false;
+      let escaped = false;
+      let curly = 0;
+      let round = 0;
+      let square = 0;
+
+      for (let i = 0; i < content.length; i++) {
+        const char = content[i];
+        const nextChar = content[i + 1];
+
+        if (inLineComment) {
+          if (char === "\n") inLineComment = false;
+          continue;
+        }
+
+        if (inBlockComment) {
+          if (char === "*" && nextChar === "/") {
+            inBlockComment = false;
+            i++;
+          }
+          continue;
+        }
+
+        if (inSingle) {
+          if (escaped) {
+            escaped = false;
+            continue;
+          }
+          if (char === "\\") {
+            escaped = true;
+            continue;
+          }
+          if (char === "'") {
+            inSingle = false;
+          }
+          continue;
+        }
+
+        if (inDouble) {
+          if (escaped) {
+            escaped = false;
+            continue;
+          }
+          if (char === "\\") {
+            escaped = true;
+            continue;
+          }
+          if (char === '"') {
+            inDouble = false;
+          }
+          continue;
+        }
+
+        if (inTemplate) {
+          if (escaped) {
+            escaped = false;
+            continue;
+          }
+          if (char === "\\") {
+            escaped = true;
+            continue;
+          }
+          if (char === "`") {
+            inTemplate = false;
+          }
+          continue;
+        }
+
+        if (char === "/" && nextChar === "/") {
+          inLineComment = true;
+          i++;
+          continue;
+        }
+
+        if (char === "/" && nextChar === "*") {
+          inBlockComment = true;
+          i++;
+          continue;
+        }
+
+        if (char === "'") {
+          inSingle = true;
+          continue;
+        }
+
+        if (char === '"') {
+          inDouble = true;
+          continue;
+        }
+
+        if (char === "`") {
+          inTemplate = true;
+          continue;
+        }
+
+        if (char === "{") curly++;
+        if (char === "}") curly--;
+        if (char === "(") round++;
+        if (char === ")") round--;
+        if (char === "[") square++;
+        if (char === "]") square--;
+
+        if (curly < 0 || round < 0 || square < 0) {
+          return false;
+        }
+      }
+
+      return !inSingle && !inDouble && !inTemplate && !inBlockComment && curly === 0 && round === 0 && square === 0;
+    };
+
+    const sourceFiles: Array<{ path: string; content: string }> = [];
     for (const [path, entry] of Object.entries(zip.files)) {
       if (entry.dir) continue;
       const relativePath = prefix ? path.replace(prefix, "") : path;
@@ -152,10 +438,134 @@ async function autoPatchMissingDependencies(
 
       try {
         const content = await entry.async("string");
-        const imports = collectImportedPackages(content);
-        for (const dep of imports) importedPackages.add(dep);
+        sourceFiles.push({ path: relativePath, content });
       } catch {
         // Ignore unreadable files
+      }
+    }
+
+    const brokenFiles = new Set<string>();
+    for (const sourceFile of sourceFiles) {
+      if (!analyzeSyntaxBalance(sourceFile.content)) {
+        brokenFiles.add(sourceFile.path);
+      }
+    }
+
+    const importedPackages = new Set<string>();
+    const missingModules = new Map<string, {
+      importerPath: string;
+      specifier: string;
+      sideEffect: boolean;
+      defaultImport: string | null;
+      namedImports: Set<string>;
+      namespaceImport: string | null;
+    }>();
+
+    const addOrMergeMissingModule = (
+      targetPath: string,
+      payload: {
+        importerPath: string;
+        specifier: string;
+        sideEffect: boolean;
+        defaultImport: string | null;
+        namedImports: string[];
+        namespaceImport: string | null;
+      }
+    ) => {
+      const existingRecord = missingModules.get(targetPath);
+      if (existingRecord) {
+        if (!existingRecord.defaultImport && payload.defaultImport) {
+          existingRecord.defaultImport = payload.defaultImport;
+        }
+        if (!existingRecord.namespaceImport && payload.namespaceImport) {
+          existingRecord.namespaceImport = payload.namespaceImport;
+        }
+        for (const name of payload.namedImports) existingRecord.namedImports.add(name);
+        return;
+      }
+
+      missingModules.set(targetPath, {
+        importerPath: payload.importerPath,
+        specifier: payload.specifier,
+        sideEffect: payload.sideEffect,
+        defaultImport: payload.defaultImport,
+        namedImports: new Set(payload.namedImports),
+        namespaceImport: payload.namespaceImport,
+      });
+    };
+
+    for (const sourceFile of sourceFiles) {
+      const imports = collectImportedPackages(sourceFile.content);
+      for (const dep of imports) importedPackages.add(dep);
+
+      const importFromRegex = /import\s+(type\s+)?([^"']+?)\s+from\s+["']([^"']+)["']/g;
+      let fromMatch: RegExpExecArray | null;
+      while ((fromMatch = importFromRegex.exec(sourceFile.content)) !== null) {
+        const isTypeOnly = Boolean(fromMatch[1]);
+        const importClause = fromMatch[2].trim();
+        const specifier = fromMatch[3].trim();
+        if (isTypeOnly || !specifier.startsWith(".")) continue;
+
+        const resolved = resolveRelativeImport(sourceFile.path, specifier, false);
+        if (resolved.exists && !brokenFiles.has(resolved.targetPath)) continue;
+
+        const parsed = parseImportClause(importClause);
+        addOrMergeMissingModule(resolved.targetPath, {
+          importerPath: sourceFile.path,
+          specifier,
+          sideEffect: false,
+          defaultImport: parsed.defaultImport,
+          namedImports: parsed.namedImports,
+          namespaceImport: parsed.namespaceImport,
+        });
+      }
+
+      const sideEffectRegex = /import\s+["']([^"']+)["']/g;
+      let sideEffectMatch: RegExpExecArray | null;
+      while ((sideEffectMatch = sideEffectRegex.exec(sourceFile.content)) !== null) {
+        const specifier = sideEffectMatch[1].trim();
+        if (!specifier.startsWith(".")) continue;
+
+        const resolved = resolveRelativeImport(sourceFile.path, specifier, true);
+        if (resolved.exists && !brokenFiles.has(resolved.targetPath)) continue;
+
+        addOrMergeMissingModule(resolved.targetPath, {
+          importerPath: sourceFile.path,
+          specifier,
+          sideEffect: true,
+          defaultImport: null,
+          namedImports: [],
+          namespaceImport: null,
+        });
+      }
+    }
+
+    for (const brokenFilePath of brokenFiles) {
+      if (missingModules.has(brokenFilePath)) continue;
+      const fallbackName = toPascalCase(brokenFilePath.split("/").pop() || "BrokenModule");
+      missingModules.set(brokenFilePath, {
+        importerPath: brokenFilePath,
+        specifier: brokenFilePath,
+        sideEffect: false,
+        defaultImport: fallbackName,
+        namedImports: new Set<string>(),
+        namespaceImport: null,
+      });
+    }
+
+    const autoAddedFiles: string[] = [];
+    const autoRepairedFiles: string[] = [];
+    for (const [targetPath, record] of missingModules.entries()) {
+      const targetZipPath = prefix ? `${prefix}${targetPath}` : targetPath;
+      const alreadyExists = hasZipFile(targetPath);
+
+      if (alreadyExists && !brokenFiles.has(targetPath)) continue;
+
+      zip.file(targetZipPath, createPlaceholderContent(targetPath, record));
+      if (alreadyExists) {
+        autoRepairedFiles.push(targetPath);
+      } else {
+        autoAddedFiles.push(targetPath);
       }
     }
 
@@ -163,13 +573,15 @@ async function autoPatchMissingDependencies(
     const devDependencies = packageJson.devDependencies || {};
     const autoAddedDependencies: string[] = [];
 
-    for (const [dep, version] of Object.entries(AUTO_DEPENDENCY_VERSIONS)) {
-      const isUsed = importedPackages.has(dep);
-      const alreadyInstalled = Boolean(dependencies[dep] || devDependencies[dep]);
+    if (hasReact) {
+      for (const [dep, version] of Object.entries(AUTO_DEPENDENCY_VERSIONS)) {
+        const isUsed = importedPackages.has(dep);
+        const alreadyInstalled = Boolean(dependencies[dep] || devDependencies[dep]);
 
-      if (isUsed && !alreadyInstalled) {
-        dependencies[dep] = version;
-        autoAddedDependencies.push(dep);
+        if (isUsed && !alreadyInstalled) {
+          dependencies[dep] = version;
+          autoAddedDependencies.push(dep);
+        }
       }
     }
 
@@ -178,10 +590,15 @@ async function autoPatchMissingDependencies(
       zip.file(pkgJsonPath, JSON.stringify(packageJson, null, 2));
     }
 
-    return { packageJson, autoAddedDependencies };
+    const allAutoPatchedFiles = [...autoAddedFiles, ...autoRepairedFiles];
+    if (allAutoPatchedFiles.length > 0) {
+      console.log(`Auto-patched local files: ${allAutoPatchedFiles.join(", ")}`);
+    }
+
+    return { packageJson, autoAddedDependencies, autoAddedFiles: allAutoPatchedFiles };
   } catch (e) {
     console.warn("Failed to auto-patch dependencies:", e);
-    return { packageJson: null, autoAddedDependencies: [] };
+    return { packageJson: null, autoAddedDependencies: [], autoAddedFiles: [] };
   }
 }
 

@@ -324,6 +324,5 @@ export default function Index() {
       <GremlinWorkshop />
       <Footer />
     </div>
-    </div>
   );
 }

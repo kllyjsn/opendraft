@@ -96,6 +96,34 @@ async function checkSiteHealth(siteUrl: string): Promise<{ httpStatus: number; i
   return { httpStatus, issues, headers };
 }
 
+// ── Auto-fix Vercel deployment protection (401) ──────────────────
+async function fixVercelProtection(site: any): Promise<boolean> {
+  const VERCEL_PLATFORM_TOKEN = Deno.env.get("VERCEL_PLATFORM_TOKEN");
+  if (!VERCEL_PLATFORM_TOKEN) return false;
+  if (site.provider !== "opendraft" && site.provider !== "vercel") return false;
+
+  try {
+    const projectId = site.site_id;
+    if (!projectId) return false;
+
+    const patchRes = await fetch(`https://api.vercel.com/v9/projects/${projectId}`, {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${VERCEL_PLATFORM_TOKEN}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ ssoProtection: null, passwordProtection: null }),
+    });
+    const patchBody = await patchRes.text();
+    if (patchRes.ok) {
+      console.log(`Disabled deployment protection for project ${projectId}`);
+      return true;
+    } else {
+      console.warn(`Failed to disable protection (${patchRes.status}):`, patchBody);
+    }
+  } catch (e) {
+    console.warn("Error fixing Vercel protection:", e);
+  }
+  return false;
+}
+
 // ── Auto-fix via Netlify API ───────────────────────────────────────
 async function autoFixSite(
   site: any,
@@ -103,6 +131,15 @@ async function autoFixSite(
   serviceClient: any
 ): Promise<{ fixed: boolean; fixes: string[] }> {
   const fixes: string[] = [];
+
+  // ── Fix 401s from Vercel Deployment Protection ──
+  const has401 = issues.some(i => i.includes("HTTP 401"));
+  if (has401 && site.provider === "opendraft") {
+    const fixed = await fixVercelProtection(site);
+    if (fixed) {
+      fixes.push("Disabled Vercel deployment protection (was causing 401)");
+    }
+  }
 
   // We need a Netlify token to fix — check if stored
   // For now, we attempt to redeploy using the original listing source

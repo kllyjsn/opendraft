@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -66,6 +67,28 @@ serve(async (req) => {
       buildLog: null as string | null,
     };
 
+    // ── Update deployed_sites status in DB ──
+    const isTerminal = ["ready", "error", "canceled", "failed"].includes(state);
+    if (isTerminal) {
+      try {
+        const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+        const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+        const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+        const newStatus = state === "ready" ? "healthy" : "error";
+        await supabase.from("deployed_sites")
+          .update({
+            status: newStatus,
+            site_url: result.deployUrl || undefined,
+          })
+          .eq("deploy_id", deployId);
+
+        console.log(`Updated deployed_sites status to '${newStatus}' for deploy ${deployId}`);
+      } catch (e) {
+        console.warn("Failed to update deployed_sites:", e);
+      }
+    }
+
     if (state === "error" || state === "canceled" || state === "failed") {
       try {
         const logRes = await fetch(`https://api.vercel.com/v2/deployments/${encodeURIComponent(deployId)}/events`, {
@@ -90,6 +113,27 @@ serve(async (req) => {
         }
       } catch {
         // best effort
+      }
+
+      // ── Auto-retry: if build failed, try to disable deployment protection and redeploy ──
+      if (state === "error" || state === "failed") {
+        try {
+          const platformToken = Deno.env.get("VERCEL_PLATFORM_TOKEN");
+          if (platformToken && usePlatformToken) {
+            // Try to disable deployment protection on the project
+            const projectId = statusData.projectId;
+            if (projectId) {
+              const patchRes = await fetch(`https://api.vercel.com/v9/projects/${projectId}`, {
+                method: "PATCH",
+                headers: { Authorization: `Bearer ${platformToken}`, "Content-Type": "application/json" },
+                body: JSON.stringify({ ssoProtection: null, passwordProtection: null }),
+              });
+              await patchRes.text();
+            }
+          }
+        } catch {
+          // best effort
+        }
       }
     }
 

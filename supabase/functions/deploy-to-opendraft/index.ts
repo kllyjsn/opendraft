@@ -41,25 +41,43 @@ async function downloadGithubRepoZip(githubUrl: string): Promise<ArrayBuffer> {
   return await zipRes.arrayBuffer();
 }
 
-async function uploadFileToVercel(content: Uint8Array, vercelToken: string): Promise<string> {
+async function uploadFileToVercel(content: Uint8Array, vercelToken: string, retries = 3): Promise<string> {
   const hashBuffer = await crypto.subtle.digest("SHA-1", content);
   const sha = Array.from(new Uint8Array(hashBuffer)).map((b) => b.toString(16).padStart(2, "0")).join("");
-  const uploadRes = await fetch("https://api.vercel.com/v2/files", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${vercelToken}`,
-      "Content-Type": "application/octet-stream",
-      "x-vercel-digest": sha,
-      "Content-Length": String(content.byteLength),
-    },
-    body: content,
-  });
-  if (!uploadRes.ok && uploadRes.status !== 409) {
-    const errText = await uploadRes.text();
-    console.error(`File upload failed (${uploadRes.status}):`, errText);
-    throw new Error(`Failed to upload file to Vercel: ${uploadRes.status}`);
-  } else {
-    await uploadRes.text();
+
+  for (let attempt = 0; attempt < retries; attempt++) {
+    try {
+      const uploadRes = await fetch("https://api.vercel.com/v2/files", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${vercelToken}`,
+          "Content-Type": "application/octet-stream",
+          "x-vercel-digest": sha,
+          "Content-Length": String(content.byteLength),
+        },
+        body: content,
+      });
+      if (!uploadRes.ok && uploadRes.status !== 409) {
+        const errText = await uploadRes.text();
+        if (attempt < retries - 1 && (uploadRes.status >= 500 || uploadRes.status === 429)) {
+          console.warn(`File upload attempt ${attempt + 1} failed (${uploadRes.status}), retrying...`);
+          await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+          continue;
+        }
+        console.error(`File upload failed (${uploadRes.status}):`, errText);
+        throw new Error(`Failed to upload file to Vercel: ${uploadRes.status}`);
+      } else {
+        await uploadRes.text();
+      }
+      return sha;
+    } catch (e) {
+      if (attempt < retries - 1 && (e as Error).message?.includes("fetch")) {
+        console.warn(`File upload network error attempt ${attempt + 1}, retrying...`);
+        await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+        continue;
+      }
+      throw e;
+    }
   }
   return sha;
 }
@@ -78,6 +96,45 @@ function detectFramework(packageJson: any) {
 
 const AUTO_DEPENDENCY_VERSIONS: Record<string, string> = {
   "react-router-dom": "^6.30.1",
+  "lucide-react": "^0.462.0",
+  "clsx": "^2.1.1",
+  "tailwind-merge": "^2.6.0",
+  "class-variance-authority": "^0.7.1",
+  "framer-motion": "^12.0.0",
+  "sonner": "^1.7.0",
+  "date-fns": "^3.6.0",
+  "zod": "^3.25.0",
+  "react-hook-form": "^7.61.0",
+  "@hookform/resolvers": "^3.10.0",
+  "recharts": "^2.15.0",
+  "@radix-ui/react-dialog": "^1.1.0",
+  "@radix-ui/react-dropdown-menu": "^2.1.0",
+  "@radix-ui/react-tabs": "^1.1.0",
+  "@radix-ui/react-tooltip": "^1.2.0",
+  "@radix-ui/react-slot": "^1.2.0",
+  "@radix-ui/react-select": "^2.2.0",
+  "@radix-ui/react-label": "^2.1.0",
+  "@radix-ui/react-checkbox": "^1.3.0",
+  "@radix-ui/react-switch": "^1.2.0",
+  "@radix-ui/react-avatar": "^1.1.0",
+  "@radix-ui/react-popover": "^1.1.0",
+  "@radix-ui/react-separator": "^1.1.0",
+  "@radix-ui/react-scroll-area": "^1.2.0",
+  "@radix-ui/react-accordion": "^1.2.0",
+  "@radix-ui/react-progress": "^1.1.0",
+  "@radix-ui/react-toast": "^1.2.0",
+  "@radix-ui/react-toggle": "^1.1.0",
+  "@radix-ui/react-toggle-group": "^1.1.0",
+  "@tanstack/react-query": "^5.83.0",
+  "cmdk": "^1.1.0",
+  "embla-carousel-react": "^8.6.0",
+  "input-otp": "^1.4.0",
+  "vaul": "^0.9.0",
+  "next-themes": "^0.3.0",
+  "react-day-picker": "^8.10.0",
+  "react-resizable-panels": "^2.1.0",
+  "@supabase/supabase-js": "^2.97.0",
+  "axios": "^1.7.0",
 };
 
 function extractPackageName(specifier: string): string | null {
@@ -797,6 +854,26 @@ serve(async (req) => {
     }
 
     const projectData = await createProjectRes.json();
+
+    // ── Disable Vercel Deployment Protection to prevent 401s ──
+    try {
+      const patchRes = await fetch(`https://api.vercel.com/v9/projects/${projectData.id}`, {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${VERCEL_PLATFORM_TOKEN}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ssoProtection: null,
+          passwordProtection: null,
+        }),
+      });
+      if (patchRes.ok) {
+        console.log("Disabled deployment protection for project");
+      } else {
+        const patchErr = await patchRes.text();
+        console.warn(`Failed to disable deployment protection (${patchRes.status}):`, patchErr);
+      }
+    } catch (e) {
+      console.warn("Failed to disable deployment protection:", e);
+    }
 
     // Deploy
     const deployRes = await fetch("https://api.vercel.com/v13/deployments", {

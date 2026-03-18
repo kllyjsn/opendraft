@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Calendar, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { BlogInlineCTA } from "@/components/BlogInlineCTA";
 
 interface BlogPost {
   slug: string;
@@ -647,43 +648,38 @@ function BlogPost() {
 
         <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:font-black prose-headings:tracking-tight prose-a:text-primary prose-a:no-underline hover:prose-a:underline">
           {post.content.map((block, i) => {
-            if (block.startsWith("## ")) {
-              return <h2 key={i} className="text-2xl font-black mt-10 mb-4">{block.replace("## ", "")}</h2>;
-            }
-            if (block.startsWith("### ")) {
-              return <h3 key={i} className="text-lg font-black mt-8 mb-3">{block.replace("### ", "")}</h3>;
-            }
-            const parts = block.split(/(\*\*.*?\*\*|\[.*?\]\(.*?\))/g);
+            // Insert inline CTA after ~40% of content
+            const midPoint = Math.floor(post.content.length * 0.4);
+            const showInlineCTA = i === midPoint;
+
             return (
-              <p key={i} className="text-muted-foreground leading-relaxed mb-4 whitespace-pre-line">
-                {parts.map((part, j) => {
-                  if (part.startsWith("**") && part.endsWith("**")) {
-                    return <strong key={j} className="text-foreground font-semibold">{part.slice(2, -2)}</strong>;
-                  }
-                  const linkMatch = part.match(/\[(.*?)\]\((.*?)\)/);
-                  if (linkMatch) {
-                    return <Link key={j} to={linkMatch[2]} className="text-primary hover:underline">{linkMatch[1]}</Link>;
-                  }
-                  return <span key={j}>{part}</span>;
-                })}
-              </p>
+              <span key={i}>
+                {showInlineCTA && <BlogInlineCTA variant="compact" />}
+                {block.startsWith("## ") ? (
+                  <h2 className="text-2xl font-black mt-10 mb-4">{block.replace("## ", "")}</h2>
+                ) : block.startsWith("### ") ? (
+                  <h3 className="text-lg font-black mt-8 mb-3">{block.replace("### ", "")}</h3>
+                ) : (
+                  <p className="text-muted-foreground leading-relaxed mb-4 whitespace-pre-line">
+                    {block.split(/(\*\*.*?\*\*|\[.*?\]\(.*?\))/g).map((part, j) => {
+                      if (part.startsWith("**") && part.endsWith("**")) {
+                        return <strong key={j} className="text-foreground font-semibold">{part.slice(2, -2)}</strong>;
+                      }
+                      const linkMatch = part.match(/\[(.*?)\]\((.*?)\)/);
+                      if (linkMatch) {
+                        return <Link key={j} to={linkMatch[2]} className="text-primary hover:underline">{linkMatch[1]}</Link>;
+                      }
+                      return <span key={j}>{part}</span>;
+                    })}
+                  </p>
+                )}
+              </span>
             );
           })}
         </div>
 
-        {/* CTA */}
-        <div className="mt-14 rounded-2xl border border-border bg-card p-8 text-center shadow-card">
-          <h3 className="text-xl font-black mb-2">Ready to join the marketplace?</h3>
-          <p className="text-sm text-muted-foreground mb-5">Browse projects or list your own.</p>
-          <div className="flex justify-center gap-3">
-            <Link to="/">
-              <Button variant="outline">Browse Projects</Button>
-            </Link>
-            <Link to="/sell">
-              <Button className="gradient-hero text-white border-0 shadow-glow hover:opacity-90">Start Selling</Button>
-            </Link>
-          </div>
-        </div>
+        {/* Bottom CTA */}
+        <BlogInlineCTA />
       </article>
 
       <Footer />

@@ -315,6 +315,121 @@ async function autoPatchMissingDependencies(
       return `${lines.join("\n")}\n`;
     };
 
+    const analyzeSyntaxBalance = (content: string) => {
+      let inSingle = false;
+      let inDouble = false;
+      let inTemplate = false;
+      let inLineComment = false;
+      let inBlockComment = false;
+      let escaped = false;
+      let curly = 0;
+      let round = 0;
+      let square = 0;
+
+      for (let i = 0; i < content.length; i++) {
+        const char = content[i];
+        const nextChar = content[i + 1];
+
+        if (inLineComment) {
+          if (char === "\n") inLineComment = false;
+          continue;
+        }
+
+        if (inBlockComment) {
+          if (char === "*" && nextChar === "/") {
+            inBlockComment = false;
+            i++;
+          }
+          continue;
+        }
+
+        if (inSingle) {
+          if (escaped) {
+            escaped = false;
+            continue;
+          }
+          if (char === "\\") {
+            escaped = true;
+            continue;
+          }
+          if (char === "'") {
+            inSingle = false;
+          }
+          continue;
+        }
+
+        if (inDouble) {
+          if (escaped) {
+            escaped = false;
+            continue;
+          }
+          if (char === "\\") {
+            escaped = true;
+            continue;
+          }
+          if (char === '"') {
+            inDouble = false;
+          }
+          continue;
+        }
+
+        if (inTemplate) {
+          if (escaped) {
+            escaped = false;
+            continue;
+          }
+          if (char === "\\") {
+            escaped = true;
+            continue;
+          }
+          if (char === "`") {
+            inTemplate = false;
+          }
+          continue;
+        }
+
+        if (char === "/" && nextChar === "/") {
+          inLineComment = true;
+          i++;
+          continue;
+        }
+
+        if (char === "/" && nextChar === "*") {
+          inBlockComment = true;
+          i++;
+          continue;
+        }
+
+        if (char === "'") {
+          inSingle = true;
+          continue;
+        }
+
+        if (char === '"') {
+          inDouble = true;
+          continue;
+        }
+
+        if (char === "`") {
+          inTemplate = true;
+          continue;
+        }
+
+        if (char === "{") curly++;
+        if (char === "}") curly--;
+        if (char === "(") round++;
+        if (char === ")") round--;
+        if (char === "[") square++;
+        if (char === "]") square--;
+
+        if (curly < 0 || round < 0 || square < 0) {
+          return false;
+        }
+      }
+
+      return !inSingle && !inDouble && !inTemplate && !inBlockComment && curly === 0 && round === 0 && square === 0;
+    };
+
     const sourceFiles: Array<{ path: string; content: string }> = [];
     for (const [path, entry] of Object.entries(zip.files)) {
       if (entry.dir) continue;
@@ -329,6 +444,13 @@ async function autoPatchMissingDependencies(
       }
     }
 
+    const brokenFiles = new Set<string>();
+    for (const sourceFile of sourceFiles) {
+      if (!analyzeSyntaxBalance(sourceFile.content)) {
+        brokenFiles.add(sourceFile.path);
+      }
+    }
+
     const importedPackages = new Set<string>();
     const missingModules = new Map<string, {
       importerPath: string;
@@ -338,6 +460,39 @@ async function autoPatchMissingDependencies(
       namedImports: Set<string>;
       namespaceImport: string | null;
     }>();
+
+    const addOrMergeMissingModule = (
+      targetPath: string,
+      payload: {
+        importerPath: string;
+        specifier: string;
+        sideEffect: boolean;
+        defaultImport: string | null;
+        namedImports: string[];
+        namespaceImport: string | null;
+      }
+    ) => {
+      const existingRecord = missingModules.get(targetPath);
+      if (existingRecord) {
+        if (!existingRecord.defaultImport && payload.defaultImport) {
+          existingRecord.defaultImport = payload.defaultImport;
+        }
+        if (!existingRecord.namespaceImport && payload.namespaceImport) {
+          existingRecord.namespaceImport = payload.namespaceImport;
+        }
+        for (const name of payload.namedImports) existingRecord.namedImports.add(name);
+        return;
+      }
+
+      missingModules.set(targetPath, {
+        importerPath: payload.importerPath,
+        specifier: payload.specifier,
+        sideEffect: payload.sideEffect,
+        defaultImport: payload.defaultImport,
+        namedImports: new Set(payload.namedImports),
+        namespaceImport: payload.namespaceImport,
+      });
+    };
 
     for (const sourceFile of sourceFiles) {
       const imports = collectImportedPackages(sourceFile.content);
@@ -352,28 +507,17 @@ async function autoPatchMissingDependencies(
         if (isTypeOnly || !specifier.startsWith(".")) continue;
 
         const resolved = resolveRelativeImport(sourceFile.path, specifier, false);
-        if (resolved.exists) continue;
+        if (resolved.exists && !brokenFiles.has(resolved.targetPath)) continue;
 
         const parsed = parseImportClause(importClause);
-        const existingRecord = missingModules.get(resolved.targetPath);
-        if (existingRecord) {
-          if (!existingRecord.defaultImport && parsed.defaultImport) {
-            existingRecord.defaultImport = parsed.defaultImport;
-          }
-          if (!existingRecord.namespaceImport && parsed.namespaceImport) {
-            existingRecord.namespaceImport = parsed.namespaceImport;
-          }
-          for (const name of parsed.namedImports) existingRecord.namedImports.add(name);
-        } else {
-          missingModules.set(resolved.targetPath, {
-            importerPath: sourceFile.path,
-            specifier,
-            sideEffect: false,
-            defaultImport: parsed.defaultImport,
-            namedImports: new Set(parsed.namedImports),
-            namespaceImport: parsed.namespaceImport,
-          });
-        }
+        addOrMergeMissingModule(resolved.targetPath, {
+          importerPath: sourceFile.path,
+          specifier,
+          sideEffect: false,
+          defaultImport: parsed.defaultImport,
+          namedImports: parsed.namedImports,
+          namespaceImport: parsed.namespaceImport,
+        });
       }
 
       const sideEffectRegex = /import\s+["']([^"']+)["']/g;
@@ -383,27 +527,46 @@ async function autoPatchMissingDependencies(
         if (!specifier.startsWith(".")) continue;
 
         const resolved = resolveRelativeImport(sourceFile.path, specifier, true);
-        if (resolved.exists) continue;
+        if (resolved.exists && !brokenFiles.has(resolved.targetPath)) continue;
 
-        if (!missingModules.has(resolved.targetPath)) {
-          missingModules.set(resolved.targetPath, {
-            importerPath: sourceFile.path,
-            specifier,
-            sideEffect: true,
-            defaultImport: null,
-            namedImports: new Set<string>(),
-            namespaceImport: null,
-          });
-        }
+        addOrMergeMissingModule(resolved.targetPath, {
+          importerPath: sourceFile.path,
+          specifier,
+          sideEffect: true,
+          defaultImport: null,
+          namedImports: [],
+          namespaceImport: null,
+        });
       }
     }
 
+    for (const brokenFilePath of brokenFiles) {
+      if (missingModules.has(brokenFilePath)) continue;
+      const fallbackName = toPascalCase(brokenFilePath.split("/").pop() || "BrokenModule");
+      missingModules.set(brokenFilePath, {
+        importerPath: brokenFilePath,
+        specifier: brokenFilePath,
+        sideEffect: false,
+        defaultImport: fallbackName,
+        namedImports: new Set<string>(),
+        namespaceImport: null,
+      });
+    }
+
     const autoAddedFiles: string[] = [];
+    const autoRepairedFiles: string[] = [];
     for (const [targetPath, record] of missingModules.entries()) {
-      if (hasZipFile(targetPath)) continue;
       const targetZipPath = prefix ? `${prefix}${targetPath}` : targetPath;
+      const alreadyExists = hasZipFile(targetPath);
+
+      if (alreadyExists && !brokenFiles.has(targetPath)) continue;
+
       zip.file(targetZipPath, createPlaceholderContent(targetPath, record));
-      autoAddedFiles.push(targetPath);
+      if (alreadyExists) {
+        autoRepairedFiles.push(targetPath);
+      } else {
+        autoAddedFiles.push(targetPath);
+      }
     }
 
     const dependencies = packageJson.dependencies || {};

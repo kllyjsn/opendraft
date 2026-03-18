@@ -15,7 +15,9 @@ function parseGithubRepo(githubUrl: string) {
     const segments = parsed.pathname.split("/").filter(Boolean);
     if (segments.length < 2) return null;
     return { owner: segments[0], repo: segments[1].replace(/\.git$/, "") };
-  } catch { return null; }
+  } catch {
+    return null;
+  }
 }
 
 async function downloadGithubRepoZip(githubUrl: string): Promise<ArrayBuffer> {
@@ -72,6 +74,115 @@ function detectFramework(packageJson: any) {
   if (deps["vite"]) return { framework: "vite", buildCommand: scripts.build || "vite build", outputDirectory: "dist", installCommand: "npm install" };
   if (deps["react-scripts"]) return { framework: "create-react-app", buildCommand: scripts.build || "react-scripts build", outputDirectory: "build", installCommand: "npm install" };
   return { framework: null, buildCommand: scripts.build || "npm run build", outputDirectory: "dist", installCommand: "npm install" };
+}
+
+const AUTO_DEPENDENCY_VERSIONS: Record<string, string> = {
+  "react-router-dom": "^6.30.1",
+};
+
+function extractPackageName(specifier: string): string | null {
+  if (!specifier) return null;
+  const cleanSpecifier = specifier.split("?")[0];
+  if (
+    cleanSpecifier.startsWith(".") ||
+    cleanSpecifier.startsWith("/") ||
+    cleanSpecifier.startsWith("http://") ||
+    cleanSpecifier.startsWith("https://") ||
+    cleanSpecifier.startsWith("node:") ||
+    cleanSpecifier.startsWith("@/") ||
+    cleanSpecifier.startsWith("~/")
+  ) {
+    return null;
+  }
+
+  if (cleanSpecifier.startsWith("@")) {
+    const parts = cleanSpecifier.split("/");
+    if (parts.length < 2) return null;
+    return `${parts[0]}/${parts[1]}`;
+  }
+
+  return cleanSpecifier.split("/")[0] || null;
+}
+
+function collectImportedPackages(content: string): Set<string> {
+  const found = new Set<string>();
+  const importPatterns = [
+    /from\s+["']([^"']+)["']/g,
+    /import\s*\(\s*["']([^"']+)["']\s*\)/g,
+    /require\(\s*["']([^"']+)["']\s*\)/g,
+  ];
+
+  for (const pattern of importPatterns) {
+    let match: RegExpExecArray | null;
+    while ((match = pattern.exec(content)) !== null) {
+      const pkgName = extractPackageName(match[1]);
+      if (pkgName) found.add(pkgName);
+    }
+  }
+
+  return found;
+}
+
+async function autoPatchMissingDependencies(
+  zip: JSZip,
+  prefix: string
+): Promise<{ packageJson: any | null; autoAddedDependencies: string[] }> {
+  const pkgJsonPath = prefix ? `${prefix}package.json` : "package.json";
+  const pkgJsonEntry = zip.files[pkgJsonPath];
+  if (!pkgJsonEntry || pkgJsonEntry.dir) {
+    return { packageJson: null, autoAddedDependencies: [] };
+  }
+
+  try {
+    const pkgContent = await pkgJsonEntry.async("string");
+    const packageJson = JSON.parse(pkgContent);
+
+    const hasReact = Boolean(
+      packageJson?.dependencies?.react || packageJson?.devDependencies?.react
+    );
+    if (!hasReact) {
+      return { packageJson, autoAddedDependencies: [] };
+    }
+
+    const importedPackages = new Set<string>();
+    for (const [path, entry] of Object.entries(zip.files)) {
+      if (entry.dir) continue;
+      const relativePath = prefix ? path.replace(prefix, "") : path;
+      if (!relativePath || !/\.(tsx?|jsx?)$/i.test(relativePath)) continue;
+
+      try {
+        const content = await entry.async("string");
+        const imports = collectImportedPackages(content);
+        for (const dep of imports) importedPackages.add(dep);
+      } catch {
+        // Ignore unreadable files
+      }
+    }
+
+    const dependencies = packageJson.dependencies || {};
+    const devDependencies = packageJson.devDependencies || {};
+    const autoAddedDependencies: string[] = [];
+
+    for (const [dep, version] of Object.entries(AUTO_DEPENDENCY_VERSIONS)) {
+      const isUsed = importedPackages.has(dep);
+      const alreadyInstalled = Boolean(dependencies[dep] || devDependencies[dep]);
+
+      if (isUsed && !alreadyInstalled) {
+        dependencies[dep] = version;
+        autoAddedDependencies.push(dep);
+      }
+    }
+
+    if (autoAddedDependencies.length > 0) {
+      packageJson.dependencies = dependencies;
+      zip.file(pkgJsonPath, JSON.stringify(packageJson, null, 2));
+    }
+
+    return { packageJson, autoAddedDependencies };
+  } catch (e) {
+    console.warn("Failed to auto-patch dependencies:", e);
+    return { packageJson: null, autoAddedDependencies: [] };
+  }
 }
 
 function generateVercelConfig(framework: string | null): string {
@@ -176,16 +287,29 @@ serve(async (req) => {
       }
     }
 
-    // Detect framework
+    // Auto-fix common missing dependencies and detect framework
     let frameworkInfo = detectFramework({});
-    const pkgJsonPath = prefix ? `${prefix}package.json` : "package.json";
-    const pkgJsonEntry = zip.files[pkgJsonPath];
-    if (pkgJsonEntry && !pkgJsonEntry.dir) {
-      try {
-        const pkgContent = await pkgJsonEntry.async("string");
-        frameworkInfo = detectFramework(JSON.parse(pkgContent));
-        console.log(`Detected framework: ${frameworkInfo.framework || "unknown"}`);
-      } catch (e) { console.warn("Failed to parse package.json:", e); }
+    const { packageJson, autoAddedDependencies } = await autoPatchMissingDependencies(zip, prefix);
+
+    if (packageJson) {
+      frameworkInfo = detectFramework(packageJson);
+      console.log(`Detected framework: ${frameworkInfo.framework || "unknown"}`);
+    } else {
+      const pkgJsonPath = prefix ? `${prefix}package.json` : "package.json";
+      const pkgJsonEntry = zip.files[pkgJsonPath];
+      if (pkgJsonEntry && !pkgJsonEntry.dir) {
+        try {
+          const pkgContent = await pkgJsonEntry.async("string");
+          frameworkInfo = detectFramework(JSON.parse(pkgContent));
+          console.log(`Detected framework: ${frameworkInfo.framework || "unknown"}`);
+        } catch (e) {
+          console.warn("Failed to parse package.json:", e);
+        }
+      }
+    }
+
+    if (autoAddedDependencies.length > 0) {
+      console.log(`Auto-added missing dependencies: ${autoAddedDependencies.join(", ")}`);
     }
 
     // Inject vercel.json for SPA routing
@@ -297,7 +421,9 @@ serve(async (req) => {
         deploy_id: deployData.id,
         status: "building",
       });
-    } catch (e) { console.warn("Failed to track deployment:", e); }
+    } catch (e) {
+      console.warn("Failed to track deployment:", e);
+    }
 
     // Log activity
     await supabase.from("activity_log").insert({
@@ -309,6 +435,7 @@ serve(async (req) => {
         project_id: projectData.id,
         deploy_id: deployData.id,
         framework: frameworkInfo.framework,
+        auto_added_dependencies: autoAddedDependencies,
       },
     });
 
@@ -322,6 +449,7 @@ serve(async (req) => {
       framework: frameworkInfo.framework,
       filesUploaded: uploadedCount,
       injectedVercelJson,
+      autoAddedDependencies,
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
     console.error("deploy-to-opendraft error:", e);

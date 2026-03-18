@@ -62,6 +62,7 @@ import GremlinsAtWork from "./pages/GremlinsAtWork";
 import AppsVertical from "./pages/AppsVertical";
 import { GremlinVoiceAgent } from "./components/GremlinVoiceAgent";
 import { SignupPrompt } from "./components/SignupPrompt";
+import { StickyMobileCTA } from "./components/StickyMobileCTA";
 
 const queryClient = new QueryClient();
 

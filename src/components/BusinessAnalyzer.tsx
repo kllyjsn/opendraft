@@ -211,7 +211,12 @@ export function BusinessAnalyzer({ onGenerate }: { onGenerate?: (prompt: string)
       navigate("/login");
       return;
     }
+    // Clear both sessionStorage and React state so the results panel
+    // collapses and the generation progress UI in the parent becomes visible
     clearAnalysis();
+    setResult(null);
+    setError(null);
+    setNotice(null);
     if (onGenerate) {
       onGenerate(prompt);
     } else {

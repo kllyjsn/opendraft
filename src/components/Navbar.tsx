@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
-import { Zap, Menu, X, ShieldCheck, Bot } from "lucide-react";
+import { Zap, Menu, X, ShieldCheck, Bot, Lightbulb } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { cn } from "@/lib/utils";

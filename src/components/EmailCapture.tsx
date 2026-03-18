@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,12 +6,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Mail, CheckCircle, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
+import { logActivity } from "@/lib/activity-logger";
 
 export function EmailCapture() {
   const { user } = useAuth();
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const impressionLogged = useRef(false);
+
+  useEffect(() => {
+    if (!user && !impressionLogged.current) {
+      impressionLogged.current = true;
+      logActivity({ event_type: "cta:impression", event_data: { source: "email_capture" } });
+    }
+  }, [user]);
 
   if (user) return null;
 
@@ -33,8 +42,7 @@ export function EmailCapture() {
       });
       setSubmitted(true);
 
-      // Track in activity log
-      await supabase.from("activity_log").insert({
+      await logActivity({
         event_type: "funnel:email_capture",
         event_data: { email: email.trim(), source: "homepage" },
         page: "/",

@@ -106,7 +106,7 @@ export default function Index() {
       <Navbar />
 
       {/* ── HERO ── */}
-      <section className="relative overflow-hidden flex-1 flex items-center justify-center min-h-[80vh] md:min-h-[88vh]">
+      <section className="relative overflow-hidden flex-1 flex items-center justify-center min-h-[60vh] md:min-h-[80vh]">
         {/* Background */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[500px] rounded-full bg-primary/6 blur-[180px]" />

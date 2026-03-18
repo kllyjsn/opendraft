@@ -417,7 +417,7 @@ export function BusinessAnalyzer({ onGenerate }: { onGenerate?: (prompt: string)
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5">
                   <Button
                     size="sm"
                     onClick={() => handleGenerateClick(build.search_query)}
@@ -425,6 +425,29 @@ export function BusinessAnalyzer({ onGenerate }: { onGenerate?: (prompt: string)
                   >
                     <Wand2 className="h-3 w-3 mr-1" />
                     {user ? "Generate this app" : "Sign in to generate"}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={async () => {
+                      if (!user) { navigate("/login"); return; }
+                      const ok = await saveIdea({
+                        name: build.name,
+                        description: build.description,
+                        category: build.category,
+                        priority: build.priority,
+                        search_query: build.search_query,
+                        source_url: result?.url,
+                      });
+                      if (ok) setSavedSet(prev => new Set(prev).add(build.search_query));
+                    }}
+                    disabled={savedSet.has(build.search_query)}
+                    className="h-8 px-2 text-[11px] text-muted-foreground hover:text-primary"
+                    title="Save for later"
+                  >
+                    {savedSet.has(build.search_query)
+                      ? <Check className="h-3 w-3 text-primary" />
+                      : <Bookmark className="h-3 w-3" />}
                   </Button>
                   <Button
                     size="sm"

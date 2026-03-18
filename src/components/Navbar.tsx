@@ -62,9 +62,9 @@ export function Navbar() {
 
         {/* Desktop Nav — buyer-first */}
         <div className="hidden md:flex items-center gap-7">
-          <NavItem to="/">Browse Apps</NavItem>
+          <NavItem to="/category/saas-tool">Browse</NavItem>
           <NavItem to="/credits">Pricing</NavItem>
-          <NavItem to="/builders">Find a Builder</NavItem>
+          <NavItem to="/builders">Builders</NavItem>
           <NavItem to="/faq">FAQ</NavItem>
           {user && (
             <>

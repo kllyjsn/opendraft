@@ -590,11 +590,12 @@ async function autoPatchMissingDependencies(
       zip.file(pkgJsonPath, JSON.stringify(packageJson, null, 2));
     }
 
-    if (autoAddedFiles.length > 0) {
-      console.log(`Auto-generated missing local files: ${autoAddedFiles.join(", ")}`);
+    const allAutoPatchedFiles = [...autoAddedFiles, ...autoRepairedFiles];
+    if (allAutoPatchedFiles.length > 0) {
+      console.log(`Auto-patched local files: ${allAutoPatchedFiles.join(", ")}`);
     }
 
-    return { packageJson, autoAddedDependencies, autoAddedFiles };
+    return { packageJson, autoAddedDependencies, autoAddedFiles: allAutoPatchedFiles };
   } catch (e) {
     console.warn("Failed to auto-patch dependencies:", e);
     return { packageJson: null, autoAddedDependencies: [], autoAddedFiles: [] };

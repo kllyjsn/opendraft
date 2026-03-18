@@ -60,6 +60,7 @@ import AdminOutreach from "./pages/AdminOutreach";
 import AdminRevenue from "./pages/AdminRevenue";
 import GremlinsAtWork from "./pages/GremlinsAtWork";
 import AppsVertical from "./pages/AppsVertical";
+import Ideas from "./pages/Ideas";
 import { GremlinVoiceAgent } from "./components/GremlinVoiceAgent";
 import { SignupPrompt } from "./components/SignupPrompt";
 import { StickyMobileCTA } from "./components/StickyMobileCTA";
@@ -118,6 +119,7 @@ const App = () => (
           <Route path="/security" element={<Security />} />
           <Route path="/gremlins" element={<GremlinsAtWork />} />
           <Route path="/apps/:vertical" element={<AppsVertical />} />
+          <Route path="/ideas" element={<Ideas />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <GremlinVoiceAgent />

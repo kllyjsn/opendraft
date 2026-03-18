@@ -1518,6 +1518,51 @@ export type Database = {
           },
         ]
       }
+      saved_ideas: {
+        Row: {
+          category: string
+          created_at: string
+          description: string
+          id: string
+          name: string
+          notes: string | null
+          priority: string
+          search_query: string
+          source_url: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          description: string
+          id?: string
+          name: string
+          notes?: string | null
+          priority?: string
+          search_query: string
+          source_url?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          priority?: string
+          search_query?: string
+          source_url?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       security_audit_log: {
         Row: {
           action: string

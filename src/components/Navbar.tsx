@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
-import { Zap, Menu, X, ShieldCheck, Bot } from "lucide-react";
+import { Zap, Menu, X, ShieldCheck, Bot, Lightbulb } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -68,6 +68,7 @@ export function Navbar() {
           <NavItem to="/faq">FAQ</NavItem>
           {user && (
             <>
+              <NavItem to="/ideas">Ideas</NavItem>
               <NavItem to="/dashboard">My Apps</NavItem>
               <NavItem to="/messages">
                 <span className="relative inline-flex items-center">
@@ -155,6 +156,7 @@ export function Navbar() {
           <NavItem to="/faq" onClick={() => setMenuOpen(false)}>FAQ</NavItem>
           {user ? (
             <>
+              <NavItem to="/ideas" onClick={() => setMenuOpen(false)}>Ideas</NavItem>
               <NavItem to="/dashboard" onClick={() => setMenuOpen(false)}>My Apps</NavItem>
               <NavItem to="/messages" onClick={() => setMenuOpen(false)}>
                 <span className="relative inline-flex items-center">

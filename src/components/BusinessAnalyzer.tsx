@@ -2,13 +2,14 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Globe, Loader2, Lightbulb, Rocket, Search, AlertCircle, X,
-  Wand2, ArrowRight, Sparkles, Zap, Layout, Brain, FileText, Gamepad2,
+  Wand2, ArrowRight, Sparkles, Zap, Layout, Brain, FileText, Gamepad2, Bookmark, Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useSavedIdeas } from "@/hooks/useSavedIdeas";
 
 interface Insight {
   title: string;
@@ -72,6 +73,8 @@ function clearAnalysis() {
 export function BusinessAnalyzer({ onGenerate }: { onGenerate?: (prompt: string) => void }) {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { saveIdea } = useSavedIdeas();
+  const [savedSet, setSavedSet] = useState<Set<string>>(new Set());
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
@@ -414,7 +417,7 @@ export function BusinessAnalyzer({ onGenerate }: { onGenerate?: (prompt: string)
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5">
                   <Button
                     size="sm"
                     onClick={() => handleGenerateClick(build.search_query)}
@@ -422,6 +425,29 @@ export function BusinessAnalyzer({ onGenerate }: { onGenerate?: (prompt: string)
                   >
                     <Wand2 className="h-3 w-3 mr-1" />
                     {user ? "Generate this app" : "Sign in to generate"}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={async () => {
+                      if (!user) { navigate("/login"); return; }
+                      const ok = await saveIdea({
+                        name: build.name,
+                        description: build.description,
+                        category: build.category,
+                        priority: build.priority,
+                        search_query: build.search_query,
+                        source_url: result?.url,
+                      });
+                      if (ok) setSavedSet(prev => new Set(prev).add(build.search_query));
+                    }}
+                    disabled={savedSet.has(build.search_query)}
+                    className="h-8 px-2 text-[11px] text-muted-foreground hover:text-primary"
+                    title="Save for later"
+                  >
+                    {savedSet.has(build.search_query)
+                      ? <Check className="h-3 w-3 text-primary" />
+                      : <Bookmark className="h-3 w-3" />}
                   </Button>
                   <Button
                     size="sm"

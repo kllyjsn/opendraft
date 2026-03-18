@@ -156,6 +156,7 @@ export function Navbar() {
           <NavItem to="/faq" onClick={() => setMenuOpen(false)}>FAQ</NavItem>
           {user ? (
             <>
+              <NavItem to="/ideas" onClick={() => setMenuOpen(false)}>Ideas</NavItem>
               <NavItem to="/dashboard" onClick={() => setMenuOpen(false)}>My Apps</NavItem>
               <NavItem to="/messages" onClick={() => setMenuOpen(false)}>
                 <span className="relative inline-flex items-center">

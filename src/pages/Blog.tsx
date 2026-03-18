@@ -678,19 +678,8 @@ function BlogPost() {
           })}
         </div>
 
-        {/* CTA */}
-        <div className="mt-14 rounded-2xl border border-border bg-card p-8 text-center shadow-card">
-          <h3 className="text-xl font-black mb-2">Ready to join the marketplace?</h3>
-          <p className="text-sm text-muted-foreground mb-5">Browse projects or list your own.</p>
-          <div className="flex justify-center gap-3">
-            <Link to="/">
-              <Button variant="outline">Browse Projects</Button>
-            </Link>
-            <Link to="/sell">
-              <Button className="gradient-hero text-white border-0 shadow-glow hover:opacity-90">Start Selling</Button>
-            </Link>
-          </div>
-        </div>
+        {/* Bottom CTA */}
+        <BlogInlineCTA />
       </article>
 
       <Footer />

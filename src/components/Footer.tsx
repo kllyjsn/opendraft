@@ -16,7 +16,7 @@ export function Footer() {
               <span className="text-gradient">OpenDraft</span>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
-              Expert-built software, ready to launch. Every app is designed, coded, and tested by professionals.
+              Stop renting SaaS. Paste your site, get a custom app you own — zero per-seat fees, ever.
             </p>
           </div>
 

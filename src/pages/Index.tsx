@@ -319,8 +319,11 @@ export default function Index() {
         </div>
       </section>
 
+      {!user && <EmailCapture />}
+
       <GremlinWorkshop />
       <Footer />
+    </div>
     </div>
   );
 }

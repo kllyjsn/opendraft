@@ -3,7 +3,7 @@ import { MascotHammock } from "@/components/MascotHammock";
 
 export function Footer() {
   return (
-    <footer className="border-t border-border/40 bg-background mt-24 relative">
+    <footer className="border-t border-border/40 bg-background mt-16 md:mt-24 relative">
       {/* Subtle top gradient */}
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
 
@@ -16,7 +16,7 @@ export function Footer() {
               <span className="text-gradient">OpenDraft</span>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
-              Expert-built software, ready to launch. Every app is designed, coded, and tested by professionals.
+              Stop renting SaaS. Paste your site, get a custom app you own — zero per-seat fees, ever.
             </p>
           </div>
 
@@ -55,7 +55,7 @@ export function Footer() {
             </ul>
             <h4 className="text-[11px] font-bold uppercase tracking-widest text-foreground mb-4 mt-8">Legal</h4>
             <ul className="space-y-3 text-sm">
-              <li><Link to="/security" className="text-emerald-400 hover:text-emerald-300 transition-colors duration-200 font-semibold flex items-center gap-1.5">🛡️ Security Standards</Link></li>
+              <li><Link to="/security" className="text-secondary hover:text-secondary/80 transition-colors duration-200 font-semibold flex items-center gap-1.5">🛡️ Security Standards</Link></li>
               <li><Link to="/terms" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Terms of Service</Link></li>
               <li><Link to="/privacy" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Privacy Policy</Link></li>
               <li><Link to="/faq" className="text-muted-foreground hover:text-foreground transition-colors duration-200">FAQ</Link></li>
@@ -77,7 +77,7 @@ export function Footer() {
         <div className="divider-gradient mb-6" />
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
           <span className="text-xs text-muted-foreground">© 2026 OpenDraft. All rights reserved.</span>
-          <span className="text-xs text-muted-foreground">Instant delivery · Get paid the moment you sell</span>
+          <span className="text-xs text-muted-foreground">Own the code · Zero per-seat fees · Deploy in 90s</span>
         </div>
       </div>
     </footer>

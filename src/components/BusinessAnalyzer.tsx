@@ -180,6 +180,8 @@ export function BusinessAnalyzer({ onGenerate }: { onGenerate?: (prompt: string)
     setNotice(null);
     setResult(null);
 
+    logActivity({ event_type: "url_entered", event_data: { url: normalizedUrl }, page: "/" });
+
     try {
       const invokePromise = supabase.functions.invoke("analyze-business-url", {
         body: { url: normalizedUrl },

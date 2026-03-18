@@ -99,7 +99,8 @@ async function checkSiteHealth(siteUrl: string): Promise<{ httpStatus: number; i
 // ── Auto-fix Vercel deployment protection (401) ──────────────────
 async function fixVercelProtection(site: any): Promise<boolean> {
   const VERCEL_PLATFORM_TOKEN = Deno.env.get("VERCEL_PLATFORM_TOKEN");
-  if (!VERCEL_PLATFORM_TOKEN || site.provider !== "opendraft") return false;
+  if (!VERCEL_PLATFORM_TOKEN) return false;
+  if (site.provider !== "opendraft" && site.provider !== "vercel") return false;
 
   try {
     const projectId = site.site_id;

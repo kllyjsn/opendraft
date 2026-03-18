@@ -68,6 +68,7 @@ export function Navbar() {
           <NavItem to="/faq">FAQ</NavItem>
           {user && (
             <>
+              <NavItem to="/ideas">Ideas</NavItem>
               <NavItem to="/dashboard">My Apps</NavItem>
               <NavItem to="/messages">
                 <span className="relative inline-flex items-center">

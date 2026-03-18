@@ -21,6 +21,7 @@ const BASE_FILES: Record<string, string> = {
       dependencies: {
         react: "^18.3.1",
         "react-dom": "^18.3.1",
+        "react-router-dom": "^6.30.1",
         "lucide-react": "^0.462.0",
         "framer-motion": "^12.0.0",
         zod: "^3.23.0",

@@ -3,7 +3,7 @@ import { MascotHammock } from "@/components/MascotHammock";
 
 export function Footer() {
   return (
-    <footer className="border-t border-border/40 bg-background mt-24 relative">
+    <footer className="border-t border-border/40 bg-background mt-16 md:mt-24 relative">
       {/* Subtle top gradient */}
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
 

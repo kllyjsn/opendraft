@@ -41,25 +41,43 @@ async function downloadGithubRepoZip(githubUrl: string): Promise<ArrayBuffer> {
   return await zipRes.arrayBuffer();
 }
 
-async function uploadFileToVercel(content: Uint8Array, vercelToken: string): Promise<string> {
+async function uploadFileToVercel(content: Uint8Array, vercelToken: string, retries = 3): Promise<string> {
   const hashBuffer = await crypto.subtle.digest("SHA-1", content);
   const sha = Array.from(new Uint8Array(hashBuffer)).map((b) => b.toString(16).padStart(2, "0")).join("");
-  const uploadRes = await fetch("https://api.vercel.com/v2/files", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${vercelToken}`,
-      "Content-Type": "application/octet-stream",
-      "x-vercel-digest": sha,
-      "Content-Length": String(content.byteLength),
-    },
-    body: content,
-  });
-  if (!uploadRes.ok && uploadRes.status !== 409) {
-    const errText = await uploadRes.text();
-    console.error(`File upload failed (${uploadRes.status}):`, errText);
-    throw new Error(`Failed to upload file to Vercel: ${uploadRes.status}`);
-  } else {
-    await uploadRes.text();
+
+  for (let attempt = 0; attempt < retries; attempt++) {
+    try {
+      const uploadRes = await fetch("https://api.vercel.com/v2/files", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${vercelToken}`,
+          "Content-Type": "application/octet-stream",
+          "x-vercel-digest": sha,
+          "Content-Length": String(content.byteLength),
+        },
+        body: content,
+      });
+      if (!uploadRes.ok && uploadRes.status !== 409) {
+        const errText = await uploadRes.text();
+        if (attempt < retries - 1 && (uploadRes.status >= 500 || uploadRes.status === 429)) {
+          console.warn(`File upload attempt ${attempt + 1} failed (${uploadRes.status}), retrying...`);
+          await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+          continue;
+        }
+        console.error(`File upload failed (${uploadRes.status}):`, errText);
+        throw new Error(`Failed to upload file to Vercel: ${uploadRes.status}`);
+      } else {
+        await uploadRes.text();
+      }
+      return sha;
+    } catch (e) {
+      if (attempt < retries - 1 && (e as Error).message?.includes("fetch")) {
+        console.warn(`File upload network error attempt ${attempt + 1}, retrying...`);
+        await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+        continue;
+      }
+      throw e;
+    }
   }
   return sha;
 }

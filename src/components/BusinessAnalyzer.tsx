@@ -2,13 +2,14 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Globe, Loader2, Lightbulb, Rocket, Search, AlertCircle, X,
-  Wand2, ArrowRight, Sparkles, Zap, Layout, Brain, FileText, Gamepad2,
+  Wand2, ArrowRight, Sparkles, Zap, Layout, Brain, FileText, Gamepad2, Bookmark, Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useSavedIdeas } from "@/hooks/useSavedIdeas";
 
 interface Insight {
   title: string;

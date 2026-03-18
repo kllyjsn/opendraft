@@ -122,6 +122,7 @@ const App = () => (
         </Routes>
         <GremlinVoiceAgent />
         <SignupPrompt />
+        <StickyMobileCTA />
         
       </BrowserRouter>
     </TooltipProvider>

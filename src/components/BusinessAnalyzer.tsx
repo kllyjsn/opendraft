@@ -7,6 +7,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
+import { logActivity } from "@/lib/activity-logger";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useSavedIdeas } from "@/hooks/useSavedIdeas";
@@ -178,6 +179,8 @@ export function BusinessAnalyzer({ onGenerate }: { onGenerate?: (prompt: string)
     setError(null);
     setNotice(null);
     setResult(null);
+
+    logActivity({ event_type: "url_entered", event_data: { url: normalizedUrl }, page: "/" });
 
     try {
       const invokePromise = supabase.functions.invoke("analyze-business-url", {

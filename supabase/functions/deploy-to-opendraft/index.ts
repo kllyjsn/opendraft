@@ -855,6 +855,26 @@ serve(async (req) => {
 
     const projectData = await createProjectRes.json();
 
+    // ── Disable Vercel Deployment Protection to prevent 401s ──
+    try {
+      const patchRes = await fetch(`https://api.vercel.com/v9/projects/${projectData.id}`, {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${VERCEL_PLATFORM_TOKEN}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ssoProtection: null,
+          passwordProtection: null,
+        }),
+      });
+      if (patchRes.ok) {
+        console.log("Disabled deployment protection for project");
+      } else {
+        const patchErr = await patchRes.text();
+        console.warn(`Failed to disable deployment protection (${patchRes.status}):`, patchErr);
+      }
+    } catch (e) {
+      console.warn("Failed to disable deployment protection:", e);
+    }
+
     // Deploy
     const deployRes = await fetch("https://api.vercel.com/v13/deployments", {
       method: "POST",

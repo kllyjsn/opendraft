@@ -73,6 +73,8 @@ function clearAnalysis() {
 export function BusinessAnalyzer({ onGenerate }: { onGenerate?: (prompt: string) => void }) {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { saveIdea } = useSavedIdeas();
+  const [savedSet, setSavedSet] = useState<Set<string>>(new Set());
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);

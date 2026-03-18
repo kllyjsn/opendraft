@@ -12,6 +12,7 @@ import { MetaTags } from "@/components/MetaTags";
 import { useGenerationJob } from "@/hooks/useGenerationJob";
 import { CheckCircle, AlertCircle, ExternalLink, Rocket, Globe, Pencil, Wand2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { EmailCapture } from "@/components/EmailCapture";
 
 const ROTATING_WORDS = ["CRM", "scheduler", "dashboard", "portal", "tracker", "helpdesk"];
 

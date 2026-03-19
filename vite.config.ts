@@ -18,4 +18,18 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    // Code splitting for better caching & smaller initial bundle
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ["react", "react-dom", "react-router-dom"],
+          ui: ["framer-motion", "recharts", "sonner"],
+          supabase: ["@supabase/supabase-js"],
+        },
+      },
+    },
+    // Enable CSS code splitting
+    cssCodeSplit: true,
+  },
 }));

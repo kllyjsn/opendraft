@@ -283,7 +283,6 @@ export function miniThreadTweet(): string[] {
   ];
   return pick(threads);
 }
-}
 
 // ═══════════════════════════════════════════════════════════════
 // ORIGINAL TEMPLATES (compatibility)

@@ -445,6 +445,7 @@ async function generateSingleTemplate(
   error?: string;
 }> {
   /* ── Step 1: Generate concept + source code via AI ─────────── */
+  if (jobId && brandContext) await updateJob(supabase, jobId, { stage: "adapting_brand" });
   if (jobId) await updateJob(supabase, jobId, { stage: "generating_code" });
 
   // Build brand-aware design directive

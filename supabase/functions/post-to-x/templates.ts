@@ -80,27 +80,21 @@ export function fomoTweet(stats: { browsing?: number; signups?: number; apps?: n
 // ═══════════════════════════════════════════════════════════════
 export function painPointTweet(): string {
   return pickUnique("pain", [
-    `Tired of:\n\n❌ 6-month dev timelines\n❌ $50k+ development costs\n❌ Hiring unreliable freelancers\n❌ Learning to code yourself\n\nThere's a shortcut.\n\n${SITE_URL}`,
-    `You have an idea.\nYou don't have 6 months.\nYou don't have $50,000.\nYou don't have a dev team.\n\nYou DO have ${SITE_URL}`,
-    `Stages of building a SaaS:\n\n1. Excitement\n2. Planning\n3. More planning\n4. "This is harder than I thought"\n5. Burnout\n\n...or skip to step 6: launch.\n\n${SITE_URL}`,
-    `If you've ever stared at a blank VS Code window wondering where to start...\n\nYou don't need more tutorials.\n\nYou need a head start.\n\n${SITE_URL}`,
-    `"How's the app going?"\n"Great, I'm almost done with the auth page"\n"You started 4 months ago"\n"..."\n\nThere's a better way.\n\n${SITE_URL}`,
-    `Real talk: nobody cares if you built it from scratch.\n\nCustomers care if it works.\n\nInvestors care if it ships.\n\nYour ego is the only thing that wants custom code.\n\n${SITE_URL}`,
-    `Quick math:\n\nFreelancer: $100/hr × 500 hrs = $50,000\nOpenDraft: $29 × 1 = $29\n\nSame app. Same outcome.\n\n${SITE_URL}`,
-    `The real cost of building from scratch isn't money.\n\nIt's the 6 months of your life you'll never get back.\n\nWhile you build, your market moves on.\n\n${SITE_URL}`,
-    `POV: You just spent 3 weeks implementing OAuth for the 47th time in your career\n\n🫠\n\n${SITE_URL}`,
-    // NEW — Developer-specific pain
-    `Things developers love building:\n→ Auth systems\n→ Payment integrations\n→ Admin dashboards\n\nThings that actually make money:\n→ None of the above\n\nBuy the boring parts. Build the differentiator.\n\n${SITE_URL}`,
-    // NEW — Agency pain
-    `If you're an agency charging clients $50k for apps you could source for $200 total...\n\nI'm not saying anything.\n\nI'm just saying.\n\n${SITE_URL}`,
-    // NEW — Burnout empathy
-    `Burnout isn't a badge of honor.\n\nIf someone already built what you need, using it isn't "cheating."\n\nIt's called being smart.\n\nYour mental health matters more than your git commits.\n\n${SITE_URL}`,
-    // NEW — Tutorial hell
-    `Tutorial hell:\n\n→ Watch 47 YouTube videos\n→ Take 3 Udemy courses\n→ Read 12 blog posts\n→ Still can't deploy\n\nAlternative: pick a working app and reverse-engineer it.\n\n${SITE_URL}`,
-    // NEW — Scope creep
-    `The project was supposed to take 2 weeks.\n\n"Just one more feature."\n"Oh, we need this too."\n"Can you also add..."\n\n6 months later: still no users.\n\nShip first. Iterate later.\n\n${SITE_URL}`,
-    // NEW — Hiring pain
-    `Hiring a developer in 2026:\n\n→ 3 months to find one\n→ $150k+ salary\n→ 3 months to onboard\n→ First feature in 6 months\n\nOr: ${SITE_URL} → ship today\n\nYour call.`,
+    `Tired of:\n\n❌ Per-seat pricing that punishes growth\n❌ Annual contracts that auto-renew\n❌ Features locked behind enterprise tiers\n❌ Vendor lock-in\n\nOwn your software instead.\n\n${SITE_URL}`,
+    `You have a business.\nYou don't have $14k/month for SaaS.\nYou don't need 47 different subscriptions.\nYou don't need vendor lock-in.\n\nYou DO need ${SITE_URL}`,
+    `Stages of SaaS grief:\n\n1. "This tool is great!"\n2. "Wait, that's per seat?"\n3. "They raised prices again?"\n4. "We're locked in"\n5. "There must be a better way"\n\nThere is → ${SITE_URL}`,
+    `If you've ever opened a SaaS renewal invoice and felt your stomach drop...\n\nYou don't need a bigger budget.\n\nYou need to own your tools.\n\n${SITE_URL}`,
+    `"How's the SaaS budget?"\n"Up 40% from last year"\n"But we only added 3 people"\n"...per-seat pricing"\n\nThere's a better way.\n\n${SITE_URL}`,
+    `Real talk: your SaaS vendor doesn't care about your margins.\n\nThey care about their ARR.\n\nYour growth is their revenue.\n\nOwnership breaks that cycle.\n\n${SITE_URL}`,
+    `Quick math:\n\nSaaS CRM: $99/seat × 50 seats × 12 months = $59,400/year\nOwned CRM: $199 × 1 = $199. Forever.\n\n${SITE_URL}`,
+    `The real cost of SaaS isn't the monthly fee.\n\nIt's the dependency. The lock-in. The data you can't export. The features they paywall.\n\nOwnership solves all of it.\n\n${SITE_URL}`,
+    `POV: You just realized your company spends more on SaaS subscriptions than on payroll.\n\n🫠\n\n${SITE_URL}`,
+    `Things SaaS companies love:\n→ Per-seat pricing\n→ Annual lock-in\n→ "Enterprise" tiers\n→ Your dependency\n\nThings that actually help your business:\n→ None of the above\n\nOwn your tools.\n\n${SITE_URL}`,
+    `If you're an agency paying $10k/mo in SaaS for tools you could own for $500 total...\n\nI'm not saying anything.\n\nI'm just saying.\n\n${SITE_URL}`,
+    `SaaS fatigue is real.\n\nYou don't need another subscription.\n\nYou need software you own.\n\nYour margins will thank you.\n\n${SITE_URL}`,
+    `SaaS renewal roulette:\n\n→ Open email\n→ See 20% price increase\n→ "New packaging"\n→ Same features, more money\n→ Repeat annually\n\nAlternative: own your code and never play this game.\n\n${SITE_URL}`,
+    `The SaaS treadmill:\n\n"Just one more tool."\n"Oh, we need this integration too."\n"Can we upgrade to the plan with API access?"\n\n$14k/month later: you own nothing.\n\n${SITE_URL}`,
+    `Hiring someone new used to mean buying a desk.\n\nNow it means adding a seat on 12 different SaaS tools.\n\n$200/month per employee. Just in software rent.\n\nOr: ${SITE_URL} → own it all\n\nYour call.`,
   ]);
 }
 

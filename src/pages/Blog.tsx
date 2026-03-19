@@ -427,6 +427,7 @@ interface DbBlogPost {
 
 function BlogIndex() {
   const [dbPosts, setDbPosts] = useState<DbBlogPost[]>([]);
+  const [activeCategory, setActiveCategory] = useState<string>("all");
 
   useEffect(() => {
     supabase
@@ -460,6 +461,11 @@ function BlogIndex() {
     })),
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
+  const categories = ["all", ...Array.from(new Set(allPosts.map(p => p.category)))];
+  const filtered = activeCategory === "all" ? allPosts : allPosts.filter(p => p.category === activeCategory);
+  const featured = filtered[0];
+  const rest = filtered.slice(1);
+
   return (
     <div className="min-h-screen flex flex-col">
       <MetaTags
@@ -469,59 +475,101 @@ function BlogIndex() {
       />
       <Navbar />
 
-      <section className="border-b border-border bg-card/50 py-16">
-        <div className="container mx-auto px-4 text-center max-w-2xl">
-          <p className="text-xs font-bold uppercase tracking-widest text-primary mb-3">Blog</p>
-          <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-4">
-            Insights for Builders
+      {/* Editorial header */}
+      <section className="pt-20 pb-12 md:pt-28 md:pb-16">
+        <div className="container mx-auto px-4 max-w-5xl">
+          <p className="text-xs font-mono uppercase tracking-[0.3em] text-primary/60 mb-6">The OpenDraft Journal</p>
+          <h1 className="text-5xl md:text-7xl font-black tracking-[-0.04em] leading-[0.9] mb-6 max-w-3xl">
+            Ideas worth<br />
+            <span className="text-primary">building.</span>
           </h1>
-          <p className="text-muted-foreground text-lg">
-            Behind-the-scenes engineering, agent economy insights, and guides for the vibe coding era.
+          <p className="text-lg md:text-xl text-muted-foreground max-w-xl leading-relaxed">
+            Engineering deep-dives, market analysis, and builder playbooks for the ownership era.
           </p>
         </div>
       </section>
 
-      {/* Featured post */}
-      {allPosts[0] && (
-        <section className="container mx-auto px-4 py-10 max-w-3xl">
+      {/* Category pills */}
+      <section className="border-y border-border/40 bg-card/30 sticky top-16 z-30 backdrop-blur-md">
+        <div className="container mx-auto px-4 max-w-5xl">
+          <div className="flex gap-1 overflow-x-auto py-3 scrollbar-hide -mx-1 px-1">
+            {categories.map(cat => (
+              <button
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                className={`shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                  activeCategory === cat
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                }`}
+              >
+                {cat === "all" ? "All" : cat}
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Featured hero post */}
+      {featured && (
+        <section className="container mx-auto px-4 pt-12 pb-6 max-w-5xl">
           <Link
-            to={`/blog/${allPosts[0].slug}`}
-            className="block rounded-2xl border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-transparent p-8 shadow-lg hover:shadow-xl hover:border-primary/50 transition-all"
+            to={`/blog/${featured.slug}`}
+            className="group block"
           >
-            <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
-              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${CATEGORY_COLORS[allPosts[0].category] || "bg-muted text-muted-foreground"}`}>
-                {allPosts[0].category}
-              </span>
-              <Calendar className="h-3.5 w-3.5" />
-              <span>{new Date(allPosts[0].date).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</span>
-              <span>·</span>
-              <span>{allPosts[0].readTime}</span>
+            <div className="relative rounded-3xl border border-border/50 bg-gradient-to-br from-primary/[0.06] via-card to-card overflow-hidden p-10 md:p-14 transition-all hover:border-primary/30 hover:shadow-[var(--shadow-glow)]">
+              <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-primary/[0.04] to-transparent pointer-events-none" />
+              <div className="relative z-10 max-w-2xl">
+                <div className="flex items-center gap-3 text-xs text-muted-foreground mb-5">
+                  <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${CATEGORY_COLORS[featured.category] || "bg-muted text-muted-foreground"}`}>
+                    {featured.category}
+                  </span>
+                  <span className="font-mono">{new Date(featured.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
+                  <span className="text-border">·</span>
+                  <span className="font-mono">{featured.readTime}</span>
+                </div>
+                <h2 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-[-0.03em] leading-[1.05] mb-4 group-hover:text-primary transition-colors">
+                  {featured.title}
+                </h2>
+                <p className="text-base md:text-lg text-muted-foreground leading-relaxed max-w-lg">
+                  {featured.description}
+                </p>
+                <div className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-primary group-hover:gap-3 transition-all">
+                  Read article <ArrowLeft className="h-4 w-4 rotate-180" />
+                </div>
+              </div>
             </div>
-            <h2 className="text-2xl md:text-3xl font-black mb-3 leading-tight">{allPosts[0].title}</h2>
-            <p className="text-muted-foreground leading-relaxed">{allPosts[0].description}</p>
           </Link>
         </section>
       )}
 
-      <section className="container mx-auto px-4 pb-14 max-w-3xl">
-        <div className="space-y-5">
-          {allPosts.slice(1).map((post) => (
+      {/* Post grid */}
+      <section className="container mx-auto px-4 pb-20 max-w-5xl">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mt-6">
+          {rest.map((post, i) => (
             <Link
               key={post.slug}
               to={`/blog/${post.slug}`}
-              className="block rounded-2xl border border-border/60 bg-card p-6 shadow-card hover:shadow-lg hover:border-primary/30 transition-all"
+              className={`group flex flex-col rounded-2xl border border-border/40 bg-card p-6 transition-all hover:border-primary/20 hover:shadow-lg ${
+                i === 0 && rest.length > 2 ? "md:col-span-2 md:flex-row md:gap-8 md:items-center" : ""
+              }`}
             >
-              <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
-                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${CATEGORY_COLORS[post.category] || "bg-muted text-muted-foreground"}`}>
-                  {post.category}
-                </span>
-                <Calendar className="h-3.5 w-3.5" />
-                <span>{new Date(post.date).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</span>
-                <span>·</span>
-                <span>{post.readTime}</span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2.5 text-[11px] text-muted-foreground mb-3">
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${CATEGORY_COLORS[post.category] || "bg-muted text-muted-foreground"}`}>
+                    {post.category}
+                  </span>
+                  <span className="font-mono">{new Date(post.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+                  <span className="text-border">·</span>
+                  <span className="font-mono">{post.readTime}</span>
+                </div>
+                <h2 className="text-lg font-black tracking-tight mb-2 leading-snug group-hover:text-primary transition-colors line-clamp-2">
+                  {post.title}
+                </h2>
+                <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2">
+                  {post.description}
+                </p>
               </div>
-              <h2 className="text-xl font-black mb-2">{post.title}</h2>
-              <p className="text-sm text-muted-foreground leading-relaxed">{post.description}</p>
             </Link>
           ))}
         </div>

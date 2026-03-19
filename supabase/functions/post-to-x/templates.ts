@@ -176,27 +176,21 @@ export function successStoryTweet(listing?: any): string {
 // ═══════════════════════════════════════════════════════════════
 export function directCtaTweet(): string {
   return pickUnique("cta", [
-    `1,000+ apps.\n0 coding required.\n100% yours to customize.\n\nFree to browse.\n\n${SITE_URL}`,
-    `Your weekend project:\n\n1. Pick an app (5 min)\n2. Customize it (2 hrs)\n3. Launch (1 click)\n\nStart here → ${SITE_URL}`,
-    `This is your sign.\n\nStop scrolling.\nStart building.\n\n→ ${SITE_URL}`,
-    `Just browse.\n\nNo commitment. No credit card.\n\nJust see what's possible.\n\n${SITE_URL}`,
-    `Be the person who ships, not the person who plans.\n\n${SITE_URL}`,
-    `What $20/mo gets you on OpenDraft:\n\n✅ Unlimited app access\n✅ Full source code\n✅ Deploy anywhere\n✅ 14 AI gremlins maintaining everything\n✅ Direct builder access\n\nLess than your Netflix subscription.\n\n${SITE_URL}`,
-    `Challenge: Launch something by Friday.\n\nYou have everything you need.\n\n${SITE_URL}`,
-    `Pick an app.\nMake it yours.\nShip it.\n\nThat's the whole playbook.\n\n${SITE_URL}`,
-    `Every app on OpenDraft comes with:\n\n→ Full source code\n→ One-click deploy\n→ AI maintenance crew\n→ The builder's direct support\n\nThis is how software should work.\n\n${SITE_URL}`,
-    // NEW — Curiosity gap
-    `I found a way to launch apps 10x faster than any developer I know.\n\nIt's not a framework.\nIt's not a course.\nIt's not an AI coding tool.\n\nIt's a marketplace.\n\n${SITE_URL}`,
-    // NEW — Benefit stack
-    `Why 500+ founders switched to OpenDraft:\n\n→ Launch in hours, not months\n→ Full source code (no lock-in)\n→ AI agents maintain your app 24/7\n→ Message the builder directly\n→ Deploy anywhere\n\n${SITE_URL}`,
-    // NEW — Simplicity
-    `Software shopping should be as easy as buying a book on Amazon.\n\nThat's what we built.\n\n${SITE_URL}`,
-    // NEW — Use case
-    `Need a dashboard? It's there.\nNeed a landing page? It's there.\nNeed an AI tool? It's there.\nNeed an MCP server? It's there.\n\n1,000+ apps. Full source code.\n\n${SITE_URL}`,
-    // NEW — Anti-CTA
-    `Honestly? Don't visit OpenDraft.\n\nBecause once you see how fast you can ship, you'll never go back to building from scratch.\n\nDon't say I didn't warn you.\n\n${SITE_URL}`,
-    // NEW — Builder invitation
-    `Builders: your side projects are worth money.\n\nList them on OpenDraft. Set your price. Earn passive income.\n\nYour weekend project is someone else's MVP.\n\n${SITE_URL}/sell`,
+    `Paste your site.\nGet a custom app.\nOwn the code.\n\nForever.\n\n${SITE_URL}`,
+    `Your weekend project:\n\n1. Paste your URL (90 sec)\n2. Get a custom app\n3. Cancel one SaaS subscription\n\nStart here → ${SITE_URL}`,
+    `This is your sign.\n\nStop renting software.\nStart owning it.\n\n→ ${SITE_URL}`,
+    `Just paste your URL.\n\nNo commitment. No subscription.\n\nSee what you could own.\n\n${SITE_URL}`,
+    `Be the business that owns its tools, not the one that rents them.\n\n${SITE_URL}`,
+    `What ownership gets you:\n\n✅ Unlimited users — no per-seat fees\n✅ Full source code — no lock-in\n✅ One price — no renewals\n✅ AI maintenance — no DevOps bills\n\nBetter than any SaaS plan.\n\n${SITE_URL}`,
+    `Challenge: Replace one SaaS subscription by Friday.\n\nYou have everything you need.\n\n${SITE_URL}`,
+    `Paste your site.\nOwn the app.\nKeep the margin.\n\nThat's the whole playbook.\n\n${SITE_URL}`,
+    `Every app on OpenDraft comes with:\n\n→ Full source code you own\n→ Zero per-seat fees\n→ One-click deploy\n→ AI maintenance crew\n\nThis is how software should work.\n\n${SITE_URL}`,
+    `I found a way to cut SaaS spending by 80%.\n\nIt's not negotiation.\nIt's not a cheaper plan.\nIt's not open source.\n\nIt's ownership.\n\n${SITE_URL}`,
+    `Why 500+ businesses switched to OpenDraft:\n\n→ Own their tools, not rent them\n→ Full source code (no lock-in)\n→ AI agents maintain everything 24/7\n→ One price, unlimited users\n\n${SITE_URL}`,
+    `Owning your software should be as normal as owning your desk.\n\nWe made it that simple.\n\n${SITE_URL}`,
+    `Need a CRM? Own it.\nNeed a dashboard? Own it.\nNeed a booking system? Own it.\n\nNo subscriptions. No per-seat fees.\n\n${SITE_URL}`,
+    `Honestly? Don't visit OpenDraft.\n\nBecause once you see the savings, you'll never pay per-seat pricing again.\n\nDon't say I didn't warn you.\n\n${SITE_URL}`,
+    `Builders: your side projects solve someone's SaaS problem.\n\nList them on OpenDraft. Set your price. Earn while they save.\n\n${SITE_URL}/sell`,
   ]);
 }
 

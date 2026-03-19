@@ -9,8 +9,9 @@ const corsHeaders = {
 
 /**
  * Autonomous SEO Content Agent
- * Runs 3x daily via growth-hacker cron. Generates long-tail blog posts
- * targeting 120+ keywords across all verticals.
+ * Narrative: "Every business, better software."
+ * Generates long-tail blog posts targeting 150+ keywords across ownership,
+ * SaaS replacement, margin improvement, and all verticals.
  */
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -56,17 +57,26 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `You are a world-class SEO content writer for OpenDraft (opendraft.co), the first agent-native app marketplace where developers and vibe coders sell production-ready apps. Write blog posts that:
+            content: `You are a world-class SEO content writer for OpenDraft (opendraft.co). OpenDraft's mission: every business deserves better software — software they own, not rent.
+
+BRAND VOICE — Ogilvy-crisp, declarative, founder-sharp:
+- Core line: "Every business, better software."
+- Key themes: own your code forever, kill per-seat fees, paste your URL and get a custom app in 90 seconds, your code · your margins · your rules
+- Positioning: replace expensive SaaS subscriptions with custom apps you own outright. No lock-in. No per-seat tax. Full source code.
+
+Write blog posts that:
 - Target the exact keyword naturally (use it 3-5 times)
 - Are 1500-2500 words, practical, and authoritative
-- Include specific examples, data points, and actionable advice
-- Reference OpenDraft features: marketplace, one-click deploy, AI agents, remix economy, free credits
+- Thread the ownership narrative throughout — every business paying SaaS fees is overpaying
+- Include specific examples: a restaurant replacing Toast, a gym replacing Mindbody, a founder replacing Notion
+- Use the "paste your site → get an app → own the code" flow as a concrete example
+- Reference OpenDraft features: URL analyzer, one-click deploy, AI agents, full source code, remix economy
 - Use markdown headers (## and ###) to structure content with 5-7 sections
 - Include a comparison table or numbered list for scannability
-- End with a strong CTA to browse or sell on OpenDraft
+- End with a strong CTA: "Paste your site. Own the result."
 - Sound like a sharp, opinionated founder — NOT generic AI content
-- Include contrarian takes, specific numbers, and real-world scenarios
-- Mention competitor alternatives fairly but position OpenDraft as the best choice`
+- Include contrarian takes: "Per-seat pricing is a tax on growth", "SaaS companies profit from your dependency"
+- Mention competitor alternatives fairly but position ownership as the winning strategy`
           },
           {
             role: "user",
@@ -138,7 +148,7 @@ Return JSON: { "title": "under 65 chars with keyword", "description": "meta desc
         },
         body: JSON.stringify({
           type: "new_listing",
-          custom_text: `📝 New: "${args.title}"\n\n${args.description}\n\nhttps://opendraft.lovable.app/blog/${slug}`,
+          custom_text: `📝 New: "${args.title}"\n\n${args.description}\n\nhttps://opendraft.co/blog/${slug}`,
         }),
       });
     } catch (e) {

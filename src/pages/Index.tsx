@@ -364,7 +364,7 @@ export default function Index() {
         "@type": "WebSite",
         name: "OpenDraft",
         url: "https://opendraft.co",
-        description: "Every business, better software. Paste your site. Own the app.",
+        description: "Improve your company. Get promoted. Paste your site, own the app.",
       },
       {
         "@context": "https://schema.org",
@@ -381,8 +381,8 @@ export default function Index() {
   return (
     <div className="min-h-screen flex flex-col">
       <MetaTags
-        title="Every Business, Better Software | OpenDraft"
-        description="Paste your website. Get custom apps you own — no per-seat fees, no lock-in. Deploy in 90 seconds."
+        title="Improve Your Company, Get Promoted | OpenDraft"
+        description="Paste your website. Get custom apps that make your team faster and your boss impressed — no per-seat fees, no lock-in."
         path="/"
       />
       <JsonLd data={jsonLdData} />

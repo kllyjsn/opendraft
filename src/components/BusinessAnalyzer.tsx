@@ -247,6 +247,11 @@ export function BusinessAnalyzer({ onGenerate }: { onGenerate?: (prompt: string,
       navigate("/login");
       return;
     }
+    // Build brand context from current analysis result
+    const brandCtx = result?.brand_identity ? {
+      ...result.brand_identity,
+      business_name: result.business_name,
+    } : undefined;
     // Clear both sessionStorage and React state so the results panel
     // collapses and the generation progress UI in the parent becomes visible
     clearAnalysis();
@@ -254,8 +259,10 @@ export function BusinessAnalyzer({ onGenerate }: { onGenerate?: (prompt: string,
     setError(null);
     setNotice(null);
     if (onGenerate) {
-      onGenerate(prompt);
+      onGenerate(prompt, brandCtx as any);
     } else {
+      // Store brand context in sessionStorage for cross-page generation
+      if (brandCtx) sessionStorage.setItem("opendraft_brand_context", JSON.stringify(brandCtx));
       navigate(`/?generate=${encodeURIComponent(prompt)}`);
     }
   }

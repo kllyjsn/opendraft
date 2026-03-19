@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { MascotHammock } from "@/components/MascotHammock";
+
 
 export function Footer() {
   return (
@@ -68,10 +68,6 @@ export function Footer() {
           </div>
         </div>
 
-        {/* Hammock mascot */}
-        <div className="flex justify-center mb-8 -mt-2">
-          <MascotHammock size={100} />
-        </div>
 
         {/* Bottom bar */}
         <div className="divider-gradient mb-6" />

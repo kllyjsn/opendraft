@@ -49,11 +49,11 @@ const COMPANIES: PreviewCompany[] = [
     domain: "goldmansachs.com",
     industry: "Investment Banking & Financial Services",
     icon: Building2,
-    summary: "Global financial institution — we identified 4 high-impact apps to streamline client services, compliance, and deal flow.",
+    summary: "Global financial institution — we identified 4 high-impact apps that would make any ops lead look like a visionary.",
     insights: [
-      { title: "Client onboarding is slow", description: "Multi-step KYC and compliance checks create bottlenecks. A self-serve portal cuts processing time by 60%." },
-      { title: "Deal pipeline lacks visibility", description: "Analysts track deals across spreadsheets. A unified dashboard surfaces pipeline health in real time." },
-      { title: "Compliance reporting is manual", description: "Regulatory reports are assembled by hand. Automated generation reduces risk and saves 20+ hours/week." },
+      { title: "Client onboarding is slow", description: "Multi-step KYC and compliance checks create bottlenecks. Fix this and you're the person who cut processing time by 60%." },
+      { title: "Deal pipeline lacks visibility", description: "Analysts track deals across spreadsheets. Build the dashboard and leadership notices you first." },
+      { title: "Compliance reporting is manual", description: "Regulatory reports are assembled by hand. Automate it and you'll save your team 20+ hours/week." },
     ],
     builds: [
       { name: "Client Onboarding Portal", description: "KYC document collection, identity verification, and milestone tracking in one branded portal.", category: "saas_tool", priority: "high" },
@@ -67,11 +67,11 @@ const COMPANIES: PreviewCompany[] = [
     domain: "mikesbikes.com",
     industry: "Bicycle Retail & Service",
     icon: Bike,
-    summary: "Multi-location bike shop — we found 4 apps to modernize scheduling, inventory, and customer loyalty.",
+    summary: "Multi-location bike shop — we found 4 apps that would make the operations manager a legend.",
     insights: [
-      { title: "Service bookings are phone-only", description: "Customers call to schedule tune-ups and repairs. Online booking eliminates phone tag and reduces no-shows." },
-      { title: "Inventory is tracked in spreadsheets", description: "Stock levels across locations aren't synced. A real-time dashboard prevents overselling and stockouts." },
-      { title: "No loyalty program", description: "Repeat customers get no recognition. A points-based system increases retention and average order value." },
+      { title: "Service bookings are phone-only", description: "Customers call to schedule tune-ups. Fix this and you eliminate phone tag — your team thanks you, your boss notices." },
+      { title: "Inventory is tracked in spreadsheets", description: "Stock levels across locations aren't synced. Build the dashboard and you're the one who prevented the next stockout crisis." },
+      { title: "No loyalty program", description: "Repeat customers get no recognition. Launch a points system and revenue goes up — along with your reputation." },
     ],
     builds: [
       { name: "Bike Service Scheduler", description: "Online booking for tune-ups, repairs, and fittings with calendar sync and automated reminders.", category: "saas_tool", priority: "high" },
@@ -104,12 +104,12 @@ export function AnalysisShowcase() {
         >
           <p className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.3em] text-primary/80 mb-4">See it work</p>
           <h2 className="text-2xl md:text-4xl lg:text-[2.75rem] font-black tracking-[-0.03em] leading-[1.1] mb-4">
-            One URL.
+            One URL. Four wins.
             <br />
-            <span className="text-muted-foreground">Four apps. Ninety seconds.</span>
+            <span className="text-muted-foreground">One very impressed boss.</span>
           </h2>
           <p className="text-sm text-muted-foreground max-w-md mx-auto leading-relaxed">
-            Real companies. Real recommendations. Every business has software it should own.
+            Real companies. Real recommendations. Every app is an opportunity to be the person who fixed something everyone else ignored.
           </p>
         </motion.div>
 

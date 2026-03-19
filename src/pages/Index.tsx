@@ -33,7 +33,7 @@ function HeroTagline() {
     <div className="mb-6">
       {/* Ogilvy-crisp brand line */}
       <p className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.3em] text-primary/80 mb-4">
-        Every business, better software.
+        Improve your company. Get promoted.
       </p>
 
       <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-[4.5rem] font-black tracking-[-0.04em] leading-[1.1]">
@@ -364,7 +364,7 @@ export default function Index() {
         "@type": "WebSite",
         name: "OpenDraft",
         url: "https://opendraft.co",
-        description: "Every business, better software. Paste your site. Own the app.",
+        description: "Improve your company. Get promoted. Paste your site, own the app.",
       },
       {
         "@context": "https://schema.org",
@@ -381,8 +381,8 @@ export default function Index() {
   return (
     <div className="min-h-screen flex flex-col">
       <MetaTags
-        title="Every Business, Better Software | OpenDraft"
-        description="Paste your website. Get custom apps you own — no per-seat fees, no lock-in. Deploy in 90 seconds."
+        title="Improve Your Company, Get Promoted | OpenDraft"
+        description="Paste your website. Get custom apps that make your team faster and your boss impressed — no per-seat fees, no lock-in."
         path="/"
       />
       <JsonLd data={jsonLdData} />
@@ -415,9 +415,9 @@ export default function Index() {
             transition={{ duration: 0.7, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
             className="text-sm md:text-base text-muted-foreground max-w-md mx-auto mb-10 md:mb-14 leading-relaxed"
           >
-            Paste your site. We build the app.
+            Paste your site. We build the tools your team needs.
             <br className="hidden sm:block" />
-            <span className="text-foreground/70 font-medium">You own the code. Forever.</span>
+            <span className="text-foreground/70 font-medium">You look like a genius. We'll keep the secret.</span>
           </motion.p>
 
           {/* URL Input — sole CTA */}
@@ -476,11 +476,11 @@ export default function Index() {
               className="mt-6"
             >
               <div className="flex items-center justify-center gap-6 text-[11px] text-muted-foreground/50 font-medium tracking-wide">
-                <span>Your code</span>
+                <span>Better tools</span>
                 <span className="h-3 w-px bg-border/30" />
-                <span>Your margins</span>
+                <span>Better results</span>
                 <span className="h-3 w-px bg-border/30" />
-                <span>Your rules</span>
+                <span>Better career</span>
               </div>
             </motion.div>
           )}

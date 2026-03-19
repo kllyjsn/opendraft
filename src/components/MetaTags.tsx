@@ -71,7 +71,7 @@ export function MetaTags({
     return () => {
       canonical.remove();
       // Restore defaults on unmount
-      document.title = "Custom Apps From Your Website — Replace SaaS | OpenDraft";
+      document.title = "Improve Your Company, Get Promoted | OpenDraft";
       [descEl, robotsEl, ogTitleEl, ogDescEl, ogUrlEl, ogImageEl, ogTypeEl, twTitleEl, twDescEl, twImageEl, twImageAltEl, ogImageAltEl].forEach(el => {
         // Only remove dynamically created ones — leave originals from index.html
       });

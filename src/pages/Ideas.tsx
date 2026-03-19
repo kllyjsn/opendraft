@@ -163,6 +163,10 @@ export default function Ideas() {
   const { ideas, loading: ideasLoading } = useSavedIdeas();
   const { handleGenerate } = useGenerationJob();
   const [tab, setTab] = useState<"analyses" | "saved">("analyses");
+  const [selectedIdea, setSelectedIdea] = useState<IdeaDetail | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  const openIdea = (idea: IdeaDetail) => { setSelectedIdea(idea); setDialogOpen(true); };
 
   const loading = tab === "analyses" ? analysesLoading : ideasLoading;
 

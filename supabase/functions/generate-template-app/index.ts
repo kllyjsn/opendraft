@@ -557,7 +557,7 @@ Requirements:
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "google/gemini-3-flash-preview",
         messages: [
           { role: "system", content: systemContent },
           { role: "user", content: userContent },
@@ -713,7 +713,7 @@ Requirements:
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            model: "google/gemini-3-pro-image-preview",
+            model: "google/gemini-3.1-flash-image-preview",
             messages: [{ role: "user", content: prompt }],
             modalities: ["image", "text"],
           }),
@@ -755,119 +755,127 @@ Requirements:
   console.log(`Generated ${screenshotPaths.length}/2 screenshots for "${template.title}"`);
 
   /* ── Step 2b: Security post-processing ─────────────────────── */
-  // Ensure AI-generated files actually use Zod and don't contain dangerous patterns
   const generatedFiles: Array<{ path: string; content: string }> = template.files || [];
 
-  // Check if ANY generated file imports zod
   const hasZodImport = generatedFiles.some(f => /import.*from\s+['"]zod['"]|import.*{.*z.*}.*from\s+['"]zod['"]/i.test(f.content));
-
   if (!hasZodImport) {
-    // Inject a validation utilities file with common Zod schemas
     generatedFiles.push({
       path: "src/lib/validation.ts",
-      content: `import { z } from 'zod';
-
-/**
- * Common validation schemas for form inputs.
- * All user inputs should be validated with these schemas before processing.
- * @see SECURITY.md for the full security policy.
- */
-
-export const emailSchema = z.string().trim().email('Invalid email address').max(255);
-export const nameSchema = z.string().trim().min(1, 'Name is required').max(100, 'Name must be under 100 characters');
-export const messageSchema = z.string().trim().min(1, 'Message is required').max(2000, 'Message must be under 2000 characters');
-export const urlSchema = z.string().url('Invalid URL').startsWith('https://', 'URL must use HTTPS');
-export const searchSchema = z.string().trim().max(200, 'Search query too long');
-
-export const contactFormSchema = z.object({
-  name: nameSchema,
-  email: emailSchema,
-  message: messageSchema,
-});
-
-export const loginFormSchema = z.object({
-  email: emailSchema,
-  password: z.string().min(8, 'Password must be at least 8 characters').max(128),
-});
-
-export const signupFormSchema = loginFormSchema.extend({
-  name: nameSchema,
-  confirmPassword: z.string(),
-}).refine(data => data.password === data.confirmPassword, {
-  message: 'Passwords do not match',
-  path: ['confirmPassword'],
-});
-
-/** Validate data against a schema, returning typed result */
-export function validate<T>(schema: z.ZodSchema<T>, data: unknown): { success: true; data: T } | { success: false; errors: string[] } {
-  const result = schema.safeParse(data);
-  if (result.success) return { success: true, data: result.data };
-  return { success: false, errors: result.error.errors.map(e => e.message) };
-}
-`,
+      content: `import { z } from 'zod';\nexport const emailSchema = z.string().trim().email().max(255);\nexport const nameSchema = z.string().trim().min(1).max(100);\nexport const messageSchema = z.string().trim().min(1).max(2000);\nexport const contactFormSchema = z.object({ name: nameSchema, email: emailSchema, message: messageSchema });\nexport function validate<T>(schema: z.ZodSchema<T>, data: unknown) {\n  const result = schema.safeParse(data);\n  if (result.success) return { success: true as const, data: result.data };\n  return { success: false as const, errors: result.error.errors.map(e => e.message) };\n}\n`,
     });
   }
 
-  // Sanitize generated files: strip any dangerous patterns the AI might have produced
+  // Sanitize dangerous patterns
   for (const file of generatedFiles) {
     if (!file.content || !file.path) continue;
-    // Remove eval() calls
-    file.content = file.content.replace(/\beval\s*\([^)]*\)/g, '/* eval removed for security */');
-    // Remove dangerouslySetInnerHTML
-    file.content = file.content.replace(/dangerouslySetInnerHTML\s*=\s*\{\s*\{[^}]*\}\s*\}/g, '/* dangerouslySetInnerHTML removed for security */');
-    // Remove new Function()
-    file.content = file.content.replace(/new\s+Function\s*\([^)]*\)/g, '/* new Function() removed for security */');
-    // Replace http:// with https:// (except localhost)
+    file.content = file.content.replace(/\beval\s*\([^)]*\)/g, '/* eval removed */');
+    file.content = file.content.replace(/dangerouslySetInnerHTML\s*=\s*\{\s*\{[^}]*\}\s*\}/g, '/* dangerouslySetInnerHTML removed */');
+    file.content = file.content.replace(/new\s+Function\s*\([^)]*\)/g, '/* new Function removed */');
     file.content = file.content.replace(/http:\/\/(?!localhost|127\.0\.0\.1|0\.0\.0\.0)/g, 'https://');
   }
 
-  /* ── Step 3: Build ZIP ────────────────────────────────────── */
-  if (jobId) await updateJob(supabase, jobId, { stage: "packaging" });
+  /* ── Step 2c: Code quality validation & auto-fix ───────────── */
+  if (jobId) await updateJob(supabase, jobId, { stage: "validating" });
 
-  const zip = new JSZip();
-  const projectFolder = zip.folder("template")!;
-
-  for (const [path, content] of Object.entries(BASE_FILES)) {
-    if (path === "index.html") {
-      projectFolder.file(
-        path,
-        (content as string).replace(
-          "Template App",
-          template.title || "Template App"
-        )
-      );
-    } else {
-      projectFolder.file(path, content as string);
-    }
-  }
-
-  // Also put _redirects in dist/ equivalent for Netlify drag-drop deploys
-  projectFolder.file("public/_redirects", "/*    /index.html   200\n");
+  const fileMap = new Set(generatedFiles.map(f => f.path));
+  for (const p of Object.keys(BASE_FILES)) fileMap.add(p);
+  const fixLog: string[] = [];
 
   for (const file of generatedFiles) {
-    if (file.path && file.content) {
-      projectFolder.file(file.path, file.content);
+    if (!file.path.endsWith(".tsx") && !file.path.endsWith(".ts")) continue;
+    const fixes: string[] = [];
+
+    // Remove duplicate imports
+    const importLines = file.content.split("\n").filter(l => l.trimStart().startsWith("import "));
+    const seen = new Set<string>();
+    for (const line of importLines) {
+      if (seen.has(line.trim())) {
+        file.content = file.content.replace(line + "\n", "");
+        fixes.push("Removed duplicate import");
+      }
+      seen.add(line.trim());
     }
+
+    // Ensure tsx files have React import for JSX
+    if (file.path.endsWith(".tsx") && !file.content.includes("from 'react'") && !file.content.includes('from "react"')) {
+      file.content = `import React from 'react';\n${file.content}`;
+      fixes.push("Added missing React import");
+    }
+
+    // Validate App.tsx imports match generated components
+    if (file.path === "src/App.tsx") {
+      const componentFiles = generatedFiles.filter(f => f.path.startsWith("src/components/") && f.path.endsWith(".tsx"));
+      for (const comp of componentFiles) {
+        const compName = comp.path.split("/").pop()!.replace(".tsx", "");
+        const exportMatch = comp.content.match(/export\s+(?:default\s+)?(?:function|const)\s+(\w+)/);
+        const exportedName = exportMatch?.[1] || compName;
+        if (!file.content.includes(exportedName)) {
+          fixes.push(`Unused component: ${compName}`);
+        }
+      }
+    }
+
+    // Fix common AI mistakes: import from './components/X' when it should be '@/components/X'
+    file.content = file.content.replace(/from\s+['"]\.\/components\//g, "from '@/components/");
+    file.content = file.content.replace(/from\s+['"]\.\/data\//g, "from '@/data/");
+    file.content = file.content.replace(/from\s+['"]\.\/lib\//g, "from '@/lib/");
+
+    if (fixes.length > 0) fixLog.push(`${file.path}: ${fixes.join("; ")}`);
   }
+  if (fixLog.length > 0) console.log("Code quality fixes:", fixLog);
 
-  const readmeContent = "# " + (template.title || "Template") + "\n\n" +
-    (template.tagline ? "> " + template.tagline + "\n\n" : "") +
-    (template.description || "") + "\n\n" +
-    "## 🚀 Quick Start\n\n" +
-    "```bash\nnpm install\nnpm run dev\n```\n\n" +
-    "## ☁️ One-Click Deploy\n\n" +
-    "[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start)\n" +
-    "[![Deploy to Vercel](https://vercel.com/button)](https://vercel.com/import)\n\n" +
-    "```bash\n# Build for production\nnpm run build\n# Output is in dist/ — deploy anywhere\n```\n\n" +
-    "## 🛠 Tech Stack\n\n" +
-    (template.tech_stack || []).map((t: string) => "- " + t).join("\n") + "\n\n" +
-    "## 📁 Project Structure\n\n" +
-    "```\n├── src/\n│   ├── App.tsx          # Main application\n│   ├── components/      # UI components\n│   ├── data/            # Sample data\n│   └── index.css        # Tailwind styles\n├── netlify.toml         # Netlify deploy config\n├── vercel.json          # Vercel deploy config\n└── vite.config.ts       # Vite configuration\n```\n\n" +
-    "Built with ❤️ and listed on [OpenDraft](https://opendraft.lovable.app)\n";
+  /* ── Step 3: Build ZIP + Screenshots IN PARALLEL ──────────── */
+  if (jobId) await updateJob(supabase, jobId, { stage: "packaging" });
 
-  projectFolder.file("README.md", readmeContent);
+  // Start screenshots concurrently with ZIP build
+  const screenshotPromise = (async () => {
+    const paths: string[] = [];
+    const prompts = [
+      `Generate a stunning marketing screenshot for "${template.title}" — "${template.tagline || ""}". ${template.description}. Color: ${template.color_palette || "modern gradient"}. Bold hero, gradient text, glowing CTA, feature cards, social proof. $100M startup quality. 1280x720, no browser chrome.`,
+      `Generate a realistic app dashboard screenshot for "${template.title}". ${template.description}. Color: ${template.color_palette || "clean modern"}. Sidebar nav, data viz, real sample data, interactive UI. Production quality. 1280x720, no browser chrome.`,
+    ];
+    const results = await Promise.allSettled(prompts.map(async (prompt, idx) => {
+      const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ model: "google/gemini-3.1-flash-image-preview", messages: [{ role: "user", content: prompt }], modalities: ["image", "text"] }),
+      });
+      if (!resp.ok) return null;
+      const data = await resp.json();
+      const imgUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+      if (!imgUrl?.startsWith("data:image")) return null;
+      const b64 = imgUrl.split(",")[1];
+      const bin = atob(b64);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      const label = idx === 0 ? "marketing" : "app";
+      const p = `ai-generated/${slug}-${label}-${Date.now()}.png`;
+      const { error } = await supabase.storage.from("listing-screenshots").upload(p, bytes, { contentType: "image/png", upsert: false });
+      if (error) { console.error(`Screenshot ${label} upload error:`, error); return null; }
+      return p;
+    }));
+    for (const r of results) { if (r.status === "fulfilled" && r.value) paths.push(r.value); }
+    return paths;
+  })();
 
-  const zipBlob = await zip.generateAsync({ type: "uint8array" });
+  const zipPromise = (async () => {
+    const zip = new JSZip();
+    const pf = zip.folder("template")!;
+    for (const [path, content] of Object.entries(BASE_FILES)) {
+      pf.file(path, path === "index.html" ? (content as string).replace("Template App", template.title || "Template App") : content as string);
+    }
+    pf.file("public/_redirects", "/*    /index.html   200\n");
+    for (const file of generatedFiles) { if (file.path && file.content) pf.file(file.path, file.content); }
+    const readme = `# ${template.title || "Template"}\n\n${template.tagline ? "> " + template.tagline + "\n\n" : ""}${template.description || ""}\n\n## Quick Start\n\n\`\`\`bash\nnpm install\nnpm run dev\n\`\`\`\n\n## Tech Stack\n\n${(template.tech_stack || []).map((t: string) => "- " + t).join("\n")}\n\nBuilt with ❤️ on [OpenDraft](https://opendraft.lovable.app)\n`;
+    pf.file("README.md", readme);
+    return await zip.generateAsync({ type: "uint8array" });
+  })();
+
+  const [screenshotPaths, zipBlob] = await Promise.all([screenshotPromise, zipPromise]);
+  console.log(`Generated ${screenshotPaths.length}/2 screenshots for "${template.title}"`);
+
+
+
 
   /* ── Step 4: Upload ZIP to storage ─────────────────────────── */
   if (jobId) await updateJob(supabase, jobId, { stage: "uploading" });
@@ -1012,38 +1020,33 @@ serve(async (req) => {
       await updateJob(supabase, jobId, { status: "processing", stage: "researching" });
     }
 
-    console.log("Gathering market demand signals...");
-    const signals = await gatherDemandSignals(supabase);
+    // Skip heavy demand research for user-initiated builds (they already have a theme)
+    const hasUserThemes = themes.length >= count;
+    let demandContext: string | undefined;
+    let existingTitles: string[] = [];
 
-    const demandParts: string[] = [];
-    if (signals.topSearches.length > 0) {
-      demandParts.push("TOP USER SEARCHES (what people are actively looking for):\n" + signals.topSearches.map(s => `- "${s}"`).join("\n"));
+    if (!hasUserThemes) {
+      console.log("Gathering market demand signals...");
+      const signals = await gatherDemandSignals(supabase);
+      existingTitles = signals.existingTitles;
+      const demandParts: string[] = [];
+      if (signals.topSearches.length > 0) demandParts.push("TOP USER SEARCHES:\n" + signals.topSearches.map(s => `- "${s}"`).join("\n"));
+      if (signals.unfilledBounties.length > 0) demandParts.push("OPEN BOUNTIES:\n" + signals.unfilledBounties.map(b => `- ${b}`).join("\n"));
+      if (signals.highViewGaps.length > 0) demandParts.push("HIGH-VIEW LOW-SALE GAPS:\n" + signals.highViewGaps.map(g => `- ${g}`).join("\n"));
+      if (signals.existingTitles.length > 0) demandParts.push("EXISTING (avoid duplicating):\n" + signals.existingTitles.slice(0, 30).join(", "));
+      demandContext = demandParts.length > 0 ? demandParts.join("\n\n") : undefined;
+    } else {
+      console.log("User provided themes, skipping demand research for speed");
     }
-    if (signals.unfilledBounties.length > 0) {
-      demandParts.push("OPEN BOUNTIES (explicit paid demand):\n" + signals.unfilledBounties.map(b => `- ${b}`).join("\n"));
-    }
-    if (signals.highViewGaps.length > 0) {
-      demandParts.push("HIGH-VIEW LOW-SALE GAPS (interest but no conversion — opportunity to build better versions):\n" + signals.highViewGaps.map(g => `- ${g}`).join("\n"));
-    }
-    if (signals.existingTitles.length > 0) {
-      demandParts.push("EXISTING LISTINGS (avoid duplicating these):\n" + signals.existingTitles.slice(0, 30).join(", "));
-    }
-    const demandContext = demandParts.length > 0 ? demandParts.join("\n\n") : undefined;
 
-    // Use live trend research to generate themes when admin doesn't specify
     let selectedThemes: string[];
-    if (themes.length >= count) {
+    if (hasUserThemes) {
       selectedThemes = themes.slice(0, count);
     } else {
       const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY");
       const neededCount = count - themes.length;
-      console.log(`Fetching ${neededCount} trend-validated themes from live internet data...`);
-      const trendThemes = await fetchTrendValidatedThemes(
-        neededCount,
-        LOVABLE_API_KEY,
-        signals.existingTitles,
-        FIRECRAWL_API_KEY || undefined
-      );
+      console.log(`Fetching ${neededCount} trend-validated themes...`);
+      const trendThemes = await fetchTrendValidatedThemes(neededCount, LOVABLE_API_KEY, existingTitles, FIRECRAWL_API_KEY || undefined);
       selectedThemes = [...themes, ...trendThemes];
     }
 

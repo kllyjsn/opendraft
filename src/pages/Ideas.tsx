@@ -121,7 +121,17 @@ function AnalysisCard({ analysis, onGenerate, onClickBuild }: { analysis: Analyz
                   {analysis.recommended_builds.slice(1).map((build: any, i: number) => {
                     const Icon = CATEGORY_ICON[build.category] || Sparkles;
                     return (
-                      <div key={i} className="flex items-start gap-2 p-2.5 rounded-xl border border-border/40 bg-muted/20">
+                      <button
+                        key={i}
+                        onClick={() => onClickBuild({
+                          ...build,
+                          business_name: analysis.business_name,
+                          industry: analysis.industry,
+                          source_url: analysis.url,
+                          created_at: analysis.created_at,
+                        })}
+                        className="flex items-start gap-2 p-2.5 rounded-xl border border-border/40 bg-muted/20 hover:bg-muted/40 transition-colors text-left w-full group"
+                      >
                         <Icon className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5 mb-0.5">
@@ -132,15 +142,8 @@ function AnalysisCard({ analysis, onGenerate, onClickBuild }: { analysis: Analyz
                           </div>
                           <p className="text-[10px] text-muted-foreground line-clamp-1">{build.description}</p>
                         </div>
-                        <Button
-                          size="sm"
-                          onClick={() => onGenerate(build.search_query)}
-                          className="gradient-hero text-primary-foreground border-0 shadow-glow hover:opacity-90 h-6 text-[9px] font-bold rounded-md px-2 shrink-0"
-                        >
-                          <Wand2 className="h-2.5 w-2.5 mr-0.5" />
-                          Generate
-                        </Button>
-                      </div>
+                        <ArrowRight className="h-3 w-3 text-primary mt-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                      </button>
                     );
                   })}
                 </div>

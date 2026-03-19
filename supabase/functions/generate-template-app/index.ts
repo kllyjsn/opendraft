@@ -795,7 +795,26 @@ Requirements:
     });
   }
 
-  // Sanitize dangerous patterns
+  // Inject brand-aware CSS and Tailwind config overrides
+  if (brandContext) {
+    const brandCss = generatedFiles.find(f => f.path === "src/index.css");
+    const brandVars = `
+  --brand-primary: ${brandContext.primary_color};
+  --brand-secondary: ${brandContext.secondary_color};
+  --brand-accent: ${brandContext.accent_color};`;
+    if (brandCss) {
+      brandCss.content = brandCss.content.replace(':root {', `:root {${brandVars}`);
+    }
+    // Ensure the tailwind config extends with brand colors
+    const twConfig = generatedFiles.find(f => f.path === "tailwind.config.js");
+    if (twConfig && !twConfig.content.includes("brand")) {
+      twConfig.content = twConfig.content.replace(
+        "extend: {",
+        `extend: {\n      colors: {\n        brand: { primary: '${brandContext.primary_color}', secondary: '${brandContext.secondary_color}', accent: '${brandContext.accent_color}' },\n      },`
+      );
+    }
+  }
+
   for (const file of generatedFiles) {
     if (!file.content || !file.path) continue;
     file.content = file.content.replace(/\beval\s*\([^)]*\)/g, '/* eval removed */');

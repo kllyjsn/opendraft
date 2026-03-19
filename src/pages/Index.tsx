@@ -119,6 +119,11 @@ export default function Index() {
           }} />
         </div>
 
+        {/* Peeking agents on hero edges */}
+        <PeekRight className="top-[20%] hidden md:block" delay={1.2} />
+        <PeekLeft className="bottom-[15%] hidden md:block" delay={1.5} />
+        <FloatingAgent className="absolute top-[12%] right-[8%] hidden lg:block" delay={1.8} />
+
         <div className="container mx-auto px-4 text-center relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}

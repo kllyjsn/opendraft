@@ -21,6 +21,7 @@ type DeployPhase = "idle" | "deploying" | "polling" | "live" | "error";
 export const STAGE_MAP: Record<string, { label: string; pct: number }> = {
   queued: { label: "Queuing your build…", pct: 3 },
   researching: { label: "Researching market demand…", pct: 8 },
+  adapting_brand: { label: "Adapting to brand design system…", pct: 14 },
   generating_code: { label: "Generating source code…", pct: 20 },
   validating: { label: "Validating code quality…", pct: 38 },
   generating_screenshots: { label: "Creating screenshots…", pct: 42 },

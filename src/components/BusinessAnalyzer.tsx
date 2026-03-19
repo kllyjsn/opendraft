@@ -92,7 +92,7 @@ async function saveAnalysisToDb(result: AnalysisResult, isFallback: boolean) {
       business_name: result.business_name,
       industry: result.industry,
       summary: result.summary,
-      insights: result.insights,
+      insights: { items: result.insights, brand_identity: result.brand_identity || null },
       recommended_builds: result.recommended_builds,
       is_fallback: isFallback,
     });

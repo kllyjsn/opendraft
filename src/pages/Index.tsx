@@ -381,8 +381,8 @@ export default function Index() {
   return (
     <div className="min-h-screen flex flex-col">
       <MetaTags
-        title="Stop Renting Software | OpenDraft"
-        description="Replace generic SaaS with custom apps built from your website. Own the code. Cut your COGS. Deploy in 90 seconds."
+        title="Every Business, Better Software | OpenDraft"
+        description="Paste your website. Get custom apps you own — no per-seat fees, no lock-in. Deploy in 90 seconds."
         path="/"
       />
       <JsonLd data={jsonLdData} />

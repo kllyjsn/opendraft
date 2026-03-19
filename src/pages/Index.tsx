@@ -415,9 +415,9 @@ export default function Index() {
             transition={{ duration: 0.7, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
             className="text-sm md:text-base text-muted-foreground max-w-md mx-auto mb-10 md:mb-14 leading-relaxed"
           >
-            Paste your site. Get a custom app you own&nbsp;—
+            Paste your site. We build the app.
             <br className="hidden sm:block" />
-            no per-seat fees, ever.
+            <span className="text-foreground/70 font-medium">You own the code. Forever.</span>
           </motion.p>
 
           {/* URL Input — sole CTA */}

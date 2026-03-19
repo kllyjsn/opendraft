@@ -447,17 +447,35 @@ async function generateSingleTemplate(
   /* ── Step 1: Generate concept + source code via AI ─────────── */
   if (jobId) await updateJob(supabase, jobId, { stage: "generating_code" });
 
+  // Build brand-aware design directive
+  const brandDirective = brandContext ? `
+## 🎨 SOURCE BRAND DESIGN SYSTEM (HIGHEST PRIORITY)
+This app is being built FOR a specific business. You MUST adapt the design to match their brand identity:
+
+- **Primary Color**: ${brandContext.primary_color} — use for CTAs, active states, key accents
+- **Secondary Color**: ${brandContext.secondary_color} — use for secondary buttons, badges, highlights
+- **Accent Color**: ${brandContext.accent_color} — use sparingly for alerts, tags, emphasis
+- **Background**: ${brandContext.background_style} mode — ${brandContext.background_style === 'dark' ? 'dark bg (slate-900/950), light text' : brandContext.background_style === 'gradient' ? 'gradient backgrounds using brand colors' : 'white/gray-50 bg, dark text'}
+- **Design Mood**: ${brandContext.design_mood}
+- **Typography**: ${brandContext.typography_style} — ${brandContext.typography_style === 'monospace-accent' ? 'Use monospace for data/code elements, sans-serif for body' : brandContext.typography_style === 'serif-accent' ? 'Use serif for headlines, sans-serif for body' : brandContext.typography_style === 'rounded' ? 'Use rounded font-family like Nunito or system rounded' : 'Use clean geometric sans like Inter or system-ui'}
+- **Corners**: ${brandContext.border_radius} — ${brandContext.border_radius === 'sharp' ? 'rounded-none or rounded-sm' : brandContext.border_radius === 'subtle' ? 'rounded-md' : brandContext.border_radius === 'pill' ? 'rounded-full on buttons, rounded-2xl on cards' : 'rounded-lg to rounded-xl'}
+- **Visual Reference**: ${brandContext.visual_references}
+${brandContext.business_name ? `- **For**: ${brandContext.business_name} — make it feel like THEIR internal tool, not a generic template` : ''}
+
+CRITICAL: The Tailwind config and index.css MUST define CSS custom properties matching these brand colors. Generate a tailwind.config.js that extends colors with the brand palette. The index.css should set :root variables for --brand-primary, --brand-secondary, --brand-accent.
+` : '';
+
   const systemContent = `You are a WORLD-CLASS React developer and UI designer who creates STUNNING, production-grade React + Tailwind template apps that developers would happily pay for.
 
 ## YOUR QUALITY BAR
 Think Vercel's templates, Linear's UI, Stripe's dashboard — that level of craft. Every template you generate should look like it was hand-built by a top design agency. Buyers should think "I can't believe this is a template."
-
+${brandDirective}
 ## DESIGN PRINCIPLES (MANDATORY)
 1. **VISUAL HIERARCHY**: Bold headlines (text-4xl to text-6xl font-black), clear information architecture, strategic whitespace
-2. **COLOR MASTERY**: Use a cohesive palette — NOT random Tailwind colors. Pick 1 primary gradient + 2 accent colors. Examples:
+2. **COLOR MASTERY**: ${brandContext ? `Use the SOURCE BRAND colors defined above as your primary palette. Derive all UI colors from the brand identity.` : `Use a cohesive palette — NOT random Tailwind colors. Pick 1 primary gradient + 2 accent colors. Examples:
    - Indigo-to-purple gradient hero + emerald accents
    - Amber-warm theme with slate + rose accents
-   - Deep blue dashboard with cyan data highlights
+   - Deep blue dashboard with cyan data highlights`}
 3. **MOTION & DELIGHT**: Use framer-motion for EVERY major section:
    - Hero text reveal with stagger (delay 0.1 per word/line)
    - Cards that slide up + fade in on scroll using viewport detection

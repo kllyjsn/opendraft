@@ -1,14 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { MetaTags } from "@/components/MetaTags";
 import { JsonLd } from "@/components/JsonLd";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Calendar, Share2 } from "lucide-react";
+import { ArrowLeft, Share2, Clock, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { BlogInlineCTA } from "@/components/BlogInlineCTA";
+import { motion, useScroll, useSpring } from "framer-motion";
 
 interface BlogPost {
   slug: string;

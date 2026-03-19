@@ -139,13 +139,29 @@ const TOOL_SCHEMA = {
   type: "function",
   function: {
     name: "suggest_apps",
-    description: "Return business analysis with app recommendations",
+    description: "Return business analysis with app recommendations and brand identity",
     parameters: {
       type: "object",
       properties: {
         business_name: { type: "string", description: "The business name" },
         industry: { type: "string", description: "Primary industry/vertical" },
         summary: { type: "string", description: "1-2 sentence business summary" },
+        brand_identity: {
+          type: "object",
+          description: "Visual brand identity extracted from the website",
+          properties: {
+            primary_color: { type: "string", description: "Primary brand color as hex, e.g. '#00ED64' for MongoDB green" },
+            secondary_color: { type: "string", description: "Secondary brand color as hex" },
+            accent_color: { type: "string", description: "Accent/highlight color as hex" },
+            background_style: { type: "string", enum: ["light", "dark", "gradient"], description: "Overall background approach" },
+            design_mood: { type: "string", description: "2-4 word design mood, e.g. 'technical minimalist', 'warm corporate', 'bold playful'" },
+            typography_style: { type: "string", enum: ["geometric-sans", "humanist-sans", "rounded", "monospace-accent", "serif-accent", "system-default"], description: "Font personality that matches the brand" },
+            border_radius: { type: "string", enum: ["sharp", "subtle", "rounded", "pill"], description: "Corner style matching brand feel" },
+            visual_references: { type: "string", description: "1 sentence describing what the generated UI should feel like, referencing the source brand. E.g. 'MongoDB Atlas console — dark panels, green accents, data-dense layouts'" },
+          },
+          required: ["primary_color", "secondary_color", "accent_color", "background_style", "design_mood", "typography_style", "border_radius", "visual_references"],
+          additionalProperties: false,
+        },
         insights: {
           type: "array",
           description: "3-4 key industry insights about their tech needs",
@@ -176,7 +192,7 @@ const TOOL_SCHEMA = {
           },
         },
       },
-      required: ["business_name", "industry", "summary", "insights", "recommended_builds"],
+      required: ["business_name", "industry", "summary", "brand_identity", "insights", "recommended_builds"],
       additionalProperties: false,
     },
   },

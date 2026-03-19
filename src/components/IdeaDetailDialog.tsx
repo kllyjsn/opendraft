@@ -91,6 +91,29 @@ export function IdeaDetailDialog({ idea, open, onOpenChange, onGenerate }: Props
             </div>
           )}
 
+          {/* Brand color palette preview */}
+          {idea.brand_identity && (
+            <div className="bg-muted/20 rounded-xl p-3 border border-border/30 space-y-2">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Brand Design System</p>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
+                  {["primary_color", "secondary_color", "accent_color"].map((key) => (
+                    <div
+                      key={key}
+                      className="h-5 w-5 rounded-md border border-border/40 shadow-sm"
+                      style={{ backgroundColor: idea.brand_identity?.[key] }}
+                      title={`${key.replace("_", " ")}: ${idea.brand_identity?.[key]}`}
+                    />
+                  ))}
+                </div>
+                <span className="text-[10px] text-muted-foreground italic">{idea.brand_identity.design_mood}</span>
+              </div>
+              {idea.brand_identity.visual_references && (
+                <p className="text-[10px] text-foreground/60 leading-relaxed">{idea.brand_identity.visual_references}</p>
+              )}
+            </div>
+          )}
+
           {idea.source_url && (
             <a
               href={idea.source_url}

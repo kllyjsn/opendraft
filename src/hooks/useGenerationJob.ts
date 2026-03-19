@@ -143,7 +143,7 @@ export function useGenerationJob() {
     return () => { supabase.removeChannel(channel); clearInterval(poll); clearTimeout(timeout); };
   }, [genJob?.id, genJob?.status]);
 
-  const handleGenerate = useCallback(async (prompt: string) => {
+  const handleGenerate = useCallback(async (prompt: string, brandContext?: Record<string, string>) => {
     if (!user) { navigate("/login"); return; }
     if (!prompt.trim()) return;
     setGenerating(true);
@@ -164,7 +164,12 @@ export function useGenerationJob() {
       setGenJob(jobRow as GenJob);
 
       supabase.functions.invoke("generate-template-app", {
-        body: { count: 1, themes: [prompt], job_id: jobRow.id },
+        body: {
+          count: 1,
+          themes: [prompt],
+          job_id: jobRow.id,
+          ...(brandContext ? { brand_context: brandContext } : {}),
+        },
       }).catch(console.error);
     } catch (err) {
       setGenJob({ id: "", status: "failed", stage: "error", listing_id: null, listing_title: null, error: err instanceof Error ? err.message : "Unknown error" });

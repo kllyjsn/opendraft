@@ -99,7 +99,7 @@ async function saveAnalysisToDb(result: AnalysisResult, isFallback: boolean) {
   } catch {}
 }
 
-export function BusinessAnalyzer({ onGenerate }: { onGenerate?: (prompt: string) => void }) {
+export function BusinessAnalyzer({ onGenerate }: { onGenerate?: (prompt: string, brandContext?: Record<string, string>) => void }) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { saveIdea } = useSavedIdeas();

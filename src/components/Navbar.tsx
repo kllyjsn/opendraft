@@ -53,7 +53,7 @@ export function Navbar() {
           <motion.img
             src="/mascot-icon.png"
             alt="OpenDraft mascot"
-            className="h-8 w-8 rounded-lg bg-white/90 p-0.5"
+            className="h-9 w-9 rounded-lg"
             whileHover={{ scale: 1.15, rotate: [0, -8, 8, -4, 0] }}
             transition={{ duration: 0.5, ease: "easeInOut" }}
           />

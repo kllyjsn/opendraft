@@ -197,6 +197,7 @@ export function BusinessAnalyzer({ onGenerate }: { onGenerate?: (prompt: string)
       if (!data?.recommended_builds?.length) throw new Error("No build recommendations returned.");
       setResult(data);
       saveAnalysis(data);
+      saveAnalysisToDb(data, false);
     } catch (err) {
       const fallback = buildInstantFallback(normalizedUrl);
       setResult(fallback);

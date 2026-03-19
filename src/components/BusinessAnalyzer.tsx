@@ -25,10 +25,22 @@ interface RecommendedBuild {
   search_query: string;
 }
 
+interface BrandIdentity {
+  primary_color: string;
+  secondary_color: string;
+  accent_color: string;
+  background_style: string;
+  design_mood: string;
+  typography_style: string;
+  border_radius: string;
+  visual_references: string;
+}
+
 interface AnalysisResult {
   business_name: string;
   industry: string;
   summary: string;
+  brand_identity?: BrandIdentity;
   insights: Insight[];
   recommended_builds: RecommendedBuild[];
   pageTitle: string;

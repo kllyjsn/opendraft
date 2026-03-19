@@ -236,14 +236,14 @@ export function builderSpotlightTweet(builder: {
 // ═══════════════════════════════════════════════════════════════
 export function hotTakeTweet(): string {
   return pickUnique("hottake", [
-    `Hot take:\n\nIn 3 years, "I built this from scratch" will be as weird as "I made my own electricity."\n\nWe're entering the assembly era of software.\n\n${SITE_URL}`,
-    `The best product managers in 2026 aren't managing sprints.\n\nThey're curating components.\n\nThe skill is taste, not tickets.\n\n${SITE_URL}`,
-    `"Learn to code" was the advice of 2015.\n\n"Learn to ship" is the advice of 2026.\n\nDifferent era. Different leverage.\n\n${SITE_URL}`,
-    `Controversial:\n\n90% of SaaS apps are the same 5 features in different wrappers:\n\n→ Auth\n→ Dashboard\n→ CRUD\n→ Payments\n→ Email\n\nStop rebuilding the wrapper.\n\n${SITE_URL}`,
-    `The best code is code you didn't write.\n\nThe best feature is the one that already works.\n\nThe best launch is the one that happens today.\n\n${SITE_URL}`,
-    `Agencies charging $50k for apps that exist for $49 on OpenDraft.\n\nThe arbitrage won't last forever.\n\nThe smart clients are already figuring this out.\n\n${SITE_URL}`,
-    `"But what about customization?"\n\nYou get the full source code.\n\nReact. TypeScript. Tailwind.\n\nCustomize literally anything.\n\nThat objection is dead.\n\n${SITE_URL}`,
-    `The entire software industry is being disrupted by a simple insight:\n\nMost software doesn't need to be unique.\n\nIt needs to work.\n\n${SITE_URL}`,
+    `Hot take:\n\nIn 3 years, "I pay per-seat" will be as embarrassing as "I still use a fax machine."\n\nOwnership is the new default.\n\n${SITE_URL}`,
+    `The best CFOs in 2026 aren't negotiating SaaS contracts.\n\nThey're replacing them with owned software.\n\nThe skill is margin management, not vendor management.\n\n${SITE_URL}`,
+    `"Get a SaaS subscription" was the advice of 2020.\n\n"Own your tools" is the advice of 2026.\n\nDifferent era. Different margins.\n\n${SITE_URL}`,
+    `Controversial:\n\n90% of what you pay SaaS companies for is their sales team, not their product.\n\nThe actual software costs $39 to own.\n\n${SITE_URL}`,
+    `The best software is software you own.\n\nThe best price is the one you pay once.\n\nThe best margin is the one SaaS can't erode.\n\n${SITE_URL}`,
+    `SaaS companies charging $50k/year for tools you could own for $200.\n\nThe pricing arbitrage won't last forever.\n\nSmart businesses are already figuring this out.\n\n${SITE_URL}`,
+    `"But what about updates?"\n\nAI agents maintain your owned apps 24/7.\n\nSecurity patches. Performance. Bug fixes.\n\nThat objection is dead.\n\n${SITE_URL}`,
+    `The entire SaaS industry is being disrupted by a simple insight:\n\nBusinesses don't need subscriptions.\n\nThey need software that works. And they should own it.\n\n${SITE_URL}`,
   ]);
 }
 

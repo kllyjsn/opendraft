@@ -44,7 +44,7 @@ const Category = lazy(() => import("./pages/Category"));
 const LifestyleCategory = lazy(() => import("./pages/LifestyleCategory"));
 const BuiltWith = lazy(() => import("./pages/BuiltWith"));
 const GuideSell = lazy(() => import("./pages/GuideSell"));
-const Blog = lazy(() => import("./pages/Blog"));
+// Blog uses named exports — handled via BlogIndexLazy / BlogPostLazy below
 const Terms = lazy(() => import("./pages/Terms"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Developers = lazy(() => import("./pages/Developers"));

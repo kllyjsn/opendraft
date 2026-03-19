@@ -421,7 +421,18 @@ async function generateSingleTemplate(
   theme: string,
   LOVABLE_API_KEY: string,
   demandContext?: string,
-  jobId?: string
+  jobId?: string,
+  brandContext?: {
+    primary_color: string;
+    secondary_color: string;
+    accent_color: string;
+    background_style: string;
+    design_mood: string;
+    typography_style: string;
+    border_radius: string;
+    visual_references: string;
+    business_name?: string;
+  }
 ): Promise<{
   success: boolean;
   listing_id?: string;

@@ -13,7 +13,7 @@ export function Footer() {
           {/* Brand */}
           <div className="md:col-span-1">
             <div className="flex items-center gap-2 font-black text-lg mb-4">
-              <img src="/mascot-icon.png" alt="OpenDraft mascot" className="h-7 w-7 rounded-lg bg-white/90 p-0.5" />
+              <img src={mascotLogo} alt="OpenDraft mascot" className="h-7 w-7 rounded-lg" />
               <span className="text-gradient">OpenDraft</span>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">

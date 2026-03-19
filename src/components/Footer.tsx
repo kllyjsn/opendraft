@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { MascotHammock } from "@/components/MascotHammock";
+
 
 export function Footer() {
   return (

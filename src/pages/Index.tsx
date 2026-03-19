@@ -476,11 +476,11 @@ export default function Index() {
               className="mt-6"
             >
               <div className="flex items-center justify-center gap-6 text-[11px] text-muted-foreground/50 font-medium tracking-wide">
-                <span>Your code</span>
+                <span>Better tools</span>
                 <span className="h-3 w-px bg-border/30" />
-                <span>Your margins</span>
+                <span>Better results</span>
                 <span className="h-3 w-px bg-border/30" />
-                <span>Your rules</span>
+                <span>Better career</span>
               </div>
             </motion.div>
           )}

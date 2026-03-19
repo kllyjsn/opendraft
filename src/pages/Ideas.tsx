@@ -8,6 +8,7 @@ import { useAnalyzedUrls, AnalyzedUrl } from "@/hooks/useAnalyzedUrls";
 import { useSavedIdeas, SavedIdea } from "@/hooks/useSavedIdeas";
 import { useAuth } from "@/hooks/useAuth";
 import { useGenerationJob } from "@/hooks/useGenerationJob";
+import { IdeaDetailDialog, IdeaDetail } from "@/components/IdeaDetailDialog";
 import { Button } from "@/components/ui/button";
 import {
   Lightbulb, Wand2, Rocket, Globe, Zap, Brain, Layout, FileText,

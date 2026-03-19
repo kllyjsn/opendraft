@@ -33,7 +33,7 @@ function HeroTagline() {
     <div className="mb-6">
       {/* Ogilvy-crisp brand line */}
       <p className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.3em] text-primary/80 mb-4">
-        Every business, better software.
+        Improve your company. Get promoted.
       </p>
 
       <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-[4.5rem] font-black tracking-[-0.04em] leading-[1.1]">

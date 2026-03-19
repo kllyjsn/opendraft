@@ -1,7 +1,9 @@
 /**
- * Tweet text templates — 5X VARIETY
- * Tones: sharp founder, meme-lord, storyteller, data nerd, philosopher, absurdist, contrarian, empathetic mentor
- * Formats: one-liners, mini-threads, lists, dialogues, mini-stories, hot takes, data drops, builder spotlights
+ * Tweet text templates — ownership-first narrative
+ * Brand: "Every business, better software."
+ * Voice: Ogilvy-crisp, anti-SaaS-rent, margin-obsessed, founder-sharp
+ * Tones: sharp founder, CFO, storyteller, data nerd, philosopher, contrarian
+ * Formats: one-liners, mini-threads, lists, dialogues, mini-stories, hot takes, data drops
  */
 
 const SITE_URL = "https://opendraft.co";

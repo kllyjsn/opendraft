@@ -320,6 +320,8 @@ export default function Index() {
         </div>
       </section>
 
+      <AnalysisShowcase />
+
       {!user && <EmailCapture />}
 
       <GremlinWorkshop />

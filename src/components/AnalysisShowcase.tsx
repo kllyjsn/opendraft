@@ -104,12 +104,12 @@ export function AnalysisShowcase() {
         >
           <p className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.3em] text-primary/80 mb-4">See it work</p>
           <h2 className="text-2xl md:text-4xl lg:text-[2.75rem] font-black tracking-[-0.03em] leading-[1.1] mb-4">
-            One URL.
+            One URL. Four wins.
             <br />
-            <span className="text-muted-foreground">Four apps. Ninety seconds.</span>
+            <span className="text-muted-foreground">One very impressed boss.</span>
           </h2>
           <p className="text-sm text-muted-foreground max-w-md mx-auto leading-relaxed">
-            Real companies. Real recommendations. Every business has software it should own.
+            Real companies. Real recommendations. Every app is an opportunity to be the person who fixed something everyone else ignored.
           </p>
         </motion.div>
 

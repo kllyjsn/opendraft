@@ -73,7 +73,7 @@ export function EmailCapture() {
               </div>
               <p className="text-[15px] font-bold text-foreground">You're in.</p>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                We'll send you our best tips on replacing SaaS with apps you own.
+                We'll send you the playbook: how operators like you are shipping tools that get noticed.
               </p>
             </motion.div>
           ) : (
@@ -87,15 +87,15 @@ export function EmailCapture() {
             >
               <div>
                 <p className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.3em] text-primary/80 mb-4">
-                  The shift is happening
+                  The operator's edge
                 </p>
                 <h3 className="text-xl md:text-2xl font-black tracking-[-0.02em] text-foreground">
-                  Every business deserves
+                  Ship tools your team loves.
                   <br />
-                  <span className="text-muted-foreground">software it actually owns.</span>
+                  <span className="text-muted-foreground">Get the credit you deserve.</span>
                 </h3>
                 <p className="text-sm text-muted-foreground mt-3 leading-relaxed">
-                  Get the free playbook: how teams are cutting SaaS costs 80% and improving margins overnight.
+                  Free playbook: how operators are cutting costs, shipping faster, and earning promotions — all from one URL.
                 </p>
               </div>
               <form onSubmit={handleSubmit} className="flex gap-2 max-w-sm mx-auto">

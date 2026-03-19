@@ -4,33 +4,33 @@ import { Code2, Zap, Shield, DollarSign, Rocket, Layers } from "lucide-react";
 const features = [
   {
     icon: Zap,
-    title: "Paste. Build. Live.",
-    description: "Enter a URL. Get a production app — deployed to your domain in 90 seconds flat.",
+    title: "Look like a hero.",
+    description: "Paste your URL. Get a custom app your team actually needs — deployed before your next standup.",
   },
   {
     icon: Code2,
     title: "Own every line.",
-    description: "Full source. No lock-in. Fork it, extend it, sell it. It's yours.",
+    description: "Full source code. No vendor lock-in. You control it, extend it, and take it with you — wherever your career goes.",
   },
   {
     icon: DollarSign,
     title: "Kill the per-seat tax.",
-    description: "One price. Unlimited users. Stop paying more as your team grows.",
+    description: "One price. Unlimited users. Show leadership how you saved $50k/year and watch what happens next.",
   },
   {
     icon: Shield,
-    title: "Audited before you ship.",
-    description: "Automated vulnerability scans on every deploy. Security isn't optional.",
+    title: "Ship with confidence.",
+    description: "Every app is security-scanned before deploy. You'll never be the person who shipped a vulnerability.",
   },
   {
     icon: Layers,
-    title: "Built for what's next.",
-    description: "TypeScript, React, Tailwind. Agent-ready APIs from day one.",
+    title: "Impress without effort.",
+    description: "TypeScript, React, Tailwind — modern stack, production-ready. Your team thinks you spent months on it.",
   },
   {
     icon: Rocket,
-    title: "Gets better while you sleep.",
-    description: "AI agents monitor, optimize, and ship improvements — your app evolves on autopilot.",
+    title: "It gets better on its own.",
+    description: "AI agents optimize and maintain your apps 24/7. You get the credit. They do the work.",
   },
 ];
 
@@ -48,12 +48,12 @@ export function ValueProps() {
           className="text-center mb-16"
         >
           <p className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.3em] text-primary/80 mb-4">
-            The ownership advantage
+            The career advantage
           </p>
           <h2 className="text-2xl md:text-4xl lg:text-[2.75rem] font-black tracking-[-0.03em] leading-[1.1]">
-            Better software.
+            Better tools. Better results.
             <br />
-            <span className="text-muted-foreground">Better margins.</span>
+            <span className="text-muted-foreground">Better title.</span>
           </h2>
         </motion.div>
 

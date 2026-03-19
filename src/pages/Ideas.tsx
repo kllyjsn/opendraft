@@ -69,15 +69,29 @@ function AnalysisCard({ analysis, onGenerate }: { analysis: AnalyzedUrl; onGener
         </div>
       </div>
 
-      {/* Recommended builds preview / expand */}
+      {/* Always-visible Generate button for the top recommended build */}
       {analysis.recommended_builds?.length > 0 && (
+        <div className="mb-3">
+          <Button
+            size="sm"
+            onClick={() => onGenerate(analysis.recommended_builds[0].search_query)}
+            className="w-full gradient-hero text-primary-foreground border-0 shadow-glow hover:opacity-90 h-8 text-[11px] font-bold rounded-lg gap-1.5"
+          >
+            <Wand2 className="h-3.5 w-3.5" />
+            Generate top pick: {analysis.recommended_builds[0].name}
+          </Button>
+        </div>
+      )}
+
+      {/* Expandable recommended builds */}
+      {analysis.recommended_builds?.length > 1 && (
         <>
           <button
             onClick={() => setExpanded(!expanded)}
             className="text-[10px] font-bold uppercase tracking-widest text-primary mb-2 flex items-center gap-1 hover:opacity-80"
           >
             <Rocket className="h-3 w-3" />
-            {analysis.recommended_builds.length} recommended build{analysis.recommended_builds.length !== 1 ? "s" : ""}
+            {analysis.recommended_builds.length - 1} more build{analysis.recommended_builds.length > 2 ? "s" : ""}
             <span className="text-muted-foreground font-normal ml-1">{expanded ? "▲" : "▼"}</span>
           </button>
 
@@ -90,7 +104,7 @@ function AnalysisCard({ analysis, onGenerate }: { analysis: AnalyzedUrl; onGener
                 className="overflow-hidden"
               >
                 <div className="grid gap-2 mb-2">
-                  {analysis.recommended_builds.map((build: any, i: number) => {
+                  {analysis.recommended_builds.slice(1).map((build: any, i: number) => {
                     const Icon = CATEGORY_ICON[build.category] || Sparkles;
                     return (
                       <div key={i} className="flex items-start gap-2 p-2.5 rounded-xl border border-border/40 bg-muted/20">

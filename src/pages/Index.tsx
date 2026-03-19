@@ -14,6 +14,7 @@ import { CheckCircle, AlertCircle, ExternalLink, Rocket, Globe, Pencil, Wand2, X
 import { Button } from "@/components/ui/button";
 import { EmailCapture } from "@/components/EmailCapture";
 import { AnalysisShowcase } from "@/components/AnalysisShowcase";
+import { PeekRight, PeekLeft, FloatingAgent, AgentParade, PeekBottom } from "@/components/PeekingAgents";
 
 const ROTATING_WORDS = ["CRM", "scheduler", "dashboard", "portal", "tracker", "helpdesk"];
 

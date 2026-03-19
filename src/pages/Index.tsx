@@ -364,7 +364,7 @@ export default function Index() {
         "@type": "WebSite",
         name: "OpenDraft",
         url: "https://opendraft.co",
-        description: "Paste your website. We build you an app.",
+        description: "Every business, better software. Paste your site. Own the app.",
       },
       {
         "@context": "https://schema.org",

@@ -30,35 +30,42 @@ function HeroTagline() {
   }, []);
 
   return (
-    <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-[4.5rem] font-black tracking-[-0.04em] mb-6 leading-[1.1]">
-      <span className="block text-foreground">Stop renting</span>
-      <span className="block text-foreground">
-        your{" "}
-        <span
-          className="inline-block relative overflow-hidden align-bottom"
-          style={{ minWidth: "7ch" }}
-        >
-          <AnimatePresence mode="wait">
-            <motion.span
-              key={ROTATING_WORDS[index]}
-              initial={{ opacity: 0, y: 28, filter: "blur(6px)" }}
-              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-              exit={{ opacity: 0, y: -28, filter: "blur(6px)" }}
-              transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-              className="inline-block text-gradient animate-gradient-shift"
-              style={{
-                backgroundImage:
-                  "linear-gradient(135deg, hsl(265 90% 62%), hsl(320 95% 60%), hsl(175 95% 50%), hsl(265 90% 62%))",
-                backgroundSize: "200% 200%",
-              }}
-            >
-              {ROTATING_WORDS[index]}
-            </motion.span>
-          </AnimatePresence>
+    <div className="mb-6">
+      {/* Ogilvy-crisp brand line */}
+      <p className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.3em] text-primary/80 mb-4">
+        Every business, better software.
+      </p>
+
+      <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-[4.5rem] font-black tracking-[-0.04em] leading-[1.1]">
+        <span className="block text-foreground">Stop renting</span>
+        <span className="block text-foreground">
+          your{" "}
+          <span
+            className="inline-block relative overflow-hidden align-bottom"
+            style={{ minWidth: "7ch" }}
+          >
+            <AnimatePresence mode="wait">
+              <motion.span
+                key={ROTATING_WORDS[index]}
+                initial={{ opacity: 0, y: 28, filter: "blur(6px)" }}
+                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                exit={{ opacity: 0, y: -28, filter: "blur(6px)" }}
+                transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+                className="inline-block text-gradient animate-gradient-shift"
+                style={{
+                  backgroundImage:
+                    "linear-gradient(135deg, hsl(265 90% 62%), hsl(320 95% 60%), hsl(175 95% 50%), hsl(265 90% 62%))",
+                  backgroundSize: "200% 200%",
+                }}
+              >
+                {ROTATING_WORDS[index]}
+              </motion.span>
+            </AnimatePresence>
+          </span>
+          .
         </span>
-        .
-      </span>
-    </h1>
+      </h1>
+    </div>
   );
 }
 

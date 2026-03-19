@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Mail, CheckCircle, ArrowRight } from "lucide-react";
+import { CheckCircle, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { logActivity } from "@/lib/activity-logger";
 
@@ -55,7 +55,10 @@ export function EmailCapture() {
   };
 
   return (
-    <section className="py-12 md:py-16">
+    <section className="py-16 md:py-24 relative">
+      {/* Top divider */}
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border/50 to-transparent" />
+
       <div className="container mx-auto px-4 max-w-lg text-center">
         <AnimatePresence mode="wait">
           {submitted ? (
@@ -63,31 +66,35 @@ export function EmailCapture() {
               key="success"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="space-y-3"
+              className="space-y-4"
             >
               <div className="inline-flex items-center justify-center h-12 w-12 rounded-full bg-primary/10 mx-auto">
                 <CheckCircle className="h-6 w-6 text-primary" />
               </div>
-              <p className="text-sm font-bold text-foreground">You're in.</p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-[15px] font-bold text-foreground">You're in.</p>
+              <p className="text-sm text-muted-foreground leading-relaxed">
                 We'll send you our best tips on replacing SaaS with apps you own.
               </p>
             </motion.div>
           ) : (
             <motion.div
               key="form"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="space-y-4"
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-60px" }}
+              transition={{ duration: 0.7 }}
+              className="space-y-5"
             >
-              <div className="inline-flex items-center justify-center h-10 w-10 rounded-xl bg-primary/10 mx-auto">
-                <Mail className="h-5 w-5 text-primary" />
-              </div>
               <div>
-                <h3 className="text-base font-black text-foreground">
-                  Not ready yet? Get the free guide.
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
+                  Stay in the loop
+                </p>
+                <h3 className="text-xl md:text-2xl font-black tracking-[-0.02em] text-foreground">
+                  Not ready yet?
+                  <br />
+                  <span className="text-muted-foreground">Get the free guide.</span>
                 </h3>
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-sm text-muted-foreground mt-3 leading-relaxed">
                   Learn how teams are cutting SaaS costs 80% by owning their tools.
                 </p>
               </div>
@@ -97,18 +104,18 @@ export function EmailCapture() {
                   placeholder="you@company.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="flex-1 h-10 text-sm bg-card border-border/50"
+                  className="flex-1 h-11 text-sm bg-card border-border/50 rounded-xl"
                   required
                 />
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="gradient-hero text-white border-0 shadow-glow h-10 px-4 shrink-0"
+                  className="gradient-hero text-primary-foreground border-0 shadow-glow h-11 px-5 shrink-0 rounded-xl font-bold"
                 >
                   {loading ? "..." : <ArrowRight className="h-4 w-4" />}
                 </Button>
               </form>
-              <p className="text-[10px] text-muted-foreground/50">
+              <p className="text-[10px] text-muted-foreground/40">
                 No spam. Unsubscribe anytime.
               </p>
             </motion.div>

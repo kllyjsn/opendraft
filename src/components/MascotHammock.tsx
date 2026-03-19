@@ -10,7 +10,7 @@ export function MascotHammock({ size = 200, className = "" }: { size?: number; c
   const w = s * 1.8;
 
   return (
-    <div className={`inline-flex items-end justify-center select-none ${className}`} style={{ width: w, height: s }}>
+    <div className={`relative inline-flex items-end justify-center select-none ${className}`} style={{ width: w, height: s }}>
       <svg viewBox={`0 0 ${w} ${s}`} width={w} height={s} fill="none" xmlns="http://www.w3.org/2000/svg">
 
         {/* Left palm tree */}

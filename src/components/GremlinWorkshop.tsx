@@ -1,5 +1,6 @@
 import { motion, useInView, AnimatePresence } from "framer-motion";
 import { useRef, useEffect, useState, useMemo } from "react";
+import { SpaceGremlin } from "@/components/SpaceGremlin";
 
 /* ═══════════════════════════════════════════════════
    GREMLIN WORKSHOP — Interstellar Coolness Mode ✦

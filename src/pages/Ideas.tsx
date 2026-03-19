@@ -73,14 +73,27 @@ function AnalysisCard({ analysis, onGenerate, onClickBuild }: { analysis: Analyz
       {/* Always-visible Generate button for the top recommended build */}
       {analysis.recommended_builds?.length > 0 && (
         <div className="mb-3">
-          <Button
-            size="sm"
-            onClick={() => onGenerate(analysis.recommended_builds[0].search_query)}
-            className="w-full gradient-hero text-primary-foreground border-0 shadow-glow hover:opacity-90 h-8 text-[11px] font-bold rounded-lg gap-1.5"
+          <button
+            onClick={() => onClickBuild({
+              ...analysis.recommended_builds[0],
+              business_name: analysis.business_name,
+              industry: analysis.industry,
+              source_url: analysis.url,
+              created_at: analysis.created_at,
+            })}
+            className="w-full text-left rounded-lg border border-primary/20 bg-primary/5 hover:bg-primary/10 transition-colors p-2.5 group"
           >
-            <Wand2 className="h-3.5 w-3.5" />
-            Generate top pick: {analysis.recommended_builds[0].name}
-          </Button>
+            <div className="flex items-center gap-2">
+              <Wand2 className="h-3.5 w-3.5 text-primary shrink-0" />
+              <span className="text-[11px] font-bold flex-1 truncate">
+                {analysis.recommended_builds[0].name}
+              </span>
+              <ArrowRight className="h-3 w-3 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+            <p className="text-[10px] text-muted-foreground line-clamp-1 mt-0.5 ml-5.5">
+              {analysis.recommended_builds[0].description}
+            </p>
+          </button>
         </div>
       )}
 

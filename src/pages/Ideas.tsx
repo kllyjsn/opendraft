@@ -8,6 +8,7 @@ import { useAnalyzedUrls, AnalyzedUrl } from "@/hooks/useAnalyzedUrls";
 import { useSavedIdeas, SavedIdea } from "@/hooks/useSavedIdeas";
 import { useAuth } from "@/hooks/useAuth";
 import { useGenerationJob } from "@/hooks/useGenerationJob";
+import { IdeaDetailDialog, IdeaDetail } from "@/components/IdeaDetailDialog";
 import { Button } from "@/components/ui/button";
 import {
   Lightbulb, Wand2, Rocket, Globe, Zap, Brain, Layout, FileText,
@@ -26,7 +27,7 @@ const PRIORITY_TAG: Record<string, string> = {
   low: "bg-muted text-muted-foreground",
 };
 
-function AnalysisCard({ analysis, onGenerate }: { analysis: AnalyzedUrl; onGenerate: (q: string) => void }) {
+function AnalysisCard({ analysis, onGenerate, onClickBuild }: { analysis: AnalyzedUrl; onGenerate: (q: string) => void; onClickBuild: (build: IdeaDetail) => void }) {
   const [expanded, setExpanded] = useState(false);
   const domain = (() => {
     try { return new URL(analysis.url).hostname.replace("www.", ""); } catch { return analysis.url; }
@@ -72,14 +73,27 @@ function AnalysisCard({ analysis, onGenerate }: { analysis: AnalyzedUrl; onGener
       {/* Always-visible Generate button for the top recommended build */}
       {analysis.recommended_builds?.length > 0 && (
         <div className="mb-3">
-          <Button
-            size="sm"
-            onClick={() => onGenerate(analysis.recommended_builds[0].search_query)}
-            className="w-full gradient-hero text-primary-foreground border-0 shadow-glow hover:opacity-90 h-8 text-[11px] font-bold rounded-lg gap-1.5"
+          <button
+            onClick={() => onClickBuild({
+              ...analysis.recommended_builds[0],
+              business_name: analysis.business_name,
+              industry: analysis.industry,
+              source_url: analysis.url,
+              created_at: analysis.created_at,
+            })}
+            className="w-full text-left rounded-lg border border-primary/20 bg-primary/5 hover:bg-primary/10 transition-colors p-2.5 group"
           >
-            <Wand2 className="h-3.5 w-3.5" />
-            Generate top pick: {analysis.recommended_builds[0].name}
-          </Button>
+            <div className="flex items-center gap-2">
+              <Wand2 className="h-3.5 w-3.5 text-primary shrink-0" />
+              <span className="text-[11px] font-bold flex-1 truncate">
+                {analysis.recommended_builds[0].name}
+              </span>
+              <ArrowRight className="h-3 w-3 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+            <p className="text-[10px] text-muted-foreground line-clamp-1 mt-0.5 ml-5.5">
+              {analysis.recommended_builds[0].description}
+            </p>
+          </button>
         </div>
       )}
 
@@ -107,7 +121,17 @@ function AnalysisCard({ analysis, onGenerate }: { analysis: AnalyzedUrl; onGener
                   {analysis.recommended_builds.slice(1).map((build: any, i: number) => {
                     const Icon = CATEGORY_ICON[build.category] || Sparkles;
                     return (
-                      <div key={i} className="flex items-start gap-2 p-2.5 rounded-xl border border-border/40 bg-muted/20">
+                      <button
+                        key={i}
+                        onClick={() => onClickBuild({
+                          ...build,
+                          business_name: analysis.business_name,
+                          industry: analysis.industry,
+                          source_url: analysis.url,
+                          created_at: analysis.created_at,
+                        })}
+                        className="flex items-start gap-2 p-2.5 rounded-xl border border-border/40 bg-muted/20 hover:bg-muted/40 transition-colors text-left w-full group"
+                      >
                         <Icon className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5 mb-0.5">
@@ -118,15 +142,8 @@ function AnalysisCard({ analysis, onGenerate }: { analysis: AnalyzedUrl; onGener
                           </div>
                           <p className="text-[10px] text-muted-foreground line-clamp-1">{build.description}</p>
                         </div>
-                        <Button
-                          size="sm"
-                          onClick={() => onGenerate(build.search_query)}
-                          className="gradient-hero text-primary-foreground border-0 shadow-glow hover:opacity-90 h-6 text-[9px] font-bold rounded-md px-2 shrink-0"
-                        >
-                          <Wand2 className="h-2.5 w-2.5 mr-0.5" />
-                          Generate
-                        </Button>
-                      </div>
+                        <ArrowRight className="h-3 w-3 text-primary mt-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                      </button>
                     );
                   })}
                 </div>
@@ -146,6 +163,10 @@ export default function Ideas() {
   const { ideas, loading: ideasLoading } = useSavedIdeas();
   const { handleGenerate } = useGenerationJob();
   const [tab, setTab] = useState<"analyses" | "saved">("analyses");
+  const [selectedIdea, setSelectedIdea] = useState<IdeaDetail | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  const openIdea = (idea: IdeaDetail) => { setSelectedIdea(idea); setDialogOpen(true); };
 
   const loading = tab === "analyses" ? analysesLoading : ideasLoading;
 
@@ -237,7 +258,7 @@ export default function Ideas() {
               <div className="grid grid-cols-1 gap-3">
                 <AnimatePresence mode="popLayout">
                   {analyses.map((a) => (
-                    <AnalysisCard key={a.id} analysis={a} onGenerate={handleGenerate} />
+                    <AnalysisCard key={a.id} analysis={a} onGenerate={handleGenerate} onClickBuild={openIdea} />
                   ))}
                 </AnimatePresence>
               </div>
@@ -254,30 +275,31 @@ export default function Ideas() {
                   {ideas.map((idea) => {
                     const Icon = CATEGORY_ICON[idea.category] || Sparkles;
                     return (
-                      <motion.div
+                      <motion.button
                         key={idea.id}
                         layout
                         initial={{ opacity: 0, y: 12 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95 }}
-                        className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm p-4"
+                        onClick={() => openIdea({
+                          ...idea,
+                          source_url: idea.source_url,
+                          notes: idea.notes,
+                          created_at: idea.created_at,
+                        })}
+                        className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm p-4 text-left hover:shadow-lg hover:shadow-primary/5 transition-all group w-full"
                       >
                         <div className="flex items-start gap-2 mb-2">
                           <Icon className="h-4 w-4 text-primary mt-0.5" />
-                          <div>
-                            <p className="text-xs font-bold">{idea.name}</p>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <p className="text-xs font-bold truncate">{idea.name}</p>
+                              <ArrowRight className="h-3 w-3 text-primary opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                            </div>
                             <p className="text-[10px] text-muted-foreground line-clamp-2">{idea.description}</p>
                           </div>
                         </div>
-                        <Button
-                          size="sm"
-                          onClick={() => handleGenerate(idea.search_query)}
-                          className="gradient-hero text-primary-foreground border-0 shadow-glow hover:opacity-90 h-7 text-[10px] font-bold rounded-lg gap-1 w-full"
-                        >
-                          <Wand2 className="h-3 w-3" />
-                          Generate
-                        </Button>
-                      </motion.div>
+                      </motion.button>
                     );
                   })}
                 </AnimatePresence>
@@ -286,6 +308,13 @@ export default function Ideas() {
           )}
         </motion.div>
       </main>
+
+      <IdeaDetailDialog
+        idea={selectedIdea}
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        onGenerate={handleGenerate}
+      />
 
       <Footer />
     </div>

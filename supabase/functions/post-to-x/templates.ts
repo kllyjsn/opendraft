@@ -132,27 +132,20 @@ export function gremlinTweet(activity?: string): string {
 // ═══════════════════════════════════════════════════════════════
 export function questionTweet(): string {
   return pickUnique("question", [
-    `Quick poll:\n\nWhat's stopping you from launching your app idea?\n\n🅰️ No coding skills\n🅱️ No time\n🅲 No budget\n🅳 All of the above\n\n(Reply and I'll show you a shortcut)`,
-    `Be honest:\n\nHow long have you been "working on" your app idea?\n\n⏰ < 1 month\n⏰ 1-6 months\n⏰ 6-12 months\n⏰ I don't want to talk about it\n\nThere's a faster way → ${SITE_URL}`,
-    `Would you rather:\n\n🅰️ Spend 6 months building an app from scratch\n🅱️ Buy a ready-made app and launch this week\n\n(Most successful founders choose B)`,
-    `What would you build if you could launch an app in 24 hours?\n\nDrop your idea below 👇\n\nI'll tell you if it already exists on OpenDraft.`,
-    `Genuine question for founders:\n\nDo you NEED to build from scratch, or do you WANT to?\n\nBe honest.\n\nBecause there's a massive difference.`,
-    `What's your biggest app idea you've never shipped?\n\nReply and I'll find something close on OpenDraft that you can launch THIS WEEK.\n\n${SITE_URL}`,
-    `Debate: Is buying a pre-built app and customizing it "cheating"?\n\nOr is it just... smart?\n\n🔥 in the replies`,
-    `Which is more impressive:\n\nA) Spent 2 years building a beautiful app nobody uses\nB) Bought an app, launched in a day, got 100 paying users\n\nI know my answer.`,
-    `Raise your hand if you have 3+ unfinished side projects right now ✋\n\nWhat if you just... bought the finished version?\n\n${SITE_URL}`,
-    // NEW — Spicier questions
-    `Hot take request:\n\nWhat's the most overrated programming language in 2026?\n\n(Wrong answers only)\n\n...also, does it matter if you can just buy the app? ${SITE_URL}`,
-    // NEW — This or that
-    `This or that:\n\n🅰️ Perfect code, 0 users\n🅱️ "Good enough" code, 1000 users\n\nYour answer reveals everything about why you haven't shipped yet.`,
-    // NEW — Fill in the blank
-    `Fill in the blank:\n\n"I would have launched my app by now, but ___________"\n\n(The top reply gets a free app from OpenDraft)\n\n${SITE_URL}`,
-    // NEW — Challenge
-    `72-hour challenge:\n\nFind an app → Customize it → Deploy it → Get your first user.\n\nWho's in? Drop a 🚀 below.\n\nStart here → ${SITE_URL}`,
-    // NEW — Founder reflection
-    `Founders: what's the one thing you wish you'd done differently when starting?\n\nI'll start: I wish I'd stopped building from scratch sooner.\n\n${SITE_URL}`,
-    // NEW — Controversial take
-    `Unpopular opinion:\n\n"Full-stack developer" will be an extinct job title by 2028.\n\nThe future is assemblers, not builders.\n\nAgree or disagree? 👇`,
+    `Quick poll:\n\nHow much does your company spend on SaaS per month?\n\n🅰️ < $1k\n🅱️ $1k-$5k\n🅲 $5k-$20k\n🅳 I don't want to know\n\n(Reply and I'll show you how to cut it in half)`,
+    `Be honest:\n\nHow many SaaS subscriptions does your business have?\n\n⏰ < 5\n⏰ 5-15\n⏰ 15-30\n⏰ I'm scared to count\n\nYou could own most of them → ${SITE_URL}`,
+    `Would you rather:\n\n🅰️ Pay $99/seat/month forever\n🅱️ Own the same tool outright for $49\n\n(Most smart businesses choose B)`,
+    `What SaaS tool would you replace first if you could own the alternative?\n\nDrop it below 👇\n\nI'll show you what's available on OpenDraft.`,
+    `Genuine question for business owners:\n\nDo you NEED that SaaS subscription, or is it just habit?\n\nBe honest.\n\nBecause there's owned software that does the same thing.`,
+    `What's the most overpriced SaaS tool you can't seem to quit?\n\nReply and I'll find an owned alternative on OpenDraft.\n\n${SITE_URL}`,
+    `Debate: Is per-seat pricing fair?\n\nOr is it just a way to extract maximum value from your growth?\n\n🔥 in the replies`,
+    `Which is a better business:\n\nA) $14k/month in SaaS, 10% margins\nB) $500 one-time in owned tools, 40% margins\n\nI know my answer.`,
+    `Raise your hand if your SaaS bill went up more than your revenue this year ✋\n\nWhat if you just... owned the software?\n\n${SITE_URL}`,
+    `This or that:\n\n🅰️ Best-in-class SaaS, 5% margins\n🅱️ Good-enough owned software, 35% margins\n\nYour answer reveals everything about your business strategy.`,
+    `Fill in the blank:\n\n"I would cancel _________ if I had an owned alternative."\n\n(The top reply gets a free app from OpenDraft)\n\n${SITE_URL}`,
+    `72-hour challenge:\n\nPaste your site → Get a custom app → Cancel one SaaS subscription.\n\nWho's in? Drop a 🚀 below.\n\nStart here → ${SITE_URL}`,
+    `Business owners: what's the one SaaS expense you wish you could eliminate?\n\nI'll start: per-seat CRM pricing.\n\n${SITE_URL}`,
+    `Unpopular opinion:\n\n"SaaS" will be a dirty word by 2028.\n\nThe future is owned software with AI maintenance.\n\nAgree or disagree? 👇`,
   ]);
 }
 

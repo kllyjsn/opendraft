@@ -5,15 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" href="/mascot-icon.png" type="image/png" />
     <link rel="canonical" href="https://opendraft.co/" />
-    <title>Expert-Built Apps — SaaS, AI & Business Software | OpenDraft</title>
-    <meta name="description" content="Production-ready apps designed, coded, and tested by experts. SaaS tools, AI products, landing pages & utilities. Launch a real business, not a prototype.">
+    <title>Custom Apps From Your Website — Replace SaaS | OpenDraft</title>
+    <meta name="description" content="Paste your website URL. Get a custom app you own — no per-seat fees, ever. Replace expensive SaaS with apps built from your site in 90 seconds.">
     <meta name="author" content="OpenDraft" />
     <meta name="theme-color" content="#7c3aed" />
     <link rel="sitemap" type="application/xml" href="https://xwumrdcagsuwqeelyxih.supabase.co/functions/v1/sitemap" />
 
     <!-- Preconnect for performance -->
     <link rel="preconnect" href="https://api.opendraft.co" />
+    <link rel="preconnect" href="https://xwumrdcagsuwqeelyxih.supabase.co" />
     <link rel="dns-prefetch" href="https://api.opendraft.co" />
+    <link rel="dns-prefetch" href="https://xwumrdcagsuwqeelyxih.supabase.co" />
+
+    <!-- Preload critical assets -->
+    <link rel="preload" href="/mascot-icon.png" as="image" type="image/png" />
+    <link rel="modulepreload" href="/src/main.tsx" />
 
     <!-- Agent Discovery -->
     <link rel="alternate" type="application/json" href="/.well-known/ai-plugin.json" />
@@ -22,29 +28,50 @@
     <link rel="alternate" type="application/json" href="/.well-known/openapi.json" title="OpenAPI Spec" />
     <link rel="alternate" type="application/yaml" href="/.well-known/skill.yaml" title="OpenClaw Skill" />
     <link rel="alternate" type="application/json" href="/.well-known/openclaw.json" title="OpenClaw Config" />
-    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large" />
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
 
     <!-- Keywords for programmatic pages -->
-    <meta name="keywords" content="expert-built apps, production-ready software, SaaS tools, AI apps, business software, app studio, MCP tools, AI agents, curated apps, professional software, deploy-ready apps" />
+    <meta name="keywords" content="custom apps, replace SaaS, own your software, no per-seat fees, app builder, business software, AI apps, deploy apps, MCP tools, AI agents, production-ready apps" />
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="OpenDraft" />
-    <meta property="og:title" content="Expert-Built Apps & Software | OpenDraft">
-    <meta property="og:description" content="Production-ready apps designed, coded, and tested by experts. Launch a real business, not a prototype.">
+    <meta property="og:title" content="Custom Apps From Your Website — Replace SaaS | OpenDraft">
+    <meta property="og:description" content="Paste your website URL. Get a custom app you own — no per-seat fees, ever. Deploy in 90 seconds.">
     <meta property="og:url" content="https://opendraft.co">
     <meta property="og:image" content="https://opendraft.co/og-image.png">
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="OpenDraft — Custom apps from your website" />
     <meta property="og:locale" content="en_US" />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@OpenDraft" />
     <meta name="twitter:creator" content="@OpenDraft" />
-    <meta name="twitter:title" content="Expert-Built Apps & Software | OpenDraft">
-    <meta name="twitter:description" content="Production-ready apps designed, coded, and tested by experts. Launch a real business, not a prototype.">
+    <meta name="twitter:title" content="Custom Apps From Your Website — Replace SaaS | OpenDraft">
+    <meta name="twitter:description" content="Paste your website URL. Get a custom app you own — no per-seat fees, ever. Deploy in 90 seconds.">
     <meta name="twitter:image" content="https://opendraft.co/og-image.png">
+    <meta name="twitter:image:alt" content="OpenDraft — Custom apps from your website" />
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "OpenDraft",
+      "url": "https://opendraft.co",
+      "description": "Paste your website URL. Get a custom app you own — no per-seat fees, ever.",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "https://opendraft.co/category/saas-tool?q={search_term_string}"
+        },
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
 </head>
 
   <body>

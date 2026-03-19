@@ -65,12 +65,14 @@ export function MetaTags({
     const twTitleEl = setMeta("name", "twitter:title", title);
     const twDescEl = setMeta("name", "twitter:description", description);
     const twImageEl = setMeta("name", "twitter:image", ogImage);
+    const twImageAltEl = setMeta("name", "twitter:image:alt", title);
+    const ogImageAltEl = setMeta("property", "og:image:alt", title);
 
     return () => {
       canonical.remove();
       // Restore defaults on unmount
-      document.title = "Expert-Built Apps — SaaS, AI & Business Software | OpenDraft";
-      [descEl, robotsEl, ogTitleEl, ogDescEl, ogUrlEl, ogImageEl, ogTypeEl, twTitleEl, twDescEl, twImageEl].forEach(el => {
+      document.title = "Custom Apps From Your Website — Replace SaaS | OpenDraft";
+      [descEl, robotsEl, ogTitleEl, ogDescEl, ogUrlEl, ogImageEl, ogTypeEl, twTitleEl, twDescEl, twImageEl, twImageAltEl, ogImageAltEl].forEach(el => {
         // Only remove dynamically created ones — leave originals from index.html
       });
     };

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -17,55 +17,80 @@ function FunnelTracker() {
   useFunnelTracker();
   return null;
 }
+
+// Critical path — loaded eagerly
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
-import Login from "./pages/Login";
-import ListingDetail from "./pages/ListingDetail";
-import Sell from "./pages/Sell";
-import EditListing from "./pages/EditListing";
-import Dashboard from "./pages/Dashboard";
-import Profile from "./pages/Profile";
-import Success from "./pages/Success";
-import Checkout from "./pages/Checkout";
-import Admin from "./pages/Admin";
-import FAQ from "./pages/FAQ";
-import Storefront from "./pages/Storefront";
-import CloudPage from "./pages/Cloud";
-import Messages from "./pages/Messages";
-import Bounties from "./pages/Bounties";
-import BountyDetail from "./pages/BountyDetail";
-import Builders from "./pages/Builders";
-import BuilderProfile from "./pages/BuilderProfile";
-import Category from "./pages/Category";
-import LifestyleCategory from "./pages/LifestyleCategory";
-import BuiltWith from "./pages/BuiltWith";
-import GuideSell from "./pages/GuideSell";
-import { BlogIndex, BlogPost } from "./pages/Blog";
-import Terms from "./pages/Terms";
-import Privacy from "./pages/Privacy";
-import Developers from "./pages/Developers";
-import Agents from "./pages/Agents";
-import Pitch from "./pages/Pitch";
-import OpenClawPage from "./pages/OpenClaw";
-import SwarmPage from "./pages/Swarm";
-import BoardRoomPage from "./pages/BoardRoom";
-import MascotExport from "./pages/MascotExport";
-import ForPersona from "./pages/ForPersona";
-import Founders from "./pages/Founders";
-import CreatorHandbook from "./pages/CreatorHandbook";
-import Credits from "./pages/Credits";
-import Onboarding from "./pages/Onboarding";
-import Security from "./pages/Security";
-import AdminOutreach from "./pages/AdminOutreach";
-import AdminRevenue from "./pages/AdminRevenue";
-import GremlinsAtWork from "./pages/GremlinsAtWork";
-import AppsVertical from "./pages/AppsVertical";
-import Ideas from "./pages/Ideas";
+
+// Lazy-loaded routes for better Core Web Vitals (code splitting)
+const Login = lazy(() => import("./pages/Login"));
+const ListingDetail = lazy(() => import("./pages/ListingDetail"));
+const Sell = lazy(() => import("./pages/Sell"));
+const EditListing = lazy(() => import("./pages/EditListing"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Profile = lazy(() => import("./pages/Profile"));
+const Success = lazy(() => import("./pages/Success"));
+const Checkout = lazy(() => import("./pages/Checkout"));
+const Admin = lazy(() => import("./pages/Admin"));
+const FAQ = lazy(() => import("./pages/FAQ"));
+const Storefront = lazy(() => import("./pages/Storefront"));
+const CloudPage = lazy(() => import("./pages/Cloud"));
+const Messages = lazy(() => import("./pages/Messages"));
+const Bounties = lazy(() => import("./pages/Bounties"));
+const BountyDetail = lazy(() => import("./pages/BountyDetail"));
+const Builders = lazy(() => import("./pages/Builders"));
+const BuilderProfile = lazy(() => import("./pages/BuilderProfile"));
+const Category = lazy(() => import("./pages/Category"));
+const LifestyleCategory = lazy(() => import("./pages/LifestyleCategory"));
+const BuiltWith = lazy(() => import("./pages/BuiltWith"));
+const GuideSell = lazy(() => import("./pages/GuideSell"));
+const Blog = lazy(() => import("./pages/Blog"));
+const Terms = lazy(() => import("./pages/Terms"));
+const Privacy = lazy(() => import("./pages/Privacy"));
+const Developers = lazy(() => import("./pages/Developers"));
+const Agents = lazy(() => import("./pages/Agents"));
+const Pitch = lazy(() => import("./pages/Pitch"));
+const OpenClawPage = lazy(() => import("./pages/OpenClaw"));
+const SwarmPage = lazy(() => import("./pages/Swarm"));
+const BoardRoomPage = lazy(() => import("./pages/BoardRoom"));
+const MascotExport = lazy(() => import("./pages/MascotExport"));
+const ForPersona = lazy(() => import("./pages/ForPersona"));
+const Founders = lazy(() => import("./pages/Founders"));
+const CreatorHandbook = lazy(() => import("./pages/CreatorHandbook"));
+const Credits = lazy(() => import("./pages/Credits"));
+const Onboarding = lazy(() => import("./pages/Onboarding"));
+const Security = lazy(() => import("./pages/Security"));
+const AdminOutreach = lazy(() => import("./pages/AdminOutreach"));
+const AdminRevenue = lazy(() => import("./pages/AdminRevenue"));
+const GremlinsAtWork = lazy(() => import("./pages/GremlinsAtWork"));
+const AppsVertical = lazy(() => import("./pages/AppsVertical"));
+const Ideas = lazy(() => import("./pages/Ideas"));
+
 import { GremlinVoiceAgent } from "./components/GremlinVoiceAgent";
 import { SignupPrompt } from "./components/SignupPrompt";
 import { StickyMobileCTA } from "./components/StickyMobileCTA";
 
 const queryClient = new QueryClient();
+
+// Minimal loading fallback for lazy routes
+function RouteLoader() {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+    </div>
+  );
+}
+
+// Wrapper to render Blog named exports via lazy
+function BlogIndexPage() {
+  return <Suspense fallback={<RouteLoader />}><BlogIndexLazy /></Suspense>;
+}
+function BlogPostPage() {
+  return <Suspense fallback={<RouteLoader />}><BlogPostLazy /></Suspense>;
+}
+
+const BlogIndexLazy = lazy(() => import("./pages/Blog").then(m => ({ default: m.BlogIndex })));
+const BlogPostLazy = lazy(() => import("./pages/Blog").then(m => ({ default: m.BlogPost })));
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -75,53 +100,55 @@ const App = () => (
       <BrowserRouter>
         <ScrollToTop />
         <FunnelTracker />
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/listing/:id" element={<ListingDetail />} />
-          <Route path="/sell" element={<Sell />} />
-          <Route path="/listing/:id/edit" element={<EditListing />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/success" element={<Success />} />
-          <Route path="/checkout/:id" element={<Checkout />} />
-          <Route path="/admin" element={<Admin />} />
-          <Route path="/admin/outreach" element={<AdminOutreach />} />
-          <Route path="/admin/revenue" element={<AdminRevenue />} />
-          <Route path="/faq" element={<FAQ />} />
-          <Route path="/storefront" element={<Storefront />} />
-          <Route path="/cloud" element={<CloudPage />} />
-          <Route path="/messages" element={<Messages />} />
-          <Route path="/bounties" element={<Bounties />} />
-          <Route path="/bounty/:id" element={<BountyDetail />} />
-          <Route path="/builders" element={<Builders />} />
-          <Route path="/builder/:userId" element={<BuilderProfile />} />
-          <Route path="/category/:slug" element={<Category />} />
-          <Route path="/lifestyle/:slug" element={<LifestyleCategory />} />
-          <Route path="/built-with/:tool" element={<BuiltWith />} />
-          <Route path="/guides/sell" element={<GuideSell />} />
-          <Route path="/guides/creators" element={<CreatorHandbook />} />
-          <Route path="/blog" element={<BlogIndex />} />
-          <Route path="/blog/:slug" element={<BlogPost />} />
-          <Route path="/terms" element={<Terms />} />
-          <Route path="/privacy" element={<Privacy />} />
-          <Route path="/developers" element={<Developers />} />
-          <Route path="/agents" element={<Agents />} />
-          <Route path="/pitch" element={<Pitch />} />
-          <Route path="/openclaw" element={<OpenClawPage />} />
-          <Route path="/swarm" element={<SwarmPage />} />
-          <Route path="/boardroom" element={<BoardRoomPage />} />
-          <Route path="/mascot-export" element={<MascotExport />} />
-          <Route path="/for/:persona" element={<ForPersona />} />
-          <Route path="/founders" element={<Founders />} />
-          <Route path="/credits" element={<Credits />} />
-          <Route path="/onboarding" element={<Onboarding />} />
-          <Route path="/security" element={<Security />} />
-          <Route path="/gremlins" element={<GremlinsAtWork />} />
-          <Route path="/apps/:vertical" element={<AppsVertical />} />
-          <Route path="/ideas" element={<Ideas />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <Suspense fallback={<RouteLoader />}>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/listing/:id" element={<ListingDetail />} />
+            <Route path="/sell" element={<Sell />} />
+            <Route path="/listing/:id/edit" element={<EditListing />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/success" element={<Success />} />
+            <Route path="/checkout/:id" element={<Checkout />} />
+            <Route path="/admin" element={<Admin />} />
+            <Route path="/admin/outreach" element={<AdminOutreach />} />
+            <Route path="/admin/revenue" element={<AdminRevenue />} />
+            <Route path="/faq" element={<FAQ />} />
+            <Route path="/storefront" element={<Storefront />} />
+            <Route path="/cloud" element={<CloudPage />} />
+            <Route path="/messages" element={<Messages />} />
+            <Route path="/bounties" element={<Bounties />} />
+            <Route path="/bounty/:id" element={<BountyDetail />} />
+            <Route path="/builders" element={<Builders />} />
+            <Route path="/builder/:userId" element={<BuilderProfile />} />
+            <Route path="/category/:slug" element={<Category />} />
+            <Route path="/lifestyle/:slug" element={<LifestyleCategory />} />
+            <Route path="/built-with/:tool" element={<BuiltWith />} />
+            <Route path="/guides/sell" element={<GuideSell />} />
+            <Route path="/guides/creators" element={<CreatorHandbook />} />
+            <Route path="/blog" element={<BlogIndexPage />} />
+            <Route path="/blog/:slug" element={<BlogPostPage />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/developers" element={<Developers />} />
+            <Route path="/agents" element={<Agents />} />
+            <Route path="/pitch" element={<Pitch />} />
+            <Route path="/openclaw" element={<OpenClawPage />} />
+            <Route path="/swarm" element={<SwarmPage />} />
+            <Route path="/boardroom" element={<BoardRoomPage />} />
+            <Route path="/mascot-export" element={<MascotExport />} />
+            <Route path="/for/:persona" element={<ForPersona />} />
+            <Route path="/founders" element={<Founders />} />
+            <Route path="/credits" element={<Credits />} />
+            <Route path="/onboarding" element={<Onboarding />} />
+            <Route path="/security" element={<Security />} />
+            <Route path="/gremlins" element={<GremlinsAtWork />} />
+            <Route path="/apps/:vertical" element={<AppsVertical />} />
+            <Route path="/ideas" element={<Ideas />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
         <GremlinVoiceAgent />
         <SignupPrompt />
         <StickyMobileCTA />

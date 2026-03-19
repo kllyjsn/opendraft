@@ -66,7 +66,7 @@ const GremlinsAtWork = lazy(() => import("./pages/GremlinsAtWork"));
 const AppsVertical = lazy(() => import("./pages/AppsVertical"));
 const Ideas = lazy(() => import("./pages/Ideas"));
 
-import { GremlinVoiceAgent } from "./components/GremlinVoiceAgent";
+
 import { SignupPrompt } from "./components/SignupPrompt";
 import { StickyMobileCTA } from "./components/StickyMobileCTA";
 
@@ -149,7 +149,7 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
-        <GremlinVoiceAgent />
+        
         <SignupPrompt />
         <StickyMobileCTA />
         

@@ -147,8 +147,9 @@ Return JSON: { "title": "under 65 chars with keyword", "description": "meta desc
           Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
         },
         body: JSON.stringify({
-          type: "new_listing",
-          custom_text: `📝 New: "${args.title}"\n\n${args.description}\n\nhttps://opendraft.co/blog/${slug}`,
+          type: "blog_post",
+          text: `📝 New: "${args.title}"\n\n${args.description}\n\nhttps://opendraft.co/blog/${slug}`,
+          skip_art: false,
         }),
       });
     } catch (e) {

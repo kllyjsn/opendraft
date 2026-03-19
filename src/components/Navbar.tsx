@@ -1,4 +1,5 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import mascotLogo from "@/assets/gremlin-logo-advanced.png";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdmin } from "@/hooks/useAdmin";
@@ -51,7 +52,7 @@ export function Navbar() {
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2.5 font-black text-xl tracking-tight shrink-0 group">
           <motion.img
-            src="/mascot-icon.png"
+            src={mascotLogo}
             alt="OpenDraft mascot"
             className="h-9 w-9 rounded-lg"
             whileHover={{ scale: 1.15, rotate: [0, -8, 8, -4, 0] }}

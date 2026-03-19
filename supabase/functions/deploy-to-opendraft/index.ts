@@ -777,10 +777,22 @@ serve(async (req) => {
     }
 
     console.log(`ZIP downloaded: ${(sourceZipBuffer.byteLength / 1024 / 1024).toFixed(2)} MB`);
+    // ── ZIP bomb protection ──
+    const zipSizeMB = sourceZipBuffer.byteLength / 1024 / 1024;
+    if (zipSizeMB > MAX_ZIP_SIZE_MB) {
+      return new Response(JSON.stringify({ error: `ZIP file too large (${zipSizeMB.toFixed(0)}MB). Maximum is ${MAX_ZIP_SIZE_MB}MB.` }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const zip = await JSZip.loadAsync(sourceZipBuffer);
     const entries = Object.keys(zip.files);
 
+    if (entries.length > MAX_FILE_COUNT) {
+      return new Response(JSON.stringify({ error: `ZIP contains too many files (${entries.length}). Maximum is ${MAX_FILE_COUNT}.` }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
     // Detect common root directory prefix
     let prefix = "";
     if (entries.length > 0) {

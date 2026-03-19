@@ -326,11 +326,25 @@ export default function Index() {
         </div>
       </section>
 
+      {/* Agent parade divider */}
+      <div className="py-6 md:py-10">
+        <AgentParade />
+      </div>
+
       <AnalysisShowcase />
 
       {!user && <EmailCapture />}
 
-      <GremlinWorkshop />
+      {/* Another peek before workshop */}
+      <div className="relative">
+        <PeekRight className="top-4 hidden md:block" delay={0.3} />
+        <PeekLeft className="top-[40%] hidden md:block" delay={0.6} />
+        <GremlinWorkshop />
+      </div>
+
+      <div className="relative">
+        <PeekBottom className="mx-auto" delay={0.4} />
+      </div>
       <Footer />
     </div>
   );

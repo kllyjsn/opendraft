@@ -309,6 +309,13 @@ export default function Ideas() {
         </motion.div>
       </main>
 
+      <IdeaDetailDialog
+        idea={selectedIdea}
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        onGenerate={handleGenerate}
+      />
+
       <Footer />
     </div>
   );

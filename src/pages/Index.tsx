@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
-import { GremlinWorkshop } from "@/components/GremlinWorkshop";
 import { BusinessAnalyzer } from "@/components/BusinessAnalyzer";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -15,7 +14,6 @@ import { EmailCapture } from "@/components/EmailCapture";
 import { AnalysisShowcase } from "@/components/AnalysisShowcase";
 import { ValueProps } from "@/components/ValueProps";
 import { HeroBeams } from "@/components/HeroBeams";
-import { PeekRight, PeekLeft, FloatingAgent, AgentParade, PeekBottom } from "@/components/PeekingAgents";
 
 const ROTATING_WORDS = ["CRM", "scheduler", "dashboard", "portal", "tracker", "helpdesk"];
 
@@ -30,13 +28,8 @@ function HeroTagline() {
   }, []);
 
   return (
-    <div className="mb-6">
-      {/* Ogilvy-crisp brand line */}
-      <p className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.3em] text-primary/80 mb-4">
-        Improve your company. Get promoted.
-      </p>
-
-      <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-[4.5rem] font-black tracking-[-0.04em] leading-[1.1]">
+    <div className="mb-8 md:mb-10">
+      <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-[5.5rem] font-black tracking-[-0.05em] leading-[1.05]">
         <span className="block text-foreground">Build your own</span>
         <span className="block text-foreground">
           <span
@@ -46,16 +39,11 @@ function HeroTagline() {
             <AnimatePresence mode="wait">
               <motion.span
                 key={ROTATING_WORDS[index]}
-                initial={{ opacity: 0, y: 28, filter: "blur(6px)" }}
+                initial={{ opacity: 0, y: 36, filter: "blur(8px)" }}
                 animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                exit={{ opacity: 0, y: -28, filter: "blur(6px)" }}
-                transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-                className="inline-block text-gradient animate-gradient-shift"
-                style={{
-                  backgroundImage:
-                    "linear-gradient(135deg, hsl(265 90% 62%), hsl(320 95% 60%), hsl(175 95% 50%), hsl(265 90% 62%))",
-                  backgroundSize: "200% 200%",
-                }}
+                exit={{ opacity: 0, y: -36, filter: "blur(8px)" }}
+                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                className="inline-block text-primary"
               >
                 {ROTATING_WORDS[index]}
               </motion.span>
@@ -89,10 +77,9 @@ function GenerationProgress({
     >
       <div className="relative h-14 w-14 mx-auto">
         <div
-          className="absolute inset-0 rounded-full gradient-hero animate-spin"
-          style={{ animationDuration: "2s" }}
+          className="absolute inset-0 rounded-full border-2 border-primary animate-spin"
+          style={{ animationDuration: "2s", borderTopColor: "transparent" }}
         />
-        <div className="absolute inset-[2px] rounded-full bg-background" />
         <div className="absolute inset-0 flex items-center justify-center">
           {deployPhase === "deploying" || deployPhase === "polling" ? (
             <Rocket className="h-5 w-5 text-primary" />
@@ -110,17 +97,15 @@ function GenerationProgress({
         </p>
       </div>
       <div className="w-full max-w-xs mx-auto">
-        <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+        <div className="h-1 rounded-full bg-muted overflow-hidden">
           <div
-            className="h-full rounded-full gradient-hero transition-all duration-1000 ease-out"
+            className="h-full rounded-full bg-primary transition-all duration-1000 ease-out"
             style={{ width: `${currentStage.pct}%` }}
           />
         </div>
         <div className="flex justify-between mt-1.5">
           <span className="text-[10px] text-muted-foreground">
-            {deployPhase === "deploying" || deployPhase === "polling"
-              ? "Deploying"
-              : "Building"}
+            {deployPhase === "deploying" || deployPhase === "polling" ? "Deploying" : "Building"}
           </span>
           <span className="text-[10px] font-semibold text-primary">
             {currentStage.pct}%
@@ -128,43 +113,17 @@ function GenerationProgress({
         </div>
       </div>
       <div className="flex items-center justify-center gap-3 text-[10px]">
-        <span
-          className={`flex items-center gap-1 ${
-            genJob?.status === "complete"
-              ? "text-primary font-bold"
-              : "text-muted-foreground"
-          }`}
-        >
-          {genJob?.status === "complete" ? (
-            <CheckCircle className="h-3 w-3" />
-          ) : (
-            <Wand2 className="h-3 w-3" />
-          )}
+        <span className={`flex items-center gap-1 ${genJob?.status === "complete" ? "text-primary font-bold" : "text-muted-foreground"}`}>
+          {genJob?.status === "complete" ? <CheckCircle className="h-3 w-3" /> : <Wand2 className="h-3 w-3" />}
           Build
         </span>
         <span className="text-border">→</span>
-        <span
-          className={`flex items-center gap-1 ${
-            deployPhase === "polling" || deployPhase === "live"
-              ? "text-primary font-bold"
-              : "text-muted-foreground"
-          }`}
-        >
-          {deployPhase === "live" ? (
-            <CheckCircle className="h-3 w-3" />
-          ) : (
-            <Rocket className="h-3 w-3" />
-          )}
+        <span className={`flex items-center gap-1 ${deployPhase === "polling" || deployPhase === "live" ? "text-primary font-bold" : "text-muted-foreground"}`}>
+          {deployPhase === "live" ? <CheckCircle className="h-3 w-3" /> : <Rocket className="h-3 w-3" />}
           Deploy
         </span>
         <span className="text-border">→</span>
-        <span
-          className={`flex items-center gap-1 ${
-            deployPhase === "live"
-              ? "text-primary font-bold"
-              : "text-muted-foreground"
-          }`}
-        >
+        <span className={`flex items-center gap-1 ${deployPhase === "live" ? "text-primary font-bold" : "text-muted-foreground"}`}>
           <Globe className="h-3 w-3" />
           Live
         </span>
@@ -196,15 +155,14 @@ function DeploySuccess({
       <div>
         <h3 className="text-xl font-black text-foreground">Your app is live.</h3>
         <p className="text-sm text-muted-foreground mt-1">
-          {genJob?.listing_title && `"${genJob.listing_title}" — `}Built, deployed,
-          ready.
+          {genJob?.listing_title && `"${genJob.listing_title}" — `}Built, deployed, ready.
         </p>
       </div>
       <a
         href={deployUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-4 py-2.5 text-sm font-semibold text-primary hover:bg-primary/10 transition-colors mx-auto"
+        className="inline-flex items-center gap-2 rounded-xl border border-primary/30 bg-primary/5 px-4 py-2.5 text-sm font-semibold text-primary hover:bg-primary/10 transition-colors mx-auto"
       >
         <Globe className="h-4 w-4" />
         {deployUrl.replace("https://", "")}
@@ -215,7 +173,7 @@ function DeploySuccess({
           <Button
             size="sm"
             onClick={() => navigate(`/listing/${genJob.listing_id}/edit`)}
-            className="gradient-hero text-primary-foreground border-0 shadow-glow hover:opacity-90 gap-2"
+            className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2"
           >
             <Pencil className="h-3.5 w-3.5" /> Edit
           </Button>
@@ -237,13 +195,11 @@ function DeploySuccess({
       <div className="rounded-xl border border-border overflow-hidden shadow-card mt-4">
         <div className="bg-muted/50 px-3 py-1.5 flex items-center gap-2 border-b border-border">
           <div className="flex gap-1">
-            <span className="h-2 w-2 rounded-full bg-destructive/50" />
-            <span className="h-2 w-2 rounded-full bg-yellow-500/50" />
-            <span className="h-2 w-2 rounded-full bg-green-500/50" />
+            <span className="h-2 w-2 rounded-full bg-foreground/10" />
+            <span className="h-2 w-2 rounded-full bg-foreground/10" />
+            <span className="h-2 w-2 rounded-full bg-foreground/10" />
           </div>
-          <span className="text-[10px] text-muted-foreground truncate flex-1">
-            {deployUrl}
-          </span>
+          <span className="text-[10px] text-muted-foreground truncate flex-1">{deployUrl}</span>
         </div>
         <iframe
           src={deployUrl}
@@ -283,35 +239,19 @@ function DeployError({
       <p className="text-sm font-semibold">
         {deployPhase === "error" ? "Deploy failed" : "Build failed"}
       </p>
-      <p className="text-xs text-muted-foreground">
-        {deployError || genJob?.error}
-      </p>
+      <p className="text-xs text-muted-foreground">{deployError || genJob?.error}</p>
       <div className="flex gap-2 justify-center flex-wrap">
         {deployPhase === "error" && genJob?.listing_id ? (
           <>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => handleAutoDeploy(genJob.listing_id!)}
-              className="gap-2"
-            >
+            <Button size="sm" variant="outline" onClick={() => handleAutoDeploy(genJob.listing_id!)} className="gap-2">
               <Rocket className="h-3.5 w-3.5" /> Retry
             </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => navigate(`/listing/${genJob.listing_id}`)}
-            >
+            <Button size="sm" variant="ghost" onClick={() => navigate(`/listing/${genJob.listing_id}`)}>
               View listing
             </Button>
           </>
         ) : (
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => handleGenerate("")}
-            className="gap-2"
-          >
+          <Button size="sm" variant="outline" onClick={() => handleGenerate("")} className="gap-2">
             <Wand2 className="h-3.5 w-3.5" /> Try again
           </Button>
         )}
@@ -363,7 +303,7 @@ export default function Index() {
         "@type": "WebSite",
         name: "OpenDraft",
         url: "https://opendraft.co",
-        description: "Improve your company. Get promoted. Paste your site, own the app.",
+        description: "Every business, better software. Paste your site, own the app.",
       },
       {
         "@context": "https://schema.org",
@@ -380,51 +320,45 @@ export default function Index() {
   return (
     <div className="min-h-screen flex flex-col">
       <MetaTags
-        title="Improve Your Company, Get Promoted | OpenDraft"
+        title="Every Business, Better Software | OpenDraft"
         description="Paste your website. Get custom apps that make your team faster and your boss impressed — no per-seat fees, no lock-in."
         path="/"
       />
       <JsonLd data={jsonLdData} />
       <Navbar />
 
-      {/* ── HERO ── */}
-      <section className="relative flex-1 flex items-center justify-center min-h-[65vh] md:min-h-[85vh]">
+      {/* ── HERO — Confident Gravity ── */}
+      <section className="relative flex-1 flex items-center justify-center min-h-[70vh] md:min-h-[90vh]">
         <HeroBeams />
-
-        {/* Peeking agents */}
-        <PeekRight className="top-[20%] hidden md:block" delay={1.2} />
-        <PeekLeft className="bottom-[15%] hidden md:block" delay={1.5} />
-        <FloatingAgent
-          className="absolute top-[12%] right-[8%] hidden lg:block"
-          delay={1.8}
-        />
 
         <div className="container mx-auto px-4 text-center relative z-10">
           <motion.div
-            initial={{ opacity: 0, y: 24 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
           >
             <HeroTagline />
           </motion.div>
 
           <motion.p
-            initial={{ opacity: 0, y: 14 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-            className="text-sm md:text-base text-muted-foreground max-w-md mx-auto mb-10 md:mb-14 leading-relaxed"
+            transition={{ duration: 0.9, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="text-base md:text-lg text-muted-foreground max-w-md mx-auto mb-12 md:mb-16 leading-relaxed"
           >
             Paste your site. We build the tools your team needs.
             <br className="hidden sm:block" />
-            <span className="text-foreground/70 font-medium">You look like a genius. We'll keep the secret.</span>
+            <span className="text-foreground/80 font-medium">
+              You look like a genius. We'll keep the secret.
+            </span>
           </motion.p>
 
-          {/* URL Input — sole CTA */}
+          {/* URL Input — the singular CTA */}
           <motion.div
-            initial={{ opacity: 0, y: 14 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
-            className="mb-10 md:mb-14"
+            transition={{ duration: 0.9, delay: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            className="mb-12 md:mb-16"
           >
             <BusinessAnalyzer onGenerate={handleGenerate} />
           </motion.div>
@@ -442,72 +376,80 @@ export default function Index() {
           {/* Deploy success */}
           <AnimatePresence>
             {deployPhase === "live" && deployUrl && !isInProgress && (
-              <DeploySuccess
-                deployUrl={deployUrl}
-                genJob={genJob}
-                navigate={navigate}
-                reset={reset}
-              />
+              <DeploySuccess deployUrl={deployUrl} genJob={genJob} navigate={navigate} reset={reset} />
             )}
           </AnimatePresence>
 
           {/* Deploy error */}
           <AnimatePresence>
-            {(deployPhase === "error" || genJob?.status === "failed") &&
-              !isInProgress && (
-                <DeployError
-                  deployPhase={deployPhase}
-                  genJob={genJob}
-                  deployError={deployError}
-                  handleAutoDeploy={handleAutoDeploy}
-                  handleGenerate={handleGenerate}
-                  navigate={navigate}
-                />
-              )}
+            {(deployPhase === "error" || genJob?.status === "failed") && !isInProgress && (
+              <DeployError
+                deployPhase={deployPhase}
+                genJob={genJob}
+                deployError={deployError}
+                handleAutoDeploy={handleAutoDeploy}
+                handleGenerate={handleGenerate}
+                navigate={navigate}
+              />
+            )}
           </AnimatePresence>
 
-          {/* Minimal social proof — signed out only */}
+          {/* Minimal proof line — signed out only */}
           {!user && (
-            <motion.div
+            <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.5 }}
-              className="mt-6"
+              transition={{ duration: 1, delay: 0.7 }}
+              className="text-xs text-muted-foreground/40 tracking-wide mt-4"
             >
-              <div className="flex items-center justify-center gap-6 text-[11px] text-muted-foreground/50 font-medium tracking-wide">
-                <span>Better tools</span>
-                <span className="h-3 w-px bg-border/30" />
-                <span>Better results</span>
-                <span className="h-3 w-px bg-border/30" />
-                <span>Better career</span>
-              </div>
-            </motion.div>
+              No per-seat fees. You own the code. Forever.
+            </motion.p>
           )}
         </div>
       </section>
 
-      {/* Value props grid */}
+      {/* ── VALUE PROPOSITIONS ── */}
       <ValueProps />
 
-      {/* Agent parade divider */}
-      <div className="py-6 md:py-10">
-        <AgentParade />
-      </div>
-
+      {/* ── SHOWCASE ── */}
       <AnalysisShowcase />
 
+      {/* ── EMAIL CAPTURE — signed out only ── */}
       {!user && <EmailCapture />}
 
-      {/* Gremlin workshop */}
-      <div className="relative">
-        <PeekRight className="top-4 hidden md:block" delay={0.3} />
-        <PeekLeft className="top-[40%] hidden md:block" delay={0.6} />
-        <GremlinWorkshop />
-      </div>
+      {/* ── CLOSING CTA ── */}
+      <section className="py-24 md:py-40">
+        <div className="container mx-auto px-4 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 1 }}
+          >
+            <h2 className="text-3xl md:text-5xl lg:text-6xl font-black tracking-[-0.04em] leading-[1.1] mb-6">
+              Every business,
+              <br />
+              <span className="text-primary">better software.</span>
+            </h2>
+            <p className="text-sm md:text-base text-muted-foreground max-w-md mx-auto mb-10 leading-relaxed">
+              Your competitors rent software. You'll own it.
+            </p>
+            <Button
+              onClick={() => {
+                const input = document.querySelector<HTMLInputElement>('input[inputMode="url"]');
+                if (input) {
+                  input.focus();
+                  input.scrollIntoView({ behavior: "smooth", block: "center" });
+                }
+              }}
+              className="bg-primary text-primary-foreground hover:bg-primary/90 h-12 px-8 text-sm font-bold rounded-xl transition-all duration-300"
+            >
+              Paste your URL
+            </Button>
+          </motion.div>
+        </div>
+      </section>
 
-      <div className="relative">
-        <PeekBottom className="mx-auto" delay={0.4} />
-      </div>
       <Footer />
     </div>
   );

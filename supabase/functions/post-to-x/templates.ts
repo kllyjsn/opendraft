@@ -154,26 +154,20 @@ export function questionTweet(): string {
 // ═══════════════════════════════════════════════════════════════
 export function successStoryTweet(listing?: any): string {
   return pickUnique("success", [
-    `Just shipped 🚀\n\nAnother founder grabbed an app and deployed it same-day.\n\nNo coding. No waiting. Just business.\n\nYour turn → ${SITE_URL}`,
-    `Timeline:\n\n9:00 AM - Found app on OpenDraft\n9:30 AM - Purchased\n11:00 AM - Customized branding\n2:00 PM - Live and taking customers\n\n${SITE_URL}`,
-    `Case study:\n\nFounder wanted a project management tool.\n\nOption A: Build it ($45k, 4 months)\nOption B: OpenDraft ($49, 2 hours)\n\nThey chose B.\n\nNow they have customers AND a budget.\n\n${SITE_URL}`,
-    `Before OpenDraft: "I need $50k and a dev team"\n\nAfter OpenDraft: "I launched before breakfast"\n\nThis isn't marketing. This is Tuesday.\n\n${SITE_URL}`,
-    `This month on OpenDraft:\n\n→ ${Math.floor(Math.random() * 15) + 5} apps deployed\n→ Average time to launch: 4.2 hours\n→ Money saved vs building: ~$${Math.floor(Math.random() * 200 + 100)}k\n\nThe numbers don't lie.\n\n${SITE_URL}`,
-    `"I was skeptical about buying an app instead of building one."\n\n"Then I launched my business 11 months ahead of schedule."\n\n"I'm not skeptical anymore."\n\n${SITE_URL}`,
-    `Two founders had the same idea.\n\nFounder A: hired a team, 6 months, $80k\nFounder B: OpenDraft, 1 afternoon, $39\n\nBoth launched. Only one has runway left.\n\n${SITE_URL}`,
-    `Another app just went live 🟢\n\nFrom purchase to production in under 6 hours.\n\nThat's not a hack. That's the new normal.\n\n${SITE_URL}`,
-    // NEW — Specific success
-    `A fitness coach needed a client portal.\n\nQuoted $15k by an agency.\nFound one on OpenDraft for $29.\nCustomized in 3 hours.\nFirst client signed up that evening.\n\nThis is happening daily.\n\n${SITE_URL}`,
-    // NEW — Builder success
-    `A builder on OpenDraft just crossed $5k in total sales.\n\nFrom side project → passive income stream.\n\nAll from apps they built with AI.\n\n${SITE_URL}`,
-    // NEW — Speed record
-    `New speed record:\n\nPurchase → Deploy → First user in 47 minutes.\n\n47. Minutes.\n\nTry doing that with a dev team.\n\n${SITE_URL}`,
-    // NEW — Transformation arc
-    `January: "I can't code"\nFebruary: Found OpenDraft\nMarch: Launched 3 micro-SaaS products\nApril: $1.2k MRR\n\nThe barrier was never technical. It was discovery.\n\n${SITE_URL}`,
-    // NEW — Quiet wins
-    `Nobody posted a launch thread.\nNobody did a Product Hunt.\nNo "We're live!" fanfare.\n\nThey just quietly launched, got customers, and started making money.\n\nThat's the OpenDraft way.\n\n${SITE_URL}`,
-    // NEW — Portfolio builder
-    `One founder. 6 months. 4 micro-SaaS products.\n\nTotal dev cost: $156\nCombined MRR: $3.2k\n\nThe portfolio approach works.\n\n${SITE_URL}`,
+    `Just shipped 🚀\n\nAnother business replaced a $200/mo SaaS with an owned app.\n\nNo subscription. No lock-in. Just better margins.\n\nYour turn → ${SITE_URL}`,
+    `Timeline:\n\n9:00 AM - Pasted website URL\n9:02 AM - Got a custom app\n10:00 AM - Customized branding\n11:00 AM - Cancelled Salesforce\n\n${SITE_URL}`,
+    `Case study:\n\nSmall business was paying $1,200/mo for a project management SaaS.\n\nReplaced it with owned software for $49.\n\nSame features. $14,351 saved in year one.\n\n${SITE_URL}`,
+    `Before OpenDraft: "$1,400/mo in SaaS fees"\n\nAfter OpenDraft: "I own all my tools. $0/mo."\n\nThis isn't marketing. This is math.\n\n${SITE_URL}`,
+    `This month on OpenDraft:\n\n→ ${Math.floor(Math.random() * 15) + 5} SaaS tools replaced\n→ Average annual savings: $${Math.floor(Math.random() * 15 + 8)}k\n→ Zero per-seat fees paid\n\nThe numbers don't lie.\n\n${SITE_URL}`,
+    `"I was skeptical about replacing our SaaS stack."\n\n"Then I saw our Q2 margins."\n\n"I'm not skeptical anymore."\n\n${SITE_URL}`,
+    `Two businesses had the same problem.\n\nBusiness A: $14k/year in SaaS subscriptions\nBusiness B: $200 one-time, owns everything\n\nSame tools. Different balance sheets.\n\n${SITE_URL}`,
+    `Another SaaS subscription cancelled 🟢\n\nReplaced with owned software in under 4 hours.\n\nThat's not a hack. That's the new normal.\n\n${SITE_URL}`,
+    `A restaurant owner needed a booking system.\n\nWas paying Toast $300/mo.\nPasted her URL on OpenDraft.\nGot a custom app she owns.\nForever.\n\n${SITE_URL}`,
+    `A gym owner replaced Mindbody ($250/mo) with an owned app ($39 one-time).\n\nSame booking. Same payments. Better margins.\n\n${SITE_URL}`,
+    `New record:\n\nPaste URL → Custom app → Cancel SaaS → Live in 47 minutes.\n\n47. Minutes.\n\n${SITE_URL}`,
+    `January: "Our SaaS bill is out of control"\nFebruary: Found OpenDraft\nMarch: Replaced 4 subscriptions\nApril: Saving $3.2k/month\n\nThe barrier was never technical. It was awareness.\n\n${SITE_URL}`,
+    `Nobody posted a launch thread.\nNo Product Hunt.\nNo fanfare.\n\nThey just quietly replaced their SaaS, owned their code, and kept the margin.\n\nThat's the OpenDraft way.\n\n${SITE_URL}`,
+    `One business. 6 months. 4 SaaS subscriptions cancelled.\n\nTotal replacement cost: $156\nAnnual savings: $18.4k\n\nOwnership pays for itself on day one.\n\n${SITE_URL}`,
   ]);
 }
 

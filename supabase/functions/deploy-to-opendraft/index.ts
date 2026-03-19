@@ -664,6 +664,12 @@ function generateVercelConfig(framework: string | null): string {
   return JSON.stringify({ rewrites: [{ source: "/(.*)", destination: "/index.html" }] }, null, 2);
 }
 
+// ── Security constants ──
+const MAX_ZIP_SIZE_MB = 200;
+const MAX_FILE_COUNT = 5000;
+const DEPLOY_COOLDOWN_MS = 30_000;
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -692,10 +698,36 @@ serve(async (req) => {
     }
 
     const { listingId } = await req.json();
+
+    // ── Input validation ──
     if (!listingId) {
       return new Response(JSON.stringify({ error: "Missing listingId" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+    if (!UUID_REGEX.test(listingId)) {
+      return new Response(JSON.stringify({ error: "Invalid listingId format" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ── Deploy rate limiting ──
+    const { data: recentDeploy } = await supabase
+      .from("deployed_sites")
+      .select("created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (recentDeploy) {
+      const elapsed = Date.now() - new Date(recentDeploy.created_at).getTime();
+      if (elapsed < DEPLOY_COOLDOWN_MS) {
+        const waitSec = Math.ceil((DEPLOY_COOLDOWN_MS - elapsed) / 1000);
+        return new Response(JSON.stringify({ error: `Please wait ${waitSec}s before deploying again` }), {
+          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     // Fetch listing

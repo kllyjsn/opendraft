@@ -32,6 +32,8 @@ function AnalysisCard({ analysis, onGenerate, onClickBuild }: { analysis: Analyz
   const domain = (() => {
     try { return new URL(analysis.url).hostname.replace("www.", ""); } catch { return analysis.url; }
   })();
+  // Extract brand_identity from insights JSON (stored as { items, brand_identity })
+  const brandIdentity = (analysis.insights as any)?.brand_identity || null;
 
   return (
     <motion.div

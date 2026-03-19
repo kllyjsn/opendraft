@@ -7,10 +7,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { MetaTags } from "@/components/MetaTags";
-import { Check, Loader2, Crown, Zap, Wrench, Sparkles, Gift, Building2, Briefcase } from "lucide-react";
+import { Check, Loader2, Zap, Sparkles, Building2, ArrowRight, Shield, Headphones } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FREE_TIER, CORE_PAID_TIERS, ENTERPRISE_TIERS, type PricingTier } from "@/lib/pricing-tiers";
 import { trackFunnel } from "@/hooks/useFunnelTracker";
+import { PricingTierCard } from "@/components/pricing/PricingTierCard";
 
 export default function Credits() {
   const { user, loading: authLoading } = useAuth();
@@ -35,208 +36,136 @@ export default function Credits() {
   const currentPlan = subscription?.plan ?? null;
   const freeUsed = purchaseCount >= 1 && !isSubscribed;
 
-  function TierCard({ tier, highlight }: { tier: PricingTier; highlight?: boolean }) {
-    const isCurrentPlan = currentPlan === tier.id;
-    const isLoading = subscribingTier === tier.id;
-    const isFree = tier.price === 0;
-
-    return (
-      <div
-        className={cn(
-          "rounded-3xl border-2 bg-card p-6 md:p-7 shadow-card flex flex-col relative transition-shadow hover:shadow-lg",
-          highlight ? "border-primary/50 shadow-glow" : "border-border"
-        )}
-      >
-        {tier.popular && (
-          <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-            <span className="inline-flex items-center gap-1 rounded-full gradient-hero px-3 py-1 text-xs font-bold text-white shadow-glow">
-              <Sparkles className="h-3 w-3" /> Most Popular
-            </span>
-          </div>
-        )}
-        {tier.badge && !tier.popular && (
-          <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-            <span className="inline-flex items-center gap-1 rounded-full bg-accent px-3 py-1 text-xs font-bold text-accent-foreground">
-              {tier.badge}
-            </span>
-          </div>
-        )}
-
-        <div className="mb-4">
-          <h3 className="text-lg font-bold mb-1">{tier.name}</h3>
-          <p className="text-sm text-muted-foreground leading-relaxed">{tier.description}</p>
-        </div>
-
-        <div className="flex items-baseline gap-1 mb-1">
-          <span className="text-4xl font-black">${tier.price / 100}</span>
-          {tier.price > 0 && <span className="text-muted-foreground font-medium">/mo</span>}
-        </div>
-        <p className="text-xs text-muted-foreground mb-6">
-          {isFree ? `${tier.appLimitLabel} · No card required` : `${tier.appLimitLabel} · Cancel anytime`}
-        </p>
-
-        <div className="space-y-2.5 mb-6 flex-1">
-          {tier.features.map((feature) => (
-            <div key={feature} className="flex items-start gap-2.5">
-              <Check className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-              <span className="text-sm">{feature}</span>
-            </div>
-          ))}
-        </div>
-
-        {authLoading || subLoading ? (
-          <div className="h-11 flex items-center justify-center">
-            <Loader2 className="h-5 w-5 animate-spin text-primary" />
-          </div>
-        ) : isFree ? (
-          isSubscribed ? (
-            <div className="rounded-xl bg-muted px-4 py-3 text-center">
-              <p className="text-sm text-muted-foreground font-medium">Included in your plan</p>
-            </div>
-          ) : freeUsed ? (
-            <div className="rounded-xl bg-primary/8 border border-primary/20 px-4 py-3 text-center">
-              <p className="font-bold text-primary flex items-center justify-center gap-2 text-sm">
-                <Check className="h-4 w-4" /> Used
-              </p>
-            </div>
-          ) : user ? (
-            <Link to="/">
-              <Button variant="outline" className="w-full h-11 text-sm font-bold">
-                <Gift className="h-4 w-4 mr-2" /> Browse & claim your free app
-              </Button>
-            </Link>
-          ) : (
-            <Link to="/login">
-              <Button variant="outline" className="w-full h-11 text-sm font-bold">
-                Sign up free
-              </Button>
-            </Link>
-          )
-        ) : isCurrentPlan ? (
-          <div className="rounded-xl bg-primary/8 border border-primary/20 px-4 py-3 text-center">
-            <p className="font-bold text-primary flex items-center justify-center gap-2 text-sm">
-              <Check className="h-4 w-4" /> Current plan
-            </p>
-          </div>
-        ) : user ? (
-          <Button
-            onClick={() => handleSubscribe(tier)}
-            disabled={!!subscribingTier}
-            className={cn(
-              "w-full h-11 text-sm font-bold",
-              highlight ? "gradient-hero text-white border-0 shadow-glow hover:opacity-90" : ""
-            )}
-            variant={highlight ? "default" : "outline"}
-          >
-            {isLoading ? (
-              <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Processing…</>
-            ) : isSubscribed ? "Switch plan" : (
-              <><Zap className="h-4 w-4 mr-2" /> Subscribe</>
-            )}
-          </Button>
-        ) : (
-          <Link to="/login">
-            <Button
-              className={cn(
-                "w-full h-11 text-sm font-bold",
-                highlight ? "gradient-hero text-white border-0 shadow-glow hover:opacity-90" : ""
-              )}
-              variant={highlight ? "default" : "outline"}
-            >
-              Sign in to subscribe
-            </Button>
-          </Link>
-        )}
-      </div>
-    );
-  }
+  const sharedCardProps = {
+    user,
+    authLoading,
+    subLoading,
+    subscribingTier,
+    isSubscribed,
+    freeUsed,
+    onSubscribe: handleSubscribe,
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
       <MetaTags
-        title="Pricing Plans — Free & Pro Access | OpenDraft"
-        description="Get full source code, deploy configs, and direct builder messaging. Start free or upgrade for unlimited access to expert-built apps."
+        title="Pricing — Own Production-Ready Software | OpenDraft"
+        description="Get full source code, deploy configs, and direct builder messaging. Start free or scale with enterprise plans."
         path="/credits"
       />
       <Navbar />
-      <main className="flex-1 container mx-auto px-4 py-16 max-w-6xl page-enter">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 mb-5">
-            <Crown className="h-8 w-8 text-primary" />
+      <main className="flex-1 page-enter">
+
+        {/* Hero section */}
+        <section className="relative overflow-hidden">
+          {/* Subtle atmospheric glow */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-primary/5 blur-[120px] rounded-full pointer-events-none" />
+
+          <div className="container mx-auto px-4 pt-24 pb-16 max-w-4xl text-center relative">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary mb-6">
+              Pricing
+            </p>
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight leading-[1.1] mb-5">
+              Stop renting software.
+              <br />
+              <span className="text-muted-foreground">Start owning it.</span>
+            </h1>
+            <p className="text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed">
+              Every plan includes full source code, deploy configs, security audits, and direct builder messaging. You own everything — forever.
+            </p>
           </div>
-          <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-3">
-            Pick your plan
-          </h1>
-          <p className="text-muted-foreground text-lg max-w-lg mx-auto leading-relaxed">
-            Every plan includes full source code, deploy configs, security audits, auto-generated READMEs, and direct builder messaging.
-          </p>
-        </div>
+        </section>
 
-        {/* Core pricing grid — Free + 3 paid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-16 max-w-5xl mx-auto">
-          <TierCard tier={FREE_TIER} />
-          {CORE_PAID_TIERS.map((tier) => (
-            <TierCard key={tier.id} tier={tier} highlight={tier.popular} />
-          ))}
-        </div>
-
-        {/* Enterprise tiers */}
-        {ENTERPRISE_TIERS.length > 0 && (
-          <>
-            <div className="text-center mb-8">
-              <div className="inline-flex items-center gap-2 rounded-full bg-accent/10 px-4 py-1.5 text-xs font-semibold text-accent-foreground mb-4">
-                <Building2 className="h-4 w-4" /> For agencies & enterprises
+        {/* Trust strip */}
+        <section className="container mx-auto px-4 max-w-4xl mb-16">
+          <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm text-muted-foreground">
+            {[
+              "Full source code included",
+              "One-click deploy to Netlify & Vercel",
+              "Security-audited",
+              "Cancel anytime",
+            ].map((item) => (
+              <div key={item} className="flex items-center gap-2">
+                <Check className="h-3.5 w-3.5 text-primary" />
+                <span>{item}</span>
               </div>
-              <h2 className="text-2xl md:text-3xl font-black tracking-tight mb-2">
-                Scale with volume pricing
-              </h2>
-              <p className="text-muted-foreground max-w-md mx-auto">
-                White-label apps for your clients. Unlimited access, bulk deploy, and dedicated support.
-              </p>
+            ))}
+          </div>
+        </section>
+
+        {/* Core pricing grid */}
+        <section className="container mx-auto px-4 max-w-6xl mb-24">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+            <PricingTierCard
+              tier={FREE_TIER}
+              isCurrentPlan={currentPlan === "free"}
+              {...sharedCardProps}
+            />
+            {CORE_PAID_TIERS.map((tier) => (
+              <PricingTierCard
+                key={tier.id}
+                tier={tier}
+                highlight={tier.popular}
+                isCurrentPlan={currentPlan === tier.id}
+                {...sharedCardProps}
+              />
+            ))}
+          </div>
+        </section>
+
+        {/* Enterprise section */}
+        {ENTERPRISE_TIERS.length > 0 && (
+          <section id="enterprise" className="container mx-auto px-4 max-w-6xl mb-24">
+            {/* Separator line */}
+            <div className="flex items-center gap-4 mb-12">
+              <div className="flex-1 h-px bg-border/40" />
+              <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                Enterprise
+              </span>
+              <div className="flex-1 h-px bg-border/40" />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-16 max-w-3xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-4xl mx-auto">
               {ENTERPRISE_TIERS.map((tier) => (
-                <TierCard key={tier.id} tier={tier} highlight={tier.badge === "Best value"} />
+                <PricingTierCard
+                  key={tier.id}
+                  tier={tier}
+                  highlight={tier.badge === "Best value"}
+                  isCurrentPlan={currentPlan === tier.id}
+                  {...sharedCardProps}
+                />
               ))}
             </div>
-          </>
+          </section>
         )}
 
-        {/* All plans include */}
-        <div className="text-center mb-8">
-          <p className="text-sm text-muted-foreground">
-            All plans include marketplace browsing, source code downloads, and direct builder messaging. No development services included — hire builders separately for custom work.
-          </p>
-        </div>
-
-        {/* Builder support section */}
-        <div className="text-center mb-8">
-          <h2 className="text-2xl font-black tracking-tight mb-2">Need custom work?</h2>
-          <p className="text-muted-foreground max-w-md mx-auto">
-            Hire the original builder for ongoing support, feature requests, and customization through a monthly retainer.
-          </p>
-        </div>
-
-        <div className="rounded-2xl border border-border bg-card p-6 md:p-8 max-w-lg mx-auto">
-          <div className="flex items-start gap-4">
-            <div className="h-12 w-12 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
-              <Wrench className="h-6 w-6 text-accent" />
-            </div>
-            <div>
-              <h3 className="font-bold text-lg mb-1">Builder Support Retainer</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed mb-3">
-                After claiming an app, message the builder to set up a monthly support plan. They'll customize, maintain, and ship features tailored to your needs.
-              </p>
-              <div className="flex flex-wrap gap-2 text-xs">
-                <span className="rounded-full bg-muted px-3 py-1 font-medium">Custom features</span>
-                <span className="rounded-full bg-muted px-3 py-1 font-medium">Priority support</span>
-                <span className="rounded-full bg-muted px-3 py-1 font-medium">Ongoing updates</span>
-              </div>
+        {/* Bottom CTA */}
+        <section className="container mx-auto px-4 max-w-3xl mb-24">
+          <div className="rounded-2xl border border-border/40 bg-card p-8 md:p-12 text-center">
+            <h2 className="text-2xl md:text-3xl font-black tracking-tight mb-3">
+              Need something custom?
+            </h2>
+            <p className="text-muted-foreground max-w-lg mx-auto leading-relaxed mb-6">
+              Hire the original builder for ongoing support, feature requests, and customization through a monthly retainer.
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-3 text-sm text-foreground/60">
+              {["Custom features", "Priority support", "Ongoing updates"].map((tag) => (
+                <span key={tag} className="rounded-full border border-border/60 px-4 py-1.5 font-medium">
+                  {tag}
+                </span>
+              ))}
             </div>
           </div>
-        </div>
+        </section>
+
+        {/* Fine print */}
+        <section className="container mx-auto px-4 max-w-3xl pb-16 text-center">
+          <p className="text-xs text-muted-foreground/60 leading-relaxed">
+            All plans include marketplace browsing, source code downloads, and direct builder messaging.
+            No development services included — hire builders separately for custom work. Prices in USD.
+          </p>
+        </section>
+
       </main>
       <Footer />
     </div>

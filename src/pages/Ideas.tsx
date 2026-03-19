@@ -258,7 +258,7 @@ export default function Ideas() {
               <div className="grid grid-cols-1 gap-3">
                 <AnimatePresence mode="popLayout">
                   {analyses.map((a) => (
-                    <AnalysisCard key={a.id} analysis={a} onGenerate={handleGenerate} />
+                    <AnalysisCard key={a.id} analysis={a} onGenerate={handleGenerate} onClickBuild={openIdea} />
                   ))}
                 </AnimatePresence>
               </div>

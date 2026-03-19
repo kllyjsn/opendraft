@@ -13,6 +13,7 @@ import { useGenerationJob } from "@/hooks/useGenerationJob";
 import { CheckCircle, AlertCircle, ExternalLink, Rocket, Globe, Pencil, Wand2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmailCapture } from "@/components/EmailCapture";
+import { AnalysisShowcase } from "@/components/AnalysisShowcase";
 
 const ROTATING_WORDS = ["CRM", "scheduler", "dashboard", "portal", "tracker", "helpdesk"];
 
@@ -318,6 +319,8 @@ export default function Index() {
           )}
         </div>
       </section>
+
+      <AnalysisShowcase />
 
       {!user && <EmailCapture />}
 

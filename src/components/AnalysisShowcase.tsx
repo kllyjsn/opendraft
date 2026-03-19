@@ -67,11 +67,11 @@ const COMPANIES: PreviewCompany[] = [
     domain: "mikesbikes.com",
     industry: "Bicycle Retail & Service",
     icon: Bike,
-    summary: "Multi-location bike shop — we found 4 apps to modernize scheduling, inventory, and customer loyalty.",
+    summary: "Multi-location bike shop — we found 4 apps that would make the operations manager a legend.",
     insights: [
-      { title: "Service bookings are phone-only", description: "Customers call to schedule tune-ups and repairs. Online booking eliminates phone tag and reduces no-shows." },
-      { title: "Inventory is tracked in spreadsheets", description: "Stock levels across locations aren't synced. A real-time dashboard prevents overselling and stockouts." },
-      { title: "No loyalty program", description: "Repeat customers get no recognition. A points-based system increases retention and average order value." },
+      { title: "Service bookings are phone-only", description: "Customers call to schedule tune-ups. Fix this and you eliminate phone tag — your team thanks you, your boss notices." },
+      { title: "Inventory is tracked in spreadsheets", description: "Stock levels across locations aren't synced. Build the dashboard and you're the one who prevented the next stockout crisis." },
+      { title: "No loyalty program", description: "Repeat customers get no recognition. Launch a points system and revenue goes up — along with your reputation." },
     ],
     builds: [
       { name: "Bike Service Scheduler", description: "Online booking for tune-ups, repairs, and fittings with calendar sync and automated reminders.", category: "saas_tool", priority: "high" },

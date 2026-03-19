@@ -202,6 +202,7 @@ export function BusinessAnalyzer({ onGenerate }: { onGenerate?: (prompt: string)
       const fallback = buildInstantFallback(normalizedUrl);
       setResult(fallback);
       saveAnalysis(fallback);
+      saveAnalysisToDb(fallback, true);
       setNotice("Live analysis was slow, so we loaded instant build ideas you can generate now.");
       setError(err instanceof Error ? err.message : "Analysis failed");
     } finally {

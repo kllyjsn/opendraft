@@ -275,30 +275,31 @@ export default function Ideas() {
                   {ideas.map((idea) => {
                     const Icon = CATEGORY_ICON[idea.category] || Sparkles;
                     return (
-                      <motion.div
+                      <motion.button
                         key={idea.id}
                         layout
                         initial={{ opacity: 0, y: 12 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95 }}
-                        className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm p-4"
+                        onClick={() => openIdea({
+                          ...idea,
+                          source_url: idea.source_url,
+                          notes: idea.notes,
+                          created_at: idea.created_at,
+                        })}
+                        className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm p-4 text-left hover:shadow-lg hover:shadow-primary/5 transition-all group w-full"
                       >
                         <div className="flex items-start gap-2 mb-2">
                           <Icon className="h-4 w-4 text-primary mt-0.5" />
-                          <div>
-                            <p className="text-xs font-bold">{idea.name}</p>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <p className="text-xs font-bold truncate">{idea.name}</p>
+                              <ArrowRight className="h-3 w-3 text-primary opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                            </div>
                             <p className="text-[10px] text-muted-foreground line-clamp-2">{idea.description}</p>
                           </div>
                         </div>
-                        <Button
-                          size="sm"
-                          onClick={() => handleGenerate(idea.search_query)}
-                          className="gradient-hero text-primary-foreground border-0 shadow-glow hover:opacity-90 h-7 text-[10px] font-bold rounded-lg gap-1 w-full"
-                        >
-                          <Wand2 className="h-3 w-3" />
-                          Generate
-                        </Button>
-                      </motion.div>
+                      </motion.button>
                     );
                   })}
                 </AnimatePresence>

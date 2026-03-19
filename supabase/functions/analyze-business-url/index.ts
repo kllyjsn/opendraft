@@ -48,6 +48,16 @@ function buildFallbackAnalysis(formattedUrl: string, domain: string) {
     business_name: businessName,
     industry: "Digital Business Operations",
     summary: `${businessName} can accelerate growth with a focused stack of internal automation and customer-facing tools built on OpenDraft.`,
+    brand_identity: {
+      primary_color: "#7C3AED",
+      secondary_color: "#06B6D4",
+      accent_color: "#F43F5E",
+      background_style: "dark" as const,
+      design_mood: "modern professional",
+      typography_style: "geometric-sans" as const,
+      border_radius: "rounded" as const,
+      visual_references: `Clean modern SaaS interface inspired by ${businessName}'s brand — professional layout with strong primary accents.`,
+    },
     insights: [
       {
         title: "Manual workflows create hidden drag",

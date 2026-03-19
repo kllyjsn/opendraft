@@ -58,26 +58,20 @@ export function engagementHookTweet(): string {
 // ═══════════════════════════════════════════════════════════════
 export function fomoTweet(stats: { browsing?: number; signups?: number; apps?: number }): string {
   return pickUnique("fomo", [
-    `🔴 LIVE: ${stats.browsing || 127} people browsing apps right now\n\nThe best ones get claimed fast.\n\nDon't miss out → ${SITE_URL}`,
-    `That app you've been thinking about building?\n\nSomeone just bought a clone of it.\n\n${stats.apps || 1000}+ apps. First come, first served.\n\n${SITE_URL}`,
-    `Every hour you wait:\n\n→ Competitors get ahead\n→ Best apps get claimed\n→ Your launch date slips further\n\nStop waiting. Start shipping.\n\n${SITE_URL}`,
-    `Your competitor just launched.\n\nThey didn't code it.\n\nThey bought it on OpenDraft, slapped their brand on it, and went live.\n\nYou're still in figma.\n\n${SITE_URL}`,
-    `PSA: The best free apps on OpenDraft don't stay free forever.\n\nBuilders raise prices as traction grows.\n\nGrab them while they're cheap.\n\n${SITE_URL}`,
-    `${stats.signups || 12} founders signed up today.\n\nThey'll be launching apps this week while you're still planning.\n\n${SITE_URL}`,
-    `Monday: "I should build that app"\nTuesday: "I'll start this weekend"\nFriday: "Maybe next week"\n\n...6 months later: nothing.\n\nOr just → ${SITE_URL}`,
-    `3 apps got claimed in the last hour.\n\nPeople are waking up to how easy this is.\n\n${SITE_URL}`,
-    // NEW — Time-based FOMO
-    `While you read this tweet, someone just claimed an app and is already customizing it.\n\nBy tomorrow, they'll have users.\n\n${SITE_URL}`,
-    // NEW — Social proof FOMO
-    `The same app got claimed by 3 different founders this week.\n\nAll in different niches.\nAll launching different products.\nSame source code.\n\nThat's the playbook.\n\n${SITE_URL}`,
-    // NEW — Price anchor
-    `A founder just spent $29 on an app that would cost $35,000 to rebuild.\n\nI checked. Same features. Same quality.\n\nThe math is embarrassing.\n\n${SITE_URL}`,
-    // NEW — Competitive intel
-    `Just saw a YC startup launch. Their MVP looks familiar.\n\nBecause I saw the exact same template on OpenDraft 3 weeks ago.\n\nFor $39.\n\nThe smart money moves fast.\n\n${SITE_URL}`,
-    // NEW — Weekend FOMO
-    `Friday shipping thread:\n\nPost what you launched this week.\n\n(Half the replies will be OpenDraft apps. Watch.)\n\n${SITE_URL}`,
-    // NEW — Seasonal
-    `Q2 just started.\n\nWill you spend it building from scratch?\nOr launching 4 products?\n\nThe tools exist. The apps exist. The only thing missing is you.\n\n${SITE_URL}`,
+    `🔴 LIVE: ${stats.browsing || 127} businesses replacing SaaS right now\n\nThe best apps get claimed fast.\n\n→ ${SITE_URL}`,
+    `That SaaS tool you're paying $99/seat for?\n\nSomeone just replaced it with an owned app for $39.\n\n${stats.apps || 1000}+ apps. Full source code.\n\n${SITE_URL}`,
+    `Every month you wait:\n\n→ Another $2k in SaaS fees\n→ Another contract auto-renewal\n→ Your margins shrink further\n\nStop renting. Start owning.\n\n${SITE_URL}`,
+    `Your competitor just replaced their SaaS stack.\n\nThey own the code. They pay zero monthly. Their margins just improved 30%.\n\nYou're still paying per seat.\n\n${SITE_URL}`,
+    `PSA: Your SaaS vendor is raising prices again next quarter.\n\nThey always do.\n\nOwned software never sends a renewal invoice.\n\n${SITE_URL}`,
+    `${stats.signups || 12} businesses switched to owned software today.\n\nThey'll save $50k+ this year while you're still paying per seat.\n\n${SITE_URL}`,
+    `Monday: "This SaaS renewal is too expensive"\nTuesday: "I'll look into alternatives"\nFriday: "Maybe next quarter"\n\n...6 months later: $30k more in SaaS rent.\n\nOr just → ${SITE_URL}`,
+    `3 businesses replaced their SaaS tools in the last hour.\n\nOwned code. Zero monthly fees.\n\n${SITE_URL}`,
+    `While you read this tweet, a business just pasted their URL and got a custom app they'll own forever.\n\nBy tomorrow, they'll have cancelled 2 subscriptions.\n\n${SITE_URL}`,
+    `The same custom CRM got claimed by 3 different businesses this week.\n\nAll different industries.\nAll cancelled Salesforce.\nSame owned code.\n\n${SITE_URL}`,
+    `A founder just spent $39 on an app that replaces a $2,400/year SaaS subscription.\n\nThe ROI is embarrassing.\n\n${SITE_URL}`,
+    `Just saw a company cancel $8k/mo in SaaS subscriptions.\n\nReplaced everything with owned apps from OpenDraft.\n\nTotal cost: $247. One time.\n\n${SITE_URL}`,
+    `Friday shipping thread:\n\nPost what SaaS tool you replaced this week.\n\n(The savings will shock you.)\n\n${SITE_URL}`,
+    `Q2 just started.\n\nWill you spend another quarter paying SaaS rent?\nOr own your tools and keep the margin?\n\n${SITE_URL}`,
   ]);
 }
 

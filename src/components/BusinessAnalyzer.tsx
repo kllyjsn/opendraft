@@ -25,10 +25,22 @@ interface RecommendedBuild {
   search_query: string;
 }
 
+interface BrandIdentity {
+  primary_color: string;
+  secondary_color: string;
+  accent_color: string;
+  background_style: string;
+  design_mood: string;
+  typography_style: string;
+  border_radius: string;
+  visual_references: string;
+}
+
 interface AnalysisResult {
   business_name: string;
   industry: string;
   summary: string;
+  brand_identity?: BrandIdentity;
   insights: Insight[];
   recommended_builds: RecommendedBuild[];
   pageTitle: string;
@@ -80,14 +92,14 @@ async function saveAnalysisToDb(result: AnalysisResult, isFallback: boolean) {
       business_name: result.business_name,
       industry: result.industry,
       summary: result.summary,
-      insights: result.insights,
+      insights: { items: result.insights, brand_identity: result.brand_identity || null },
       recommended_builds: result.recommended_builds,
       is_fallback: isFallback,
     });
   } catch {}
 }
 
-export function BusinessAnalyzer({ onGenerate }: { onGenerate?: (prompt: string) => void }) {
+export function BusinessAnalyzer({ onGenerate }: { onGenerate?: (prompt: string, brandContext?: Record<string, string>) => void }) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { saveIdea } = useSavedIdeas();
@@ -235,6 +247,11 @@ export function BusinessAnalyzer({ onGenerate }: { onGenerate?: (prompt: string)
       navigate("/login");
       return;
     }
+    // Build brand context from current analysis result
+    const brandCtx = result?.brand_identity ? {
+      ...result.brand_identity,
+      business_name: result.business_name,
+    } : undefined;
     // Clear both sessionStorage and React state so the results panel
     // collapses and the generation progress UI in the parent becomes visible
     clearAnalysis();
@@ -242,8 +259,10 @@ export function BusinessAnalyzer({ onGenerate }: { onGenerate?: (prompt: string)
     setError(null);
     setNotice(null);
     if (onGenerate) {
-      onGenerate(prompt);
+      onGenerate(prompt, brandCtx as any);
     } else {
+      // Store brand context in sessionStorage for cross-page generation
+      if (brandCtx) sessionStorage.setItem("opendraft_brand_context", JSON.stringify(brandCtx));
       navigate(`/?generate=${encodeURIComponent(prompt)}`);
     }
   }

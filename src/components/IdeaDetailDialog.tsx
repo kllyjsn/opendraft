@@ -32,13 +32,14 @@ export interface IdeaDetail {
   // For builds from analyzed URLs
   business_name?: string | null;
   industry?: string | null;
+  brand_identity?: Record<string, string> | null;
 }
 
 interface Props {
   idea: IdeaDetail | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onGenerate: (query: string) => void;
+  onGenerate: (query: string, brandContext?: Record<string, string>) => void;
 }
 
 export function IdeaDetailDialog({ idea, open, onOpenChange, onGenerate }: Props) {
@@ -90,6 +91,29 @@ export function IdeaDetailDialog({ idea, open, onOpenChange, onGenerate }: Props
             </div>
           )}
 
+          {/* Brand color palette preview */}
+          {idea.brand_identity && (
+            <div className="bg-muted/20 rounded-xl p-3 border border-border/30 space-y-2">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Brand Design System</p>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
+                  {["primary_color", "secondary_color", "accent_color"].map((key) => (
+                    <div
+                      key={key}
+                      className="h-5 w-5 rounded-md border border-border/40 shadow-sm"
+                      style={{ backgroundColor: idea.brand_identity?.[key] }}
+                      title={`${key.replace("_", " ")}: ${idea.brand_identity?.[key]}`}
+                    />
+                  ))}
+                </div>
+                <span className="text-[10px] text-muted-foreground italic">{idea.brand_identity.design_mood}</span>
+              </div>
+              {idea.brand_identity.visual_references && (
+                <p className="text-[10px] text-foreground/60 leading-relaxed">{idea.brand_identity.visual_references}</p>
+              )}
+            </div>
+          )}
+
           {idea.source_url && (
             <a
               href={idea.source_url}
@@ -129,7 +153,11 @@ export function IdeaDetailDialog({ idea, open, onOpenChange, onGenerate }: Props
         {/* Footer CTA */}
         <div className="px-6 pb-6 pt-2">
           <Button
-            onClick={() => { onGenerate(idea.search_query); onOpenChange(false); }}
+            onClick={() => {
+              const brandCtx = idea.brand_identity ? { ...idea.brand_identity, business_name: idea.business_name || "" } : undefined;
+              onGenerate(idea.search_query, brandCtx);
+              onOpenChange(false);
+            }}
             className="w-full gradient-hero text-primary-foreground border-0 shadow-glow hover:opacity-90 h-10 text-sm font-bold rounded-xl gap-2"
           >
             <Wand2 className="h-4 w-4" />

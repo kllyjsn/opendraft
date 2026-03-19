@@ -27,11 +27,13 @@ const PRIORITY_TAG: Record<string, string> = {
   low: "bg-muted text-muted-foreground",
 };
 
-function AnalysisCard({ analysis, onGenerate, onClickBuild }: { analysis: AnalyzedUrl; onGenerate: (q: string) => void; onClickBuild: (build: IdeaDetail) => void }) {
+function AnalysisCard({ analysis, onGenerate, onClickBuild }: { analysis: AnalyzedUrl; onGenerate: (q: string, brandCtx?: Record<string, string>) => void; onClickBuild: (build: IdeaDetail) => void }) {
   const [expanded, setExpanded] = useState(false);
   const domain = (() => {
     try { return new URL(analysis.url).hostname.replace("www.", ""); } catch { return analysis.url; }
   })();
+  // Extract brand_identity from insights JSON (stored as { items, brand_identity })
+  const brandIdentity = (analysis.insights as any)?.brand_identity || null;
 
   return (
     <motion.div
@@ -70,6 +72,18 @@ function AnalysisCard({ analysis, onGenerate, onClickBuild }: { analysis: Analyz
         </div>
       </div>
 
+      {/* Brand identity swatch */}
+      {brandIdentity && (
+        <div className="flex items-center gap-2 mb-3 ml-11">
+          <div className="flex items-center gap-1">
+            <div className="h-3 w-3 rounded-full border border-border/40" style={{ backgroundColor: brandIdentity.primary_color }} />
+            <div className="h-3 w-3 rounded-full border border-border/40" style={{ backgroundColor: brandIdentity.secondary_color }} />
+            <div className="h-3 w-3 rounded-full border border-border/40" style={{ backgroundColor: brandIdentity.accent_color }} />
+          </div>
+          <span className="text-[9px] text-muted-foreground italic">{brandIdentity.design_mood}</span>
+        </div>
+      )}
+
       {/* Always-visible Generate button for the top recommended build */}
       {analysis.recommended_builds?.length > 0 && (
         <div className="mb-3">
@@ -80,6 +94,7 @@ function AnalysisCard({ analysis, onGenerate, onClickBuild }: { analysis: Analyz
               industry: analysis.industry,
               source_url: analysis.url,
               created_at: analysis.created_at,
+              brand_identity: brandIdentity,
             })}
             className="w-full text-left rounded-lg border border-primary/20 bg-primary/5 hover:bg-primary/10 transition-colors p-2.5 group"
           >
@@ -129,6 +144,7 @@ function AnalysisCard({ analysis, onGenerate, onClickBuild }: { analysis: Analyz
                           industry: analysis.industry,
                           source_url: analysis.url,
                           created_at: analysis.created_at,
+                          brand_identity: brandIdentity,
                         })}
                         className="flex items-start gap-2 p-2.5 rounded-xl border border-border/40 bg-muted/20 hover:bg-muted/40 transition-colors text-left w-full group"
                       >

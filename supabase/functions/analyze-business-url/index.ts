@@ -48,6 +48,16 @@ function buildFallbackAnalysis(formattedUrl: string, domain: string) {
     business_name: businessName,
     industry: "Digital Business Operations",
     summary: `${businessName} can accelerate growth with a focused stack of internal automation and customer-facing tools built on OpenDraft.`,
+    brand_identity: {
+      primary_color: "#7C3AED",
+      secondary_color: "#06B6D4",
+      accent_color: "#F43F5E",
+      background_style: "dark" as const,
+      design_mood: "modern professional",
+      typography_style: "geometric-sans" as const,
+      border_radius: "rounded" as const,
+      visual_references: `Clean modern SaaS interface inspired by ${businessName}'s brand — professional layout with strong primary accents.`,
+    },
     insights: [
       {
         title: "Manual workflows create hidden drag",
@@ -139,13 +149,29 @@ const TOOL_SCHEMA = {
   type: "function",
   function: {
     name: "suggest_apps",
-    description: "Return business analysis with app recommendations",
+    description: "Return business analysis with app recommendations and brand identity",
     parameters: {
       type: "object",
       properties: {
         business_name: { type: "string", description: "The business name" },
         industry: { type: "string", description: "Primary industry/vertical" },
         summary: { type: "string", description: "1-2 sentence business summary" },
+        brand_identity: {
+          type: "object",
+          description: "Visual brand identity extracted from the website",
+          properties: {
+            primary_color: { type: "string", description: "Primary brand color as hex, e.g. '#00ED64' for MongoDB green" },
+            secondary_color: { type: "string", description: "Secondary brand color as hex" },
+            accent_color: { type: "string", description: "Accent/highlight color as hex" },
+            background_style: { type: "string", enum: ["light", "dark", "gradient"], description: "Overall background approach" },
+            design_mood: { type: "string", description: "2-4 word design mood, e.g. 'technical minimalist', 'warm corporate', 'bold playful'" },
+            typography_style: { type: "string", enum: ["geometric-sans", "humanist-sans", "rounded", "monospace-accent", "serif-accent", "system-default"], description: "Font personality that matches the brand" },
+            border_radius: { type: "string", enum: ["sharp", "subtle", "rounded", "pill"], description: "Corner style matching brand feel" },
+            visual_references: { type: "string", description: "1 sentence describing what the generated UI should feel like, referencing the source brand. E.g. 'MongoDB Atlas console — dark panels, green accents, data-dense layouts'" },
+          },
+          required: ["primary_color", "secondary_color", "accent_color", "background_style", "design_mood", "typography_style", "border_radius", "visual_references"],
+          additionalProperties: false,
+        },
         insights: {
           type: "array",
           description: "3-4 key industry insights about their tech needs",
@@ -176,7 +202,7 @@ const TOOL_SCHEMA = {
           },
         },
       },
-      required: ["business_name", "industry", "summary", "insights", "recommended_builds"],
+      required: ["business_name", "industry", "summary", "brand_identity", "insights", "recommended_builds"],
       additionalProperties: false,
     },
   },
@@ -226,8 +252,8 @@ Deno.serve(async (req) => {
             messages: [
               {
                 role: "system",
-                content:
-                  "You are a business technology advisor for OpenDraft, a platform where users can generate and deploy production-ready web applications instantly. Analyze the business and recommend specific apps/tools they should BUILD to grow their business. Focus on internal tools, customer-facing apps, and automation they likely do not have. Be creative and specific.",
+              content:
+                  "You are a business technology advisor and brand design expert for OpenDraft, a platform where users can generate and deploy production-ready web applications instantly. Analyze the business and recommend specific apps/tools they should BUILD to grow their business. Focus on internal tools, customer-facing apps, and automation they likely do not have. Be creative and specific.\n\nCRITICAL — BRAND IDENTITY EXTRACTION:\nCarefully analyze the website's visual design to extract its brand identity. Look at:\n- Logo colors, hero section gradients, button colors, link colors → primary_color, secondary_color, accent_color\n- Dark vs light backgrounds → background_style\n- Overall aesthetic (e.g. MongoDB = technical minimalist dark, Stripe = clean corporate light, Discord = playful dark) → design_mood\n- Font style (geometric like Inter/Geist, humanist like Source Sans, rounded like Nunito, monospace-accented like JetBrains) → typography_style\n- Corner rounding (sharp/boxy like Linear, subtle like Stripe, rounded like Notion, pill like Discord) → border_radius\n- Write a vivid 1-sentence visual reference that a designer could use to recreate the feel → visual_references\n\nIf you can't see the page content, infer brand identity from what you know about the company. For example, MongoDB → green (#00ED64), dark background, technical minimalist. Stripe → purple (#635BFF), light background, clean corporate.",
               },
               {
                 role: "user",

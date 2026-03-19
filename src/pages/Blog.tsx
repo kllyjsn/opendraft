@@ -1,14 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { MetaTags } from "@/components/MetaTags";
 import { JsonLd } from "@/components/JsonLd";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Calendar, Share2 } from "lucide-react";
+import { ArrowLeft, Share2, Clock, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { BlogInlineCTA } from "@/components/BlogInlineCTA";
+import { motion, useScroll, useSpring } from "framer-motion";
 
 interface BlogPost {
   slug: string;
@@ -427,6 +428,7 @@ interface DbBlogPost {
 
 function BlogIndex() {
   const [dbPosts, setDbPosts] = useState<DbBlogPost[]>([]);
+  const [activeCategory, setActiveCategory] = useState<string>("all");
 
   useEffect(() => {
     supabase
@@ -460,6 +462,11 @@ function BlogIndex() {
     })),
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
+  const categories = ["all", ...Array.from(new Set(allPosts.map(p => p.category)))];
+  const filtered = activeCategory === "all" ? allPosts : allPosts.filter(p => p.category === activeCategory);
+  const featured = filtered[0];
+  const rest = filtered.slice(1);
+
   return (
     <div className="min-h-screen flex flex-col">
       <MetaTags
@@ -469,59 +476,101 @@ function BlogIndex() {
       />
       <Navbar />
 
-      <section className="border-b border-border bg-card/50 py-16">
-        <div className="container mx-auto px-4 text-center max-w-2xl">
-          <p className="text-xs font-bold uppercase tracking-widest text-primary mb-3">Blog</p>
-          <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-4">
-            Insights for Builders
+      {/* Editorial header */}
+      <section className="pt-20 pb-12 md:pt-28 md:pb-16">
+        <div className="container mx-auto px-4 max-w-5xl">
+          <p className="text-xs font-mono uppercase tracking-[0.3em] text-primary/60 mb-6">The OpenDraft Journal</p>
+          <h1 className="text-5xl md:text-7xl font-black tracking-[-0.04em] leading-[0.9] mb-6 max-w-3xl">
+            Ideas worth<br />
+            <span className="text-primary">building.</span>
           </h1>
-          <p className="text-muted-foreground text-lg">
-            Behind-the-scenes engineering, agent economy insights, and guides for the vibe coding era.
+          <p className="text-lg md:text-xl text-muted-foreground max-w-xl leading-relaxed">
+            Engineering deep-dives, market analysis, and builder playbooks for the ownership era.
           </p>
         </div>
       </section>
 
-      {/* Featured post */}
-      {allPosts[0] && (
-        <section className="container mx-auto px-4 py-10 max-w-3xl">
+      {/* Category pills */}
+      <section className="border-y border-border/40 bg-card/30 sticky top-16 z-30 backdrop-blur-md">
+        <div className="container mx-auto px-4 max-w-5xl">
+          <div className="flex gap-1 overflow-x-auto py-3 scrollbar-hide -mx-1 px-1">
+            {categories.map(cat => (
+              <button
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                className={`shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                  activeCategory === cat
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                }`}
+              >
+                {cat === "all" ? "All" : cat}
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Featured hero post */}
+      {featured && (
+        <section className="container mx-auto px-4 pt-12 pb-6 max-w-5xl">
           <Link
-            to={`/blog/${allPosts[0].slug}`}
-            className="block rounded-2xl border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-transparent p-8 shadow-lg hover:shadow-xl hover:border-primary/50 transition-all"
+            to={`/blog/${featured.slug}`}
+            className="group block"
           >
-            <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
-              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${CATEGORY_COLORS[allPosts[0].category] || "bg-muted text-muted-foreground"}`}>
-                {allPosts[0].category}
-              </span>
-              <Calendar className="h-3.5 w-3.5" />
-              <span>{new Date(allPosts[0].date).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</span>
-              <span>·</span>
-              <span>{allPosts[0].readTime}</span>
+            <div className="relative rounded-3xl border border-border/50 bg-gradient-to-br from-primary/[0.06] via-card to-card overflow-hidden p-10 md:p-14 transition-all hover:border-primary/30 hover:shadow-[var(--shadow-glow)]">
+              <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-primary/[0.04] to-transparent pointer-events-none" />
+              <div className="relative z-10 max-w-2xl">
+                <div className="flex items-center gap-3 text-xs text-muted-foreground mb-5">
+                  <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${CATEGORY_COLORS[featured.category] || "bg-muted text-muted-foreground"}`}>
+                    {featured.category}
+                  </span>
+                  <span className="font-mono">{new Date(featured.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
+                  <span className="text-border">·</span>
+                  <span className="font-mono">{featured.readTime}</span>
+                </div>
+                <h2 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-[-0.03em] leading-[1.05] mb-4 group-hover:text-primary transition-colors">
+                  {featured.title}
+                </h2>
+                <p className="text-base md:text-lg text-muted-foreground leading-relaxed max-w-lg">
+                  {featured.description}
+                </p>
+                <div className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-primary group-hover:gap-3 transition-all">
+                  Read article <ArrowLeft className="h-4 w-4 rotate-180" />
+                </div>
+              </div>
             </div>
-            <h2 className="text-2xl md:text-3xl font-black mb-3 leading-tight">{allPosts[0].title}</h2>
-            <p className="text-muted-foreground leading-relaxed">{allPosts[0].description}</p>
           </Link>
         </section>
       )}
 
-      <section className="container mx-auto px-4 pb-14 max-w-3xl">
-        <div className="space-y-5">
-          {allPosts.slice(1).map((post) => (
+      {/* Post grid */}
+      <section className="container mx-auto px-4 pb-20 max-w-5xl">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mt-6">
+          {rest.map((post, i) => (
             <Link
               key={post.slug}
               to={`/blog/${post.slug}`}
-              className="block rounded-2xl border border-border/60 bg-card p-6 shadow-card hover:shadow-lg hover:border-primary/30 transition-all"
+              className={`group flex flex-col rounded-2xl border border-border/40 bg-card p-6 transition-all hover:border-primary/20 hover:shadow-lg ${
+                i === 0 && rest.length > 2 ? "md:col-span-2 md:flex-row md:gap-8 md:items-center" : ""
+              }`}
             >
-              <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
-                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${CATEGORY_COLORS[post.category] || "bg-muted text-muted-foreground"}`}>
-                  {post.category}
-                </span>
-                <Calendar className="h-3.5 w-3.5" />
-                <span>{new Date(post.date).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</span>
-                <span>·</span>
-                <span>{post.readTime}</span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2.5 text-[11px] text-muted-foreground mb-3">
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${CATEGORY_COLORS[post.category] || "bg-muted text-muted-foreground"}`}>
+                    {post.category}
+                  </span>
+                  <span className="font-mono">{new Date(post.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+                  <span className="text-border">·</span>
+                  <span className="font-mono">{post.readTime}</span>
+                </div>
+                <h2 className="text-lg font-black tracking-tight mb-2 leading-snug group-hover:text-primary transition-colors line-clamp-2">
+                  {post.title}
+                </h2>
+                <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2">
+                  {post.description}
+                </p>
               </div>
-              <h2 className="text-xl font-black mb-2">{post.title}</h2>
-              <p className="text-sm text-muted-foreground leading-relaxed">{post.description}</p>
             </Link>
           ))}
         </div>
@@ -536,6 +585,11 @@ function BlogPost() {
   const { slug } = useParams<{ slug: string }>();
   const staticPost = slug ? POSTS[slug] : undefined;
   const [dbPost, setDbPost] = useState<DbBlogPost | null>(null);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const articleRef = useRef<HTMLElement>(null);
+
+  const { scrollYProgress } = useScroll({ target: articleRef, offset: ["start start", "end end"] });
+  const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
 
   useEffect(() => {
     if (!slug || staticPost) return;
@@ -548,7 +602,12 @@ function BlogPost() {
       .then(({ data }) => setDbPost(data));
   }, [slug, staticPost]);
 
-  // Build a unified post object
+  useEffect(() => {
+    const onScroll = () => setShowScrollTop(window.scrollY > 600);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   const post = staticPost
     ? staticPost
     : dbPost
@@ -585,13 +644,20 @@ function BlogPost() {
     );
   }
 
-  // Use custom OG image for vibe coding report, dynamic OG for others
   const ogImageUrl = post.slug === "vibe-coding-state-of-the-market"
     ? "https://opendraft.co/og-vibe-coding-report.png"
     : `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/blog-og-image?slug=${post.slug}&title=${encodeURIComponent(post.title)}&category=${encodeURIComponent(post.category)}`;
 
+  const wordCount = post.content.join(" ").split(/\s+/).length;
+
   return (
     <div className="min-h-screen flex flex-col">
+      {/* Reading progress bar */}
+      <motion.div
+        className="fixed top-0 left-0 right-0 h-[3px] bg-primary z-50 origin-left"
+        style={{ scaleX }}
+      />
+
       <MetaTags
         title={`${post.title} | OpenDraft Blog`}
         description={post.description}
@@ -612,75 +678,109 @@ function BlogPost() {
         url: `https://opendraft.co/blog/${post.slug}`,
         image: ogImageUrl,
         articleSection: post.category,
-        wordCount: post.content.join(" ").split(/\s+/).length,
+        wordCount,
       }} />
       <Navbar />
 
-      <article className="container mx-auto px-4 py-14 max-w-2xl">
-        <div className="flex items-center justify-between mb-8">
-          <Link to="/blog" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
-            <ArrowLeft className="h-4 w-4" />
-            Back to blog
-          </Link>
-          <Button variant="ghost" size="sm" onClick={handleShare} className="gap-1.5 text-muted-foreground">
-            <Share2 className="h-3.5 w-3.5" />
-            Share
-          </Button>
+      {/* Hero header */}
+      <header className="pt-20 pb-12 md:pt-28 md:pb-16 border-b border-border/30">
+        <div className="container mx-auto px-4 max-w-3xl">
+          <div className="flex items-center justify-between mb-10">
+            <Link to="/blog" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+              <ArrowLeft className="h-4 w-4" />
+              All articles
+            </Link>
+            <Button variant="ghost" size="sm" onClick={handleShare} className="gap-1.5 text-muted-foreground">
+              <Share2 className="h-3.5 w-3.5" />
+              Share
+            </Button>
+          </div>
+
+          <div className="flex items-center gap-3 text-xs text-muted-foreground mb-6">
+            <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${CATEGORY_COLORS[post.category] || "bg-muted text-muted-foreground"}`}>
+              {post.category}
+            </span>
+            <span className="font-mono">{new Date(post.date).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</span>
+            <span className="text-border">·</span>
+            <span className="inline-flex items-center gap-1 font-mono">
+              <Clock className="h-3 w-3" />
+              {post.readTime}
+            </span>
+          </div>
+
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-[-0.04em] leading-[1.05] mb-6">
+            {post.title}
+          </h1>
+          <p className="text-lg md:text-xl text-muted-foreground leading-relaxed max-w-2xl">
+            {post.description}
+          </p>
         </div>
+      </header>
 
-        <div className="flex items-center gap-3 text-xs text-muted-foreground mb-4">
-          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${CATEGORY_COLORS[post.category] || "bg-muted text-muted-foreground"}`}>
-            {post.category}
-          </span>
-          <Calendar className="h-3.5 w-3.5" />
-          <span>{new Date(post.date).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</span>
-          <span>·</span>
-          <span>{post.readTime}</span>
-        </div>
-
-        <h1 className="text-3xl md:text-4xl font-black tracking-tight mb-4 leading-tight">{post.title}</h1>
-        <p className="text-lg text-muted-foreground mb-10 leading-relaxed">{post.description}</p>
-
-        {/* OG Image preview */}
-        <div className="rounded-2xl overflow-hidden border border-border/40 mb-10">
-          <img src={ogImageUrl} alt={post.title} className="w-full" loading="lazy" />
-        </div>
-
-        <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:font-black prose-headings:tracking-tight prose-a:text-primary prose-a:no-underline hover:prose-a:underline">
+      <article ref={articleRef} className="container mx-auto px-4 py-12 md:py-16 max-w-3xl">
+        {/* Drop cap + editorial prose */}
+        <div className="prose prose-lg max-w-none dark:prose-invert prose-headings:font-black prose-headings:tracking-[-0.03em] prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-p:text-muted-foreground prose-p:leading-[1.8] prose-strong:text-foreground">
           {post.content.map((block, i) => {
-            // Insert inline CTA after ~40% of content
             const midPoint = Math.floor(post.content.length * 0.4);
             const showInlineCTA = i === midPoint;
 
             return (
-              <span key={i}>
+              <div key={i}>
                 {showInlineCTA && <BlogInlineCTA variant="compact" />}
                 {block.startsWith("## ") ? (
-                  <h2 className="text-2xl font-black mt-10 mb-4">{block.replace("## ", "")}</h2>
+                  <h2 className="text-2xl md:text-3xl font-black mt-14 mb-5 pt-6 border-t border-border/30">
+                    {block.replace("## ", "")}
+                  </h2>
                 ) : block.startsWith("### ") ? (
-                  <h3 className="text-lg font-black mt-8 mb-3">{block.replace("### ", "")}</h3>
+                  <h3 className="text-xl font-black mt-10 mb-4">{block.replace("### ", "")}</h3>
+                ) : block.includes("|") && block.includes("---") ? (
+                  <div className="overflow-x-auto my-6">
+                    <div className="text-sm text-muted-foreground whitespace-pre-line font-mono bg-muted/30 rounded-xl p-5 border border-border/30">
+                      {block}
+                    </div>
+                  </div>
                 ) : (
-                  <p className="text-muted-foreground leading-relaxed mb-4 whitespace-pre-line">
+                  <p className={`text-base md:text-[17px] text-muted-foreground leading-[1.85] mb-5 whitespace-pre-line ${
+                    i === 0 ? "first-letter:text-5xl first-letter:font-black first-letter:text-foreground first-letter:float-left first-letter:mr-3 first-letter:mt-1 first-letter:leading-[0.8]" : ""
+                  }`}>
                     {block.split(/(\*\*.*?\*\*|\[.*?\]\(.*?\))/g).map((part, j) => {
                       if (part.startsWith("**") && part.endsWith("**")) {
                         return <strong key={j} className="text-foreground font-semibold">{part.slice(2, -2)}</strong>;
                       }
                       const linkMatch = part.match(/\[(.*?)\]\((.*?)\)/);
                       if (linkMatch) {
-                        return <Link key={j} to={linkMatch[2]} className="text-primary hover:underline">{linkMatch[1]}</Link>;
+                        return <Link key={j} to={linkMatch[2]} className="text-primary hover:underline font-medium">{linkMatch[1]}</Link>;
                       }
                       return <span key={j}>{part}</span>;
                     })}
                   </p>
                 )}
-              </span>
+              </div>
             );
           })}
         </div>
 
-        {/* Bottom CTA */}
-        <BlogInlineCTA />
+        {/* Divider + bottom CTA */}
+        <div className="mt-16 pt-12 border-t border-border/30">
+          <BlogInlineCTA />
+        </div>
+
+        {/* Word count footer */}
+        <div className="mt-10 pt-6 border-t border-border/20 flex items-center justify-between text-xs text-muted-foreground/50 font-mono">
+          <span>{wordCount.toLocaleString()} words</span>
+          <span>opendraft.co/blog/{post.slug}</span>
+        </div>
       </article>
+
+      {/* Scroll to top */}
+      {showScrollTop && (
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          className="fixed bottom-6 right-6 z-40 h-10 w-10 rounded-full bg-card border border-border/50 flex items-center justify-center shadow-lg hover:bg-muted transition-colors"
+        >
+          <ChevronUp className="h-4 w-4 text-muted-foreground" />
+        </button>
+      )}
 
       <Footer />
     </div>

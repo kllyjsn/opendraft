@@ -207,11 +207,11 @@ export function dataDropTweet(data: {
   builderCount?: number;
 }): string {
   return pickUnique("datadrop", [
-    `📊 OpenDraft by the numbers:\n\n→ ${data.totalApps || 500}+ live apps\n→ ${data.weeklySales || 20}+ claimed this week\n→ Avg price: $${data.avgPrice || 29}\n→ Most popular: ${data.topCategory || "AI tools"}\n\nThe data speaks.\n\n${SITE_URL}`,
-    `Marketplace pulse 📈\n\nTop category this week: ${data.topCategory || "AI apps"}\nNew apps listed: ${data.weeklyListings || 15}\nApps claimed: ${data.weeklySales || 25}\n\nThe vibe coding economy is real.\n\n${SITE_URL}`,
-    `Interesting stat:\n\nThe average OpenDraft app gets claimed within ${Math.floor(Math.random() * 5) + 3} days of listing.\n\nDemand > supply.\n\nBuilders: this is your cue.\n\n${SITE_URL}/sell`,
-    `Cost to build an app from scratch: $50,000+\nCost on OpenDraft: $${data.avgPrice || 29}\n\nTime to build: 6 months\nTime to launch: 6 hours\n\nROI: ♾️\n\n${SITE_URL}`,
-    `${data.builderCount || 50}+ builders now sell on OpenDraft.\n\nTheir side projects earn them passive income.\n\nYour side project could too.\n\n${SITE_URL}/sell`,
+    `📊 The ownership economy in numbers:\n\n→ ${data.totalApps || 500}+ owned apps deployed\n→ ${data.weeklySales || 20}+ SaaS tools replaced this week\n→ Avg price: $${data.avgPrice || 29} (one-time)\n→ Avg SaaS savings: $12k/year\n\n${SITE_URL}`,
+    `Marketplace pulse 📈\n\nMost-replaced SaaS category: ${data.topCategory || "CRM & dashboards"}\nNew owned apps: ${data.weeklyListings || 15}\nSubscriptions cancelled: ${data.weeklySales || 25}\n\nThe ownership economy is real.\n\n${SITE_URL}`,
+    `Interesting stat:\n\nThe average OpenDraft customer saves $${Math.floor(Math.random() * 8 + 5)}k/year by owning instead of renting.\n\nThe math is getting hard to ignore.\n\n${SITE_URL}`,
+    `SaaS subscription: $99/seat × 50 seats = $59,400/year\nOwned app on OpenDraft: $${data.avgPrice || 29} one-time\n\nROI: ♾️\n\n${SITE_URL}`,
+    `${data.builderCount || 50}+ builders now sell owned alternatives to expensive SaaS.\n\nEvery app is someone's SaaS exit ramp.\n\n${SITE_URL}/sell`,
   ]);
 }
 

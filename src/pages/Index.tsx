@@ -37,9 +37,8 @@ function HeroTagline() {
       </p>
 
       <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-[4.5rem] font-black tracking-[-0.04em] leading-[1.1]">
-        <span className="block text-foreground">Stop renting</span>
+        <span className="block text-foreground">Build your own</span>
         <span className="block text-foreground">
-          your{" "}
           <span
             className="inline-block relative overflow-hidden align-bottom"
             style={{ minWidth: "7ch" }}

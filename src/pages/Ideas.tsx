@@ -27,7 +27,7 @@ const PRIORITY_TAG: Record<string, string> = {
   low: "bg-muted text-muted-foreground",
 };
 
-function AnalysisCard({ analysis, onGenerate }: { analysis: AnalyzedUrl; onGenerate: (q: string) => void }) {
+function AnalysisCard({ analysis, onGenerate, onClickBuild }: { analysis: AnalyzedUrl; onGenerate: (q: string) => void; onClickBuild: (build: IdeaDetail) => void }) {
   const [expanded, setExpanded] = useState(false);
   const domain = (() => {
     try { return new URL(analysis.url).hostname.replace("www.", ""); } catch { return analysis.url; }

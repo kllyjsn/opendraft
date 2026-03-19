@@ -132,6 +132,7 @@ function AnalysisCard({ analysis, onGenerate, onClickBuild }: { analysis: Analyz
                           industry: analysis.industry,
                           source_url: analysis.url,
                           created_at: analysis.created_at,
+                          brand_identity: brandIdentity,
                         })}
                         className="flex items-start gap-2 p-2.5 rounded-xl border border-border/40 bg-muted/20 hover:bg-muted/40 transition-colors text-left w-full group"
                       >

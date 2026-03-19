@@ -72,6 +72,18 @@ function AnalysisCard({ analysis, onGenerate, onClickBuild }: { analysis: Analyz
         </div>
       </div>
 
+      {/* Brand identity swatch */}
+      {brandIdentity && (
+        <div className="flex items-center gap-2 mb-3 ml-11">
+          <div className="flex items-center gap-1">
+            <div className="h-3 w-3 rounded-full border border-border/40" style={{ backgroundColor: brandIdentity.primary_color }} />
+            <div className="h-3 w-3 rounded-full border border-border/40" style={{ backgroundColor: brandIdentity.secondary_color }} />
+            <div className="h-3 w-3 rounded-full border border-border/40" style={{ backgroundColor: brandIdentity.accent_color }} />
+          </div>
+          <span className="text-[9px] text-muted-foreground italic">{brandIdentity.design_mood}</span>
+        </div>
+      )}
+
       {/* Always-visible Generate button for the top recommended build */}
       {analysis.recommended_builds?.length > 0 && (
         <div className="mb-3">

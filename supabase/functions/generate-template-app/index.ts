@@ -1020,38 +1020,33 @@ serve(async (req) => {
       await updateJob(supabase, jobId, { status: "processing", stage: "researching" });
     }
 
-    console.log("Gathering market demand signals...");
-    const signals = await gatherDemandSignals(supabase);
+    // Skip heavy demand research for user-initiated builds (they already have a theme)
+    const hasUserThemes = themes.length >= count;
+    let demandContext: string | undefined;
+    let existingTitles: string[] = [];
 
-    const demandParts: string[] = [];
-    if (signals.topSearches.length > 0) {
-      demandParts.push("TOP USER SEARCHES (what people are actively looking for):\n" + signals.topSearches.map(s => `- "${s}"`).join("\n"));
+    if (!hasUserThemes) {
+      console.log("Gathering market demand signals...");
+      const signals = await gatherDemandSignals(supabase);
+      existingTitles = signals.existingTitles;
+      const demandParts: string[] = [];
+      if (signals.topSearches.length > 0) demandParts.push("TOP USER SEARCHES:\n" + signals.topSearches.map(s => `- "${s}"`).join("\n"));
+      if (signals.unfilledBounties.length > 0) demandParts.push("OPEN BOUNTIES:\n" + signals.unfilledBounties.map(b => `- ${b}`).join("\n"));
+      if (signals.highViewGaps.length > 0) demandParts.push("HIGH-VIEW LOW-SALE GAPS:\n" + signals.highViewGaps.map(g => `- ${g}`).join("\n"));
+      if (signals.existingTitles.length > 0) demandParts.push("EXISTING (avoid duplicating):\n" + signals.existingTitles.slice(0, 30).join(", "));
+      demandContext = demandParts.length > 0 ? demandParts.join("\n\n") : undefined;
+    } else {
+      console.log("User provided themes, skipping demand research for speed");
     }
-    if (signals.unfilledBounties.length > 0) {
-      demandParts.push("OPEN BOUNTIES (explicit paid demand):\n" + signals.unfilledBounties.map(b => `- ${b}`).join("\n"));
-    }
-    if (signals.highViewGaps.length > 0) {
-      demandParts.push("HIGH-VIEW LOW-SALE GAPS (interest but no conversion — opportunity to build better versions):\n" + signals.highViewGaps.map(g => `- ${g}`).join("\n"));
-    }
-    if (signals.existingTitles.length > 0) {
-      demandParts.push("EXISTING LISTINGS (avoid duplicating these):\n" + signals.existingTitles.slice(0, 30).join(", "));
-    }
-    const demandContext = demandParts.length > 0 ? demandParts.join("\n\n") : undefined;
 
-    // Use live trend research to generate themes when admin doesn't specify
     let selectedThemes: string[];
-    if (themes.length >= count) {
+    if (hasUserThemes) {
       selectedThemes = themes.slice(0, count);
     } else {
       const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY");
       const neededCount = count - themes.length;
-      console.log(`Fetching ${neededCount} trend-validated themes from live internet data...`);
-      const trendThemes = await fetchTrendValidatedThemes(
-        neededCount,
-        LOVABLE_API_KEY,
-        signals.existingTitles,
-        FIRECRAWL_API_KEY || undefined
-      );
+      console.log(`Fetching ${neededCount} trend-validated themes...`);
+      const trendThemes = await fetchTrendValidatedThemes(neededCount, LOVABLE_API_KEY, existingTitles, FIRECRAWL_API_KEY || undefined);
       selectedThemes = [...themes, ...trendThemes];
     }
 

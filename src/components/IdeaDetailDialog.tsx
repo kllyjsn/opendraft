@@ -32,13 +32,14 @@ export interface IdeaDetail {
   // For builds from analyzed URLs
   business_name?: string | null;
   industry?: string | null;
+  brand_identity?: Record<string, string> | null;
 }
 
 interface Props {
   idea: IdeaDetail | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onGenerate: (query: string) => void;
+  onGenerate: (query: string, brandContext?: Record<string, string>) => void;
 }
 
 export function IdeaDetailDialog({ idea, open, onOpenChange, onGenerate }: Props) {

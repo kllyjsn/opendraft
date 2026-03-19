@@ -475,12 +475,12 @@ export default function Index() {
               transition={{ duration: 0.6, delay: 0.5 }}
               className="mt-6"
             >
-              <div className="flex items-center justify-center gap-6 text-[11px] text-muted-foreground/50">
-                <span>Own the code</span>
+              <div className="flex items-center justify-center gap-6 text-[11px] text-muted-foreground/50 font-medium tracking-wide">
+                <span>Your code</span>
                 <span className="h-3 w-px bg-border/30" />
-                <span>Zero per-seat fees</span>
+                <span>Your margins</span>
                 <span className="h-3 w-px bg-border/30" />
-                <span>Deploy in 90s</span>
+                <span>Your rules</span>
               </div>
             </motion.div>
           )}

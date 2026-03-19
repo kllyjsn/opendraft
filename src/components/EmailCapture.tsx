@@ -86,16 +86,16 @@ export function EmailCapture() {
               className="space-y-5"
             >
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
-                  Stay in the loop
+                <p className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.3em] text-primary/80 mb-4">
+                  The shift is happening
                 </p>
                 <h3 className="text-xl md:text-2xl font-black tracking-[-0.02em] text-foreground">
-                  Not ready yet?
+                  Every business deserves
                   <br />
-                  <span className="text-muted-foreground">Get the free guide.</span>
+                  <span className="text-muted-foreground">software it actually owns.</span>
                 </h3>
                 <p className="text-sm text-muted-foreground mt-3 leading-relaxed">
-                  Learn how teams are cutting SaaS costs 80% by owning their tools.
+                  Get the free playbook: how teams are cutting SaaS costs 80% and improving margins overnight.
                 </p>
               </div>
               <form onSubmit={handleSubmit} className="flex gap-2 max-w-sm mx-auto">

@@ -20,10 +20,11 @@ type DeployPhase = "idle" | "deploying" | "polling" | "live" | "error";
 
 export const STAGE_MAP: Record<string, { label: string; pct: number }> = {
   queued: { label: "Queuing your build…", pct: 3 },
-  researching: { label: "Researching market demand…", pct: 10 },
-  generating_code: { label: "Generating source code…", pct: 25 },
-  generating_screenshots: { label: "Creating screenshots…", pct: 40 },
-  packaging: { label: "Packaging ZIP bundle…", pct: 52 },
+  researching: { label: "Researching market demand…", pct: 8 },
+  generating_code: { label: "Generating source code…", pct: 20 },
+  validating: { label: "Validating code quality…", pct: 38 },
+  generating_screenshots: { label: "Creating screenshots…", pct: 42 },
+  packaging: { label: "Packaging & screenshots…", pct: 52 },
   uploading: { label: "Uploading files…", pct: 60 },
   creating_listing: { label: "Creating your listing…", pct: 65 },
   done: { label: "Build complete!", pct: 68 },

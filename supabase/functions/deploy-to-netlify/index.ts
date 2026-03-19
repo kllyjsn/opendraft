@@ -94,6 +94,37 @@ serve(async (req) => {
       });
     }
 
+    // ── Input validation ──
+    if (!UUID_REGEX.test(listingId)) {
+      return new Response(JSON.stringify({ error: "Invalid listingId format" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (typeof netlifyToken !== "string" || netlifyToken.length > 500) {
+      return new Response(JSON.stringify({ error: "Invalid token format" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ── Deploy rate limiting ──
+    const { data: recentDeploy } = await supabase
+      .from("deployed_sites")
+      .select("created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (recentDeploy) {
+      const elapsed = Date.now() - new Date(recentDeploy.created_at).getTime();
+      if (elapsed < DEPLOY_COOLDOWN_MS) {
+        const waitSec = Math.ceil((DEPLOY_COOLDOWN_MS - elapsed) / 1000);
+        return new Response(JSON.stringify({ error: `Please wait ${waitSec}s before deploying again` }), {
+          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     const { data: listing } = await supabase
       .from("listings")
       .select("id, title, description, file_path, seller_id, github_url")

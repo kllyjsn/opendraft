@@ -1099,7 +1099,8 @@ serve(async (req) => {
                 LOVABLE_API_KEY,
                 demandContext,
                 // Only pass jobId for the first template so stage updates don't conflict
-                idx === 0 ? jobId : undefined
+                idx === 0 ? jobId : undefined,
+                brandContext
               );
               resolve(result);
             } catch (err) {

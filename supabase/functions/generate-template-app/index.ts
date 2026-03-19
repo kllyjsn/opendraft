@@ -873,8 +873,7 @@ Requirements:
 
   const [screenshotPaths, zipBlob] = await Promise.all([screenshotPromise, zipPromise]);
   console.log(`Generated ${screenshotPaths.length}/2 screenshots for "${template.title}"`);
-  // Check if ANY generated file imports zod
-  const hasZodImport = generatedFiles.some(f => /import.*from\s+['"]zod['"]|import.*{.*z.*}.*from\s+['"]zod['"]/i.test(f.content));
+
 
   if (!hasZodImport) {
     // Inject a validation utilities file with common Zod schemas

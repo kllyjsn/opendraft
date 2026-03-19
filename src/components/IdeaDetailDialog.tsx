@@ -130,7 +130,11 @@ export function IdeaDetailDialog({ idea, open, onOpenChange, onGenerate }: Props
         {/* Footer CTA */}
         <div className="px-6 pb-6 pt-2">
           <Button
-            onClick={() => { onGenerate(idea.search_query); onOpenChange(false); }}
+            onClick={() => {
+              const brandCtx = idea.brand_identity ? { ...idea.brand_identity, business_name: idea.business_name || "" } : undefined;
+              onGenerate(idea.search_query, brandCtx);
+              onOpenChange(false);
+            }}
             className="w-full gradient-hero text-primary-foreground border-0 shadow-glow hover:opacity-90 h-10 text-sm font-bold rounded-xl gap-2"
           >
             <Wand2 className="h-4 w-4" />

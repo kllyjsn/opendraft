@@ -30,34 +30,26 @@ function pickUnique<T>(key: string, arr: T[]): T {
 // ═══════════════════════════════════════════════════════════════
 export function engagementHookTweet(): string {
   return pickUnique("hook", [
-    `Unpopular opinion:\n\nBuilding an app from scratch in 2026 is like hand-writing every email instead of using Gmail.\n\nThere's a faster way 👇\n\n${SITE_URL}`,
-    `The biggest lie in tech:\n\n"You need to build everything yourself."\n\nThe smartest founders buy, customize, launch.\n\n${SITE_URL}`,
-    `Me in 2023: "I'll build this app myself, how hard can it be?"\n\nMe in 2026: *buys a finished one for $29 and launches before lunch*\n\n${SITE_URL}`,
-    `Nobody:\n\nAbsolutely nobody:\n\nFounders still hand-coding login pages from scratch: 🤡\n\n${SITE_URL}`,
-    `I analyzed 200 failed startups.\n\nThe #1 cause of death?\n\nThey ran out of money before shipping.\n\nThe fix is stupidly simple → buy what's already built.\n\n${SITE_URL}`,
-    `Building software used to be about writing code.\n\nNow it's about taste.\n\nKnowing what to ship > knowing how to build.\n\n${SITE_URL}`,
-    `The future of software isn't code.\n\nIt's curation.\n\nFind the right pieces. Assemble. Ship.\n\n${SITE_URL}`,
-    `Hot take: The best developers in 2026 write zero code.\n\nThey orchestrate. They assemble. They ship.\n\nAnd they move 10x faster than everyone else.\n\n${SITE_URL}`,
-    `Controversial but true:\n\nYour "unique" app idea has probably been built 47 times already.\n\nThe differentiator is execution speed.\n\n${SITE_URL}`,
-    `My friend quit her $200k job to start a SaaS.\n\n6 months in: no product, no revenue, $40k spent.\n\nI showed her OpenDraft.\n\nShe launched in 3 hours.\n\n${SITE_URL}`,
-    `Stop reading this.\n\nGo launch something.\n\nSeriously.\n\n${SITE_URL}`,
-    `This tweet will save you $50,000.\n\n(screenshot it)\n\nDon't build from scratch. Buy a working app. Customize it. Launch.\n\n${SITE_URL}`,
-    // NEW — Tech insight format
-    `The stack that's quietly winning in 2026:\n\nReact + Supabase + AI.\n\nEvery top-selling app on OpenDraft runs it.\n\nThe consensus is in.\n\n${SITE_URL}`,
-    // NEW — Paradigm shift
-    `Software development is being unbundled.\n\nWriting code = commodity\nShipping products = the skill\n\nThe founders who get this are lapping everyone else.\n\n${SITE_URL}`,
-    // NEW — Counterintuitive
-    `The laziest founder I know makes $40k/mo.\n\nHer secret? She never builds from scratch.\n\nShe finds proven apps, adds her domain expertise, and ships.\n\nLazy = smart.\n\n${SITE_URL}`,
-    // NEW — Framework
-    `The 3-step framework that replaced my entire dev process:\n\n1. Search for what's already built\n2. Customize for my market\n3. Ship same-day\n\nI haven't written a line of auth code in 2 years.\n\n${SITE_URL}`,
-    // NEW — Prediction
-    `By 2027, 80% of new software won't be "built."\n\nIt'll be assembled from components, templates, and AI-generated code.\n\nThe marketplace for this already exists.\n\n${SITE_URL}`,
-    // NEW — Identity
-    `There are two types of founders in 2026:\n\n1. Those who ship\n2. Those who're still choosing a framework\n\nType 1 uses shortcuts.\n\n${SITE_URL}`,
-    // NEW — Micro-story
-    `Day 1: Found an app on OpenDraft\nDay 2: Customized it\nDay 3: Launched\nDay 7: First paying customer\nDay 30: $2k MRR\n\nThat's not a fantasy. That's a Tuesday.\n\n${SITE_URL}`,
-    // NEW — Comparison
-    `Your dev team: 3 engineers, 6 months, $250k\n\nA solo founder with OpenDraft: 1 person, 1 day, $49\n\nSame app. Same users. Different P&L.\n\n${SITE_URL}`,
+    `Every per-seat fee is a tax on your growth.\n\nOwn the software. Kill the invoice.\n\n${SITE_URL}`,
+    `The biggest lie in SaaS:\n\n"You need us."\n\nYou don't. You need your own code.\n\n${SITE_URL}`,
+    `Your SaaS bill grows every time you hire. Your owned software doesn't.\n\nBetter margins. Same features.\n\n${SITE_URL}`,
+    `Nobody:\n\nAbsolutely nobody:\n\nFounders still paying $49/seat/month for a glorified spreadsheet: 🤡\n\n${SITE_URL}`,
+    `I audited a 20-person startup's SaaS stack.\n\n$14,200/month. For tools they could own outright for $500 total.\n\nThe math is criminal.\n\n${SITE_URL}`,
+    `Owning software used to be hard.\n\nNow it's one URL paste away.\n\nPaste your site. Get your app. Own the code. Forever.\n\n${SITE_URL}`,
+    `The future of business software isn't subscriptions.\n\nIt's ownership.\n\nYour code. Your margins. Your rules.\n\n${SITE_URL}`,
+    `Hot take: The best CFOs in 2026 aren't negotiating SaaS contracts.\n\nThey're eliminating them.\n\n${SITE_URL}`,
+    `Controversial but true:\n\nEvery SaaS company profits from your dependency.\n\nOwnership is the exit.\n\n${SITE_URL}`,
+    `My friend's company paid Salesforce $180k last year.\n\nI showed her a custom CRM she could own for $200.\n\nSame features. No renewal.\n\n${SITE_URL}`,
+    `Stop renting your software.\n\nSeriously.\n\n${SITE_URL}`,
+    `This tweet will save you $50,000/year.\n\n(screenshot it)\n\nReplace per-seat SaaS with software you own. Full source code. One price.\n\n${SITE_URL}`,
+    `The stack that's quietly winning in 2026:\n\nOwned software + AI maintenance.\n\nNo subscriptions. No lock-in. No per-seat tax.\n\n${SITE_URL}`,
+    `Software ownership is being unbundled from software development.\n\nYou don't need to build it. You just need to own it.\n\n${SITE_URL}`,
+    `The smartest business owner I know has zero SaaS subscriptions.\n\nShe owns every tool her team uses.\n\nHer margins are 40% higher than competitors.\n\n${SITE_URL}`,
+    `The 3-step framework that killed our SaaS budget:\n\n1. Paste your website URL\n2. Get a custom app in 90 seconds\n3. Own the code forever\n\nWe haven't paid per-seat fees in 2 years.\n\n${SITE_URL}`,
+    `By 2027, "SaaS subscription" will sound as quaint as "software CD-ROM."\n\nOwnership is the default. The marketplace already exists.\n\n${SITE_URL}`,
+    `There are two types of businesses in 2026:\n\n1. Those who own their software\n2. Those who rent it and wonder where the margin went\n\n${SITE_URL}`,
+    `Day 1: Pasted our website URL\nDay 2: Got a custom app\nDay 3: Cancelled 3 SaaS subscriptions\nDay 30: Saved $4,200/month\n\nThat's not a fantasy. That's a Tuesday.\n\n${SITE_URL}`,
+    `Your SaaS vendor: 3 tiers, per-seat pricing, annual contract\n\nOpenDraft: one price, unlimited users, you own the code\n\nSame app. Different P&L.\n\n${SITE_URL}`,
   ]);
 }
 

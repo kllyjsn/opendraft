@@ -253,35 +253,36 @@ export function hotTakeTweet(): string {
 export function miniThreadTweet(): string[] {
   const threads = [
     [
-      `I studied 50 founders who launched in under 24 hours.\n\nHere's what they all had in common:\n\n🧵 Thread:`,
-      `1/ They didn't start from zero.\n\nEvery single one used a template, boilerplate, or pre-built app.\n\nNot because they couldn't code. Because they valued speed over ego.`,
-      `2/ They focused on distribution, not development.\n\nWhile competitors were debugging, they were:\n→ Talking to customers\n→ Running ads\n→ Building partnerships\n\nCode is table stakes. Distribution is the game.`,
-      `3/ They launched "ugly" and iterated.\n\nNone of them waited for perfection.\n\nThey grabbed an app, customized the brand, and shipped.\n\nPerfect is the enemy of live.\n\n${SITE_URL}`,
+      `I studied 50 businesses that cut their SaaS spending by 70%+.\n\nHere's what they all had in common:\n\n🧵 Thread:`,
+      `1/ They stopped assuming "subscription = necessary."\n\nEvery tool got audited: "Can we own this instead?"\n\nThe answer was yes for 80% of their stack.`,
+      `2/ They focused on margins, not features.\n\nMost SaaS tools have 10x more features than you use.\n\nAn owned app with YOUR features costs 1/100th the price.\n\nYour code. Your margins. Your rules.`,
+      `3/ They replaced incrementally.\n\nOne tool per month. Starting with the most expensive per-seat subscription.\n\nBy month 6, their software budget dropped 60%.\n\n${SITE_URL}`,
     ],
     [
-      `The "Buy vs Build" framework that changed how I think about software:\n\n🧵`,
-      `Ask 3 questions:\n\n1. Is this core to my competitive advantage?\n2. Does a working version already exist?\n3. Will building it delay my launch?\n\nIf answers are No, Yes, Yes — buy it.`,
-      `Most founders get this wrong because of ego.\n\n"Real founders build their own infra"\n\nNo. Real founders ship.\n\nThe infra is a means, not the end.\n\n${SITE_URL}`,
+      `The "Own vs Rent" framework that saved us $150k/year:\n\n🧵`,
+      `Ask 3 questions about every SaaS tool:\n\n1. Are we paying per-seat fees?\n2. Could we own an equivalent for a one-time price?\n3. Does vendor lock-in limit our options?\n\nIf answers are Yes, Yes, Yes — own it.`,
+      `Most businesses get this wrong because of inertia.\n\n"We've always used Salesforce."\n\nThat's not a strategy. That's a habit.\n\nHabits are expensive.\n\n${SITE_URL}`,
     ],
     [
-      `Why the smartest agencies are using OpenDraft (and not telling their clients):\n\n🧵`,
-      `1/ Client says: "Build me a dashboard"\n\nAgency finds one on OpenDraft for $39.\nCustomizes it for the client.\nCharges $5,000.\n\nMargin: 99.2%\n\nIs it ethical? It's literally how every industry works.`,
-      `2/ The client gets:\n→ A working product in days\n→ Battle-tested code\n→ AI maintenance included\n\nThe agency gets:\n→ Insane margins\n→ Happy clients\n→ More capacity\n\nEveryone wins.\n\n${SITE_URL}`,
+      `Why smart businesses are replacing SaaS with owned software:\n\n🧵`,
+      `1/ Per-seat pricing punishes growth.\n\nHire 10 people → your software bill goes up $1,000/month.\n\nWith owned software → $0 increase.\n\nThe math compounds.`,
+      `2/ Owned software = better margins forever.\n\nNo renewals. No price increases. No surprise "new packaging."\n\nOne price. Unlimited users. Full source code.\n\n${SITE_URL}`,
     ],
     [
-      `The future of software development in 5 predictions:\n\n🧵`,
-      `1/ By 2027, "full-stack developer" becomes "full-stack assembler."\n\nThe skill isn't writing code. It's knowing which components to combine.\n\nTaste > syntax.`,
-      `2/ AI agents will buy software on behalf of companies.\n\nThey'll search marketplaces, evaluate options, and purchase — autonomously.\n\nThis is already happening on OpenDraft.`,
-      `3/ The supply of software will 100x, but quality will concentrate.\n\nMarketplaces with curation, reviews, and AI quality checks will win.\n\nThat's exactly what we're building.\n\n${SITE_URL}`,
+      `The death of per-seat pricing in 5 data points:\n\n🧵`,
+      `1/ Average business spends $14k/month on SaaS subscriptions.\n\nThat's $168k/year. In rent.\n\nFor software they don't own.`,
+      `2/ The same functionality, owned outright, costs ~$500-2,000 total.\n\nNot per year. Total. Forever.`,
+      `3/ AI maintenance means owned software stays updated automatically.\n\nThe "who will maintain it?" objection is gone.\n\nYour code. Your margins. Your rules.\n\n${SITE_URL}`,
     ],
     [
-      `I built 3 micro-SaaS products in one weekend.\n\nHere's exactly how:\n\n🧵`,
-      `Product 1: Client portal for freelancers\n\n→ Found a dashboard app on OpenDraft ($39)\n→ Swapped the logo, colors, copy\n→ Added my Stripe key\n→ Live by Saturday noon`,
-      `Product 2: AI content scheduler\n\n→ Found an AI tool template ($49)\n→ Connected my OpenAI key\n→ Customized the prompts\n→ Live by Saturday evening`,
-      `Product 3: Landing page builder\n\n→ Grabbed a page builder template (FREE)\n→ Added my domain\n→ Started selling next week\n\nTotal cost: $88\nTotal time: 1 weekend\n\nAll apps: ${SITE_URL}`,
+      `I replaced 3 SaaS subscriptions in one weekend.\n\nHere's exactly how:\n\n🧵`,
+      `Tool 1: CRM (was $99/seat/mo × 15 seats = $1,485/mo)\n\n→ Pasted our URL on OpenDraft\n→ Got a custom CRM in 90 seconds\n→ Customized for our workflow\n→ Annual savings: $17,820`,
+      `Tool 2: Project management (was $25/seat/mo × 30 seats = $750/mo)\n\n→ Found an owned alternative for $49\n→ Deployed in 2 hours\n→ Annual savings: $8,951`,
+      `Tool 3: Client portal (was $200/mo flat)\n\n→ Grabbed an owned portal app ($39)\n→ Live by Sunday evening\n\nTotal one-time cost: $127\nTotal annual savings: $29,171\n\n${SITE_URL}`,
     ],
   ];
   return pick(threads);
+}
 }
 
 // ═══════════════════════════════════════════════════════════════

@@ -1043,6 +1043,7 @@ serve(async (req) => {
     const count = Math.min(Math.max(body.count || 1, 1), maxCount);
     const themes: string[] = body.themes || [];
     const jobId: string | undefined = body.job_id;
+    const brandContext: any = body.brand_context || undefined;
 
     /* ── Update job to processing if provided ────────────────── */
     if (jobId) {

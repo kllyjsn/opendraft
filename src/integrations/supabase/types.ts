@@ -184,6 +184,45 @@ export type Database = {
         }
         Relationships: []
       }
+      analyzed_urls: {
+        Row: {
+          business_name: string | null
+          created_at: string
+          id: string
+          industry: string | null
+          insights: Json
+          is_fallback: boolean
+          recommended_builds: Json
+          summary: string | null
+          url: string
+          user_id: string | null
+        }
+        Insert: {
+          business_name?: string | null
+          created_at?: string
+          id?: string
+          industry?: string | null
+          insights?: Json
+          is_fallback?: boolean
+          recommended_builds?: Json
+          summary?: string | null
+          url: string
+          user_id?: string | null
+        }
+        Update: {
+          business_name?: string | null
+          created_at?: string
+          id?: string
+          industry?: string | null
+          insights?: Json
+          is_fallback?: boolean
+          recommended_builds?: Json
+          summary?: string | null
+          url?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       blog_posts: {
         Row: {
           category: string

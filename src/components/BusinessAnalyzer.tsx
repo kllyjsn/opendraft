@@ -71,6 +71,22 @@ function clearAnalysis() {
   try { sessionStorage.removeItem(STORAGE_KEY); } catch {}
 }
 
+async function saveAnalysisToDb(result: AnalysisResult, isFallback: boolean) {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    await (supabase as any).from("analyzed_urls").insert({
+      user_id: user?.id ?? null,
+      url: result.url,
+      business_name: result.business_name,
+      industry: result.industry,
+      summary: result.summary,
+      insights: result.insights,
+      recommended_builds: result.recommended_builds,
+      is_fallback: isFallback,
+    });
+  } catch {}
+}
+
 export function BusinessAnalyzer({ onGenerate }: { onGenerate?: (prompt: string) => void }) {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -197,10 +213,12 @@ export function BusinessAnalyzer({ onGenerate }: { onGenerate?: (prompt: string)
       if (!data?.recommended_builds?.length) throw new Error("No build recommendations returned.");
       setResult(data);
       saveAnalysis(data);
+      saveAnalysisToDb(data, false);
     } catch (err) {
       const fallback = buildInstantFallback(normalizedUrl);
       setResult(fallback);
       saveAnalysis(fallback);
+      saveAnalysisToDb(fallback, true);
       setNotice("Live analysis was slow, so we loaded instant build ideas you can generate now.");
       setError(err instanceof Error ? err.message : "Analysis failed");
     } finally {

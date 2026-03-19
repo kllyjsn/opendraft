@@ -364,7 +364,7 @@ export default function Index() {
         "@type": "WebSite",
         name: "OpenDraft",
         url: "https://opendraft.co",
-        description: "Paste your website. We build you an app.",
+        description: "Every business, better software. Paste your site. Own the app.",
       },
       {
         "@context": "https://schema.org",
@@ -381,8 +381,8 @@ export default function Index() {
   return (
     <div className="min-h-screen flex flex-col">
       <MetaTags
-        title="Stop Renting Software | OpenDraft"
-        description="Replace generic SaaS with custom apps built from your website. Own the code. Cut your COGS. Deploy in 90 seconds."
+        title="Every Business, Better Software | OpenDraft"
+        description="Paste your website. Get custom apps you own — no per-seat fees, no lock-in. Deploy in 90 seconds."
         path="/"
       />
       <JsonLd data={jsonLdData} />
@@ -475,12 +475,12 @@ export default function Index() {
               transition={{ duration: 0.6, delay: 0.5 }}
               className="mt-6"
             >
-              <div className="flex items-center justify-center gap-6 text-[11px] text-muted-foreground/50">
-                <span>Own the code</span>
+              <div className="flex items-center justify-center gap-6 text-[11px] text-muted-foreground/50 font-medium tracking-wide">
+                <span>Your code</span>
                 <span className="h-3 w-px bg-border/30" />
-                <span>Zero per-seat fees</span>
+                <span>Your margins</span>
                 <span className="h-3 w-px bg-border/30" />
-                <span>Deploy in 90s</span>
+                <span>Your rules</span>
               </div>
             </motion.div>
           )}

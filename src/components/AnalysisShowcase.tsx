@@ -102,14 +102,14 @@ export function AnalysisShowcase() {
           transition={{ duration: 0.7 }}
           className="text-center mb-14"
         >
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">How it works</p>
+          <p className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.3em] text-primary/80 mb-4">See it work</p>
           <h2 className="text-2xl md:text-4xl lg:text-[2.75rem] font-black tracking-[-0.03em] leading-[1.1] mb-4">
-            Paste any site.
+            One URL.
             <br />
-            <span className="text-muted-foreground">Get custom app ideas.</span>
+            <span className="text-muted-foreground">Four apps. Ninety seconds.</span>
           </h2>
-          <p className="text-sm text-muted-foreground max-w-lg mx-auto leading-relaxed">
-            Here's what OpenDraft recommends for real companies — personalized apps you can generate and deploy in 90 seconds.
+          <p className="text-sm text-muted-foreground max-w-md mx-auto leading-relaxed">
+            Real companies. Real recommendations. Every business has software it should own.
           </p>
         </motion.div>
 

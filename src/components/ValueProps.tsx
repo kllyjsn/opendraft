@@ -4,40 +4,39 @@ import { Code2, Zap, Shield, DollarSign, Rocket, Layers } from "lucide-react";
 const features = [
   {
     icon: Zap,
-    title: "90-second deploys",
-    description: "Paste a URL. Get a production app. Deployed to your own domain, instantly.",
+    title: "Paste. Build. Live.",
+    description: "Enter a URL. Get a production app — deployed to your domain in 90 seconds flat.",
   },
   {
     icon: Code2,
-    title: "Own every line",
-    description: "Full source code. No vendor lock-in. Fork, customize, and extend without limits.",
+    title: "Own every line.",
+    description: "Full source. No lock-in. Fork it, extend it, sell it. It's yours.",
   },
   {
     icon: DollarSign,
-    title: "Zero per-seat fees",
-    description: "One price, unlimited users. Replace SaaS subscriptions that scale against you.",
+    title: "Kill the per-seat tax.",
+    description: "One price. Unlimited users. Stop paying more as your team grows.",
   },
   {
     icon: Shield,
-    title: "Security-first",
-    description: "Automated vulnerability scans. Production-grade code audited before every deploy.",
+    title: "Audited before you ship.",
+    description: "Automated vulnerability scans on every deploy. Security isn't optional.",
   },
   {
     icon: Layers,
-    title: "AI-native architecture",
-    description: "Built with TypeScript, React, and Tailwind. Agent-ready APIs from day one.",
+    title: "Built for what's next.",
+    description: "TypeScript, React, Tailwind. Agent-ready APIs from day one.",
   },
   {
     icon: Rocket,
-    title: "Continuous improvement",
-    description: "AI agents monitor, optimize, and ship improvements — your app gets better on autopilot.",
+    title: "Gets better while you sleep.",
+    description: "AI agents monitor, optimize, and ship improvements — your app evolves on autopilot.",
   },
 ];
 
 export function ValueProps() {
   return (
     <section className="py-20 md:py-32 relative">
-      {/* Subtle divider */}
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border/50 to-transparent" />
 
       <div className="container mx-auto px-4">
@@ -48,13 +47,13 @@ export function ValueProps() {
           transition={{ duration: 0.7 }}
           className="text-center mb-16"
         >
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
-            Why OpenDraft
+          <p className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.3em] text-primary/80 mb-4">
+            The ownership advantage
           </p>
           <h2 className="text-2xl md:text-4xl lg:text-[2.75rem] font-black tracking-[-0.03em] leading-[1.1]">
-            Software you own.
+            Better software.
             <br />
-            <span className="text-muted-foreground">Infrastructure you don't manage.</span>
+            <span className="text-muted-foreground">Better margins.</span>
           </h2>
         </motion.div>
 
@@ -87,7 +86,6 @@ export function ValueProps() {
         </div>
       </div>
 
-      {/* Bottom divider */}
       <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border/50 to-transparent" />
     </section>
   );

@@ -14,6 +14,7 @@ import { CheckCircle, AlertCircle, ExternalLink, Rocket, Globe, Pencil, Wand2, X
 import { Button } from "@/components/ui/button";
 import { EmailCapture } from "@/components/EmailCapture";
 import { AnalysisShowcase } from "@/components/AnalysisShowcase";
+import { PeekRight, PeekLeft, FloatingAgent, AgentParade, PeekBottom } from "@/components/PeekingAgents";
 
 const ROTATING_WORDS = ["CRM", "scheduler", "dashboard", "portal", "tracker", "helpdesk"];
 
@@ -117,6 +118,11 @@ export default function Index() {
             backgroundSize: "80px 80px",
           }} />
         </div>
+
+        {/* Peeking agents on hero edges */}
+        <PeekRight className="top-[20%] hidden md:block" delay={1.2} />
+        <PeekLeft className="bottom-[15%] hidden md:block" delay={1.5} />
+        <FloatingAgent className="absolute top-[12%] right-[8%] hidden lg:block" delay={1.8} />
 
         <div className="container mx-auto px-4 text-center relative z-10">
           <motion.div
@@ -320,11 +326,25 @@ export default function Index() {
         </div>
       </section>
 
+      {/* Agent parade divider */}
+      <div className="py-6 md:py-10">
+        <AgentParade />
+      </div>
+
       <AnalysisShowcase />
 
       {!user && <EmailCapture />}
 
-      <GremlinWorkshop />
+      {/* Another peek before workshop */}
+      <div className="relative">
+        <PeekRight className="top-4 hidden md:block" delay={0.3} />
+        <PeekLeft className="top-[40%] hidden md:block" delay={0.6} />
+        <GremlinWorkshop />
+      </div>
+
+      <div className="relative">
+        <PeekBottom className="mx-auto" delay={0.4} />
+      </div>
       <Footer />
     </div>
   );

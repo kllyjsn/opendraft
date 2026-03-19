@@ -8,6 +8,12 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// ── Security constants ──
+const MAX_ZIP_SIZE_MB = 200;
+const MAX_FILE_COUNT = 5000;
+const DEPLOY_COOLDOWN_MS = 30_000;
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 type GithubRepo = { owner: string; repo: string };
 
 function parseGithubRepo(githubUrl: string): GithubRepo | null {
@@ -86,6 +92,37 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: "Missing listingId or netlifyToken" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // ── Input validation ──
+    if (!UUID_REGEX.test(listingId)) {
+      return new Response(JSON.stringify({ error: "Invalid listingId format" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (typeof netlifyToken !== "string" || netlifyToken.length > 500) {
+      return new Response(JSON.stringify({ error: "Invalid token format" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ── Deploy rate limiting ──
+    const { data: recentDeploy } = await supabase
+      .from("deployed_sites")
+      .select("created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (recentDeploy) {
+      const elapsed = Date.now() - new Date(recentDeploy.created_at).getTime();
+      if (elapsed < DEPLOY_COOLDOWN_MS) {
+        const waitSec = Math.ceil((DEPLOY_COOLDOWN_MS - elapsed) / 1000);
+        return new Response(JSON.stringify({ error: `Please wait ${waitSec}s before deploying again` }), {
+          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     const { data: listing } = await supabase
@@ -246,8 +283,18 @@ async function zipDeploy(
   const zip = await JSZip.loadAsync(sourceZipBuffer);
   const entries = Object.keys(zip.files);
 
-  // Detect common root directory prefix
-  let prefix = "";
+  // ── ZIP bomb protection ──
+  const zipSizeMB = sourceZipBuffer.byteLength / 1024 / 1024;
+  if (zipSizeMB > MAX_ZIP_SIZE_MB) {
+    return new Response(JSON.stringify({ error: `ZIP file too large (${zipSizeMB.toFixed(0)}MB). Maximum is ${MAX_ZIP_SIZE_MB}MB.` }), {
+      status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+  if (entries.length > MAX_FILE_COUNT) {
+    return new Response(JSON.stringify({ error: `ZIP contains too many files (${entries.length}). Maximum is ${MAX_FILE_COUNT}.` }), {
+      status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
   if (entries.length > 0) {
     const first = entries[0];
     if (first.includes("/")) {

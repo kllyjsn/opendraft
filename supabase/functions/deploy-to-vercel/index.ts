@@ -8,6 +8,13 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// ── Security constants ──
+const MAX_ZIP_SIZE_MB = 200;
+const MAX_FILE_COUNT = 5000;
+const MAX_SINGLE_FILE_MB = 50;
+const DEPLOY_COOLDOWN_MS = 30_000; // 30s between deploys per user
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 type GithubRepo = { owner: string; repo: string };
 
 function parseGithubRepo(githubUrl: string): GithubRepo | null {
@@ -50,37 +57,53 @@ async function downloadGithubRepoZip(githubUrl: string): Promise<ArrayBuffer> {
   return await zipRes.arrayBuffer();
 }
 
-/** Upload a single file to Vercel's File API and return its SHA */
+/** Upload a single file to Vercel's File API with retry logic */
 async function uploadFileToVercel(
   content: Uint8Array,
-  vercelToken: string
+  vercelToken: string,
+  retries = 3
 ): Promise<string> {
   const hashBuffer = await crypto.subtle.digest("SHA-1", content);
   const sha = Array.from(new Uint8Array(hashBuffer))
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
 
-  const uploadRes = await fetch("https://api.vercel.com/v2/files", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${vercelToken}`,
-      "Content-Type": "application/octet-stream",
-      "x-vercel-digest": sha,
-      "Content-Length": String(content.byteLength),
-    },
-    body: content,
-  });
+  for (let attempt = 0; attempt < retries; attempt++) {
+    try {
+      const uploadRes = await fetch("https://api.vercel.com/v2/files", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${vercelToken}`,
+          "Content-Type": "application/octet-stream",
+          "x-vercel-digest": sha,
+          "Content-Length": String(content.byteLength),
+        },
+        body: content,
+      });
 
-  // 409 = file already exists, which is fine
-  if (!uploadRes.ok && uploadRes.status !== 409) {
-    const errText = await uploadRes.text();
-    console.error(`File upload failed (${uploadRes.status}):`, errText);
-    throw new Error(`Failed to upload file to Vercel: ${uploadRes.status}`);
-  } else {
-    // Consume body to prevent resource leak
-    await uploadRes.text();
+      // 409 = file already exists, which is fine
+      if (!uploadRes.ok && uploadRes.status !== 409) {
+        const errText = await uploadRes.text();
+        if (attempt < retries - 1 && (uploadRes.status >= 500 || uploadRes.status === 429)) {
+          console.warn(`File upload attempt ${attempt + 1} failed (${uploadRes.status}), retrying...`);
+          await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+          continue;
+        }
+        console.error(`File upload failed (${uploadRes.status}):`, errText);
+        throw new Error(`Failed to upload file to Vercel: ${uploadRes.status}`);
+      } else {
+        await uploadRes.text();
+      }
+      return sha;
+    } catch (e) {
+      if (attempt < retries - 1 && (e as Error).message?.includes("fetch")) {
+        console.warn(`File upload network error attempt ${attempt + 1}, retrying...`);
+        await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+        continue;
+      }
+      throw e;
+    }
   }
-
   return sha;
 }
 
@@ -94,83 +117,141 @@ function detectFramework(packageJson: any): {
   const deps = { ...packageJson?.dependencies, ...packageJson?.devDependencies };
   const scripts = packageJson?.scripts || {};
 
-  // Check for Next.js
-  if (deps["next"]) {
-    return {
-      framework: "nextjs",
-      buildCommand: scripts.build || "next build",
-      outputDirectory: ".next",
-      installCommand: "npm install",
-    };
-  }
+  if (deps["next"]) return { framework: "nextjs", buildCommand: scripts.build || "next build", outputDirectory: ".next", installCommand: "npm install" };
+  if (deps["nuxt"]) return { framework: "nuxtjs", buildCommand: scripts.build || "nuxt build", outputDirectory: ".output", installCommand: "npm install" };
+  if (deps["@sveltejs/kit"]) return { framework: "sveltekit", buildCommand: scripts.build || "vite build", outputDirectory: "build", installCommand: "npm install" };
+  if (deps["astro"]) return { framework: "astro", buildCommand: scripts.build || "astro build", outputDirectory: "dist", installCommand: "npm install" };
+  if (deps["vite"]) return { framework: "vite", buildCommand: scripts.build || "vite build", outputDirectory: "dist", installCommand: "npm install" };
+  if (deps["react-scripts"]) return { framework: "create-react-app", buildCommand: scripts.build || "react-scripts build", outputDirectory: "build", installCommand: "npm install" };
+  return { framework: null, buildCommand: scripts.build || "npm run build", outputDirectory: "dist", installCommand: "npm install" };
+}
 
-  // Check for Nuxt
-  if (deps["nuxt"]) {
-    return {
-      framework: "nuxtjs",
-      buildCommand: scripts.build || "nuxt build",
-      outputDirectory: ".output",
-      installCommand: "npm install",
-    };
-  }
+/** Auto-inject commonly missing dependencies into package.json */
+const AUTO_DEPENDENCY_VERSIONS: Record<string, string> = {
+  "react-router-dom": "^6.30.1",
+  "lucide-react": "^0.462.0",
+  "clsx": "^2.1.1",
+  "tailwind-merge": "^2.6.0",
+  "class-variance-authority": "^0.7.1",
+  "framer-motion": "^12.0.0",
+  "sonner": "^1.7.0",
+  "date-fns": "^3.6.0",
+  "zod": "^3.25.0",
+  "react-hook-form": "^7.61.0",
+  "@hookform/resolvers": "^3.10.0",
+  "recharts": "^2.15.0",
+  "@radix-ui/react-dialog": "^1.1.0",
+  "@radix-ui/react-dropdown-menu": "^2.1.0",
+  "@radix-ui/react-tabs": "^1.1.0",
+  "@radix-ui/react-tooltip": "^1.2.0",
+  "@radix-ui/react-slot": "^1.2.0",
+  "@radix-ui/react-select": "^2.2.0",
+  "@radix-ui/react-label": "^2.1.0",
+  "@radix-ui/react-checkbox": "^1.3.0",
+  "@radix-ui/react-switch": "^1.2.0",
+  "@radix-ui/react-avatar": "^1.1.0",
+  "@radix-ui/react-popover": "^1.1.0",
+  "@radix-ui/react-separator": "^1.1.0",
+  "@radix-ui/react-scroll-area": "^1.2.0",
+  "@radix-ui/react-accordion": "^1.2.0",
+  "@radix-ui/react-progress": "^1.1.0",
+  "@radix-ui/react-toast": "^1.2.0",
+  "@radix-ui/react-toggle": "^1.1.0",
+  "@radix-ui/react-toggle-group": "^1.1.0",
+  "@tanstack/react-query": "^5.83.0",
+  "cmdk": "^1.1.0",
+  "embla-carousel-react": "^8.6.0",
+  "input-otp": "^1.4.0",
+  "vaul": "^0.9.0",
+  "next-themes": "^0.3.0",
+  "react-day-picker": "^8.10.0",
+  "react-resizable-panels": "^2.1.0",
+  "@supabase/supabase-js": "^2.97.0",
+  "axios": "^1.7.0",
+};
 
-  // Check for SvelteKit
-  if (deps["@sveltejs/kit"]) {
-    return {
-      framework: "sveltekit",
-      buildCommand: scripts.build || "vite build",
-      outputDirectory: "build",
-      installCommand: "npm install",
-    };
+function extractPackageName(specifier: string): string | null {
+  if (!specifier) return null;
+  const clean = specifier.split("?")[0];
+  if (clean.startsWith(".") || clean.startsWith("/") || clean.startsWith("http") || clean.startsWith("node:") || clean.startsWith("@/") || clean.startsWith("~/")) return null;
+  if (clean.startsWith("@")) {
+    const parts = clean.split("/");
+    return parts.length >= 2 ? `${parts[0]}/${parts[1]}` : null;
   }
+  return clean.split("/")[0] || null;
+}
 
-  // Check for Astro
-  if (deps["astro"]) {
-    return {
-      framework: "astro",
-      buildCommand: scripts.build || "astro build",
-      outputDirectory: "dist",
-      installCommand: "npm install",
-    };
+function collectImportedPackages(content: string): Set<string> {
+  const found = new Set<string>();
+  const patterns = [
+    /from\s+["']([^"']+)["']/g,
+    /import\s*\(\s*["']([^"']+)["']\s*\)/g,
+    /require\(\s*["']([^"']+)["']\s*\)/g,
+  ];
+  for (const pattern of patterns) {
+    let match: RegExpExecArray | null;
+    while ((match = pattern.exec(content)) !== null) {
+      const pkgName = extractPackageName(match[1]);
+      if (pkgName) found.add(pkgName);
+    }
   }
+  return found;
+}
 
-  // Check for Vite (React, Vue, etc.)
-  if (deps["vite"]) {
-    return {
-      framework: "vite",
-      buildCommand: scripts.build || "vite build",
-      outputDirectory: "dist",
-      installCommand: "npm install",
-    };
+/** Auto-patch missing npm dependencies in the ZIP's package.json */
+async function autoPatchDependencies(zip: JSZip, prefix: string): Promise<{ autoAdded: string[] }> {
+  const pkgJsonPath = prefix ? `${prefix}package.json` : "package.json";
+  const pkgJsonEntry = zip.files[pkgJsonPath];
+  if (!pkgJsonEntry || pkgJsonEntry.dir) return { autoAdded: [] };
+
+  try {
+    const pkgContent = await pkgJsonEntry.async("string");
+    const packageJson = JSON.parse(pkgContent);
+    const deps = { ...packageJson?.dependencies, ...packageJson?.devDependencies };
+    const hasReact = Boolean(deps["react"]);
+    if (!hasReact) return { autoAdded: [] };
+
+    // Scan source files for imports
+    const importedPackages = new Set<string>();
+    for (const [path, entry] of Object.entries(zip.files)) {
+      if (entry.dir) continue;
+      const rel = prefix ? path.replace(prefix, "") : path;
+      if (!rel || !/\.(tsx?|jsx?)$/i.test(rel)) continue;
+      try {
+        const content = await entry.async("string");
+        for (const pkg of collectImportedPackages(content)) importedPackages.add(pkg);
+      } catch { /* skip */ }
+    }
+
+    const autoAdded: string[] = [];
+    const dependencies = packageJson.dependencies || {};
+    const devDependencies = packageJson.devDependencies || {};
+
+    for (const [dep, version] of Object.entries(AUTO_DEPENDENCY_VERSIONS)) {
+      if (importedPackages.has(dep) && !dependencies[dep] && !devDependencies[dep]) {
+        dependencies[dep] = version;
+        autoAdded.push(dep);
+      }
+    }
+
+    if (autoAdded.length > 0) {
+      packageJson.dependencies = dependencies;
+      zip.file(pkgJsonPath, JSON.stringify(packageJson, null, 2));
+      console.log(`Auto-added missing dependencies: ${autoAdded.join(", ")}`);
+    }
+
+    return { autoAdded };
+  } catch (e) {
+    console.warn("Failed to auto-patch dependencies:", e);
+    return { autoAdded: [] };
   }
-
-  // Check for Create React App
-  if (deps["react-scripts"]) {
-    return {
-      framework: "create-react-app",
-      buildCommand: scripts.build || "react-scripts build",
-      outputDirectory: "build",
-      installCommand: "npm install",
-    };
-  }
-
-  // Fallback
-  return {
-    framework: null,
-    buildCommand: scripts.build || "npm run build",
-    outputDirectory: "dist",
-    installCommand: "npm install",
-  };
 }
 
 /** Generate a vercel.json config for SPA routing if one doesn't exist */
 function generateVercelConfig(framework: string | null): string {
-  // Next.js, Nuxt, SvelteKit, Astro handle their own routing
   if (framework && ["nextjs", "nuxtjs", "sveltekit", "astro"].includes(framework)) {
     return JSON.stringify({});
   }
-
-  // For SPAs (Vite, CRA, etc.), add catch-all rewrite for client-side routing
   return JSON.stringify({
     rewrites: [{ source: "/(.*)", destination: "/index.html" }],
   }, null, 2);
@@ -196,10 +277,41 @@ serve(async (req) => {
     }
 
     const { listingId, vercelToken } = await req.json();
+
+    // ── Input validation ──
     if (!listingId || !vercelToken) {
       return new Response(JSON.stringify({ error: "Missing listingId or vercelToken" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+    if (!UUID_REGEX.test(listingId)) {
+      return new Response(JSON.stringify({ error: "Invalid listingId format" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (typeof vercelToken !== "string" || vercelToken.length > 500) {
+      return new Response(JSON.stringify({ error: "Invalid token format" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ── Deploy rate limiting ──
+    const { data: recentDeploy } = await supabase
+      .from("deployed_sites")
+      .select("created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (recentDeploy) {
+      const elapsed = Date.now() - new Date(recentDeploy.created_at).getTime();
+      if (elapsed < DEPLOY_COOLDOWN_MS) {
+        const waitSec = Math.ceil((DEPLOY_COOLDOWN_MS - elapsed) / 1000);
+        return new Response(JSON.stringify({ error: `Please wait ${waitSec}s before deploying again` }), {
+          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     // Fetch listing
@@ -262,10 +374,24 @@ serve(async (req) => {
       sourceZipBuffer = await downloadGithubRepoZip(listing.github_url!);
     }
 
-    console.log(`ZIP downloaded: ${(sourceZipBuffer.byteLength / 1024 / 1024).toFixed(2)} MB`);
+    // ── ZIP bomb protection ──
+    const zipSizeMB = sourceZipBuffer.byteLength / 1024 / 1024;
+    console.log(`ZIP downloaded: ${zipSizeMB.toFixed(2)} MB`);
+    if (zipSizeMB > MAX_ZIP_SIZE_MB) {
+      return new Response(JSON.stringify({ error: `ZIP file too large (${zipSizeMB.toFixed(0)}MB). Maximum is ${MAX_ZIP_SIZE_MB}MB.` }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const zip = await JSZip.loadAsync(sourceZipBuffer);
     const entries = Object.keys(zip.files);
+
+    // ── File count protection ──
+    if (entries.length > MAX_FILE_COUNT) {
+      return new Response(JSON.stringify({ error: `ZIP contains too many files (${entries.length}). Maximum is ${MAX_FILE_COUNT}.` }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     // Detect common root directory prefix
     let prefix = "";
@@ -278,6 +404,9 @@ serve(async (req) => {
         }
       }
     }
+
+    // ── Auto-patch missing dependencies ──
+    const { autoAdded } = await autoPatchDependencies(zip, prefix);
 
     // ── Detect framework from package.json ──
     let frameworkInfo = detectFramework({});
@@ -307,13 +436,12 @@ serve(async (req) => {
       }
     }
 
-    // Upload files individually to Vercel's File API
+    // Upload files individually to Vercel's File API (with retries)
     const fileRefs: Array<{ file: string; sha: string; size: number }> = [];
     let uploadedCount = 0;
     let skippedCount = 0;
 
     const allEntries = Object.entries(zip.files);
-    // Process in batches of 10 for better throughput
     const BATCH_SIZE = 10;
 
     for (let i = 0; i < allEntries.length; i += BATCH_SIZE) {
@@ -325,8 +453,7 @@ serve(async (req) => {
           if (!relativePath) return null;
 
           const content = await entry.async("uint8array");
-          // Skip very large files (>50MB)
-          if (content.byteLength > 50 * 1024 * 1024) {
+          if (content.byteLength > MAX_SINGLE_FILE_MB * 1024 * 1024) {
             console.warn(`Skipping oversized file: ${relativePath} (${(content.byteLength / 1024 / 1024).toFixed(1)} MB)`);
             return { skipped: true };
           }
@@ -456,6 +583,7 @@ serve(async (req) => {
         deploy_id: deployData.id,
         framework: frameworkInfo.framework,
         injected_vercel_json: injectedVercelJson,
+        auto_added_dependencies: autoAdded,
       },
     });
 
@@ -470,6 +598,7 @@ serve(async (req) => {
       filesUploaded: uploadedCount,
       filesSkipped: skippedCount,
       injectedVercelJson,
+      autoAddedDependencies: autoAdded,
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
     console.error("deploy-to-vercel error:", e);

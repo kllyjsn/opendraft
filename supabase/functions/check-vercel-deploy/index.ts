@@ -7,6 +7,8 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const DEPLOY_ID_REGEX = /^[a-zA-Z0-9_-]{1,100}$/;
+
 function toState(value: unknown): string {
   if (typeof value !== "string") return "unknown";
   return value.toLowerCase();
@@ -34,19 +36,37 @@ serve(async (req) => {
   try {
     const { deployId, vercelToken, usePlatformToken } = await req.json();
 
+    // ── Input validation ──
+    if (!deployId || typeof deployId !== "string" || !DEPLOY_ID_REGEX.test(deployId)) {
+      return new Response(JSON.stringify({ error: "Invalid or missing deployId" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // Use platform token if requested, otherwise use user-provided token
     const token = usePlatformToken ? Deno.env.get("VERCEL_PLATFORM_TOKEN") : vercelToken;
 
-    if (!deployId || !token) {
+    if (!token || typeof token !== "string") {
       return new Response(JSON.stringify({ error: "Missing deployId or vercel token" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const statusRes = await fetch(`https://api.vercel.com/v13/deployments/${encodeURIComponent(deployId)}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    // ── Fetch deployment status with timeout ──
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15_000);
+
+    let statusRes: Response;
+    try {
+      statusRes = await fetch(`https://api.vercel.com/v13/deployments/${encodeURIComponent(deployId)}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        signal: controller.signal,
+      });
+    } finally {
+      clearTimeout(timeout);
+    }
 
     if (!statusRes.ok) {
       const errText = await statusRes.text();
@@ -91,9 +111,18 @@ serve(async (req) => {
 
     if (state === "error" || state === "canceled" || state === "failed") {
       try {
-        const logRes = await fetch(`https://api.vercel.com/v2/deployments/${encodeURIComponent(deployId)}/events`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const logController = new AbortController();
+        const logTimeout = setTimeout(() => logController.abort(), 10_000);
+
+        let logRes: Response;
+        try {
+          logRes = await fetch(`https://api.vercel.com/v2/deployments/${encodeURIComponent(deployId)}/events`, {
+            headers: { Authorization: `Bearer ${token}` },
+            signal: logController.signal,
+          });
+        } finally {
+          clearTimeout(logTimeout);
+        }
 
         if (logRes.ok) {
           const events = await logRes.json();
@@ -120,7 +149,6 @@ serve(async (req) => {
         try {
           const platformToken = Deno.env.get("VERCEL_PLATFORM_TOKEN");
           if (platformToken && usePlatformToken) {
-            // Try to disable deployment protection on the project
             const projectId = statusData.projectId;
             if (projectId) {
               const patchRes = await fetch(`https://api.vercel.com/v9/projects/${projectId}`, {
@@ -141,6 +169,12 @@ serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
+    if (e instanceof DOMException && e.name === "AbortError") {
+      return new Response(
+        JSON.stringify({ error: "Vercel API request timed out" }),
+        { status: 504, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
     return new Response(
       JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },

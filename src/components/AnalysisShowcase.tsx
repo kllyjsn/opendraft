@@ -49,11 +49,11 @@ const COMPANIES: PreviewCompany[] = [
     domain: "goldmansachs.com",
     industry: "Investment Banking & Financial Services",
     icon: Building2,
-    summary: "Global financial institution — we identified 4 high-impact apps to streamline client services, compliance, and deal flow.",
+    summary: "Global financial institution — we identified 4 high-impact apps that would make any ops lead look like a visionary.",
     insights: [
-      { title: "Client onboarding is slow", description: "Multi-step KYC and compliance checks create bottlenecks. A self-serve portal cuts processing time by 60%." },
-      { title: "Deal pipeline lacks visibility", description: "Analysts track deals across spreadsheets. A unified dashboard surfaces pipeline health in real time." },
-      { title: "Compliance reporting is manual", description: "Regulatory reports are assembled by hand. Automated generation reduces risk and saves 20+ hours/week." },
+      { title: "Client onboarding is slow", description: "Multi-step KYC and compliance checks create bottlenecks. Fix this and you're the person who cut processing time by 60%." },
+      { title: "Deal pipeline lacks visibility", description: "Analysts track deals across spreadsheets. Build the dashboard and leadership notices you first." },
+      { title: "Compliance reporting is manual", description: "Regulatory reports are assembled by hand. Automate it and you'll save your team 20+ hours/week." },
     ],
     builds: [
       { name: "Client Onboarding Portal", description: "KYC document collection, identity verification, and milestone tracking in one branded portal.", category: "saas_tool", priority: "high" },

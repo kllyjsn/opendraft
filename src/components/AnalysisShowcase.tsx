@@ -95,15 +95,23 @@ export function AnalysisShowcase() {
 
       <div className="container mx-auto px-4 relative z-10">
         {/* Section header */}
-        <div className="text-center mb-10">
-          <p className="text-[11px] font-black uppercase tracking-[0.2em] text-primary mb-2">See what you'll get</p>
-          <h2 className="text-2xl md:text-3xl font-black tracking-tight mb-3">
-            Paste any site. Get custom app ideas.
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-80px" }}
+          transition={{ duration: 0.7 }}
+          className="text-center mb-14"
+        >
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">How it works</p>
+          <h2 className="text-2xl md:text-4xl lg:text-[2.75rem] font-black tracking-[-0.03em] leading-[1.1] mb-4">
+            Paste any site.
+            <br />
+            <span className="text-muted-foreground">Get custom app ideas.</span>
           </h2>
-          <p className="text-sm text-muted-foreground max-w-md mx-auto">
+          <p className="text-sm text-muted-foreground max-w-lg mx-auto leading-relaxed">
             Here's what OpenDraft recommends for real companies — personalized apps you can generate and deploy in 90 seconds.
           </p>
-        </div>
+        </motion.div>
 
         {/* Company tabs */}
         <div className="flex justify-center gap-2 mb-8">

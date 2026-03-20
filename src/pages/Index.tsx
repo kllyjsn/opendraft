@@ -14,6 +14,8 @@ import { EmailCapture } from "@/components/EmailCapture";
 import { AnalysisShowcase } from "@/components/AnalysisShowcase";
 import { ValueProps } from "@/components/ValueProps";
 import { HeroBeams } from "@/components/HeroBeams";
+import { SocialProofBar } from "@/components/SocialProofBar";
+import { BeforeAfterDemo } from "@/components/BeforeAfterDemo";
 
 const ROTATING_WORDS = ["CRM", "scheduler", "dashboard", "portal", "tracker", "helpdesk"];
 

@@ -609,7 +609,7 @@ export default function ListingDetail() {
                       <div className="space-y-2">
                         <GoogleSignInButton label="Sign up free to claim" />
                         <p className="text-center text-[11px] text-muted-foreground">
-                          ✨ No credit card required · Your first app is free
+                          ✨ No coding experience needed · Your first app is free
                         </p>
                       </div>
                     )

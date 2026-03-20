@@ -35,7 +35,7 @@ export default function Login() {
             </div>
             <h1 className="text-2xl font-black mb-2">Claim your free app</h1>
             <p className="text-muted-foreground text-sm leading-relaxed">
-              Sign up and claim one app completely free.<br />No credit card required.
+              Sign up and claim one app completely free.<br />No coding experience needed.
             </p>
           </div>
 

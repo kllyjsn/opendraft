@@ -26,45 +26,44 @@ const showcases = [
 
 export function AnalysisShowcase() {
   return (
-    <section className="py-24 md:py-40 relative">
+    <section className="py-28 md:py-44 relative">
       <div className="container mx-auto px-4">
-        {/* Section heading */}
+        {/* Section heading — editorial weight */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, y: 16, filter: "blur(4px)" }}
+          whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
           viewport={{ once: true, margin: "-80px" }}
-          transition={{ duration: 0.8 }}
-          className="max-w-2xl mb-16 md:mb-24"
+          transition={{ duration: 0.9 }}
+          className="max-w-2xl mb-20 md:mb-32"
         >
-          <p className="text-xs font-mono text-primary/60 tracking-widest uppercase mb-4">
-            The work
+          <p className="text-[9px] font-mono text-muted-foreground/30 tracking-[0.3em] uppercase mb-5">
+            fig. 03 — the work
           </p>
-          <h2 className="text-2xl md:text-4xl lg:text-5xl font-black tracking-[-0.04em] leading-[1.1]">
+          <h2 className="text-2xl md:text-4xl lg:text-5xl font-bold tracking-[-0.04em] leading-[1.08]">
             One URL.
             <br />
-            <span className="text-muted-foreground">Production app. Live.</span>
+            <span className="text-muted-foreground/60">Production app. Live.</span>
           </h2>
         </motion.div>
 
-        {/* Gallery — oversized, gallery-print treatment */}
-        <div className="space-y-16 md:space-y-28">
+        {/* Gallery — generous spacing, gallery-print treatment */}
+        <div className="space-y-20 md:space-y-36">
           {showcases.map((item, i) => (
             <motion.div
               key={item.label}
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-80px" }}
-              transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+              initial={{ opacity: 0, y: 24, filter: "blur(4px)" }}
+              whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              viewport={{ once: true, amount: 0.15 }}
+              transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
               className="group"
             >
-              {/* Screenshot — framed with gallery reverence */}
-              <div className="relative rounded-xl overflow-hidden border border-border/30 shadow-card group-hover:shadow-card-hover transition-shadow duration-700">
-                {/* Browser chrome */}
-                <div className="flex items-center gap-2 px-4 py-2.5 bg-card/80 border-b border-border/30">
+              {/* Screenshot with browser chrome */}
+              <div className="relative rounded-xl overflow-hidden border border-border/20 shadow-card group-hover:shadow-card-hover transition-shadow duration-700">
+                <div className="flex items-center gap-2 px-4 py-2.5 bg-card/60 border-b border-border/20">
                   <div className="flex gap-1.5">
-                    <span className="h-2 w-2 rounded-full bg-foreground/10" />
-                    <span className="h-2 w-2 rounded-full bg-foreground/10" />
-                    <span className="h-2 w-2 rounded-full bg-foreground/10" />
+                    <span className="h-2 w-2 rounded-full bg-foreground/8" />
+                    <span className="h-2 w-2 rounded-full bg-foreground/8" />
+                    <span className="h-2 w-2 rounded-full bg-foreground/8" />
                   </div>
                 </div>
                 <img
@@ -75,28 +74,26 @@ export function AnalysisShowcase() {
                 />
               </div>
 
-              {/* Caption — editorial, understated */}
-              <div className="flex items-baseline justify-between mt-4 md:mt-6 gap-4">
-                <div>
-                  <p className="text-xs font-mono text-primary/50 tracking-widest uppercase mb-1">
-                    {item.label}
-                  </p>
-                  <p className="text-sm md:text-base text-muted-foreground leading-relaxed max-w-lg">
-                    {item.caption}
-                  </p>
-                </div>
+              {/* Caption — restrained, specimen-like */}
+              <div className="mt-5 md:mt-7">
+                <p className="text-[10px] font-mono text-muted-foreground/25 tracking-[0.2em] uppercase mb-1.5">
+                  {item.label}
+                </p>
+                <p className="text-sm text-muted-foreground/60 leading-relaxed max-w-lg">
+                  {item.caption}
+                </p>
               </div>
             </motion.div>
           ))}
         </div>
 
-        {/* CTA */}
+        {/* CTA — minimal, authoritative */}
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-          className="mt-20 md:mt-32 text-center"
+          transition={{ duration: 1, delay: 0.2 }}
+          className="mt-24 md:mt-40 text-center"
         >
           <Button
             onClick={() => {
@@ -106,15 +103,15 @@ export function AnalysisShowcase() {
                 input.scrollIntoView({ behavior: "smooth", block: "center" });
               }
             }}
-            className="bg-primary text-primary-foreground hover:bg-primary/90 h-12 px-8 text-sm font-bold rounded-xl transition-all duration-300"
+            className="bg-primary text-primary-foreground hover:bg-primary/90 h-11 px-7 text-sm font-semibold rounded-lg transition-all duration-300 active:scale-[0.97]"
           >
             Try it with your site
-            <ArrowRight className="h-4 w-4 ml-2" />
+            <ArrowRight className="h-3.5 w-3.5 ml-2" />
           </Button>
         </motion.div>
       </div>
 
-      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border/40 to-transparent" />
+      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border/20 to-transparent" />
     </section>
   );
 }

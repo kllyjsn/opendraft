@@ -216,20 +216,20 @@ export default function Index() {
       <JsonLd data={jsonLdData} />
       <Navbar />
 
-      {/* ── HERO — Pain-Driven Conversion ── */}
-      <section className="relative flex-1 flex items-center justify-center min-h-[60vh] md:min-h-[85vh] pt-8 md:pt-0">
+      {/* ── HERO — Charged Stillness ── */}
+      <section className="relative flex-1 flex items-center justify-center min-h-[65vh] md:min-h-[90vh] pt-10 md:pt-0">
         <HeroBeams />
 
         <div className="container mx-auto px-4 text-center relative z-10">
-          {/* Pain-point headline */}
+          {/* Headline */}
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+            initial={{ opacity: 0, y: 24, filter: "blur(6px)" }}
+            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+            transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1] }}
           >
-            <div className="mb-6 md:mb-8">
-              <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-[5rem] font-black tracking-[-0.05em] leading-[1.08]">
-                <span className="block text-muted-foreground">Stop renting software.</span>
+            <div className="mb-7 md:mb-9">
+              <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-[5rem] font-bold tracking-[-0.04em] leading-[1.06]">
+                <span className="block text-muted-foreground/70">Stop renting software.</span>
                 <span className="block text-foreground mt-1">
                   Build your own{" "}
                   <span
@@ -239,9 +239,9 @@ export default function Index() {
                     <AnimatePresence mode="wait">
                       <motion.span
                         key={ROTATING_WORDS[rotatingIndex]}
-                        initial={{ opacity: 0, y: 28, filter: "blur(6px)" }}
+                        initial={{ opacity: 0, y: 24, filter: "blur(6px)" }}
                         animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                        exit={{ opacity: 0, y: -28, filter: "blur(6px)" }}
+                        exit={{ opacity: 0, y: -24, filter: "blur(6px)" }}
                         transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
                         className="inline-block text-primary"
                       >
@@ -255,33 +255,33 @@ export default function Index() {
             </div>
           </motion.div>
 
-          {/* Concrete sub-headline */}
+          {/* Sub-headline */}
           <motion.p
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-            className="text-sm md:text-base text-muted-foreground max-w-sm mx-auto mb-8 md:mb-10 leading-relaxed"
+            transition={{ duration: 0.9, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
+            className="text-sm md:text-[15px] text-muted-foreground/60 max-w-sm mx-auto mb-9 md:mb-11 leading-[1.7]"
           >
             Paste your website. Get a custom app in 90 seconds.
             <br />
-            <span className="text-foreground/80 font-medium">Free to try — no coding experience needed.</span>
+            <span className="text-foreground/70 font-medium">Free to try — no coding experience needed.</span>
           </motion.p>
 
           {/* URL Input */}
           <motion.div
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, delay: 0.35, ease: [0.16, 1, 0.3, 1] }}
-            className="mb-6 md:mb-8"
+            transition={{ duration: 0.9, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
+            className="mb-7 md:mb-9"
           >
             <BusinessAnalyzer onGenerate={handleGenerate} />
           </motion.div>
 
-          {/* Trust signals — immediately below CTA */}
+          {/* Trust signals */}
           <SocialProofBar />
 
           {/* Generation progress */}
-          <div className="mt-8">
+          <div className="mt-10">
             <AnimatePresence>
               <GenerationProgress
                 isInProgress={isInProgress}
@@ -290,7 +290,6 @@ export default function Index() {
               />
             </AnimatePresence>
 
-            {/* Build error */}
             <AnimatePresence>
               {genJob?.status === "failed" && !isInProgress && (
                 <BuildError
@@ -303,8 +302,8 @@ export default function Index() {
         </div>
       </section>
 
-      {/* ── BEFORE/AFTER — Show what you get ── */}
-      <section className="py-12 md:py-20">
+      {/* ── BEFORE/AFTER ── */}
+      <section className="py-14 md:py-24">
         <div className="container mx-auto px-4">
           <BeforeAfterDemo />
         </div>
@@ -319,21 +318,24 @@ export default function Index() {
       {/* ── EMAIL CAPTURE — signed out only ── */}
       {!user && <EmailCapture />}
 
-      {/* ── CLOSING CTA ── */}
-      <section className="py-24 md:py-40">
+      {/* ── CLOSING CTA — monumental stillness ── */}
+      <section className="py-28 md:py-48">
         <div className="container mx-auto px-4 text-center">
           <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 20, filter: "blur(4px)" }}
+            whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
             viewport={{ once: true }}
-            transition={{ duration: 1 }}
+            transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
           >
-            <h2 className="text-3xl md:text-5xl lg:text-6xl font-black tracking-[-0.04em] leading-[1.1] mb-6">
+            <p className="text-[9px] font-mono tracking-[0.3em] uppercase text-muted-foreground/25 mb-8">
+              fig. 04 — the promise
+            </p>
+            <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold tracking-[-0.04em] leading-[1.06] mb-6">
               Every business,
               <br />
-              <span className="text-primary">better software.</span>
+              <span className="text-primary/80">better software.</span>
             </h2>
-            <p className="text-sm md:text-base text-muted-foreground max-w-md mx-auto mb-10 leading-relaxed">
+            <p className="text-sm text-muted-foreground/50 max-w-md mx-auto mb-12 leading-relaxed">
               Your competitors rent software. You'll own it.
             </p>
             <Button
@@ -344,7 +346,7 @@ export default function Index() {
                   input.scrollIntoView({ behavior: "smooth", block: "center" });
                 }
               }}
-              className="bg-primary text-primary-foreground hover:bg-primary/90 h-12 px-8 text-sm font-bold rounded-xl transition-all duration-300"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 h-11 px-7 text-sm font-semibold rounded-lg transition-all duration-300 active:scale-[0.97]"
             >
               Paste your URL
             </Button>

@@ -13,14 +13,20 @@ export function SocialProofBar() {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: 0.8, delay: 0.6 }}
-      className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[11px] md:text-xs text-muted-foreground/60"
+      transition={{ duration: 1.2, delay: 0.8 }}
+      className="flex flex-wrap items-center justify-center gap-x-8 gap-y-2 text-[10px] tracking-[0.08em] uppercase text-muted-foreground/40 font-medium"
     >
-      {proofs.map((p) => (
-        <span key={p.text} className="flex items-center gap-1.5">
-          <p.icon className="h-3 w-3 text-primary/50" />
+      {proofs.map((p, i) => (
+        <motion.span
+          key={p.text}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.9 + i * 0.1 }}
+          className="flex items-center gap-1.5"
+        >
+          <p.icon className="h-3 w-3" />
           {p.text}
-        </span>
+        </motion.span>
       ))}
     </motion.div>
   );

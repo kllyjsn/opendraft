@@ -14,6 +14,8 @@ import { EmailCapture } from "@/components/EmailCapture";
 import { AnalysisShowcase } from "@/components/AnalysisShowcase";
 import { ValueProps } from "@/components/ValueProps";
 import { HeroBeams } from "@/components/HeroBeams";
+import { SocialProofBar } from "@/components/SocialProofBar";
+import { BeforeAfterDemo } from "@/components/BeforeAfterDemo";
 
 const ROTATING_WORDS = ["CRM", "scheduler", "dashboard", "portal", "tracker", "helpdesk"];
 
@@ -263,6 +265,14 @@ function DeployError({
 export default function Index() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [rotatingIndex, setRotatingIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setRotatingIndex((prev) => (prev + 1) % ROTATING_WORDS.length);
+    }, 2400);
+    return () => clearInterval(interval);
+  }, []);
 
   const {
     generating,
@@ -327,84 +337,109 @@ export default function Index() {
       <JsonLd data={jsonLdData} />
       <Navbar />
 
-      {/* ── HERO — Confident Gravity ── */}
-      <section className="relative flex-1 flex items-center justify-center min-h-[70vh] md:min-h-[90vh]">
+      {/* ── HERO — Pain-Driven Conversion ── */}
+      <section className="relative flex-1 flex items-center justify-center min-h-[60vh] md:min-h-[85vh] pt-8 md:pt-0">
         <HeroBeams />
 
         <div className="container mx-auto px-4 text-center relative z-10">
+          {/* Pain-point headline */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
           >
-            <HeroTagline />
+            <div className="mb-6 md:mb-8">
+              <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-[5rem] font-black tracking-[-0.05em] leading-[1.08]">
+                <span className="block text-muted-foreground">Stop renting software.</span>
+                <span className="block text-foreground mt-1">
+                  Build your own{" "}
+                  <span
+                    className="inline-block relative overflow-hidden align-bottom"
+                    style={{ minWidth: "5ch" }}
+                  >
+                    <AnimatePresence mode="wait">
+                      <motion.span
+                        key={ROTATING_WORDS[rotatingIndex]}
+                        initial={{ opacity: 0, y: 28, filter: "blur(6px)" }}
+                        animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                        exit={{ opacity: 0, y: -28, filter: "blur(6px)" }}
+                        transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+                        className="inline-block text-primary"
+                      >
+                        {ROTATING_WORDS[rotatingIndex]}
+                      </motion.span>
+                    </AnimatePresence>
+                  </span>
+                  .
+                </span>
+              </h1>
+            </div>
           </motion.div>
 
+          {/* Concrete sub-headline */}
           <motion.p
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.9, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-            className="text-base md:text-lg text-muted-foreground max-w-md mx-auto mb-12 md:mb-16 leading-relaxed"
+            className="text-sm md:text-base text-muted-foreground max-w-sm mx-auto mb-8 md:mb-10 leading-relaxed"
           >
-            Paste your site. We build the tools your team needs.
-            <br className="hidden sm:block" />
-            <span className="text-foreground/80 font-medium">
-              You look like a genius. We'll keep the secret.
-            </span>
+            Paste your website. Get a custom app in 90 seconds.
+            <br />
+            <span className="text-foreground/80 font-medium">Free to try — no credit card.</span>
           </motion.p>
 
-          {/* URL Input — the singular CTA */}
+          {/* URL Input */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.9, delay: 0.35, ease: [0.16, 1, 0.3, 1] }}
-            className="mb-12 md:mb-16"
+            className="mb-6 md:mb-8"
           >
             <BusinessAnalyzer onGenerate={handleGenerate} />
           </motion.div>
 
+          {/* Trust signals — immediately below CTA */}
+          <SocialProofBar />
+
           {/* Generation progress */}
-          <AnimatePresence>
-            <GenerationProgress
-              isInProgress={isInProgress}
-              genJob={genJob}
-              deployPhase={deployPhase}
-              currentStage={currentStage}
-            />
-          </AnimatePresence>
-
-          {/* Deploy success */}
-          <AnimatePresence>
-            {deployPhase === "live" && deployUrl && !isInProgress && (
-              <DeploySuccess deployUrl={deployUrl} genJob={genJob} navigate={navigate} reset={reset} />
-            )}
-          </AnimatePresence>
-
-          {/* Deploy error */}
-          <AnimatePresence>
-            {(deployPhase === "error" || genJob?.status === "failed") && !isInProgress && (
-              <DeployError
-                deployPhase={deployPhase}
+          <div className="mt-8">
+            <AnimatePresence>
+              <GenerationProgress
+                isInProgress={isInProgress}
                 genJob={genJob}
-                deployError={deployError}
-                handleAutoDeploy={handleAutoDeploy}
-                handleGenerate={handleGenerate}
-                navigate={navigate}
+                deployPhase={deployPhase}
+                currentStage={currentStage}
               />
-            )}
-          </AnimatePresence>
+            </AnimatePresence>
 
-          {/* Minimal proof line — signed out only */}
-          {!user && (
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 1, delay: 0.7 }}
-              className="text-xs text-muted-foreground/40 tracking-wide mt-4"
-            >
-              No per-seat fees. You own the code. Forever.
-            </motion.p>
-          )}
+            {/* Deploy success */}
+            <AnimatePresence>
+              {deployPhase === "live" && deployUrl && !isInProgress && (
+                <DeploySuccess deployUrl={deployUrl} genJob={genJob} navigate={navigate} reset={reset} />
+              )}
+            </AnimatePresence>
+
+            {/* Deploy error */}
+            <AnimatePresence>
+              {(deployPhase === "error" || genJob?.status === "failed") && !isInProgress && (
+                <DeployError
+                  deployPhase={deployPhase}
+                  genJob={genJob}
+                  deployError={deployError}
+                  handleAutoDeploy={handleAutoDeploy}
+                  handleGenerate={handleGenerate}
+                  navigate={navigate}
+                />
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+      </section>
+
+      {/* ── BEFORE/AFTER — Show what you get ── */}
+      <section className="py-12 md:py-20">
+        <div className="container mx-auto px-4">
+          <BeforeAfterDemo />
         </div>
       </section>
 

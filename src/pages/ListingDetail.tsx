@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
 import { ExternalLink, Github, Star, Crown, ChevronLeft, Download, Eye, Package, Gift, MessageSquare, GitFork, RefreshCw, Wrench, Shield, Infinity, Rocket, Sparkles, Bot, CheckCircle, Pencil } from "lucide-react";
+import { MarketingKitPanel } from "@/components/MarketingKitPanel";
 import { RequestForkDialog } from "@/components/RequestForkDialog";
 import { ImageGallery } from "@/components/ImageGallery";
 import { DeployPanel } from "@/components/DeployPanel";

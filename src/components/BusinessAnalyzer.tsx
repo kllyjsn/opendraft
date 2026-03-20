@@ -390,6 +390,38 @@ export function BusinessAnalyzer({ onGenerate }: { onGenerate?: (prompt: string,
           </div>
         </form>
 
+        {/* One-tap examples — the key conversion lever */}
+        {!loading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="mt-4 flex flex-col items-center gap-2"
+          >
+            <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground/50 font-medium">
+              or see what we'd build for
+            </p>
+            <div className="flex flex-wrap justify-center gap-2">
+              {EXAMPLE_ANALYSES.map((ex) => (
+                <button
+                  key={ex.label}
+                  type="button"
+                  onClick={() => {
+                    logActivity({ event_type: "example_clicked", event_data: { label: ex.label }, page: "/" });
+                    setResult(ex.data);
+                    saveAnalysis(ex.data);
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-card/50 backdrop-blur-sm px-3.5 py-1.5 text-xs font-medium text-foreground/80 hover:border-primary/40 hover:bg-primary/5 hover:text-primary transition-all duration-200"
+                >
+                  <span>{ex.emoji}</span>
+                  {ex.label}
+                  <ArrowRight className="h-3 w-3 opacity-40" />
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
         <AnimatePresence>
           {error && (
             <motion.div

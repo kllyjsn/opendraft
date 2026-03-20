@@ -265,6 +265,14 @@ function DeployError({
 export default function Index() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [rotatingIndex, setRotatingIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setRotatingIndex((prev) => (prev + 1) % ROTATING_WORDS.length);
+    }, 2400);
+    return () => clearInterval(interval);
+  }, []);
 
   const {
     generating,

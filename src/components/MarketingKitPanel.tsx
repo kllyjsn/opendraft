@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, Mail, MessageSquare, Target, Megaphone, TrendingUp, ChevronDown, ChevronUp } from "lucide-react";
+import { Users, Mail, MessageSquare, Target, Megaphone, TrendingUp, ChevronDown, ChevronUp, Copy, Check } from "lucide-react";
+import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface BuyerPersona {
@@ -56,6 +57,15 @@ export function MarketingKitPanel({ listingId }: Props) {
   }
 
   const toggle = (key: string) => setExpandedSection(prev => prev === key ? null : key);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  function copyToClipboard(text: string, id: string) {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedId(id);
+      toast.success("Copied to clipboard");
+      setTimeout(() => setCopiedId(null), 2000);
+    });
+  }
 
   if (loading) {
     return (
@@ -170,6 +180,16 @@ export function MarketingKitPanel({ listingId }: Props) {
               <p className="text-xs text-muted-foreground whitespace-pre-wrap leading-relaxed">{packet.email_pitch.body}</p>
             </div>
           )}
+          <button
+            onClick={() => copyToClipboard(
+              `Subject: ${packet.email_pitch?.subject ?? ""}\n\n${packet.email_pitch?.body ?? ""}`,
+              "email"
+            )}
+            className="flex items-center gap-1.5 text-[11px] font-medium text-primary hover:text-primary/80 transition-colors mt-1"
+          >
+            {copiedId === "email" ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+            {copiedId === "email" ? "Copied!" : "Copy email"}
+          </button>
         </div>
       ) : null,
     },
@@ -181,10 +201,25 @@ export function MarketingKitPanel({ listingId }: Props) {
         <div className="space-y-2">
           {packet.social_media_posts.map((p, i) => (
             <div key={i} className="rounded-xl border border-border/40 bg-muted/30 p-3">
-              {p.platform && (
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">{p.platform}</p>
-              )}
-              <p className="text-xs text-muted-foreground whitespace-pre-wrap">{p.content}</p>
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1">
+                  {p.platform && (
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">{p.platform}</p>
+                  )}
+                  <p className="text-xs text-muted-foreground whitespace-pre-wrap">{p.content}</p>
+                </div>
+                <button
+                  onClick={() => copyToClipboard(p.content ?? "", `social-${i}`)}
+                  className="shrink-0 p-1 rounded hover:bg-muted transition-colors"
+                  title="Copy to clipboard"
+                >
+                  {copiedId === `social-${i}` ? (
+                    <Check className="h-3 w-3 text-primary" />
+                  ) : (
+                    <Copy className="h-3 w-3 text-muted-foreground" />
+                  )}
+                </button>
+              </div>
             </div>
           ))}
         </div>

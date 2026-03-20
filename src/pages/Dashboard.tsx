@@ -8,7 +8,11 @@ import { useAuth } from "@/hooks/useAuth";
 import { CompletenessBadge } from "@/components/CompletenessBadge";
 import { StripeConnectPanel } from "@/components/StripeConnectPanel";
 import { CreateProductPanel } from "@/components/CreateProductPanel";
-import { TrendingUp, Package, Eye, Trash2, Plus, ShoppingBag, BarChart3, Rss, Pencil, GitFork, Hammer } from "lucide-react";
+import {
+  TrendingUp, Package, Eye, Trash2, Plus, ShoppingBag,
+  BarChart3, Rss, Pencil, GitFork, Hammer, ArrowUpRight,
+  DollarSign, Layers, Zap,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { SellerAnalytics } from "@/components/SellerAnalytics";
 import { ActivityFeed } from "@/components/ActivityFeed";
@@ -48,10 +52,12 @@ interface SaleSummary {
   total_sales: number;
 }
 
-const statusConfig: Record<string, { label: string; className: string }> = {
-  pending: { label: "Pending", className: "bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300" },
-  live: { label: "Live", className: "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300" },
-  hidden: { label: "Hidden", className: "bg-muted text-muted-foreground" },
+type TabKey = "builds" | "listings" | "sales" | "forks" | "improvements" | "analytics" | "feed";
+
+const statusDot: Record<string, string> = {
+  pending: "bg-amber-400",
+  live: "bg-emerald-400",
+  hidden: "bg-muted-foreground/40",
 };
 
 export default function Dashboard() {
@@ -61,8 +67,8 @@ export default function Dashboard() {
   const [sales, setSales] = useState<Sale[]>([]);
   const [summary, setSummary] = useState<SaleSummary>({ total_earned: 0, total_sales: 0 });
   const [dataLoading, setDataLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"feed" | "builds" | "listings" | "sales" | "forks" | "improvements" | "analytics">(
-    (new URLSearchParams(window.location.search).get("tab") as any) || "feed"
+  const [activeTab, setActiveTab] = useState<TabKey>(
+    (new URLSearchParams(window.location.search).get("tab") as TabKey) || "builds"
   );
 
   useEffect(() => {
@@ -79,7 +85,6 @@ export default function Dashboard() {
     }
 
     async function fetchSales() {
-      // Fetch actual purchase records for sales history
       const { data } = await supabase
         .from("purchases")
         .select("id,created_at,amount_paid,seller_amount,platform_fee,listing_id,buyer_id,listings(title)")
@@ -89,8 +94,6 @@ export default function Dashboard() {
       const salesData = (data as unknown as Sale[]) ?? [];
       setSales(salesData);
 
-      // Use profile-level counters as the source of truth for summary stats
-      // (purchase records may be missing due to webhook edge cases)
       const { data: profile } = await supabase
         .from("profiles")
         .select("total_sales")
@@ -100,8 +103,6 @@ export default function Dashboard() {
       const profileTotalSales = profile?.total_sales ?? 0;
       const purchaseBasedSales = salesData.length;
       const purchaseBasedEarnings = salesData.reduce((s, p) => s + (p.seller_amount ?? 0), 0);
-
-      // Use whichever is higher — profile counter or purchase records
       const actualSales = Math.max(profileTotalSales, purchaseBasedSales);
 
       setSummary({
@@ -126,90 +127,96 @@ export default function Dashboard() {
     }
   }
 
-  const stats = [
-    {
-      label: "Total earned",
-      value: `$${(summary.total_earned / 100).toFixed(2)}`,
-      icon: <TrendingUp className="h-5 w-5 text-primary" />,
-      accent: "from-primary/10 to-primary/5",
-    },
-    {
-      label: "Total sales",
-      value: summary.total_sales,
-      icon: <Package className="h-5 w-5 text-secondary" />,
-      accent: "from-secondary/10 to-secondary/5",
-    },
-    {
-      label: "Active listings",
-      value: listings.filter((l) => l.status === "live").length,
-      icon: <Eye className="h-5 w-5 text-accent" />,
-      accent: "from-accent/10 to-accent/5",
-    },
+  const liveCount = listings.filter((l) => l.status === "live").length;
+  const totalViews = listings.reduce((s, l) => s + (l.view_count ?? 0), 0);
+
+  const tabs: { key: TabKey; label: string; icon: React.ReactNode }[] = [
+    { key: "builds", label: "Builds", icon: <Hammer className="h-4 w-4" /> },
+    { key: "listings", label: "Projects", icon: <Layers className="h-4 w-4" /> },
+    { key: "sales", label: "Revenue", icon: <DollarSign className="h-4 w-4" /> },
+    { key: "forks", label: "Forks", icon: <GitFork className="h-4 w-4" /> },
+    { key: "improvements", label: "Improve", icon: <TrendingUp className="h-4 w-4" /> },
+    { key: "analytics", label: "Analytics", icon: <BarChart3 className="h-4 w-4" /> },
+    { key: "feed", label: "Feed", icon: <Rss className="h-4 w-4" /> },
   ];
 
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="flex-1 container mx-auto px-4 py-10 page-enter">
+      <main className="flex-1 container mx-auto px-4 py-8 sm:py-12 page-enter">
         {/* Active builds banner */}
         <ActiveBuildsBanner />
 
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-black tracking-tight">Seller Dashboard</h1>
-            <p className="text-muted-foreground mt-1 text-sm">Manage your listings and track earnings</p>
+        {/* ── Header ── */}
+        <div className="mb-10">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground mb-2">
+                Builder Studio
+              </p>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+                Your workshop
+              </h1>
+            </div>
+            <Link to="/sell">
+              <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 transition-colors gap-2">
+                <Plus className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">New project</span>
+                <span className="sm:hidden">New</span>
+              </Button>
+            </Link>
           </div>
-          <Link to="/sell">
-            <Button className="gradient-hero text-white border-0 shadow-glow hover:opacity-90 transition-opacity">
-              <Plus className="h-4 w-4 mr-2" /> New listing
-            </Button>
-          </Link>
+
+          {/* ── Stat strip ── */}
+          <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[
+              { label: "Earned", value: `$${(summary.total_earned / 100).toFixed(0)}`, icon: <DollarSign className="h-3.5 w-3.5" /> },
+              { label: "Sales", value: summary.total_sales, icon: <Zap className="h-3.5 w-3.5" /> },
+              { label: "Live projects", value: liveCount, icon: <Layers className="h-3.5 w-3.5" /> },
+              { label: "Total views", value: totalViews.toLocaleString(), icon: <Eye className="h-3.5 w-3.5" /> },
+            ].map(({ label, value, icon }) => (
+              <div
+                key={label}
+                className="rounded-xl border border-border/40 bg-card/50 px-4 py-3"
+              >
+                <div className="flex items-center gap-1.5 text-muted-foreground mb-1">
+                  {icon}
+                  <span className="text-[10px] font-medium uppercase tracking-wider">{label}</span>
+                </div>
+                <p className="text-xl font-bold tabular-nums">{value}</p>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* Stripe Connect + Product Creation */}
-        <div className="mb-8 grid grid-cols-1 lg:grid-cols-2 gap-5">
+        {/* ── Stripe + Product panels ── */}
+        <div className="mb-8 grid grid-cols-1 lg:grid-cols-2 gap-4">
           <StripeConnectPanel />
           <CreateProductPanel />
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
-          {stats.map(({ label, value, icon, accent }) => (
-            <div key={label} className={`rounded-2xl border border-border/60 bg-gradient-to-br ${accent} p-5 shadow-card`}>
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
-                <div className="rounded-lg bg-background/60 p-1.5">{icon}</div>
-              </div>
-              <p className="text-3xl font-black">{value}</p>
-            </div>
-          ))}
+        {/* ── Tabs ── */}
+        <div className="border-b border-border/40 mb-6 -mx-4 px-4 overflow-x-auto scrollbar-none">
+          <div className="flex gap-0 min-w-max">
+            {tabs.map(({ key, label, icon }) => (
+              <button
+                key={key}
+                onClick={() => setActiveTab(key)}
+                className={`flex items-center gap-1.5 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                  activeTab === key
+                    ? "border-primary text-foreground"
+                    : "border-transparent text-muted-foreground hover:text-foreground/70"
+                }`}
+              >
+                {icon}
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* Tabs */}
-        <div className="flex gap-1 mb-6 rounded-xl bg-muted/50 p-1 w-fit">
-          {([
-            { key: "feed" as const, label: "Feed", icon: <Rss className="h-3.5 w-3.5" /> },
-            { key: "builds" as const, label: "Builds", icon: <Hammer className="h-3.5 w-3.5" /> },
-            { key: "listings" as const, label: "Listings", icon: <Package className="h-3.5 w-3.5" /> },
-            { key: "sales" as const, label: "Sales", icon: <ShoppingBag className="h-3.5 w-3.5" /> },
-            { key: "forks" as const, label: "Fork Requests", icon: <GitFork className="h-3.5 w-3.5" /> },
-            { key: "improvements" as const, label: "Improvements", icon: <TrendingUp className="h-3.5 w-3.5" /> },
-            { key: "analytics" as const, label: "Analytics", icon: <BarChart3 className="h-3.5 w-3.5" /> },
-          ]).map(({ key, label, icon }) => (
-            <button
-              key={key}
-              onClick={() => setActiveTab(key)}
-              className={`flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition-all ${
-                activeTab === key
-                  ? "bg-background shadow-sm text-foreground"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {icon} {label}
-            </button>
-          ))}
-        </div>
+        {/* ── Tab content ── */}
+        {activeTab === "builds" && <ActiveBuilds />}
 
         {activeTab === "feed" && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -222,178 +229,191 @@ export default function Dashboard() {
           </div>
         )}
 
-        {activeTab === "builds" && <ActiveBuilds />}
-
-
         {activeTab === "listings" && (
-          <>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold">Your listings</h2>
-          <span className="text-sm text-muted-foreground">{listings.length} total</span>
-        </div>
-
-        {dataLoading ? (
-          <div className="space-y-3">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="h-16 rounded-2xl bg-muted animate-pulse" />
-            ))}
-          </div>
-        ) : listings.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border/60 p-14 text-center">
-            <div className="text-4xl mb-4">📦</div>
-            <h3 className="font-bold mb-1">No listings yet</h3>
-            <p className="text-muted-foreground text-sm mb-5">Create your first listing to start earning</p>
-            <Link to="/sell">
-              <Button className="gradient-hero text-white border-0 shadow-glow hover:opacity-90">Create listing</Button>
-            </Link>
-          </div>
-        ) : (
-          <div className="rounded-2xl border border-border/60 overflow-hidden shadow-card">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-muted/40 border-b border-border/60">
-                  <tr>
-                    <th className="px-5 py-3.5 text-left text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Listing</th>
-                    <th className="px-5 py-3.5 text-left text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Price</th>
-                    <th className="px-5 py-3.5 text-left text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Status</th>
-                    <th className="px-5 py-3.5 text-left text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Sales</th>
-                    <th className="px-5 py-3.5 text-left text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Views</th>
-                    <th className="px-5 py-3.5" />
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border/40">
-                  {listings.map((l) => (
-                    <React.Fragment key={l.id}>
-                      <tr className="hover:bg-muted/20 transition-colors group">
-                        <td className="px-5 py-4">
-                          <div className="flex items-center gap-2.5">
-                            <Link to={`/listing/${l.id}`} className="font-semibold hover:text-primary transition-colors line-clamp-1">
-                              {l.title}
-                            </Link>
-                            <CompletenessBadge level={l.completeness_badge} showTooltip={false} />
-                          </div>
-                        </td>
-                        <td className="px-5 py-4 font-semibold">${(l.price / 100).toFixed(2)}</td>
-                        <td className="px-5 py-4">
-                          <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusConfig[l.status]?.className}`}>
-                            {statusConfig[l.status]?.label ?? l.status}
-                          </span>
-                        </td>
-                        <td className="px-5 py-4 text-muted-foreground">{l.sales_count}</td>
-                        <td className="px-5 py-4 text-muted-foreground">{l.view_count}</td>
-                        <td className="px-5 py-4">
-                          <div className="flex items-center gap-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Link to={`/listing/${l.id}`}>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted">
-                                <Eye className="h-3.5 w-3.5" />
-                              </Button>
-                            </Link>
-                            <Link to={`/listing/${l.id}/edit`}>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted">
-                                <Pencil className="h-3.5 w-3.5" />
-                              </Button>
-                            </Link>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                              onClick={() => deleteListing(l.id)}
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                      {(l.demo_url || l.github_url) && !l.domain_verified && (
-                        <tr>
-                          <td colSpan={6} className="px-5 pb-4 pt-0">
-                            <VerifyListingPanel
-                              listingId={l.id}
-                              demoUrl={l.demo_url}
-                              githubUrl={l.github_url}
-                              domainVerified={l.domain_verified}
-                            />
-                          </td>
-                        </tr>
-                      )}
-                    </React.Fragment>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-          </>
+          <ListingsTab
+            listings={listings}
+            dataLoading={dataLoading}
+            onDelete={deleteListing}
+          />
         )}
 
         {activeTab === "sales" && (
-          <>
-        {/* Sales History */}
-        <div className="flex items-center gap-2 mt-0 mb-4">
-          <ShoppingBag className="h-5 w-5 text-primary" />
-          <h2 className="text-lg font-bold">Sales history</h2>
-          {sales.length > 0 && (
-            <span className="text-sm text-muted-foreground ml-auto">{sales.length} transactions</span>
-          )}
-        </div>
-
-        {sales.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border/60 p-10 text-center text-muted-foreground text-sm">
-            No sales yet — they'll appear here once a buyer completes checkout.
-          </div>
-        ) : (
-          <div className="rounded-2xl border border-border/60 overflow-hidden shadow-card">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-muted/40 border-b border-border/60">
-                  <tr>
-                    <th className="px-5 py-3.5 text-left text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Date</th>
-                    <th className="px-5 py-3.5 text-left text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Product</th>
-                    <th className="px-5 py-3.5 text-left text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Sale price</th>
-                    <th className="px-5 py-3.5 text-left text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Platform fee</th>
-                    <th className="px-5 py-3.5 text-left text-[10px] font-bold uppercase tracking-widest text-muted-foreground">You received</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border/40">
-                  {sales.map((sale) => (
-                    <tr key={sale.id} className="hover:bg-muted/20 transition-colors">
-                      <td className="px-5 py-4 text-muted-foreground whitespace-nowrap">
-                        {new Date(sale.created_at).toLocaleDateString()}
-                      </td>
-                      <td className="px-5 py-4 font-medium max-w-[200px] truncate">
-                        {sale.listings?.title ?? <span className="text-muted-foreground italic">Deleted listing</span>}
-                      </td>
-                      <td className="px-5 py-4">${(sale.amount_paid / 100).toFixed(2)}</td>
-                      <td className="px-5 py-4 text-muted-foreground">−${(sale.platform_fee / 100).toFixed(2)}</td>
-                      <td className="px-5 py-4 font-bold text-primary">${(sale.seller_amount / 100).toFixed(2)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-                <tfoot className="bg-muted/30 border-t border-border/60">
-                  <tr>
-                    <td colSpan={4} className="px-5 py-4 text-sm font-semibold text-muted-foreground text-right">
-                      Total transferred to your account:
-                    </td>
-                    <td className="px-5 py-4 font-black text-primary text-base">
-                      ${(summary.total_earned / 100).toFixed(2)}
-                    </td>
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
-          </div>
-        )}
-          </>
+          <SalesTab sales={sales} summary={summary} />
         )}
 
         {activeTab === "forks" && <ForkRequestsManager />}
-
         {activeTab === "improvements" && <ImprovementDashboard />}
-
         {activeTab === "analytics" && <SellerAnalytics />}
       </main>
       <Footer />
+    </div>
+  );
+}
+
+/* ── Listings sub-tab ── */
+function ListingsTab({
+  listings,
+  dataLoading,
+  onDelete,
+}: {
+  listings: Listing[];
+  dataLoading: boolean;
+  onDelete: (id: string) => void;
+}) {
+  if (dataLoading) {
+    return (
+      <div className="space-y-3">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="h-20 rounded-xl bg-muted/30 animate-pulse" />
+        ))}
+      </div>
+    );
+  }
+
+  if (listings.length === 0) {
+    return (
+      <div className="rounded-xl border border-dashed border-border/40 py-16 text-center">
+        <Layers className="h-8 w-8 text-muted-foreground/40 mx-auto mb-4" />
+        <h3 className="font-semibold mb-1">No projects yet</h3>
+        <p className="text-muted-foreground text-sm mb-5">
+          Build your first project to start earning
+        </p>
+        <Link to="/sell">
+          <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90">
+            Create project
+          </Button>
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      {listings.map((l) => (
+        <div key={l.id} className="group">
+          <div className="flex items-center gap-4 rounded-xl border border-border/30 bg-card/40 px-4 py-3.5 hover:border-border/60 transition-colors">
+            {/* Status dot */}
+            <div className={`h-2 w-2 rounded-full shrink-0 ${statusDot[l.status] ?? "bg-muted-foreground/40"}`} />
+
+            {/* Title + badge */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <Link
+                  to={`/listing/${l.id}`}
+                  className="font-medium text-sm hover:text-primary transition-colors truncate"
+                >
+                  {l.title}
+                </Link>
+                <CompletenessBadge level={l.completeness_badge} showTooltip={false} />
+              </div>
+              <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground">
+                <span>${(l.price / 100).toFixed(0)}</span>
+                <span className="text-border">·</span>
+                <span>{l.sales_count} sales</span>
+                <span className="text-border">·</span>
+                <span>{l.view_count} views</span>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+              <Link to={`/listing/${l.id}`}>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <ArrowUpRight className="h-3.5 w-3.5" />
+                </Button>
+              </Link>
+              <Link to={`/listing/${l.id}/edit`}>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <Pencil className="h-3.5 w-3.5" />
+                </Button>
+              </Link>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                onClick={() => onDelete(l.id)}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          </div>
+
+          {/* Verify panel if needed */}
+          {(l.demo_url || l.github_url) && !l.domain_verified && (
+            <div className="ml-6 mt-1 mb-2">
+              <VerifyListingPanel
+                listingId={l.id}
+                demoUrl={l.demo_url}
+                githubUrl={l.github_url}
+                domainVerified={l.domain_verified}
+              />
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ── Sales sub-tab ── */
+function SalesTab({ sales, summary }: { sales: Sale[]; summary: SaleSummary }) {
+  if (sales.length === 0) {
+    return (
+      <div className="rounded-xl border border-dashed border-border/40 py-16 text-center">
+        <DollarSign className="h-8 w-8 text-muted-foreground/40 mx-auto mb-4" />
+        <p className="text-muted-foreground text-sm">
+          No revenue yet — sales appear here once a buyer completes checkout.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Summary card */}
+      <div className="rounded-xl border border-border/40 bg-card/50 p-5 flex items-center justify-between">
+        <div>
+          <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Total transferred</p>
+          <p className="text-3xl font-bold tabular-nums mt-1">
+            ${(summary.total_earned / 100).toFixed(2)}
+          </p>
+        </div>
+        <div className="text-right">
+          <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Transactions</p>
+          <p className="text-xl font-bold tabular-nums mt-1">{sales.length}</p>
+        </div>
+      </div>
+
+      {/* Transaction list */}
+      <div className="space-y-1.5">
+        {sales.map((sale) => (
+          <div
+            key={sale.id}
+            className="flex items-center gap-4 rounded-xl border border-border/30 bg-card/40 px-4 py-3 text-sm"
+          >
+            <div className="flex-1 min-w-0">
+              <p className="font-medium truncate">
+                {sale.listings?.title ?? <span className="text-muted-foreground italic">Deleted</span>}
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {new Date(sale.created_at).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })}
+              </p>
+            </div>
+            <div className="text-right shrink-0">
+              <p className="font-semibold tabular-nums">
+                +${(sale.seller_amount / 100).toFixed(2)}
+              </p>
+              <p className="text-[10px] text-muted-foreground tabular-nums">
+                of ${(sale.amount_paid / 100).toFixed(2)}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

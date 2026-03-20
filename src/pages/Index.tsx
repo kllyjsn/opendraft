@@ -8,7 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { JsonLd } from "@/components/JsonLd";
 import { MetaTags } from "@/components/MetaTags";
 import { useGenerationJob } from "@/hooks/useGenerationJob";
-import { CheckCircle, AlertCircle, ExternalLink, Rocket, Globe, Pencil, Wand2, Code, FileText, Shield } from "lucide-react";
+import { AlertCircle, Rocket, Wand2, Code, FileText, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmailCapture } from "@/components/EmailCapture";
 import { AnalysisShowcase } from "@/components/AnalysisShowcase";
@@ -61,12 +61,10 @@ function HeroTagline() {
 function GenerationProgress({
   isInProgress,
   genJob,
-  deployPhase,
   currentStage,
 }: {
   isInProgress: boolean;
   genJob: any;
-  deployPhase: string;
   currentStage: { label: string; pct: number };
 }) {
   if (!isInProgress) return null;
@@ -83,11 +81,7 @@ function GenerationProgress({
           style={{ animationDuration: "2s", borderTopColor: "transparent" }}
         />
         <div className="absolute inset-0 flex items-center justify-center">
-          {deployPhase === "deploying" || deployPhase === "polling" ? (
-            <Rocket className="h-5 w-5 text-primary" />
-          ) : (
-            <Wand2 className="h-5 w-5 text-primary" />
-          )}
+          <Wand2 className="h-5 w-5 text-primary" />
         </div>
       </div>
       <div>
@@ -99,7 +93,7 @@ function GenerationProgress({
         </p>
         <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 mt-2.5 text-[10px] text-muted-foreground/60">
           <span className="flex items-center gap-1"><Code className="h-2.5 w-2.5" /> Full source code</span>
-          <span className="flex items-center gap-1"><Rocket className="h-2.5 w-2.5" /> Live deploy</span>
+          <span className="flex items-center gap-1"><Rocket className="h-2.5 w-2.5" /> Ready to deploy</span>
           <span className="flex items-center gap-1"><FileText className="h-2.5 w-2.5" /> Marketing kit</span>
           <span className="flex items-center gap-1"><Shield className="h-2.5 w-2.5" /> Security audit</span>
         </div>
@@ -112,128 +106,26 @@ function GenerationProgress({
           />
         </div>
         <div className="flex justify-between mt-1.5">
-          <span className="text-[10px] text-muted-foreground">
-            {deployPhase === "deploying" || deployPhase === "polling" ? "Deploying" : "Building"}
-          </span>
+          <span className="text-[10px] text-muted-foreground">Building</span>
           <span className="text-[10px] font-semibold text-primary">
             {currentStage.pct}%
           </span>
         </div>
       </div>
-      <div className="flex items-center justify-center gap-3 text-[10px]">
-        <span className={`flex items-center gap-1 ${genJob?.status === "complete" ? "text-primary font-bold" : "text-muted-foreground"}`}>
-          {genJob?.status === "complete" ? <CheckCircle className="h-3 w-3" /> : <Wand2 className="h-3 w-3" />}
-          Build
-        </span>
-        <span className="text-border">→</span>
-        <span className={`flex items-center gap-1 ${deployPhase === "polling" || deployPhase === "live" ? "text-primary font-bold" : "text-muted-foreground"}`}>
-          {deployPhase === "live" ? <CheckCircle className="h-3 w-3" /> : <Rocket className="h-3 w-3" />}
-          Deploy
-        </span>
-        <span className="text-border">→</span>
-        <span className={`flex items-center gap-1 ${deployPhase === "live" ? "text-primary font-bold" : "text-muted-foreground"}`}>
-          <Globe className="h-3 w-3" />
-          Live
-        </span>
-      </div>
+      <p className="text-[10px] text-muted-foreground">
+        You can leave this page — track progress in your{" "}
+        <a href="/dashboard" className="text-primary underline underline-offset-2">dashboard</a>.
+      </p>
     </motion.div>
   );
 }
 
-function DeploySuccess({
-  deployUrl,
+function BuildError({
   genJob,
-  navigate,
-  reset,
-}: {
-  deployUrl: string;
-  genJob: any;
-  navigate: (path: string) => void;
-  reset: () => void;
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      className="max-w-md mx-auto space-y-5 mb-8"
-    >
-      <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl bg-primary/10 mx-auto">
-        <CheckCircle className="h-7 w-7 text-primary" />
-      </div>
-      <div>
-        <h3 className="text-xl font-black text-foreground">Your app is live.</h3>
-        <p className="text-sm text-muted-foreground mt-1">
-          {genJob?.listing_title && `"${genJob.listing_title}" — `}Built, deployed, ready.
-        </p>
-      </div>
-      <a
-        href={deployUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex items-center gap-2 rounded-xl border border-primary/30 bg-primary/5 px-4 py-2.5 text-sm font-semibold text-primary hover:bg-primary/10 transition-colors mx-auto"
-      >
-        <Globe className="h-4 w-4" />
-        {deployUrl.replace("https://", "")}
-        <ExternalLink className="h-3.5 w-3.5" />
-      </a>
-      <div className="flex gap-2 justify-center flex-wrap">
-        {genJob?.listing_id && (
-          <Button
-            size="sm"
-            onClick={() => navigate(`/listing/${genJob.listing_id}/edit`)}
-            className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2"
-          >
-            <Pencil className="h-3.5 w-3.5" /> Edit
-          </Button>
-        )}
-        {genJob?.listing_id && (
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => navigate(`/listing/${genJob.listing_id}`)}
-            className="gap-2"
-          >
-            <ExternalLink className="h-3.5 w-3.5" /> View listing
-          </Button>
-        )}
-        <Button size="sm" variant="ghost" onClick={reset}>
-          Build another
-        </Button>
-      </div>
-      <div className="rounded-xl border border-border overflow-hidden shadow-card mt-4">
-        <div className="bg-muted/50 px-3 py-1.5 flex items-center gap-2 border-b border-border">
-          <div className="flex gap-1">
-            <span className="h-2 w-2 rounded-full bg-foreground/10" />
-            <span className="h-2 w-2 rounded-full bg-foreground/10" />
-            <span className="h-2 w-2 rounded-full bg-foreground/10" />
-          </div>
-          <span className="text-[10px] text-muted-foreground truncate flex-1">{deployUrl}</span>
-        </div>
-        <iframe
-          src={deployUrl}
-          className="w-full h-[300px] bg-background"
-          title="Live preview"
-          sandbox="allow-scripts allow-same-origin"
-        />
-      </div>
-    </motion.div>
-  );
-}
-
-function DeployError({
-  deployPhase,
-  genJob,
-  deployError,
-  handleAutoDeploy,
   handleGenerate,
-  navigate,
 }: {
-  deployPhase: string;
   genJob: any;
-  deployError: string | undefined;
-  handleAutoDeploy: (id: string) => void;
   handleGenerate: (prompt: string) => void;
-  navigate: (path: string) => void;
 }) {
   return (
     <motion.div
@@ -244,26 +136,11 @@ function DeployError({
       <div className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-destructive/10 mx-auto">
         <AlertCircle className="h-5 w-5 text-destructive" />
       </div>
-      <p className="text-sm font-semibold">
-        {deployPhase === "error" ? "Deploy failed" : "Build failed"}
-      </p>
-      <p className="text-xs text-muted-foreground">{deployError || genJob?.error}</p>
-      <div className="flex gap-2 justify-center flex-wrap">
-        {deployPhase === "error" && genJob?.listing_id ? (
-          <>
-            <Button size="sm" variant="outline" onClick={() => handleAutoDeploy(genJob.listing_id!)} className="gap-2">
-              <Rocket className="h-3.5 w-3.5" /> Retry
-            </Button>
-            <Button size="sm" variant="ghost" onClick={() => navigate(`/listing/${genJob.listing_id}`)}>
-              View listing
-            </Button>
-          </>
-        ) : (
-          <Button size="sm" variant="outline" onClick={() => handleGenerate("")} className="gap-2">
-            <Wand2 className="h-3.5 w-3.5" /> Try again
-          </Button>
-        )}
-      </div>
+      <p className="text-sm font-semibold">Build failed</p>
+      <p className="text-xs text-muted-foreground">{genJob?.error}</p>
+      <Button size="sm" variant="outline" onClick={() => handleGenerate("")} className="gap-2">
+        <Wand2 className="h-3.5 w-3.5" /> Try again
+      </Button>
     </motion.div>
   );
 }
@@ -283,13 +160,9 @@ export default function Index() {
   const {
     generating,
     genJob,
-    deployPhase,
-    deployUrl,
-    deployError,
     currentStage,
     isInProgress,
     handleGenerate,
-    handleAutoDeploy,
     reset,
   } = useGenerationJob();
 
@@ -413,28 +286,16 @@ export default function Index() {
               <GenerationProgress
                 isInProgress={isInProgress}
                 genJob={genJob}
-                deployPhase={deployPhase}
                 currentStage={currentStage}
               />
             </AnimatePresence>
 
-            {/* Deploy success */}
+            {/* Build error */}
             <AnimatePresence>
-              {deployPhase === "live" && deployUrl && !isInProgress && (
-                <DeploySuccess deployUrl={deployUrl} genJob={genJob} navigate={navigate} reset={reset} />
-              )}
-            </AnimatePresence>
-
-            {/* Deploy error */}
-            <AnimatePresence>
-              {(deployPhase === "error" || genJob?.status === "failed") && !isInProgress && (
-                <DeployError
-                  deployPhase={deployPhase}
+              {genJob?.status === "failed" && !isInProgress && (
+                <BuildError
                   genJob={genJob}
-                  deployError={deployError}
-                  handleAutoDeploy={handleAutoDeploy}
                   handleGenerate={handleGenerate}
-                  navigate={navigate}
                 />
               )}
             </AnimatePresence>

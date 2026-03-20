@@ -579,7 +579,7 @@ export function BusinessAnalyzer({ onGenerate }: { onGenerate?: (prompt: string,
                     className="flex-1 gradient-hero text-primary-foreground border-0 shadow-glow hover:opacity-90 h-8 text-[11px] font-bold rounded-lg"
                   >
                     <Wand2 className="h-3 w-3 mr-1" />
-                    {user ? `Build "${build.name}"` : "Sign in to generate"}
+                    Build "{build.name}"
                   </Button>
                   <Button
                     size="sm"

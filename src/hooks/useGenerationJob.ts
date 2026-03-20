@@ -87,7 +87,12 @@ export function useGenerationJob() {
   }, [genJob?.id, genJob?.status]);
 
   const handleGenerate = useCallback(async (prompt: string, brandContext?: Record<string, string>) => {
-    if (!user) { navigate("/login"); return; }
+    if (!user) {
+      // Save prompt so it resumes after login
+      if (prompt.trim()) sessionStorage.setItem("opendraft_pending_generate", prompt);
+      navigate("/login");
+      return;
+    }
     if (!prompt.trim()) return;
     setGenerating(true);
     setGenJob(null);

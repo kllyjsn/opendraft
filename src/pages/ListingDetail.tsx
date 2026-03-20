@@ -428,6 +428,9 @@ export default function ListingDetail() {
               </div>
             )}
 
+            {/* Go-To-Market Kit — visible to all visitors */}
+            <MarketingKitPanel listingId={listing.id} />
+
           </div>
 
           {/* Right: sidebar */}

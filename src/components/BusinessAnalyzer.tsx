@@ -544,7 +544,7 @@ export function BusinessAnalyzer({ onGenerate }: { onGenerate?: (prompt: string,
                 transition={{ delay: 0.35 + i * 0.08, ease: [0.16, 1, 0.3, 1] }}
                 className={`group relative rounded-2xl border p-4 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-0.5 ${PRIORITY_STYLES[build.priority]}`}
               >
-                <div className="flex items-start gap-3 mb-3">
+                <div className="flex items-start gap-3 mb-2">
                   <div className="rounded-xl bg-background/80 border border-border/50 p-2 shrink-0">
                     <Icon className="h-4 w-4 text-primary" />
                   </div>
@@ -559,6 +559,19 @@ export function BusinessAnalyzer({ onGenerate }: { onGenerate?: (prompt: string,
                   </div>
                 </div>
 
+                {/* What you'll get */}
+                <div className="flex flex-wrap gap-x-3 gap-y-1 mb-2.5 ml-11">
+                  <span className="text-[10px] text-muted-foreground/70 flex items-center gap-1">
+                    <Code className="h-2.5 w-2.5" /> Source code
+                  </span>
+                  <span className="text-[10px] text-muted-foreground/70 flex items-center gap-1">
+                    <Rocket className="h-2.5 w-2.5" /> Live deploy
+                  </span>
+                  <span className="text-[10px] text-muted-foreground/70 flex items-center gap-1">
+                    <Megaphone className="h-2.5 w-2.5" /> Marketing kit
+                  </span>
+                </div>
+
                 <div className="flex items-center gap-1.5">
                   <Button
                     size="sm"
@@ -566,7 +579,7 @@ export function BusinessAnalyzer({ onGenerate }: { onGenerate?: (prompt: string,
                     className="flex-1 gradient-hero text-primary-foreground border-0 shadow-glow hover:opacity-90 h-8 text-[11px] font-bold rounded-lg"
                   >
                     <Wand2 className="h-3 w-3 mr-1" />
-                    {user ? "Generate this app" : "Sign in to generate"}
+                    {user ? `Build "${build.name}"` : "Sign in to generate"}
                   </Button>
                   <Button
                     size="sm"

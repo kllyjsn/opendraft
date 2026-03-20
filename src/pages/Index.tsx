@@ -94,9 +94,15 @@ function GenerationProgress({
         <p className="text-base font-bold">{currentStage.label}</p>
         <p className="text-xs text-muted-foreground mt-1">
           {genJob?.listing_title
-            ? `"${genJob.listing_title}"`
+            ? `Building "${genJob.listing_title}"`
             : "This usually takes 60–90 seconds"}
         </p>
+        <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 mt-2.5 text-[10px] text-muted-foreground/60">
+          <span className="flex items-center gap-1"><Code className="h-2.5 w-2.5" /> Full source code</span>
+          <span className="flex items-center gap-1"><Rocket className="h-2.5 w-2.5" /> Live deploy</span>
+          <span className="flex items-center gap-1"><FileText className="h-2.5 w-2.5" /> Marketing kit</span>
+          <span className="flex items-center gap-1"><Shield className="h-2.5 w-2.5" /> Security audit</span>
+        </div>
       </div>
       <div className="w-full max-w-xs mx-auto">
         <div className="h-1 rounded-full bg-muted overflow-hidden">

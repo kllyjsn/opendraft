@@ -160,13 +160,9 @@ export default function Index() {
   const {
     generating,
     genJob,
-    deployPhase,
-    deployUrl,
-    deployError,
     currentStage,
     isInProgress,
     handleGenerate,
-    handleAutoDeploy,
     reset,
   } = useGenerationJob();
 

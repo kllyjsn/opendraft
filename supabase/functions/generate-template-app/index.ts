@@ -718,71 +718,10 @@ Requirements:
   if (!template.files?.length)
     return { success: false, error: "AI generated no files" };
 
-  /* ── Step 2: Generate TWO preview screenshots via AI ────── */
-  if (jobId) await updateJob(supabase, jobId, { stage: "generating_screenshots", listing_title: template.title });
-
-  const screenshotPaths: string[] = [];
   const slug = (template.title || "template")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .slice(0, 40);
-
-  const screenshotPrompts = [
-    `Generate a stunning, ultra-polished marketing landing page screenshot for a premium web app called "${template.title}" — "${template.tagline || ""}". ${template.description}. Color palette: ${template.color_palette || "modern gradient"}. Show: bold hero headline with gradient text, prominent glowing CTA button, feature cards with icons, social proof section with avatars, and a subtle grid/mesh background. Typography should be Inter-style, sharp and modern. The design should look like a $100M startup's landing page — NOT a student project. 1280x720, no browser chrome, just the page.`,
-    `Generate a realistic, detailed app dashboard/workspace screenshot for "${template.title}". ${template.description}. Color palette: ${template.color_palette || "clean modern"}. Show the main functional interface with: sidebar or top navigation, data visualizations (charts/metrics/cards), content area with realistic sample data, and interactive UI elements. Use subtle shadows, proper spacing, and a cohesive color system. It should look like a REAL production app with REAL data — not a wireframe. 1280x720, no browser chrome.`,
-  ];
-
-  const imgResults = await Promise.allSettled(
-    screenshotPrompts.map(async (prompt, idx) => {
-      const imgResponse = await fetch(
-        "https://ai.gateway.lovable.dev/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${LOVABLE_API_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: "google/gemini-3.1-flash-image-preview",
-            messages: [{ role: "user", content: prompt }],
-            modalities: ["image", "text"],
-          }),
-        }
-      );
-
-      if (!imgResponse.ok) return null;
-      const imgData = await imgResponse.json();
-      const imageUrl = imgData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
-      if (!imageUrl?.startsWith("data:image")) return null;
-
-      const base64Data = imageUrl.split(",")[1];
-      const binaryStr = atob(base64Data);
-      const bytes = new Uint8Array(binaryStr.length);
-      for (let i = 0; i < binaryStr.length; i++) {
-        bytes[i] = binaryStr.charCodeAt(i);
-      }
-
-      const label = idx === 0 ? "marketing" : "app";
-      const path = `ai-generated/${slug}-${label}-${Date.now()}.png`;
-
-      const { error: uploadErr } = await supabase.storage
-        .from("listing-screenshots")
-        .upload(path, bytes, { contentType: "image/png", upsert: false });
-
-      if (uploadErr) {
-        console.error(`Screenshot ${label} upload error:`, uploadErr);
-        return null;
-      }
-      return path;
-    })
-  );
-
-  for (const r of imgResults) {
-    if (r.status === "fulfilled" && r.value) {
-      screenshotPaths.push(r.value);
-    }
-  }
-  console.log(`Generated ${screenshotPaths.length}/2 screenshots for "${template.title}"`);
 
   /* ── Step 2b: Security post-processing ─────────────────────── */
   const generatedFiles: Array<{ path: string; content: string }> = template.files || [];

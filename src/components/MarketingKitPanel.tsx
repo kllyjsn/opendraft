@@ -180,6 +180,16 @@ export function MarketingKitPanel({ listingId }: Props) {
               <p className="text-xs text-muted-foreground whitespace-pre-wrap leading-relaxed">{packet.email_pitch.body}</p>
             </div>
           )}
+          <button
+            onClick={() => copyToClipboard(
+              `Subject: ${packet.email_pitch?.subject ?? ""}\n\n${packet.email_pitch?.body ?? ""}`,
+              "email"
+            )}
+            className="flex items-center gap-1.5 text-[11px] font-medium text-primary hover:text-primary/80 transition-colors mt-1"
+          >
+            {copiedId === "email" ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+            {copiedId === "email" ? "Copied!" : "Copy email"}
+          </button>
         </div>
       ) : null,
     },

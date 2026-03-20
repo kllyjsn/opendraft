@@ -385,7 +385,7 @@ export default function Index() {
           >
             Paste your website. Get a custom app in 90 seconds.
             <br />
-            <span className="text-foreground/80 font-medium">Free to try — no credit card.</span>
+            <span className="text-foreground/80 font-medium">Free to try — no coding experience needed.</span>
           </motion.p>
 
           {/* URL Input */}

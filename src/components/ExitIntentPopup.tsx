@@ -42,7 +42,7 @@ export function ExitIntentPopup() {
           </div>
           <h2 className="text-2xl font-black tracking-tight">Wait — free credits inside 👀</h2>
           <p className="text-sm text-muted-foreground max-w-sm">
-            Sign up now and get <span className="font-bold text-foreground">3 free app claims</span> to start building your portfolio. No credit card needed.
+            Sign up now and get <span className="font-bold text-foreground">3 free app claims</span> to start building your portfolio. No coding experience needed.
           </p>
           <div className="flex gap-3 w-full">
             <Button variant="outline" onClick={dismiss} className="flex-1">

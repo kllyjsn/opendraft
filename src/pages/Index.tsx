@@ -286,28 +286,16 @@ export default function Index() {
               <GenerationProgress
                 isInProgress={isInProgress}
                 genJob={genJob}
-                deployPhase={deployPhase}
                 currentStage={currentStage}
               />
             </AnimatePresence>
 
-            {/* Deploy success */}
+            {/* Build error */}
             <AnimatePresence>
-              {deployPhase === "live" && deployUrl && !isInProgress && (
-                <DeploySuccess deployUrl={deployUrl} genJob={genJob} navigate={navigate} reset={reset} />
-              )}
-            </AnimatePresence>
-
-            {/* Deploy error */}
-            <AnimatePresence>
-              {(deployPhase === "error" || genJob?.status === "failed") && !isInProgress && (
-                <DeployError
-                  deployPhase={deployPhase}
+              {genJob?.status === "failed" && !isInProgress && (
+                <BuildError
                   genJob={genJob}
-                  deployError={deployError}
-                  handleAutoDeploy={handleAutoDeploy}
                   handleGenerate={handleGenerate}
-                  navigate={navigate}
                 />
               )}
             </AnimatePresence>

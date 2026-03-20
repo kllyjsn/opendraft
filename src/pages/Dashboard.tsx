@@ -190,6 +190,7 @@ export default function Dashboard() {
         <div className="flex gap-1 mb-6 rounded-xl bg-muted/50 p-1 w-fit">
           {([
             { key: "feed" as const, label: "Feed", icon: <Rss className="h-3.5 w-3.5" /> },
+            { key: "builds" as const, label: "Builds", icon: <Hammer className="h-3.5 w-3.5" /> },
             { key: "listings" as const, label: "Listings", icon: <Package className="h-3.5 w-3.5" /> },
             { key: "sales" as const, label: "Sales", icon: <ShoppingBag className="h-3.5 w-3.5" /> },
             { key: "forks" as const, label: "Fork Requests", icon: <GitFork className="h-3.5 w-3.5" /> },

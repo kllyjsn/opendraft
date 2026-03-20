@@ -61,12 +61,10 @@ function HeroTagline() {
 function GenerationProgress({
   isInProgress,
   genJob,
-  deployPhase,
   currentStage,
 }: {
   isInProgress: boolean;
   genJob: any;
-  deployPhase: string;
   currentStage: { label: string; pct: number };
 }) {
   if (!isInProgress) return null;
@@ -83,11 +81,7 @@ function GenerationProgress({
           style={{ animationDuration: "2s", borderTopColor: "transparent" }}
         />
         <div className="absolute inset-0 flex items-center justify-center">
-          {deployPhase === "deploying" || deployPhase === "polling" ? (
-            <Rocket className="h-5 w-5 text-primary" />
-          ) : (
-            <Wand2 className="h-5 w-5 text-primary" />
-          )}
+          <Wand2 className="h-5 w-5 text-primary" />
         </div>
       </div>
       <div>
@@ -99,7 +93,7 @@ function GenerationProgress({
         </p>
         <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 mt-2.5 text-[10px] text-muted-foreground/60">
           <span className="flex items-center gap-1"><Code className="h-2.5 w-2.5" /> Full source code</span>
-          <span className="flex items-center gap-1"><Rocket className="h-2.5 w-2.5" /> Live deploy</span>
+          <span className="flex items-center gap-1"><Rocket className="h-2.5 w-2.5" /> Ready to deploy</span>
           <span className="flex items-center gap-1"><FileText className="h-2.5 w-2.5" /> Marketing kit</span>
           <span className="flex items-center gap-1"><Shield className="h-2.5 w-2.5" /> Security audit</span>
         </div>
@@ -112,30 +106,16 @@ function GenerationProgress({
           />
         </div>
         <div className="flex justify-between mt-1.5">
-          <span className="text-[10px] text-muted-foreground">
-            {deployPhase === "deploying" || deployPhase === "polling" ? "Deploying" : "Building"}
-          </span>
+          <span className="text-[10px] text-muted-foreground">Building</span>
           <span className="text-[10px] font-semibold text-primary">
             {currentStage.pct}%
           </span>
         </div>
       </div>
-      <div className="flex items-center justify-center gap-3 text-[10px]">
-        <span className={`flex items-center gap-1 ${genJob?.status === "complete" ? "text-primary font-bold" : "text-muted-foreground"}`}>
-          {genJob?.status === "complete" ? <CheckCircle className="h-3 w-3" /> : <Wand2 className="h-3 w-3" />}
-          Build
-        </span>
-        <span className="text-border">→</span>
-        <span className={`flex items-center gap-1 ${deployPhase === "polling" || deployPhase === "live" ? "text-primary font-bold" : "text-muted-foreground"}`}>
-          {deployPhase === "live" ? <CheckCircle className="h-3 w-3" /> : <Rocket className="h-3 w-3" />}
-          Deploy
-        </span>
-        <span className="text-border">→</span>
-        <span className={`flex items-center gap-1 ${deployPhase === "live" ? "text-primary font-bold" : "text-muted-foreground"}`}>
-          <Globe className="h-3 w-3" />
-          Live
-        </span>
-      </div>
+      <p className="text-[10px] text-muted-foreground">
+        You can leave this page — track progress in your{" "}
+        <a href="/dashboard" className="text-primary underline underline-offset-2">dashboard</a>.
+      </p>
     </motion.div>
   );
 }

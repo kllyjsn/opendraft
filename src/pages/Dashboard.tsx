@@ -64,7 +64,6 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<"feed" | "builds" | "listings" | "sales" | "forks" | "improvements" | "analytics">(
     (new URLSearchParams(window.location.search).get("tab") as any) || "feed"
   );
-  );
 
   useEffect(() => {
     if (!user) return;

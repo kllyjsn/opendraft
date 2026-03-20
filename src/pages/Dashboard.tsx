@@ -8,7 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { CompletenessBadge } from "@/components/CompletenessBadge";
 import { StripeConnectPanel } from "@/components/StripeConnectPanel";
 import { CreateProductPanel } from "@/components/CreateProductPanel";
-import { TrendingUp, Package, Eye, Trash2, Plus, ShoppingBag, BarChart3, Rss, Pencil, GitFork } from "lucide-react";
+import { TrendingUp, Package, Eye, Trash2, Plus, ShoppingBag, BarChart3, Rss, Pencil, GitFork, Hammer } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { SellerAnalytics } from "@/components/SellerAnalytics";
 import { ActivityFeed } from "@/components/ActivityFeed";
@@ -16,6 +16,7 @@ import { VerifyListingPanel } from "@/components/VerifyListingPanel";
 import { AgentDemandFeed } from "@/components/AgentDemandFeed";
 import { ForkRequestsManager } from "@/components/ForkRequestsManager";
 import { ImprovementDashboard } from "@/components/ImprovementDashboard";
+import { ActiveBuilds, ActiveBuildsBanner } from "@/components/ActiveBuilds";
 
 interface Sale {
   id: string;

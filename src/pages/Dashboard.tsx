@@ -9,9 +9,9 @@ import { CompletenessBadge } from "@/components/CompletenessBadge";
 import { StripeConnectPanel } from "@/components/StripeConnectPanel";
 import { CreateProductPanel } from "@/components/CreateProductPanel";
 import {
-  TrendingUp, Package, Eye, Trash2, Plus, ShoppingBag,
+  TrendingUp, Eye, Trash2, Plus,
   BarChart3, Rss, Pencil, GitFork, Hammer, ArrowUpRight,
-  DollarSign, Layers, Zap,
+  DollarSign, Layers, ChevronDown, ChevronRight,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { SellerAnalytics } from "@/components/SellerAnalytics";
@@ -52,7 +52,7 @@ interface SaleSummary {
   total_sales: number;
 }
 
-type TabKey = "builds" | "listings" | "sales" | "forks" | "improvements" | "analytics" | "feed";
+type TabKey = "builds" | "projects" | "improve";
 
 const statusDot: Record<string, string> = {
   pending: "bg-amber-400",
@@ -70,6 +70,8 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<TabKey>(
     (new URLSearchParams(window.location.search).get("tab") as TabKey) || "builds"
   );
+  const [sellerOpen, setSellerOpen] = useState(false);
+  const [sellerSection, setSellerSection] = useState<"revenue" | "analytics" | "forks" | "feed">("revenue");
 
   useEffect(() => {
     if (!user) return;
@@ -127,24 +129,23 @@ export default function Dashboard() {
     }
   }
 
-  const liveCount = listings.filter((l) => l.status === "live").length;
-  const totalViews = listings.reduce((s, l) => s + (l.view_count ?? 0), 0);
-
   const tabs: { key: TabKey; label: string; icon: React.ReactNode }[] = [
     { key: "builds", label: "Builds", icon: <Hammer className="h-4 w-4" /> },
-    { key: "listings", label: "Projects", icon: <Layers className="h-4 w-4" /> },
-    { key: "sales", label: "Revenue", icon: <DollarSign className="h-4 w-4" /> },
-    { key: "forks", label: "Forks", icon: <GitFork className="h-4 w-4" /> },
-    { key: "improvements", label: "Improve", icon: <TrendingUp className="h-4 w-4" /> },
-    { key: "analytics", label: "Analytics", icon: <BarChart3 className="h-4 w-4" /> },
-    { key: "feed", label: "Feed", icon: <Rss className="h-4 w-4" /> },
+    { key: "projects", label: "Projects", icon: <Layers className="h-4 w-4" /> },
+    { key: "improve", label: "Improve", icon: <TrendingUp className="h-4 w-4" /> },
+  ];
+
+  const sellerSections = [
+    { key: "revenue" as const, label: "Revenue", icon: <DollarSign className="h-3.5 w-3.5" /> },
+    { key: "analytics" as const, label: "Analytics", icon: <BarChart3 className="h-3.5 w-3.5" /> },
+    { key: "forks" as const, label: "Forks", icon: <GitFork className="h-3.5 w-3.5" /> },
+    { key: "feed" as const, label: "Feed", icon: <Rss className="h-3.5 w-3.5" /> },
   ];
 
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
       <main className="flex-1 container mx-auto px-4 py-8 sm:py-12 page-enter">
-        {/* Active builds banner */}
         <ActiveBuildsBanner />
 
         {/* ── Header ── */}
@@ -152,47 +153,20 @@ export default function Dashboard() {
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground mb-2">
-                Builder Studio
+                Dashboard
               </p>
               <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-                Your workshop
+                Your apps
               </h1>
             </div>
-            <Link to="/sell">
+            <Link to="/">
               <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 transition-colors gap-2">
                 <Plus className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">New project</span>
+                <span className="hidden sm:inline">New build</span>
                 <span className="sm:hidden">New</span>
               </Button>
             </Link>
           </div>
-
-          {/* ── Stat strip ── */}
-          <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {[
-              { label: "Earned", value: `$${(summary.total_earned / 100).toFixed(0)}`, icon: <DollarSign className="h-3.5 w-3.5" /> },
-              { label: "Sales", value: summary.total_sales, icon: <Zap className="h-3.5 w-3.5" /> },
-              { label: "Live projects", value: liveCount, icon: <Layers className="h-3.5 w-3.5" /> },
-              { label: "Total views", value: totalViews.toLocaleString(), icon: <Eye className="h-3.5 w-3.5" /> },
-            ].map(({ label, value, icon }) => (
-              <div
-                key={label}
-                className="rounded-xl border border-border/40 bg-card/50 px-4 py-3"
-              >
-                <div className="flex items-center gap-1.5 text-muted-foreground mb-1">
-                  {icon}
-                  <span className="text-[10px] font-medium uppercase tracking-wider">{label}</span>
-                </div>
-                <p className="text-xl font-bold tabular-nums">{value}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* ── Stripe + Product panels ── */}
-        <div className="mb-8 grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <StripeConnectPanel />
-          <CreateProductPanel />
         </div>
 
         {/* ── Tabs ── */}
@@ -218,18 +192,7 @@ export default function Dashboard() {
         {/* ── Tab content ── */}
         {activeTab === "builds" && <ActiveBuilds />}
 
-        {activeTab === "feed" && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
-              <ActivityFeed />
-            </div>
-            <div>
-              <AgentDemandFeed />
-            </div>
-          </div>
-        )}
-
-        {activeTab === "listings" && (
+        {activeTab === "projects" && (
           <ListingsTab
             listings={listings}
             dataLoading={dataLoading}
@@ -237,13 +200,72 @@ export default function Dashboard() {
           />
         )}
 
-        {activeTab === "sales" && (
-          <SalesTab sales={sales} summary={summary} />
-        )}
+        {activeTab === "improve" && <ImprovementDashboard />}
 
-        {activeTab === "forks" && <ForkRequestsManager />}
-        {activeTab === "improvements" && <ImprovementDashboard />}
-        {activeTab === "analytics" && <SellerAnalytics />}
+        {/* ── Collapsible seller tools ── */}
+        <div className="mt-16 border-t border-border/30 pt-8">
+          <button
+            onClick={() => setSellerOpen(!sellerOpen)}
+            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors group"
+          >
+            {sellerOpen ? (
+              <ChevronDown className="h-4 w-4" />
+            ) : (
+              <ChevronRight className="h-4 w-4" />
+            )}
+            <span className="font-medium">Seller tools</span>
+            {summary.total_sales > 0 && (
+              <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded-full tabular-nums">
+                {summary.total_sales} sale{summary.total_sales !== 1 ? "s" : ""}
+              </span>
+            )}
+          </button>
+
+          {sellerOpen && (
+            <div className="mt-6 space-y-6">
+              {/* Stripe + Product panels */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <StripeConnectPanel />
+                <CreateProductPanel />
+              </div>
+
+              {/* Seller sub-nav */}
+              <div className="flex gap-1 flex-wrap">
+                {sellerSections.map(({ key, label, icon }) => (
+                  <button
+                    key={key}
+                    onClick={() => setSellerSection(key)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                      sellerSection === key
+                        ? "bg-muted text-foreground"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                    }`}
+                  >
+                    {icon}
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Seller content */}
+              {sellerSection === "revenue" && (
+                <SalesTab sales={sales} summary={summary} />
+              )}
+              {sellerSection === "analytics" && <SellerAnalytics />}
+              {sellerSection === "forks" && <ForkRequestsManager />}
+              {sellerSection === "feed" && (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <div className="lg:col-span-2">
+                    <ActivityFeed />
+                  </div>
+                  <div>
+                    <AgentDemandFeed />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </main>
       <Footer />
     </div>
@@ -276,11 +298,11 @@ function ListingsTab({
         <Layers className="h-8 w-8 text-muted-foreground/40 mx-auto mb-4" />
         <h3 className="font-semibold mb-1">No projects yet</h3>
         <p className="text-muted-foreground text-sm mb-5">
-          Build your first project to start earning
+          Build your first app from the homepage
         </p>
-        <Link to="/sell">
+        <Link to="/">
           <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90">
-            Create project
+            Start a build
           </Button>
         </Link>
       </div>
@@ -292,10 +314,7 @@ function ListingsTab({
       {listings.map((l) => (
         <div key={l.id} className="group">
           <div className="flex items-center gap-4 rounded-xl border border-border/30 bg-card/40 px-4 py-3.5 hover:border-border/60 transition-colors">
-            {/* Status dot */}
             <div className={`h-2 w-2 rounded-full shrink-0 ${statusDot[l.status] ?? "bg-muted-foreground/40"}`} />
-
-            {/* Title + badge */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <Link
@@ -307,15 +326,11 @@ function ListingsTab({
                 <CompletenessBadge level={l.completeness_badge} showTooltip={false} />
               </div>
               <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground">
-                <span>${(l.price / 100).toFixed(0)}</span>
-                <span className="text-border">·</span>
-                <span>{l.sales_count} sales</span>
-                <span className="text-border">·</span>
                 <span>{l.view_count} views</span>
+                <span className="text-border">·</span>
+                <span>{l.status}</span>
               </div>
             </div>
-
-            {/* Actions */}
             <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
               <Link to={`/listing/${l.id}`}>
                 <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -337,8 +352,6 @@ function ListingsTab({
               </Button>
             </div>
           </div>
-
-          {/* Verify panel if needed */}
           {(l.demo_url || l.github_url) && !l.domain_verified && (
             <div className="ml-6 mt-1 mb-2">
               <VerifyListingPanel
@@ -370,7 +383,6 @@ function SalesTab({ sales, summary }: { sales: Sale[]; summary: SaleSummary }) {
 
   return (
     <div className="space-y-6">
-      {/* Summary card */}
       <div className="rounded-xl border border-border/40 bg-card/50 p-5 flex items-center justify-between">
         <div>
           <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Total transferred</p>
@@ -383,8 +395,6 @@ function SalesTab({ sales, summary }: { sales: Sale[]; summary: SaleSummary }) {
           <p className="text-xl font-bold tabular-nums mt-1">{sales.length}</p>
         </div>
       </div>
-
-      {/* Transaction list */}
       <div className="space-y-1.5">
         {sales.map((sale) => (
           <div

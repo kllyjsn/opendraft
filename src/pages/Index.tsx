@@ -8,7 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { JsonLd } from "@/components/JsonLd";
 import { MetaTags } from "@/components/MetaTags";
 import { useGenerationJob } from "@/hooks/useGenerationJob";
-import { CheckCircle, AlertCircle, ExternalLink, Rocket, Globe, Pencil, Wand2 } from "lucide-react";
+import { CheckCircle, AlertCircle, ExternalLink, Rocket, Globe, Pencil, Wand2, Code, FileText, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmailCapture } from "@/components/EmailCapture";
 import { AnalysisShowcase } from "@/components/AnalysisShowcase";

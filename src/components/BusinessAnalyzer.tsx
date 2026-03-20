@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Globe, Loader2, Lightbulb, Rocket, Search, AlertCircle, X,
-  Wand2, ArrowRight, Sparkles, Zap, Layout, Brain, FileText, Gamepad2, Bookmark, Check,
+  Wand2, ArrowRight, Sparkles, Zap, Layout, Brain, FileText, Gamepad2, Bookmark, Check, Code, Megaphone,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

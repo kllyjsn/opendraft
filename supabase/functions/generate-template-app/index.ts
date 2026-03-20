@@ -1140,7 +1140,7 @@ serve(async (req) => {
     }
 
     // Run all templates in parallel to avoid edge function timeout
-    console.log(`Generating ${selectedThemes.length} templates in parallel (with ${signals.topSearches.length} demand signals)...`);
+    console.log(`Generating ${selectedThemes.length} templates in parallel...`);
     for (const theme of selectedThemes) {
       console.log(`  → "${theme}"`);
     }

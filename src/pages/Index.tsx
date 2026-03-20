@@ -120,100 +120,12 @@ function GenerationProgress({
   );
 }
 
-function DeploySuccess({
-  deployUrl,
+function BuildError({
   genJob,
-  navigate,
-  reset,
-}: {
-  deployUrl: string;
-  genJob: any;
-  navigate: (path: string) => void;
-  reset: () => void;
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      className="max-w-md mx-auto space-y-5 mb-8"
-    >
-      <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl bg-primary/10 mx-auto">
-        <CheckCircle className="h-7 w-7 text-primary" />
-      </div>
-      <div>
-        <h3 className="text-xl font-black text-foreground">Your app is live.</h3>
-        <p className="text-sm text-muted-foreground mt-1">
-          {genJob?.listing_title && `"${genJob.listing_title}" — `}Built, deployed, ready.
-        </p>
-      </div>
-      <a
-        href={deployUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex items-center gap-2 rounded-xl border border-primary/30 bg-primary/5 px-4 py-2.5 text-sm font-semibold text-primary hover:bg-primary/10 transition-colors mx-auto"
-      >
-        <Globe className="h-4 w-4" />
-        {deployUrl.replace("https://", "")}
-        <ExternalLink className="h-3.5 w-3.5" />
-      </a>
-      <div className="flex gap-2 justify-center flex-wrap">
-        {genJob?.listing_id && (
-          <Button
-            size="sm"
-            onClick={() => navigate(`/listing/${genJob.listing_id}/edit`)}
-            className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2"
-          >
-            <Pencil className="h-3.5 w-3.5" /> Edit
-          </Button>
-        )}
-        {genJob?.listing_id && (
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => navigate(`/listing/${genJob.listing_id}`)}
-            className="gap-2"
-          >
-            <ExternalLink className="h-3.5 w-3.5" /> View listing
-          </Button>
-        )}
-        <Button size="sm" variant="ghost" onClick={reset}>
-          Build another
-        </Button>
-      </div>
-      <div className="rounded-xl border border-border overflow-hidden shadow-card mt-4">
-        <div className="bg-muted/50 px-3 py-1.5 flex items-center gap-2 border-b border-border">
-          <div className="flex gap-1">
-            <span className="h-2 w-2 rounded-full bg-foreground/10" />
-            <span className="h-2 w-2 rounded-full bg-foreground/10" />
-            <span className="h-2 w-2 rounded-full bg-foreground/10" />
-          </div>
-          <span className="text-[10px] text-muted-foreground truncate flex-1">{deployUrl}</span>
-        </div>
-        <iframe
-          src={deployUrl}
-          className="w-full h-[300px] bg-background"
-          title="Live preview"
-          sandbox="allow-scripts allow-same-origin"
-        />
-      </div>
-    </motion.div>
-  );
-}
-
-function DeployError({
-  deployPhase,
-  genJob,
-  deployError,
-  handleAutoDeploy,
   handleGenerate,
-  navigate,
 }: {
-  deployPhase: string;
   genJob: any;
-  deployError: string | undefined;
-  handleAutoDeploy: (id: string) => void;
   handleGenerate: (prompt: string) => void;
-  navigate: (path: string) => void;
 }) {
   return (
     <motion.div
@@ -224,26 +136,11 @@ function DeployError({
       <div className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-destructive/10 mx-auto">
         <AlertCircle className="h-5 w-5 text-destructive" />
       </div>
-      <p className="text-sm font-semibold">
-        {deployPhase === "error" ? "Deploy failed" : "Build failed"}
-      </p>
-      <p className="text-xs text-muted-foreground">{deployError || genJob?.error}</p>
-      <div className="flex gap-2 justify-center flex-wrap">
-        {deployPhase === "error" && genJob?.listing_id ? (
-          <>
-            <Button size="sm" variant="outline" onClick={() => handleAutoDeploy(genJob.listing_id!)} className="gap-2">
-              <Rocket className="h-3.5 w-3.5" /> Retry
-            </Button>
-            <Button size="sm" variant="ghost" onClick={() => navigate(`/listing/${genJob.listing_id}`)}>
-              View listing
-            </Button>
-          </>
-        ) : (
-          <Button size="sm" variant="outline" onClick={() => handleGenerate("")} className="gap-2">
-            <Wand2 className="h-3.5 w-3.5" /> Try again
-          </Button>
-        )}
-      </div>
+      <p className="text-sm font-semibold">Build failed</p>
+      <p className="text-xs text-muted-foreground">{genJob?.error}</p>
+      <Button size="sm" variant="outline" onClick={() => handleGenerate("")} className="gap-2">
+        <Wand2 className="h-3.5 w-3.5" /> Try again
+      </Button>
     </motion.div>
   );
 }

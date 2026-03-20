@@ -62,6 +62,76 @@ const PRIORITY_STYLES: Record<string, string> = {
   low: "border-border bg-muted/30",
 };
 
+// Pre-cached example analyses — these load instantly, no API call needed
+const EXAMPLE_ANALYSES: { label: string; emoji: string; data: AnalysisResult }[] = [
+  {
+    label: "Plumbing Co",
+    emoji: "🔧",
+    data: {
+      business_name: "Summit Plumbing",
+      industry: "Home Services",
+      summary: "A residential plumbing company that could automate scheduling, estimates, and customer follow-ups to reduce admin overhead by 60%.",
+      insights: [
+        { title: "Scheduling is a bottleneck", description: "Most plumbing companies lose 5+ hours/week on phone-based booking. Online self-scheduling converts 3× more leads." },
+        { title: "Estimates drive close rate", description: "Instant digital estimates with photo uploads close 40% faster than PDF-over-email." },
+        { title: "Repeat customers are gold", description: "Automated maintenance reminders drive 30% of annual revenue for top home service companies." },
+      ],
+      recommended_builds: [
+        { name: "Online Booking Portal", description: "Let customers pick a time slot, describe their issue with photos, and get instant confirmation.", category: "saas_tool", priority: "high", search_query: "plumbing booking scheduling app" },
+        { name: "Instant Estimate Builder", description: "Drag-and-drop estimate tool with labor rates, parts markup, and one-click customer approval.", category: "saas_tool", priority: "high", search_query: "plumbing estimate quote builder app" },
+        { name: "Customer Follow-Up System", description: "Automated texts for appointment reminders, review requests, and annual maintenance nudges.", category: "ai_app", priority: "medium", search_query: "plumbing customer follow up automation" },
+        { name: "Service Area Landing Page", description: "SEO-optimized page with real-time availability, reviews, and click-to-book for each zip code.", category: "landing_page", priority: "medium", search_query: "plumbing service area landing page" },
+      ],
+      pageTitle: "Summit Plumbing",
+      url: "https://summitplumbing.com",
+    },
+  },
+  {
+    label: "Law Firm",
+    emoji: "⚖️",
+    data: {
+      business_name: "Meridian Legal",
+      industry: "Professional Services — Legal",
+      summary: "A mid-size law firm spending too much on generic practice management software. Custom tools could cut software costs 70% and improve client experience.",
+      insights: [
+        { title: "Client intake is manual", description: "Firms using digital intake forms reduce onboarding time from 45 min to 8 min per new client." },
+        { title: "Case status calls waste time", description: "60% of client calls are 'what's my case status?' — a self-serve portal eliminates them." },
+        { title: "Document management is fragmented", description: "Centralizing documents with role-based access cuts document retrieval time by 80%." },
+      ],
+      recommended_builds: [
+        { name: "Client Intake Portal", description: "Digital forms with e-signatures, conflict checks, and automatic matter creation.", category: "saas_tool", priority: "high", search_query: "law firm client intake portal app" },
+        { name: "Case Status Dashboard", description: "Clients log in to see milestones, upcoming dates, documents, and message their attorney.", category: "saas_tool", priority: "high", search_query: "law firm case tracker client portal" },
+        { name: "AI Document Drafter", description: "Template-based document generation with AI clause suggestions and version history.", category: "ai_app", priority: "medium", search_query: "law firm ai document drafting tool" },
+        { name: "Lead Qualification Chatbot", description: "Website chatbot that qualifies leads, books consultations, and captures case details 24/7.", category: "ai_app", priority: "medium", search_query: "law firm lead chatbot" },
+      ],
+      pageTitle: "Meridian Legal",
+      url: "https://meridianlegal.com",
+    },
+  },
+  {
+    label: "Fitness Studio",
+    emoji: "💪",
+    data: {
+      business_name: "Peak Fitness",
+      industry: "Health & Wellness",
+      summary: "A boutique fitness studio paying $200+/mo for Mindbody when custom tools could handle booking, memberships, and retention for a fraction of the cost.",
+      insights: [
+        { title: "Member churn is preventable", description: "Studios that track attendance patterns and send re-engagement messages reduce churn by 25%." },
+        { title: "Class booking drives revenue", description: "Frictionless mobile booking increases class fill rates by 35% vs. walk-in only." },
+        { title: "Upsell opportunities are missed", description: "Post-class product and package recommendations boost per-member revenue 15%." },
+      ],
+      recommended_builds: [
+        { name: "Member Booking App", description: "Mobile-first class schedule with waitlists, check-in QR codes, and package tracking.", category: "saas_tool", priority: "high", search_query: "fitness studio booking app" },
+        { name: "Membership Dashboard", description: "Track visits, remaining sessions, billing, and freeze/cancel — all self-serve.", category: "saas_tool", priority: "high", search_query: "fitness membership management dashboard" },
+        { name: "Retention Alert System", description: "AI flags at-risk members based on attendance drops and triggers personalized win-back messages.", category: "ai_app", priority: "medium", search_query: "fitness member retention automation" },
+        { name: "Class Results Tracker", description: "Members log workouts, see progress charts, and share achievements — drives community and retention.", category: "utility", priority: "medium", search_query: "fitness workout tracker app" },
+      ],
+      pageTitle: "Peak Fitness",
+      url: "https://peakfitness.com",
+    },
+  },
+];
+
 const PRIORITY_TAG: Record<string, string> = {
   high: "bg-primary/15 text-primary",
   medium: "bg-accent/15 text-accent",
@@ -319,6 +389,38 @@ export function BusinessAnalyzer({ onGenerate }: { onGenerate?: (prompt: string,
             </div>
           </div>
         </form>
+
+        {/* One-tap examples — the key conversion lever */}
+        {!loading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="mt-4 flex flex-col items-center gap-2"
+          >
+            <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground/50 font-medium">
+              or see what we'd build for
+            </p>
+            <div className="flex flex-wrap justify-center gap-2">
+              {EXAMPLE_ANALYSES.map((ex) => (
+                <button
+                  key={ex.label}
+                  type="button"
+                  onClick={() => {
+                    logActivity({ event_type: "example_clicked", event_data: { label: ex.label }, page: "/" });
+                    setResult(ex.data);
+                    saveAnalysis(ex.data);
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-card/50 backdrop-blur-sm px-3.5 py-1.5 text-xs font-medium text-foreground/80 hover:border-primary/40 hover:bg-primary/5 hover:text-primary transition-all duration-200"
+                >
+                  <span>{ex.emoji}</span>
+                  {ex.label}
+                  <ArrowRight className="h-3 w-3 opacity-40" />
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
 
         <AnimatePresence>
           {error && (

@@ -57,6 +57,15 @@ export function MarketingKitPanel({ listingId }: Props) {
   }
 
   const toggle = (key: string) => setExpandedSection(prev => prev === key ? null : key);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  function copyToClipboard(text: string, id: string) {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedId(id);
+      toast.success("Copied to clipboard");
+      setTimeout(() => setCopiedId(null), 2000);
+    });
+  }
 
   if (loading) {
     return (

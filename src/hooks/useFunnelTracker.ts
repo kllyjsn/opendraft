@@ -15,6 +15,7 @@ type FunnelStep =
   | "page_view"
   | "signup_started"
   | "signup_completed"
+  | "login_completed"
   | "listing_viewed"
   | "claim_started"
   | "claim_completed"

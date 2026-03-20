@@ -873,6 +873,106 @@ Requirements:
   }
   if (fixLog.length > 0) console.log("Code quality fixes:", fixLog);
 
+  /* ── Step 2d: Generate marketing & positioning packet ──────── */
+  if (jobId) await updateJob(supabase, jobId, { stage: "generating_marketing" });
+
+  try {
+    const mktSystemPrompt = `You are a top-tier SaaS marketing strategist. Generate a comprehensive internal marketing and positioning packet for this newly built app.
+
+APP DETAILS:
+- Name: "${template.title}"
+- Tagline: "${template.tagline || ""}"
+- Description: ${template.description}
+- Category: ${template.category}
+- Tech Stack: ${(template.tech_stack || []).join(", ")}
+${brandContext?.business_name ? `- Built for: ${brandContext.business_name}` : ""}
+
+Generate a complete marketing kit that helps sell this app internally and externally.`;
+
+    const mktResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          { role: "system", content: mktSystemPrompt },
+          { role: "user", content: "Generate the full marketing packet." },
+        ],
+        tools: [{
+          type: "function",
+          function: {
+            name: "return_marketing_packet",
+            description: "Return structured marketing and positioning content",
+            parameters: {
+              type: "object",
+              properties: {
+                positioning_statement: { type: "string", description: "For [target], who [need], [product] is a [category] that [key benefit]. Unlike [alternatives], we [differentiator]." },
+                internal_sell_sheet: { type: "string", description: "2-3 paragraph executive summary for internal stakeholders: why this app matters, what problem it solves, expected business impact." },
+                buyer_personas: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      name: { type: "string" },
+                      role: { type: "string" },
+                      pain_points: { type: "array", items: { type: "string" } },
+                      how_app_helps: { type: "string" },
+                      objections: { type: "array", items: { type: "string" } },
+                    },
+                    required: ["name", "role", "pain_points", "how_app_helps", "objections"],
+                  },
+                  description: "3 distinct buyer personas"
+                },
+                value_propositions: { type: "array", items: { type: "string" }, description: "5 compelling one-sentence value props" },
+                email_pitch: { type: "string", description: "Cold email pitch (subject + body) under 150 words" },
+                social_media_posts: { type: "array", items: { type: "string" }, description: "3 launch posts: data-driven, story-driven, provocative" },
+                competitive_advantages: { type: "array", items: { type: "string" }, description: "4-5 advantages over DIY or SaaS alternatives" },
+                pricing_justification: { type: "string", description: "2-3 sentences anchoring price against alternatives" },
+                launch_checklist: { type: "array", items: { type: "string" }, description: "8-10 actionable launch steps" },
+              },
+              required: ["positioning_statement", "internal_sell_sheet", "buyer_personas", "value_propositions", "email_pitch", "social_media_posts", "competitive_advantages", "pricing_justification", "launch_checklist"],
+              additionalProperties: false,
+            },
+          },
+        }],
+        tool_choice: { type: "function", function: { name: "return_marketing_packet" } },
+      }),
+    });
+
+    if (mktResp.ok) {
+      const mktData = await mktResp.json();
+      const mktToolCall = mktData.choices?.[0]?.message?.tool_calls?.[0];
+      if (mktToolCall) {
+        const mkt = JSON.parse(mktToolCall.function.arguments || "{}");
+        const md: string[] = [];
+        md.push(`# Marketing & Positioning Kit — ${template.title}\n\n> ${template.tagline || ""}\n\n---\n`);
+        if (mkt.positioning_statement) md.push(`## Positioning Statement\n\n${mkt.positioning_statement}\n`);
+        if (mkt.internal_sell_sheet) md.push(`## Internal Sell Sheet\n\n${mkt.internal_sell_sheet}\n`);
+        if (mkt.value_propositions?.length) md.push(`## Value Propositions\n\n${mkt.value_propositions.map((v: string, i: number) => `${i + 1}. ${v}`).join("\n")}\n`);
+        if (mkt.buyer_personas?.length) {
+          md.push(`## Buyer Personas\n`);
+          for (const p of mkt.buyer_personas) {
+            md.push(`### ${p.name} — ${p.role}\n\n**Pain Points:**\n${p.pain_points.map((pp: string) => `- ${pp}`).join("\n")}\n\n**How This App Helps:** ${p.how_app_helps}\n\n**Objection Handling:**\n${p.objections.map((o: string) => `- ${o}`).join("\n")}\n`);
+          }
+        }
+        if (mkt.competitive_advantages?.length) md.push(`## Competitive Advantages\n\n${mkt.competitive_advantages.map((a: string) => `- ${a}`).join("\n")}\n`);
+        if (mkt.pricing_justification) md.push(`## Pricing Justification\n\n${mkt.pricing_justification}\n`);
+        if (mkt.email_pitch) md.push(`## Ready-to-Send Email Pitch\n\n\`\`\`\n${mkt.email_pitch}\n\`\`\`\n`);
+        if (mkt.social_media_posts?.length) md.push(`## Social Media Launch Posts\n\n${mkt.social_media_posts.map((s: string, i: number) => `**Post ${i + 1}:**\n> ${s}`).join("\n\n")}\n`);
+        if (mkt.launch_checklist?.length) md.push(`## Launch Checklist\n\n${mkt.launch_checklist.map((s: string) => `- [ ] ${s}`).join("\n")}\n`);
+        md.push(`\n---\n\n*Generated by [OpenDraft](https://opendraft.lovable.app) Marketing Engine*\n`);
+
+        generatedFiles.push({ path: "MARKETING.md", content: md.join("\n") });
+        generatedFiles.push({ path: "marketing-packet.json", content: JSON.stringify(mkt, null, 2) });
+        console.log(`Marketing packet generated for "${template.title}" — ${mkt.buyer_personas?.length || 0} personas, ${mkt.social_media_posts?.length || 0} social posts`);
+      }
+    } else {
+      console.error("Marketing packet generation failed:", mktResp.status);
+    }
+  } catch (mktErr) {
+    console.error("Marketing packet error (non-fatal):", mktErr);
+  }
+
   /* ── Step 3: Build ZIP + Screenshots IN PARALLEL ──────────── */
   if (jobId) await updateJob(supabase, jobId, { stage: "packaging" });
 

@@ -222,6 +222,8 @@ export default function Dashboard() {
           </div>
         )}
 
+        {activeTab === "builds" && <ActiveBuilds />}
+
 
         {activeTab === "listings" && (
           <>

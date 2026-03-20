@@ -1,6 +1,6 @@
 /**
  * useGenerationJob — extracted from Index.tsx
- * Manages the full generate → deploy lifecycle.
+ * Manages the generate lifecycle (no auto-deploy).
  */
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
@@ -16,23 +16,18 @@ export interface GenJob {
   error: string | null;
 }
 
-type DeployPhase = "idle" | "deploying" | "polling" | "live" | "error";
-
 export const STAGE_MAP: Record<string, { label: string; pct: number }> = {
-  queued: { label: "Queuing your build…", pct: 3 },
-  researching: { label: "Researching market demand…", pct: 8 },
-  adapting_brand: { label: "Adapting to brand design system…", pct: 12 },
-  generating_code: { label: "Generating source code…", pct: 18 },
-  validating: { label: "Validating code quality…", pct: 32 },
-  generating_marketing: { label: "Creating marketing & positioning packet…", pct: 40 },
-  generating_screenshots: { label: "Creating screenshots…", pct: 48 },
-  packaging: { label: "Packaging app + marketing kit…", pct: 55 },
-  uploading: { label: "Uploading files…", pct: 62 },
-  creating_listing: { label: "Creating your listing…", pct: 68 },
-  done: { label: "Build complete!", pct: 72 },
-  deploying: { label: "Deploying to OpenDraft Cloud…", pct: 78 },
-  deploy_building: { label: "Cloud build in progress…", pct: 88 },
-  deploy_live: { label: "Your app is live! 🎉", pct: 100 },
+  queued: { label: "Queuing your build…", pct: 5 },
+  researching: { label: "Researching market demand…", pct: 12 },
+  adapting_brand: { label: "Adapting to brand design system…", pct: 20 },
+  generating_code: { label: "Generating source code…", pct: 30 },
+  validating: { label: "Validating code quality…", pct: 45 },
+  generating_marketing: { label: "Creating marketing & positioning…", pct: 55 },
+  generating_screenshots: { label: "Creating screenshots…", pct: 65 },
+  packaging: { label: "Packaging app + marketing kit…", pct: 75 },
+  uploading: { label: "Uploading files…", pct: 85 },
+  creating_listing: { label: "Creating your listing…", pct: 92 },
+  done: { label: "Build complete! 🎉", pct: 100 },
   error: { label: "Something went wrong", pct: 0 },
 };
 
@@ -41,70 +36,16 @@ export function useGenerationJob() {
   const navigate = useNavigate();
   const [generating, setGenerating] = useState(false);
   const [genJob, setGenJob] = useState<GenJob | null>(null);
-  const [deployPhase, setDeployPhase] = useState<DeployPhase>("idle");
-  const [deployUrl, setDeployUrl] = useState<string | null>(null);
-  const [deployError, setDeployError] = useState<string | null>(null);
-  const [deployId, setDeployId] = useState<string | null>(null);
 
-  // Auto-deploy when generation completes
+  // Navigate to listing detail when generation completes
   useEffect(() => {
-    if (genJob?.status === "complete" && genJob.listing_id && deployPhase === "idle") {
-      handleAutoDeploy(genJob.listing_id);
+    if (genJob?.status === "complete" && genJob.listing_id) {
+      const timer = setTimeout(() => {
+        navigate(`/listing/${genJob.listing_id}`);
+      }, 1500);
+      return () => clearTimeout(timer);
     }
-  }, [genJob?.status, genJob?.listing_id]);
-
-  async function handleAutoDeploy(listingId: string) {
-    setDeployPhase("deploying");
-    setDeployError(null);
-    try {
-      const { data, error } = await supabase.functions.invoke("deploy-to-opendraft", {
-        body: { listingId },
-      });
-      if (error) throw new Error(error.message);
-      if (data?.error) throw new Error(data.error);
-      if (data?.siteUrl && data?.deployId) {
-        setDeployId(data.deployId);
-        setDeployPhase("polling");
-        pollDeployStatus(data.deployId, data.siteUrl);
-      } else {
-        throw new Error("Deploy returned no URL");
-      }
-    } catch (err) {
-      console.error("Auto-deploy failed:", err);
-      setDeployError(err instanceof Error ? err.message : "Deploy failed");
-      setDeployPhase("error");
-    }
-  }
-
-  async function pollDeployStatus(depId: string, siteUrl: string) {
-    let attempts = 0;
-    const maxAttempts = 60;
-    const interval = setInterval(async () => {
-      attempts++;
-      try {
-        const { data } = await supabase.functions.invoke("check-vercel-deploy", {
-          body: { deployId: depId, usePlatformToken: true },
-        });
-        if (data?.state === "ready") {
-          clearInterval(interval);
-          setDeployUrl(data.deployUrl || siteUrl);
-          setDeployPhase("live");
-          if (genJob?.listing_id) {
-            supabase.from("listings").update({ demo_url: data.deployUrl || siteUrl }).eq("id", genJob.listing_id).then(() => {});
-          }
-        } else if (data?.state === "error" || data?.state === "canceled") {
-          clearInterval(interval);
-          setDeployError(data?.errorMessage || "Deploy failed during build");
-          setDeployPhase("error");
-        }
-      } catch { /* keep polling */ }
-      if (attempts >= maxAttempts) {
-        clearInterval(interval);
-        setDeployUrl(siteUrl);
-        setDeployPhase("live");
-      }
-    }, 5000);
-  }
+  }, [genJob?.status, genJob?.listing_id, navigate]);
 
   // Subscribe to generation job updates
   useEffect(() => {
@@ -150,10 +91,6 @@ export function useGenerationJob() {
     if (!prompt.trim()) return;
     setGenerating(true);
     setGenJob(null);
-    setDeployPhase("idle");
-    setDeployUrl(null);
-    setDeployError(null);
-    setDeployId(null);
 
     try {
       const { data: jobRow, error: jobErr } = await supabase
@@ -180,35 +117,23 @@ export function useGenerationJob() {
   }, [user, navigate]);
 
   function getCurrentStage(): { label: string; pct: number } {
-    if (deployPhase === "live") return STAGE_MAP.deploy_live;
-    if (deployPhase === "polling") return STAGE_MAP.deploy_building;
-    if (deployPhase === "deploying") return STAGE_MAP.deploying;
-    if (deployPhase === "error") return STAGE_MAP.error;
     if (genJob?.status === "complete") return STAGE_MAP.done;
     return genJob ? (STAGE_MAP[genJob.stage] || STAGE_MAP.queued) : STAGE_MAP.queued;
   }
 
   const currentStage = getCurrentStage();
-  const isInProgress = generating || (genJob != null && genJob.status !== "complete" && genJob.status !== "failed") || deployPhase === "deploying" || deployPhase === "polling";
+  const isInProgress = generating || (genJob != null && genJob.status !== "complete" && genJob.status !== "failed");
 
   const reset = useCallback(() => {
     setGenJob(null);
-    setDeployPhase("idle");
-    setDeployUrl(null);
-    setDeployId(null);
-    setDeployError(null);
   }, []);
 
   return {
     generating,
     genJob,
-    deployPhase,
-    deployUrl,
-    deployError,
     currentStage,
     isInProgress,
     handleGenerate,
-    handleAutoDeploy,
     reset,
   };
 }

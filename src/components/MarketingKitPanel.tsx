@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, Mail, MessageSquare, Target, Megaphone, TrendingUp, ChevronDown, ChevronUp } from "lucide-react";
+import { Users, Mail, MessageSquare, Target, Megaphone, TrendingUp, ChevronDown, ChevronUp, Copy, Check } from "lucide-react";
+import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface BuyerPersona {

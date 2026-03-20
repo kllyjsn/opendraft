@@ -25,7 +25,7 @@ const propositions = [
 
 export function ValueProps() {
   return (
-    <section className="py-24 md:py-40 relative">
+    <section className="py-16 md:py-28 relative">
       <div className="container mx-auto px-4 max-w-4xl">
         {propositions.map((prop, i) => (
           <motion.div

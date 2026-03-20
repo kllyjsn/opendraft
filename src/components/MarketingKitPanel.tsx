@@ -201,10 +201,25 @@ export function MarketingKitPanel({ listingId }: Props) {
         <div className="space-y-2">
           {packet.social_media_posts.map((p, i) => (
             <div key={i} className="rounded-xl border border-border/40 bg-muted/30 p-3">
-              {p.platform && (
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">{p.platform}</p>
-              )}
-              <p className="text-xs text-muted-foreground whitespace-pre-wrap">{p.content}</p>
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1">
+                  {p.platform && (
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">{p.platform}</p>
+                  )}
+                  <p className="text-xs text-muted-foreground whitespace-pre-wrap">{p.content}</p>
+                </div>
+                <button
+                  onClick={() => copyToClipboard(p.content ?? "", `social-${i}`)}
+                  className="shrink-0 p-1 rounded hover:bg-muted transition-colors"
+                  title="Copy to clipboard"
+                >
+                  {copiedId === `social-${i}` ? (
+                    <Check className="h-3 w-3 text-primary" />
+                  ) : (
+                    <Copy className="h-3 w-3 text-muted-foreground" />
+                  )}
+                </button>
+              </div>
             </div>
           ))}
         </div>

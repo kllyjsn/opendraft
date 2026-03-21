@@ -118,6 +118,40 @@ export default {
   </body>
 </html>
 `,
+  // Backend scaffolding — Supabase client setup for data persistence
+  "src/lib/supabase.ts": `import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+
+export const supabase = supabaseUrl && supabaseAnonKey
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : null;
+
+/** Helper to check if backend is configured */
+export const hasBackend = () => !!supabase;
+`,
+  "src/hooks/useLocalStorage.ts": `import { useState, useEffect } from 'react';
+
+/** Persist state to localStorage with automatic JSON serialization.
+ *  Works as a drop-in replacement for useState — if Supabase is configured,
+ *  you can swap this for a database-backed hook later. */
+export function useLocalStorage<T>(key: string, initialValue: T) {
+  const [value, setValue] = useState<T>(() => {
+    try {
+      const item = localStorage.getItem(key);
+      return item ? JSON.parse(item) : initialValue;
+    } catch { return initialValue; }
+  });
+
+  useEffect(() => {
+    try { localStorage.setItem(key, JSON.stringify(value)); }
+    catch { /* quota exceeded */ }
+  }, [key, value]);
+
+  return [value, setValue] as const;
+}
+`,
   "src/main.tsx": `import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';

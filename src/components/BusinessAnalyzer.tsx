@@ -520,6 +520,9 @@ export function BusinessAnalyzer({ onGenerate, onResultsChange }: {
 
   // ── Results ──
   const totalSaasSavings = (result.saas_replacements || []).reduce((sum, r) => sum + r.monthly_cost, 0);
+  const heroBuild = result.recommended_builds[0];
+  const restBuilds = result.recommended_builds.slice(1);
+  const HeroIcon = CATEGORY_ICON[heroBuild?.category] || Sparkles;
 
   return (
     <motion.div
@@ -528,6 +531,32 @@ export function BusinessAnalyzer({ onGenerate, onResultsChange }: {
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       className="max-w-3xl mx-auto w-full text-left"
     >
+      {/* ── Progress Stepper ── */}
+      <div className="flex items-center justify-center gap-1 mb-6">
+        {[
+          { label: "Analyze", done: true },
+          { label: "Pick", done: false, active: true },
+          { label: "Deploy", done: false },
+        ].map((step, i) => (
+          <div key={step.label} className="flex items-center gap-1">
+            {i > 0 && <div className={`w-6 sm:w-10 h-px ${step.done || step.active ? "bg-primary/40" : "bg-border/60"}`} />}
+            <div className="flex items-center gap-1.5">
+              <div className={`h-5 w-5 rounded-full flex items-center justify-center text-[9px] font-bold ${
+                step.done ? "bg-primary text-primary-foreground" :
+                step.active ? "border-2 border-primary text-primary" :
+                "border border-border text-muted-foreground/50"
+              }`}>
+                {step.done ? <Check className="h-3 w-3" /> : i + 1}
+              </div>
+              <span className={`text-[10px] font-semibold ${
+                step.done ? "text-primary" :
+                step.active ? "text-foreground" :
+                "text-muted-foreground/50"
+              }`}>{step.label}</span>
+            </div>
+          </div>
+        ))}
+      </div>
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div>

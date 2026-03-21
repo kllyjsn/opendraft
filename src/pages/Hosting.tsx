@@ -164,8 +164,8 @@ export default function Hosting() {
                           </h3>
                           <span className={cn(
                             "text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full",
-                            site.status === "healthy" ? "bg-emerald-500/10 text-emerald-500" :
-                            site.status === "warning" ? "bg-amber-500/10 text-amber-500" :
+                            site.status === "healthy" ? "bg-primary/10 text-primary" :
+                            site.status === "warning" ? "bg-accent/10 text-accent" :
                             "bg-muted text-muted-foreground"
                           )}>
                             {config.label}

@@ -511,6 +511,8 @@ export function BusinessAnalyzer({ onGenerate }: { onGenerate?: (prompt: string,
   }
 
   // ── Results ──
+  const totalSaasSavings = (result.saas_replacements || []).reduce((sum, r) => sum + r.monthly_cost, 0);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -525,12 +527,18 @@ export function BusinessAnalyzer({ onGenerate }: { onGenerate?: (prompt: string,
             initial={{ opacity: 0, x: -8 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1 }}
-            className="flex items-center gap-2 mb-1"
+            className="flex items-center gap-2 mb-1 flex-wrap"
           >
             <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 border border-primary/20 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-primary">
               <Sparkles className="h-3 w-3" />
               {result.industry}
             </span>
+            {totalSaasSavings > 0 && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-green-500/10 border border-green-500/20 px-2.5 py-1 text-[10px] font-bold text-green-600 dark:text-green-400">
+                <DollarSign className="h-3 w-3" />
+                ${totalSaasSavings}/mo saveable
+              </span>
+            )}
           </motion.div>
           <h2 className="text-xl md:text-2xl font-black tracking-tight">{result.business_name}</h2>
           <p className="text-xs text-muted-foreground mt-1 max-w-lg">{result.summary}</p>
@@ -547,12 +555,56 @@ export function BusinessAnalyzer({ onGenerate }: { onGenerate?: (prompt: string,
         </Button>
       </div>
 
+      {/* ── Brand Identity Preview ── */}
+      {result.brand_identity && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="rounded-2xl border border-border/40 bg-card/60 p-4 mb-6 backdrop-blur-sm"
+        >
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-3 flex items-center gap-2">
+            <Palette className="h-3 w-3" />
+            Your brand identity
+          </p>
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex items-center gap-1.5">
+              {[result.brand_identity.primary_color, result.brand_identity.secondary_color, result.brand_identity.accent_color].map((color, i) => (
+                <div
+                  key={i}
+                  className="h-8 w-8 rounded-lg border border-border/50 shadow-sm"
+                  style={{ backgroundColor: color }}
+                  title={color}
+                />
+              ))}
+            </div>
+            <div className="flex flex-wrap gap-2 text-[10px]">
+              <span className="rounded-full border border-border/50 bg-muted/40 px-2.5 py-1 font-medium capitalize">
+                {result.brand_identity.design_mood}
+              </span>
+              <span className="rounded-full border border-border/50 bg-muted/40 px-2.5 py-1 font-medium capitalize">
+                {result.brand_identity.typography_style.replace(/-/g, " ")}
+              </span>
+              <span className="rounded-full border border-border/50 bg-muted/40 px-2.5 py-1 font-medium capitalize">
+                {result.brand_identity.border_radius} corners
+              </span>
+              <span className="rounded-full border border-border/50 bg-muted/40 px-2.5 py-1 font-medium capitalize">
+                {result.brand_identity.background_style} theme
+              </span>
+            </div>
+          </div>
+          <p className="text-[10px] text-muted-foreground/70 mt-2 italic">
+            {result.brand_identity.visual_references}
+          </p>
+        </motion.div>
+      )}
+
       {/* Insights Strip */}
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.15 }}
-        className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-8"
+        className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-6"
       >
         {result.insights.map((insight, i) => (
           <motion.div
@@ -573,11 +625,120 @@ export function BusinessAnalyzer({ onGenerate }: { onGenerate?: (prompt: string,
         ))}
       </motion.div>
 
+      {/* ── SaaS Savings Calculator ── */}
+      {result.saas_replacements && result.saas_replacements.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
+          className="rounded-2xl border border-green-500/20 bg-green-500/5 p-4 mb-6"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-green-600 dark:text-green-400 flex items-center gap-2">
+              <Replace className="h-3 w-3" />
+              SaaS you can replace
+            </p>
+            <span className="text-sm font-black text-green-600 dark:text-green-400">
+              ${totalSaasSavings}/mo → $0
+            </span>
+          </div>
+          <div className="space-y-2">
+            {result.saas_replacements.map((replacement, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 + i * 0.05 }}
+                className="flex items-center justify-between rounded-xl bg-background/60 border border-border/30 px-3 py-2"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-xs font-bold truncate">{replacement.tool_name}</span>
+                    <span className="text-[10px] text-muted-foreground truncate">→ {replacement.replacement_app}</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full ${
+                    replacement.difficulty === "easy" ? "bg-green-500/15 text-green-600 dark:text-green-400" :
+                    replacement.difficulty === "moderate" ? "bg-amber-500/15 text-amber-600 dark:text-amber-400" :
+                    "bg-red-500/15 text-red-600 dark:text-red-400"
+                  }`}>
+                    {replacement.difficulty}
+                  </span>
+                  <span className="text-xs font-bold text-muted-foreground line-through">${replacement.monthly_cost}/mo</span>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+          <p className="text-[10px] text-green-600/70 dark:text-green-400/70 mt-3 text-center font-medium">
+            Annual savings: <span className="font-black">${totalSaasSavings * 12}/year</span> by owning your tools
+          </p>
+        </motion.div>
+      )}
+
+      {/* ── Quick Wins ── */}
+      {result.quick_wins && result.quick_wins.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="mb-6"
+        >
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-accent mb-3 flex items-center gap-2">
+            <Clock className="h-3 w-3" />
+            Quick wins — build in under an hour
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            {result.quick_wins.map((win, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.35 + i * 0.05 }}
+                className="rounded-xl border border-accent/20 bg-accent/5 p-3"
+              >
+                <div className="flex items-center gap-1.5 mb-1">
+                  <Zap className="h-3 w-3 text-accent" />
+                  <p className="text-xs font-bold">{win.name}</p>
+                </div>
+                <p className="text-[10px] text-muted-foreground leading-snug mb-2">{win.impact}</p>
+                <span className="inline-flex items-center gap-1 text-[9px] font-bold text-accent/80 bg-accent/10 rounded-full px-2 py-0.5">
+                  <Clock className="h-2.5 w-2.5" />
+                  {win.time_to_build}
+                </span>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+      )}
+
+      {/* ── Competitive Edge ── */}
+      {result.competitive_edge && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35 }}
+          className="rounded-2xl border border-primary/20 bg-primary/5 p-4 mb-6"
+        >
+          <div className="flex items-start gap-3">
+            <div className="rounded-xl bg-primary/10 p-2 shrink-0">
+              <Trophy className="h-4 w-4 text-primary" />
+            </div>
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-1">
+                Competitive edge
+              </p>
+              <p className="text-xs text-foreground/80 leading-relaxed">{result.competitive_edge}</p>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
       {/* Recommended Builds */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.3 }}
+        transition={{ delay: 0.4 }}
       >
         <p className="text-xs font-black uppercase tracking-[0.2em] text-primary mb-4 flex items-center gap-2">
           <Rocket className="h-3.5 w-3.5" />
@@ -591,7 +752,7 @@ export function BusinessAnalyzer({ onGenerate }: { onGenerate?: (prompt: string,
                 key={i}
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.35 + i * 0.08, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ delay: 0.45 + i * 0.08, ease: [0.16, 1, 0.3, 1] }}
                 className={`group relative rounded-2xl border p-4 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-0.5 ${PRIORITY_STYLES[build.priority]}`}
               >
                 <div className="flex items-start gap-3 mb-2">

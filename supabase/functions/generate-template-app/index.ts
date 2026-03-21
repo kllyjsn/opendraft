@@ -25,6 +25,7 @@ const BASE_FILES: Record<string, string> = {
         "lucide-react": "^0.462.0",
         "framer-motion": "^12.0.0",
         zod: "^3.23.0",
+        "@supabase/supabase-js": "^2.97.0",
       },
       devDependencies: {
         "@types/node": "^22.0.0",
@@ -118,6 +119,40 @@ export default {
   </body>
 </html>
 `,
+  // Backend scaffolding — Supabase client setup for data persistence
+  "src/lib/supabase.ts": `import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+
+export const supabase = supabaseUrl && supabaseAnonKey
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : null;
+
+/** Helper to check if backend is configured */
+export const hasBackend = () => !!supabase;
+`,
+  "src/hooks/useLocalStorage.ts": `import { useState, useEffect } from 'react';
+
+/** Persist state to localStorage with automatic JSON serialization.
+ *  Works as a drop-in replacement for useState — if Supabase is configured,
+ *  you can swap this for a database-backed hook later. */
+export function useLocalStorage<T>(key: string, initialValue: T) {
+  const [value, setValue] = useState<T>(() => {
+    try {
+      const item = localStorage.getItem(key);
+      return item ? JSON.parse(item) : initialValue;
+    } catch { return initialValue; }
+  });
+
+  useEffect(() => {
+    try { localStorage.setItem(key, JSON.stringify(value)); }
+    catch { /* quota exceeded */ }
+  }, [key, value]);
+
+  return [value, setValue] as const;
+}
+`,
   "src/main.tsx": `import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
@@ -197,9 +232,13 @@ This template was automatically scanned by OpenDraft's security scanner and assi
 # Copy this file to .env and fill in your values
 # NEVER commit .env to version control
 
-# API keys (if needed)
+# Supabase (for data persistence, auth, file storage)
+# Sign up at https://supabase.com or use OpenDraft Managed Hosting
+# VITE_SUPABASE_URL=https://your-project.supabase.co
+# VITE_SUPABASE_ANON_KEY=your_anon_key_here
+
+# Other API keys (if needed)
 # VITE_API_URL=https://your-api.example.com
-# VITE_PUBLIC_KEY=your_publishable_key_here
 `,
   /* ── Deploy-ready configs ───────────────────────────────── */
   "netlify.toml": `[build]
@@ -535,6 +574,13 @@ const contactSchema = z.object({
 - src/components/ — 4-8 additional feature-specific components
 - src/data/sample-data.ts — Realistic mock data
 
+## BACKEND-READY ARCHITECTURE
+The base scaffold includes src/lib/supabase.ts (Supabase client) and src/hooks/useLocalStorage.ts (offline-first state).
+- Use useLocalStorage for any persistent state (form data, settings, preferences) — this works immediately without a database
+- Import { supabase, hasBackend } from '@/lib/supabase' when you need database features
+- Forms should collect data and store it locally — when Supabase is configured, it auto-syncs
+- This makes the app functional immediately AND upgradeable to full backend later
+
 ## ANIMATIONS COOKBOOK (use these patterns)
 \`\`\`tsx
 // Stagger children
@@ -734,8 +780,9 @@ Requirements:
     });
   }
 
-  // Inject brand-aware CSS and Tailwind config overrides
+  // Inject brand-aware CSS, Tailwind config, and business identity
   if (brandContext) {
+    // 1. CSS custom properties
     const brandCss = generatedFiles.find(f => f.path === "src/index.css");
     const brandVars = `
   --brand-primary: ${brandContext.primary_color};
@@ -744,13 +791,40 @@ Requirements:
     if (brandCss) {
       brandCss.content = brandCss.content.replace(':root {', `:root {${brandVars}`);
     }
-    // Ensure the tailwind config extends with brand colors
+    // 2. Tailwind brand colors
     const twConfig = generatedFiles.find(f => f.path === "tailwind.config.js");
     if (twConfig && !twConfig.content.includes("brand")) {
       twConfig.content = twConfig.content.replace(
         "extend: {",
         `extend: {\n      colors: {\n        brand: { primary: '${brandContext.primary_color}', secondary: '${brandContext.secondary_color}', accent: '${brandContext.accent_color}' },\n      },`
       );
+    }
+    // 3. Inject business name into HTML title
+    const indexHtml = generatedFiles.find(f => f.path === "index.html");
+    if (indexHtml && brandContext.business_name) {
+      indexHtml.content = indexHtml.content.replace(/<title>[^<]*<\/title>/, `<title>${brandContext.business_name}</title>`);
+    }
+    // 4. Add brand config file for runtime access
+    if (brandContext.business_name) {
+      generatedFiles.push({
+        path: "src/config/brand.ts",
+        content: `/** Auto-generated brand configuration from ${brandContext.business_name}'s website */
+export const BRAND = {
+  name: "${brandContext.business_name.replace(/"/g, '\\"')}",
+  colors: {
+    primary: "${brandContext.primary_color}",
+    secondary: "${brandContext.secondary_color}",
+    accent: "${brandContext.accent_color}",
+  },
+  style: {
+    background: "${brandContext.background_style}",
+    mood: "${brandContext.design_mood}",
+    typography: "${brandContext.typography_style}",
+    borderRadius: "${brandContext.border_radius}",
+  },
+} as const;
+`,
+      });
     }
   }
 

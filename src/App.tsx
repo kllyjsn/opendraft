@@ -66,6 +66,7 @@ const GremlinsAtWork = lazy(() => import("./pages/GremlinsAtWork"));
 const AppsVertical = lazy(() => import("./pages/AppsVertical"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Ideas = lazy(() => import("./pages/Ideas"));
+const Hosting = lazy(() => import("./pages/Hosting"));
 
 
 import { SignupPrompt } from "./components/SignupPrompt";
@@ -148,6 +149,7 @@ const App = () => (
             <Route path="/gremlins" element={<GremlinsAtWork />} />
             <Route path="/apps/:vertical" element={<AppsVertical />} />
             <Route path="/ideas" element={<Ideas />} />
+            <Route path="/hosting" element={<Hosting />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>

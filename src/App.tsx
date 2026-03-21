@@ -149,6 +149,7 @@ const App = () => (
             <Route path="/gremlins" element={<GremlinsAtWork />} />
             <Route path="/apps/:vertical" element={<AppsVertical />} />
             <Route path="/ideas" element={<Ideas />} />
+            <Route path="/hosting" element={<Hosting />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>

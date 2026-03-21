@@ -768,8 +768,9 @@ Requirements:
     });
   }
 
-  // Inject brand-aware CSS and Tailwind config overrides
+  // Inject brand-aware CSS, Tailwind config, and business identity
   if (brandContext) {
+    // 1. CSS custom properties
     const brandCss = generatedFiles.find(f => f.path === "src/index.css");
     const brandVars = `
   --brand-primary: ${brandContext.primary_color};
@@ -778,13 +779,40 @@ Requirements:
     if (brandCss) {
       brandCss.content = brandCss.content.replace(':root {', `:root {${brandVars}`);
     }
-    // Ensure the tailwind config extends with brand colors
+    // 2. Tailwind brand colors
     const twConfig = generatedFiles.find(f => f.path === "tailwind.config.js");
     if (twConfig && !twConfig.content.includes("brand")) {
       twConfig.content = twConfig.content.replace(
         "extend: {",
         `extend: {\n      colors: {\n        brand: { primary: '${brandContext.primary_color}', secondary: '${brandContext.secondary_color}', accent: '${brandContext.accent_color}' },\n      },`
       );
+    }
+    // 3. Inject business name into HTML title
+    const indexHtml = generatedFiles.find(f => f.path === "index.html");
+    if (indexHtml && brandContext.business_name) {
+      indexHtml.content = indexHtml.content.replace(/<title>[^<]*<\/title>/, `<title>${brandContext.business_name}</title>`);
+    }
+    // 4. Add brand config file for runtime access
+    if (brandContext.business_name) {
+      generatedFiles.push({
+        path: "src/config/brand.ts",
+        content: `/** Auto-generated brand configuration from ${brandContext.business_name}'s website */
+export const BRAND = {
+  name: "${brandContext.business_name.replace(/"/g, '\\"')}",
+  colors: {
+    primary: "${brandContext.primary_color}",
+    secondary: "${brandContext.secondary_color}",
+    accent: "${brandContext.accent_color}",
+  },
+  style: {
+    background: "${brandContext.background_style}",
+    mood: "${brandContext.design_mood}",
+    typography: "${brandContext.typography_style}",
+    borderRadius: "${brandContext.border_radius}",
+  },
+} as const;
+`,
+      });
     }
   }
 

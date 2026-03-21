@@ -734,11 +734,16 @@ const contactSchema = z.object({
 - src/data/sample-data.ts — Realistic mock data
 
 ## BACKEND-READY ARCHITECTURE
-The base scaffold includes src/lib/supabase.ts (Supabase client) and src/hooks/useLocalStorage.ts (offline-first state).
-- Use useLocalStorage for any persistent state (form data, settings, preferences) — this works immediately without a database
-- Import { supabase, hasBackend } from '@/lib/supabase' when you need database features
-- Forms should collect data and store it locally — when Supabase is configured, it auto-syncs
-- This makes the app functional immediately AND upgradeable to full backend later
+The base scaffold supports THREE database backends out of the box:
+1. **Supabase** (PostgreSQL) — src/lib/supabase.ts — full-featured with auth, storage, realtime
+2. **MongoDB Atlas** — src/lib/mongodb.ts — document database via Data API (REST, no driver needed)
+3. **localStorage** — src/hooks/useLocalStorage.ts — offline-first fallback, zero config
+
+A unified abstraction layer in src/lib/database.ts auto-detects the configured backend:
+- Import { db, getBackendType } from '@/lib/database' for backend-agnostic CRUD
+- Use db.getAll<T>('collection'), db.insert('collection', record), db.delete('collection', id)
+- Use useLocalStorage for simple key-value persistence that works immediately
+- The app is functional immediately AND upgradeable to either Supabase or MongoDB later
 
 ## ANIMATIONS COOKBOOK (use these patterns)
 \`\`\`tsx

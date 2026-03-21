@@ -11,6 +11,7 @@ import { useGenerationJob } from "@/hooks/useGenerationJob";
 import { AlertCircle, Rocket, Wand2, Code, FileText, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmailCapture } from "@/components/EmailCapture";
+import { HomepageSignupNudge } from "@/components/HomepageSignupNudge";
 import { AnalysisShowcase } from "@/components/AnalysisShowcase";
 import { ValueProps } from "@/components/ValueProps";
 import { HeroBeams } from "@/components/HeroBeams";
@@ -314,6 +315,9 @@ export default function Index() {
 
       {/* ── SHOWCASE ── */}
       <AnalysisShowcase />
+
+      {/* ── SIGNUP NUDGE — signed out only ── */}
+      {!user && <HomepageSignupNudge />}
 
       {/* ── EMAIL CAPTURE — signed out only ── */}
       {!user && <EmailCapture />}

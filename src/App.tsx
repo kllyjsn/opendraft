@@ -64,6 +64,7 @@ const AdminOutreach = lazy(() => import("./pages/AdminOutreach"));
 const AdminRevenue = lazy(() => import("./pages/AdminRevenue"));
 const GremlinsAtWork = lazy(() => import("./pages/GremlinsAtWork"));
 const AppsVertical = lazy(() => import("./pages/AppsVertical"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Ideas = lazy(() => import("./pages/Ideas"));
 
 
@@ -104,6 +105,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/listing/:id" element={<ListingDetail />} />
             <Route path="/sell" element={<Sell />} />
             <Route path="/listing/:id/edit" element={<EditListing />} />

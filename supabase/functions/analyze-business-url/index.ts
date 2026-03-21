@@ -106,6 +106,17 @@ function buildFallbackAnalysis(formattedUrl: string, domain: string) {
         search_query: `${domain} roi calculator landing page`,
       },
     ],
+    saas_replacements: [
+      { tool_name: "Calendly", monthly_cost: 12, replacement_app: "Custom Booking Portal", difficulty: "easy" as const },
+      { tool_name: "HubSpot CRM", monthly_cost: 45, replacement_app: "Lightweight CRM Dashboard", difficulty: "moderate" as const },
+      { tool_name: "Zendesk", monthly_cost: 69, replacement_app: "Customer Support Portal", difficulty: "moderate" as const },
+    ],
+    quick_wins: [
+      { name: "Contact Form with Auto-Reply", impact: "Capture leads 24/7 with instant confirmation emails", time_to_build: "15 min" },
+      { name: "FAQ Knowledge Base", impact: "Reduce support tickets by 40% with self-serve answers", time_to_build: "30 min" },
+      { name: "Team Status Dashboard", impact: "Real-time visibility into project progress for stakeholders", time_to_build: "45 min" },
+    ],
+    competitive_edge: `Top performers in ${businessName}'s space are building proprietary tools that give them a 2-3x speed advantage in customer onboarding and lead conversion. By owning your software stack instead of renting generic SaaS, you control your competitive moat and eliminate per-seat pricing that scales against you.`,
     pageTitle: businessName,
     url: formattedUrl,
     analysis_source: "fallback",
@@ -149,7 +160,7 @@ const TOOL_SCHEMA = {
   type: "function",
   function: {
     name: "suggest_apps",
-    description: "Return business analysis with app recommendations and brand identity",
+    description: "Return business analysis with app recommendations, brand identity, SaaS replacement estimates, quick wins, and competitive intel",
     parameters: {
       type: "object",
       properties: {
@@ -201,8 +212,41 @@ const TOOL_SCHEMA = {
             additionalProperties: false,
           },
         },
+        saas_replacements: {
+          type: "array",
+          description: "2-4 SaaS tools this business likely pays for that could be replaced with owned software. Include estimated monthly cost per tool.",
+          items: {
+            type: "object",
+            properties: {
+              tool_name: { type: "string", description: "Name of the SaaS tool, e.g. 'Calendly', 'HubSpot', 'Zendesk'" },
+              monthly_cost: { type: "number", description: "Estimated monthly cost in USD" },
+              replacement_app: { type: "string", description: "What owned app would replace it" },
+              difficulty: { type: "string", enum: ["easy", "moderate", "complex"], description: "How hard is it to replace" },
+            },
+            required: ["tool_name", "monthly_cost", "replacement_app", "difficulty"],
+            additionalProperties: false,
+          },
+        },
+        quick_wins: {
+          type: "array",
+          description: "3-4 automations or micro-tools that can be built in under an hour and deliver immediate value",
+          items: {
+            type: "object",
+            properties: {
+              name: { type: "string", description: "Short name, e.g. 'Auto-Reply Email Template'" },
+              impact: { type: "string", description: "One-line impact statement, e.g. 'Saves 2 hours/week on customer responses'" },
+              time_to_build: { type: "string", description: "Estimated build time, e.g. '15 min', '30 min', '1 hour'" },
+            },
+            required: ["name", "impact", "time_to_build"],
+            additionalProperties: false,
+          },
+        },
+        competitive_edge: {
+          type: "string",
+          description: "A 2-3 sentence paragraph about what competitors in this industry are doing with custom software and how this business can leapfrog them. Be specific and motivating."
+        },
       },
-      required: ["business_name", "industry", "summary", "brand_identity", "insights", "recommended_builds"],
+      required: ["business_name", "industry", "summary", "brand_identity", "insights", "recommended_builds", "saas_replacements", "quick_wins", "competitive_edge"],
       additionalProperties: false,
     },
   },
@@ -253,7 +297,7 @@ Deno.serve(async (req) => {
               {
                 role: "system",
               content:
-                  "You are a business technology advisor and brand design expert for OpenDraft, a platform where users can generate and deploy production-ready web applications instantly. Analyze the business and recommend specific apps/tools they should BUILD to grow their business. Focus on internal tools, customer-facing apps, and automation they likely do not have. Be creative and specific.\n\nCRITICAL — BRAND IDENTITY EXTRACTION:\nCarefully analyze the website's visual design to extract its brand identity. Look at:\n- Logo colors, hero section gradients, button colors, link colors → primary_color, secondary_color, accent_color\n- Dark vs light backgrounds → background_style\n- Overall aesthetic (e.g. MongoDB = technical minimalist dark, Stripe = clean corporate light, Discord = playful dark) → design_mood\n- Font style (geometric like Inter/Geist, humanist like Source Sans, rounded like Nunito, monospace-accented like JetBrains) → typography_style\n- Corner rounding (sharp/boxy like Linear, subtle like Stripe, rounded like Notion, pill like Discord) → border_radius\n- Write a vivid 1-sentence visual reference that a designer could use to recreate the feel → visual_references\n\nIf you can't see the page content, infer brand identity from what you know about the company. For example, MongoDB → green (#00ED64), dark background, technical minimalist. Stripe → purple (#635BFF), light background, clean corporate.",
+                  "You are a business technology advisor and brand design expert for OpenDraft, a platform where users can generate and deploy production-ready web applications instantly. Analyze the business and recommend specific apps/tools they should BUILD to grow their business. Focus on internal tools, customer-facing apps, and automation they likely do not have. Be creative and specific.\n\nCRITICAL — BRAND IDENTITY EXTRACTION:\nCarefully analyze the website's visual design to extract its brand identity. Look at:\n- Logo colors, hero section gradients, button colors, link colors → primary_color, secondary_color, accent_color\n- Dark vs light backgrounds → background_style\n- Overall aesthetic (e.g. MongoDB = technical minimalist dark, Stripe = clean corporate light, Discord = playful dark) → design_mood\n- Font style (geometric like Inter/Geist, humanist like Source Sans, rounded like Nunito, monospace-accented like JetBrains) → typography_style\n- Corner rounding (sharp/boxy like Linear, subtle like Stripe, rounded like Notion, pill like Discord) → border_radius\n- Write a vivid 1-sentence visual reference that a designer could use to recreate the feel → visual_references\n\nIf you can't see the page content, infer brand identity from what you know about the company. For example, MongoDB → green (#00ED64), dark background, technical minimalist. Stripe → purple (#635BFF), light background, clean corporate.\n\nSAAS REPLACEMENTS:\nIdentify 2-4 SaaS tools this business likely subscribes to (e.g. Calendly $12/mo, HubSpot $45/mo, Zendesk $69/mo). Estimate monthly costs realistically. Suggest what custom-built replacement could save them money.\n\nQUICK WINS:\nSuggest 3-4 micro-automations or small tools that can be built in under 1 hour and deliver immediate, tangible value (time saved, errors reduced, leads captured).\n\nCOMPETITIVE EDGE:\nWrite a motivating 2-3 sentence paragraph about what competitors in this industry are doing with custom software and how owning their own tools gives this business an unfair advantage.",
               },
               {
                 role: "user",

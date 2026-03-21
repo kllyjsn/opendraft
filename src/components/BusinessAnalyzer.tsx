@@ -219,7 +219,10 @@ async function saveAnalysisToDb(result: AnalysisResult, isFallback: boolean) {
   } catch {}
 }
 
-export function BusinessAnalyzer({ onGenerate }: { onGenerate?: (prompt: string, brandContext?: Record<string, string>) => void }) {
+export function BusinessAnalyzer({ onGenerate, onResultsChange }: {
+  onGenerate?: (prompt: string, brandContext?: Record<string, string>) => void;
+  onResultsChange?: (hasResults: boolean) => void;
+}) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { saveIdea } = useSavedIdeas();
@@ -229,6 +232,11 @@ export function BusinessAnalyzer({ onGenerate }: { onGenerate?: (prompt: string,
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+
+  // Notify parent when results change
+  useEffect(() => {
+    onResultsChange?.(!!result);
+  }, [result, onResultsChange]);
 
   // Restore analysis after sign-in redirect
   useEffect(() => {
@@ -512,6 +520,9 @@ export function BusinessAnalyzer({ onGenerate }: { onGenerate?: (prompt: string,
 
   // ── Results ──
   const totalSaasSavings = (result.saas_replacements || []).reduce((sum, r) => sum + r.monthly_cost, 0);
+  const heroBuild = result.recommended_builds[0];
+  const restBuilds = result.recommended_builds.slice(1);
+  const HeroIcon = CATEGORY_ICON[heroBuild?.category] || Sparkles;
 
   return (
     <motion.div
@@ -520,6 +531,32 @@ export function BusinessAnalyzer({ onGenerate }: { onGenerate?: (prompt: string,
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       className="max-w-3xl mx-auto w-full text-left"
     >
+      {/* ── Progress Stepper ── */}
+      <div className="flex items-center justify-center gap-1 mb-6">
+        {[
+          { label: "Analyze", done: true },
+          { label: "Pick", done: false, active: true },
+          { label: "Deploy", done: false },
+        ].map((step, i) => (
+          <div key={step.label} className="flex items-center gap-1">
+            {i > 0 && <div className={`w-6 sm:w-10 h-px ${step.done || step.active ? "bg-primary/40" : "bg-border/60"}`} />}
+            <div className="flex items-center gap-1.5">
+              <div className={`h-5 w-5 rounded-full flex items-center justify-center text-[9px] font-bold ${
+                step.done ? "bg-primary text-primary-foreground" :
+                step.active ? "border-2 border-primary text-primary" :
+                "border border-border text-muted-foreground/50"
+              }`}>
+                {step.done ? <Check className="h-3 w-3" /> : i + 1}
+              </div>
+              <span className={`text-[10px] font-semibold ${
+                step.done ? "text-primary" :
+                step.active ? "text-foreground" :
+                "text-muted-foreground/50"
+              }`}>{step.label}</span>
+            </div>
+          </div>
+        ))}
+      </div>
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div>
@@ -734,102 +771,164 @@ export function BusinessAnalyzer({ onGenerate }: { onGenerate?: (prompt: string,
         </motion.div>
       )}
 
-      {/* Recommended Builds */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.4 }}
-      >
-        <p className="text-xs font-black uppercase tracking-[0.2em] text-primary mb-4 flex items-center gap-2">
-          <Rocket className="h-3.5 w-3.5" />
-          Apps we'd build for you
-        </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
-          {result.recommended_builds.map((build, i) => {
-            const Icon = CATEGORY_ICON[build.category] || Sparkles;
-            return (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.45 + i * 0.08, ease: [0.16, 1, 0.3, 1] }}
-                className={`group relative rounded-2xl border p-4 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-0.5 ${PRIORITY_STYLES[build.priority]}`}
+      {/* ── #1 Recommendation — Hero Card ── */}
+      {heroBuild && (
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
+          className="mb-5"
+        >
+          <p className="text-xs font-black uppercase tracking-[0.2em] text-primary mb-3 flex items-center gap-2">
+            <Rocket className="h-3.5 w-3.5" />
+            #1 recommendation
+          </p>
+          <div className="relative rounded-2xl border-2 border-primary/30 bg-primary/5 p-5 transition-all duration-300 hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-0.5">
+            <div className="absolute top-3 right-3">
+              <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-primary">
+                <TrendingUp className="h-3 w-3" />
+                Highest impact
+              </span>
+            </div>
+            <div className="flex items-start gap-3 mb-3">
+              <div className="rounded-xl bg-primary/10 border border-primary/20 p-2.5 shrink-0">
+                <HeroIcon className="h-5 w-5 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0 pr-20">
+                <p className="text-base font-black tracking-tight">{heroBuild.name}</p>
+                <p className="text-xs text-muted-foreground mt-1 leading-snug">{heroBuild.description}</p>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-x-4 gap-y-1 mb-3 ml-[52px]">
+              <span className="text-[10px] text-muted-foreground/70 flex items-center gap-1">
+                <Code className="h-2.5 w-2.5" /> Full source code
+              </span>
+              <span className="text-[10px] text-muted-foreground/70 flex items-center gap-1">
+                <Rocket className="h-2.5 w-2.5" /> Live deploy
+              </span>
+              <span className="text-[10px] text-muted-foreground/70 flex items-center gap-1">
+                <Megaphone className="h-2.5 w-2.5" /> Marketing kit
+              </span>
+            </div>
+            <div className="flex items-center gap-2 ml-[52px]">
+              <Button
+                size="sm"
+                onClick={() => handleGenerateClick(heroBuild.search_query)}
+                className="gradient-hero text-primary-foreground border-0 shadow-glow hover:opacity-90 h-9 px-5 text-xs font-bold rounded-lg"
               >
-                <div className="flex items-start gap-3 mb-2">
-                  <div className="rounded-xl bg-background/80 border border-border/50 p-2 shrink-0">
-                    <Icon className="h-4 w-4 text-primary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                      <p className="text-sm font-bold truncate">{build.name}</p>
-                      <span className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full ${PRIORITY_TAG[build.priority]}`}>
-                        {build.priority}
-                      </span>
+                <Wand2 className="h-3.5 w-3.5 mr-1.5" />
+                Build this now
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={async () => {
+                  if (!user) { navigate("/login"); return; }
+                  const ok = await saveIdea({
+                    name: heroBuild.name,
+                    description: heroBuild.description,
+                    category: heroBuild.category,
+                    priority: heroBuild.priority,
+                    search_query: heroBuild.search_query,
+                    source_url: result?.url,
+                  });
+                  if (ok) setSavedSet(prev => new Set(prev).add(heroBuild.search_query));
+                }}
+                disabled={savedSet.has(heroBuild.search_query)}
+                className="h-9 px-2 text-muted-foreground hover:text-primary"
+                title="Save for later"
+              >
+                {savedSet.has(heroBuild.search_query) ? <Check className="h-3.5 w-3.5 text-primary" /> : <Bookmark className="h-3.5 w-3.5" />}
+              </Button>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* ── Other Builds ── */}
+      {restBuilds.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+        >
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-3 flex items-center gap-2">
+            Also recommended
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+            {restBuilds.map((build, i) => {
+              const Icon = CATEGORY_ICON[build.category] || Sparkles;
+              return (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.55 + i * 0.08, ease: [0.16, 1, 0.3, 1] }}
+                  className={`group relative rounded-2xl border p-4 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-0.5 ${PRIORITY_STYLES[build.priority]}`}
+                >
+                  <div className="flex items-start gap-3 mb-2">
+                    <div className="rounded-xl bg-background/80 border border-border/50 p-2 shrink-0">
+                      <Icon className="h-4 w-4 text-primary" />
                     </div>
-                    <p className="text-[11px] text-muted-foreground leading-snug line-clamp-2">{build.description}</p>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                        <p className="text-sm font-bold truncate">{build.name}</p>
+                        <span className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full ${PRIORITY_TAG[build.priority]}`}>
+                          {build.priority}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground leading-snug line-clamp-2">{build.description}</p>
+                    </div>
                   </div>
-                </div>
 
-                {/* What you'll get */}
-                <div className="flex flex-wrap gap-x-3 gap-y-1 mb-2.5 ml-11">
-                  <span className="text-[10px] text-muted-foreground/70 flex items-center gap-1">
-                    <Code className="h-2.5 w-2.5" /> Source code
-                  </span>
-                  <span className="text-[10px] text-muted-foreground/70 flex items-center gap-1">
-                    <Rocket className="h-2.5 w-2.5" /> Live deploy
-                  </span>
-                  <span className="text-[10px] text-muted-foreground/70 flex items-center gap-1">
-                    <Megaphone className="h-2.5 w-2.5" /> Marketing kit
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-1.5">
-                  <Button
-                    size="sm"
-                    onClick={() => handleGenerateClick(build.search_query)}
-                    className="flex-1 gradient-hero text-primary-foreground border-0 shadow-glow hover:opacity-90 h-8 text-[11px] font-bold rounded-lg"
-                  >
-                    <Wand2 className="h-3 w-3 mr-1" />
-                    Build "{build.name}"
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={async () => {
-                      if (!user) { navigate("/login"); return; }
-                      const ok = await saveIdea({
-                        name: build.name,
-                        description: build.description,
-                        category: build.category,
-                        priority: build.priority,
-                        search_query: build.search_query,
-                        source_url: result?.url,
-                      });
-                      if (ok) setSavedSet(prev => new Set(prev).add(build.search_query));
-                    }}
-                    disabled={savedSet.has(build.search_query)}
-                    className="h-8 px-2 text-[11px] text-muted-foreground hover:text-primary"
-                    title="Save for later"
-                  >
-                    {savedSet.has(build.search_query)
-                      ? <Check className="h-3 w-3 text-primary" />
-                      : <Bookmark className="h-3 w-3" />}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => handleSearchClick(build.search_query)}
-                    className="h-8 px-2 text-[11px] text-muted-foreground hover:text-foreground"
-                    title="Browse similar"
-                  >
-                    <Search className="h-3 w-3" />
-                  </Button>
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
-      </motion.div>
+                  <div className="flex items-center gap-1.5">
+                    <Button
+                      size="sm"
+                      onClick={() => handleGenerateClick(build.search_query)}
+                      className="flex-1 gradient-hero text-primary-foreground border-0 shadow-glow hover:opacity-90 h-8 text-[11px] font-bold rounded-lg min-w-0"
+                    >
+                      <Wand2 className="h-3 w-3 mr-1 shrink-0" />
+                      <span className="truncate">Build this</span>
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={async () => {
+                        if (!user) { navigate("/login"); return; }
+                        const ok = await saveIdea({
+                          name: build.name,
+                          description: build.description,
+                          category: build.category,
+                          priority: build.priority,
+                          search_query: build.search_query,
+                          source_url: result?.url,
+                        });
+                        if (ok) setSavedSet(prev => new Set(prev).add(build.search_query));
+                      }}
+                      disabled={savedSet.has(build.search_query)}
+                      className="h-8 px-2 text-[11px] text-muted-foreground hover:text-primary shrink-0"
+                      title="Save for later"
+                    >
+                      {savedSet.has(build.search_query)
+                        ? <Check className="h-3 w-3 text-primary" />
+                        : <Bookmark className="h-3 w-3" />}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleSearchClick(build.search_query)}
+                      className="h-8 px-2 text-[11px] text-muted-foreground hover:text-foreground shrink-0"
+                      title="Browse similar"
+                    >
+                      <Search className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </motion.div>
+      )}
 
     </motion.div>
   );

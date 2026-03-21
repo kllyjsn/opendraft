@@ -382,12 +382,21 @@ This template was automatically scanned by OpenDraft's security scanner and assi
 # Copy this file to .env and fill in your values
 # NEVER commit .env to version control
 
-# Supabase (for data persistence, auth, file storage)
+# ── Option A: Supabase (PostgreSQL — recommended) ──────────
 # Sign up at https://supabase.com or use OpenDraft Managed Hosting
 # VITE_SUPABASE_URL=https://your-project.supabase.co
 # VITE_SUPABASE_ANON_KEY=your_anon_key_here
 
-# Other API keys (if needed)
+# ── Option B: MongoDB Atlas ────────────────────────────────
+# 1. Create a free cluster at https://cloud.mongodb.com
+# 2. Enable Data API: Atlas → App Services → Data API
+# 3. Generate an API key and fill in below
+# VITE_MONGODB_API_URL=https://data.mongodb-api.com/app/YOUR_APP_ID/endpoint/data/v1
+# VITE_MONGODB_API_KEY=your_api_key_here
+# VITE_MONGODB_DATA_SOURCE=Cluster0
+# VITE_MONGODB_DATABASE=app
+
+# ── Other API keys (if needed) ─────────────────────────────
 # VITE_API_URL=https://your-api.example.com
 `,
   /* ── Deploy-ready configs ───────────────────────────────── */

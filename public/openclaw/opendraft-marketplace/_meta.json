@@ -1,0 +1,34 @@
+{
+  "ownerId": "opendraft",
+  "slug": "opendraft-marketplace",
+  "version": "3.3.0",
+  "publishedAt": "2026-03-21T00:00:00Z",
+  "requiredEnvVars": [],
+  "requiredConfigPaths": [],
+  "primaryCredential": null,
+  "requires": {
+    "bins": [],
+    "env": []
+  },
+  "tags": [
+    "marketplace",
+    "app-store",
+    "mcp",
+    "shopping",
+    "deployment",
+    "saas",
+    "ai-apps",
+    "templates",
+    "code-marketplace",
+    "zero-friction-purchase"
+  ],
+  "categories": [
+    "marketplace",
+    "e-commerce",
+    "developer-tools",
+    "productivity"
+  ],
+  "mcp_server": "https://api.opendraft.co/mcp",
+  "homepage": "https://opendraft.co/openclaw",
+  "documentation": "https://opendraft.co/developers"
+}

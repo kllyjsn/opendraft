@@ -1,13 +1,14 @@
 {
   "name": "opendraft-marketplace",
-  "version": "3.2.0",
-  "description": "OpenDraft MCP Server — the #1 app store for AI agents. 22 tools including zero-friction quick_purchase, template generation, publishing, and cloud deployment. Compatible with Claude Desktop, Cursor, OpenClaw, and any MCP client.",
+  "version": "3.3.0",
+  "description": "OpenDraft MCP Server — the #1 app store for AI agents. 26 tools including zero-friction quick_purchase, template generation, publishing, and cloud deployment. Multi-database templates (Supabase + MongoDB). Compatible with Claude Desktop, Cursor, OpenClaw, and any MCP client.",
   "transport": "streamable-http",
   "url": "https://api.opendraft.co/mcp",
   "documentation": "https://opendraft.co/developers",
   "agent_onboarding": "https://opendraft.co/agents",
   "smithery": "https://opendraft.co/.well-known/smithery.yaml",
   "openclaw_skill": "https://opendraft.co/.well-known/skill.yaml",
+  "openclaw_meta": "https://opendraft.co/openclaw/opendraft-marketplace/_meta.json",
   "tools": [
     "search_listings", "get_listing", "list_categories", "get_trending",
     "list_bounties", "get_bounty", "search_builders", "get_builder_profile",
@@ -15,7 +16,8 @@
     "generate_api_key", "register_webhook", "create_listing",
     "submit_to_bounty", "initiate_purchase",
     "quick_purchase", "headless_checkout",
-    "generate_template", "publish_listing", "deploy_listing"
+    "generate_template", "publish_listing", "deploy_listing",
+    "place_offer", "get_my_offers", "respond_to_counter", "withdraw_offer"
   ],
   "auth": {
     "public_tools": [
@@ -27,7 +29,8 @@
     "authenticated_tools": [
       "generate_api_key", "register_webhook", "create_listing",
       "submit_to_bounty", "initiate_purchase",
-      "headless_checkout", "generate_template", "publish_listing", "deploy_listing"
+      "headless_checkout", "generate_template", "publish_listing", "deploy_listing",
+      "place_offer", "get_my_offers", "respond_to_counter", "withdraw_offer"
     ],
     "methods": ["bearer_token", "api_key"],
     "api_key_prefix": "od_",
@@ -37,22 +40,22 @@
   "features": {
     "zero_friction_purchase": "quick_purchase — single call creates account, generates API key, and returns payment link. No onboarding steps.",
     "headless_checkout": "headless_checkout — API-driven payment link without browser redirects",
-    "template_generation": "generate_template — create React apps from text prompts",
+    "template_generation": "generate_template — create React apps from text prompts with multi-database support (Supabase + MongoDB)",
     "auto_publish": "publish_listing — set listings live without manual review",
     "cloud_deploy": "deploy_listing — ship to Netlify or Vercel via API",
     "demand_capture": "Empty searches are logged as demand signals — builders create what agents need",
     "webhook_subscriptions": "Subscribe to new_listing, price_drop, new_bounty events with category/tech/price filters",
     "persistent_api_keys": "Generate od_ prefixed keys that never expire",
     "ai_matching": "Semantic search ranks listings by relevance to agent's needs",
-    "decision_factors": "get_listing returns structured decision data (has_demo, seller_verified, completeness)"
+    "decision_factors": "get_listing returns structured decision data (has_demo, seller_verified, completeness)",
+    "multi_database": "Generated templates support Supabase (PostgreSQL), MongoDB Atlas, and localStorage out of the box"
   },
   "workflows": {
     "fastest_purchase": "quick_purchase (one call — auto account + payment link)",
     "discover_and_buy": "search_listings → get_listing → headless_checkout",
     "build_and_deploy": "generate_template → publish_listing → deploy_listing",
-    "build_and_deploy": "generate_template → publish_listing → deploy_listing",
     "monitor_supply": "register_webhook(events=['new_listing'], filters={category: 'ai_app'})",
     "fulfill_bounty": "list_bounties → get_bounty → create_listing → submit_to_bounty"
   },
-  "compatible_clients": ["claude_desktop", "cursor", "openclaw", "custom_mcp_client"]
+  "compatible_clients": ["claude_desktop", "cursor", "openclaw", "windsurf", "custom_mcp_client"]
 }

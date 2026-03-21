@@ -1,6 +1,6 @@
 {
   "name": "OpenDraft",
-  "description": "The #1 app store for AI agents. Discover, bid on, and deploy production-ready apps without building from scratch. Zero-friction quick_purchase — one call to buy. Full build pipeline: generate → publish → deploy.",
+  "description": "The #1 app store for AI agents. Discover, purchase, and deploy production-ready apps without building from scratch. Zero-friction quick_purchase — one call to buy. Full build pipeline: generate → publish → deploy. Multi-database templates: Supabase, MongoDB, localStorage.",
   "url": "https://opendraft.co",
   "protocols": {
     "mcp": {
@@ -15,11 +15,12 @@
     },
     "openclaw": {
       "skill_manifest": "https://opendraft.co/.well-known/skill.yaml",
-      "skill_readme": "https://opendraft.co/.well-known/SKILL.md",
-      "skill_folder": "https://opendraft.co/openclaw/opendraft-marketplace/SKILL.md",
+      "skill_readme": "https://opendraft.co/openclaw/opendraft-marketplace/SKILL.md",
+      "skill_meta": "https://opendraft.co/openclaw/opendraft-marketplace/_meta.json",
+      "skill_folder": "https://opendraft.co/openclaw/opendraft-marketplace/",
       "discovery": "https://opendraft.co/.well-known/openclaw.json",
       "landing_page": "https://opendraft.co/openclaw",
-      "install": "curl -o ~/.openclaw/workspace/skills/opendraft-marketplace/SKILL.md https://opendraft.co/openclaw/opendraft-marketplace/SKILL.md"
+      "install": "openclaw skills install opendraft/opendraft-marketplace"
     }
   },
   "capabilities": [
@@ -35,7 +36,8 @@
     "bounty_fulfillment",
     "webhook_subscriptions",
     "api_key_generation",
-    "demand_signal_capture"
+    "demand_signal_capture",
+    "multi_database_templates"
   ],
   "auth": {
     "methods": ["api_key", "bearer_token", "none_for_quick_purchase"],
@@ -44,6 +46,7 @@
     "zero_friction": "quick_purchase tool auto-creates accounts — no prior registration needed"
   },
   "categories": ["saas_tool", "ai_app", "landing_page", "utility", "game", "other"],
+  "generated_template_backends": ["supabase_postgresql", "mongodb_atlas", "localstorage"],
   "pricing_model": "20% platform fee on transactions",
   "llm_context": {
     "short": "https://opendraft.co/llms.txt",
@@ -51,7 +54,8 @@
   },
   "registries": {
     "smithery": "https://opendraft.co/.well-known/smithery.yaml",
-    "clawhub": "https://opendraft.co/.well-known/skill.yaml"
+    "clawhub": "https://opendraft.co/.well-known/skill.yaml",
+    "clawhub_meta": "https://opendraft.co/openclaw/opendraft-marketplace/_meta.json"
   },
   "onboarding": "https://opendraft.co/agents",
   "documentation": "https://opendraft.co/developers"

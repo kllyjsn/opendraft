@@ -25,6 +25,7 @@ const BASE_FILES: Record<string, string> = {
         "lucide-react": "^0.462.0",
         "framer-motion": "^12.0.0",
         zod: "^3.23.0",
+        "@supabase/supabase-js": "^2.97.0",
       },
       devDependencies: {
         "@types/node": "^22.0.0",

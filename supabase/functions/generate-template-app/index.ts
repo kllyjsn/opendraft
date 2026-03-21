@@ -232,9 +232,13 @@ This template was automatically scanned by OpenDraft's security scanner and assi
 # Copy this file to .env and fill in your values
 # NEVER commit .env to version control
 
-# API keys (if needed)
+# Supabase (for data persistence, auth, file storage)
+# Sign up at https://supabase.com or use OpenDraft Managed Hosting
+# VITE_SUPABASE_URL=https://your-project.supabase.co
+# VITE_SUPABASE_ANON_KEY=your_anon_key_here
+
+# Other API keys (if needed)
 # VITE_API_URL=https://your-api.example.com
-# VITE_PUBLIC_KEY=your_publishable_key_here
 `,
   /* ── Deploy-ready configs ───────────────────────────────── */
   "netlify.toml": `[build]

@@ -219,7 +219,10 @@ async function saveAnalysisToDb(result: AnalysisResult, isFallback: boolean) {
   } catch {}
 }
 
-export function BusinessAnalyzer({ onGenerate }: { onGenerate?: (prompt: string, brandContext?: Record<string, string>) => void }) {
+export function BusinessAnalyzer({ onGenerate, onResultsChange }: {
+  onGenerate?: (prompt: string, brandContext?: Record<string, string>) => void;
+  onResultsChange?: (hasResults: boolean) => void;
+}) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { saveIdea } = useSavedIdeas();
@@ -229,6 +232,11 @@ export function BusinessAnalyzer({ onGenerate }: { onGenerate?: (prompt: string,
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+
+  // Notify parent when results change
+  useEffect(() => {
+    onResultsChange?.(!!result);
+  }, [result, onResultsChange]);
 
   // Restore analysis after sign-in redirect
   useEffect(() => {

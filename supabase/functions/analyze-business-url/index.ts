@@ -149,7 +149,7 @@ const TOOL_SCHEMA = {
   type: "function",
   function: {
     name: "suggest_apps",
-    description: "Return business analysis with app recommendations and brand identity",
+    description: "Return business analysis with app recommendations, brand identity, SaaS replacement estimates, quick wins, and competitive intel",
     parameters: {
       type: "object",
       properties: {
@@ -201,8 +201,41 @@ const TOOL_SCHEMA = {
             additionalProperties: false,
           },
         },
+        saas_replacements: {
+          type: "array",
+          description: "2-4 SaaS tools this business likely pays for that could be replaced with owned software. Include estimated monthly cost per tool.",
+          items: {
+            type: "object",
+            properties: {
+              tool_name: { type: "string", description: "Name of the SaaS tool, e.g. 'Calendly', 'HubSpot', 'Zendesk'" },
+              monthly_cost: { type: "number", description: "Estimated monthly cost in USD" },
+              replacement_app: { type: "string", description: "What owned app would replace it" },
+              difficulty: { type: "string", enum: ["easy", "moderate", "complex"], description: "How hard is it to replace" },
+            },
+            required: ["tool_name", "monthly_cost", "replacement_app", "difficulty"],
+            additionalProperties: false,
+          },
+        },
+        quick_wins: {
+          type: "array",
+          description: "3-4 automations or micro-tools that can be built in under an hour and deliver immediate value",
+          items: {
+            type: "object",
+            properties: {
+              name: { type: "string", description: "Short name, e.g. 'Auto-Reply Email Template'" },
+              impact: { type: "string", description: "One-line impact statement, e.g. 'Saves 2 hours/week on customer responses'" },
+              time_to_build: { type: "string", description: "Estimated build time, e.g. '15 min', '30 min', '1 hour'" },
+            },
+            required: ["name", "impact", "time_to_build"],
+            additionalProperties: false,
+          },
+        },
+        competitive_edge: {
+          type: "string",
+          description: "A 2-3 sentence paragraph about what competitors in this industry are doing with custom software and how this business can leapfrog them. Be specific and motivating."
+        },
       },
-      required: ["business_name", "industry", "summary", "brand_identity", "insights", "recommended_builds"],
+      required: ["business_name", "industry", "summary", "brand_identity", "insights", "recommended_builds", "saas_replacements", "quick_wins", "competitive_edge"],
       additionalProperties: false,
     },
   },

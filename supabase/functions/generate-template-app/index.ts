@@ -574,6 +574,13 @@ const contactSchema = z.object({
 - src/components/ — 4-8 additional feature-specific components
 - src/data/sample-data.ts — Realistic mock data
 
+## BACKEND-READY ARCHITECTURE
+The base scaffold includes src/lib/supabase.ts (Supabase client) and src/hooks/useLocalStorage.ts (offline-first state).
+- Use useLocalStorage for any persistent state (form data, settings, preferences) — this works immediately without a database
+- Import { supabase, hasBackend } from '@/lib/supabase' when you need database features
+- Forms should collect data and store it locally — when Supabase is configured, it auto-syncs
+- This makes the app functional immediately AND upgradeable to full backend later
+
 ## ANIMATIONS COOKBOOK (use these patterns)
 \`\`\`tsx
 // Stagger children

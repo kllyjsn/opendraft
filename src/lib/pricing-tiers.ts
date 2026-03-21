@@ -22,6 +22,7 @@ export interface PricingTier {
   id: string;
   name: string;
   price: number;        // Monthly price in cents
+  annualPrice?: number;  // Annual price in cents (total for year)
   appLimit: number;      // Max serviced apps (Infinity = unlimited)
   appLimitLabel: string; // Human-readable limit
   description: string;
@@ -29,6 +30,9 @@ export interface PricingTier {
   badge?: string;
   features: string[];
 }
+
+/** Annual discount percentage */
+export const ANNUAL_DISCOUNT = 20;
 
 /** Canonical value proposition — one line used everywhere */
 export const VALUE_PROP = "Production-ready apps with full source code. Claim, deploy, and own — forever.";
@@ -62,7 +66,8 @@ export const TIERS: PricingTier[] = [
   {
     id: "starter",
     name: "Starter",
-    price: 2000,         // $20/mo
+    price: 2000,           // $20/mo
+    annualPrice: 19200,    // $192/yr ($16/mo)
     appLimit: 5,
     appLimitLabel: "5 apps",
     description: "Claim 5 production-ready apps per month with everything included.",
@@ -77,7 +82,8 @@ export const TIERS: PricingTier[] = [
   {
     id: "growth",
     name: "Growth",
-    price: 3000,         // $30/mo
+    price: 3000,           // $30/mo
+    annualPrice: 28800,    // $288/yr ($24/mo)
     appLimit: 20,
     appLimitLabel: "20 apps",
     description: "Scale with 20 apps/month — ideal for agencies and power users.",
@@ -93,7 +99,8 @@ export const TIERS: PricingTier[] = [
   {
     id: "unlimited",
     name: "Unlimited",
-    price: 5000,         // $50/mo
+    price: 5000,           // $50/mo
+    annualPrice: 48000,    // $480/yr ($40/mo)
     appLimit: Infinity,
     appLimitLabel: "Unlimited",
     description: "No limits. Claim every app on the platform with everything included.",
@@ -108,7 +115,8 @@ export const TIERS: PricingTier[] = [
   {
     id: "agency",
     name: "Agency",
-    price: 9900,         // $99/mo
+    price: 9900,           // $99/mo
+    annualPrice: 95000,    // $950/yr (~$79/mo)
     appLimit: Infinity,
     appLimitLabel: "Unlimited",
     badge: "For teams",
@@ -125,7 +133,8 @@ export const TIERS: PricingTier[] = [
   {
     id: "enterprise",
     name: "Enterprise",
-    price: 19900,        // $199/mo
+    price: 19900,          // $199/mo
+    annualPrice: 190000,   // $1900/yr (~$158/mo)
     appLimit: Infinity,
     appLimitLabel: "Unlimited",
     badge: "Best value",
@@ -158,4 +167,16 @@ export function getTierByPrice(priceCents: number): PricingTier | undefined {
 /** Look up a tier by its ID */
 export function getTierById(id: string): PricingTier | undefined {
   return TIERS.find((t) => t.id === id);
+}
+
+/** Get effective price based on billing period */
+export function getEffectiveMonthlyPrice(tier: PricingTier, annual: boolean): number {
+  if (!annual || !tier.annualPrice) return tier.price;
+  return Math.round(tier.annualPrice / 12);
+}
+
+/** Get savings amount for annual billing */
+export function getAnnualSavings(tier: PricingTier): number {
+  if (!tier.annualPrice) return 0;
+  return (tier.price * 12) - tier.annualPrice;
 }

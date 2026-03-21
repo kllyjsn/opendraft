@@ -9,7 +9,7 @@ import { Link } from "react-router-dom";
 import { MetaTags } from "@/components/MetaTags";
 import { Check, Loader2, Zap, Sparkles, Building2, ArrowRight, Shield, Headphones } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { FREE_TIER, CORE_PAID_TIERS, ENTERPRISE_TIERS, type PricingTier } from "@/lib/pricing-tiers";
+import { FREE_TIER, CORE_PAID_TIERS, ENTERPRISE_TIERS, ANNUAL_DISCOUNT, type PricingTier } from "@/lib/pricing-tiers";
 import { trackFunnel } from "@/hooks/useFunnelTracker";
 import { PricingTierCard } from "@/components/pricing/PricingTierCard";
 
@@ -17,14 +17,16 @@ export default function Credits() {
   const { user, loading: authLoading } = useAuth();
   const { isSubscribed, subscription, canClaimFree, purchaseCount, loading: subLoading } = useSubscription();
   const [subscribingTier, setSubscribingTier] = useState<string | null>(null);
+  const [annual, setAnnual] = useState(true); // Default to annual for higher LTV
 
-  async function handleSubscribe(tier: PricingTier) {
+  async function handleSubscribe(tier: PricingTier, isAnnual: boolean) {
     if (!user) return;
     setSubscribingTier(tier.id);
-    trackFunnel("subscribe_started", { tier: tier.id, price: tier.price });
+    trackFunnel("subscribe_started", { tier: tier.id, price: tier.price, billing: isAnnual ? "annual" : "monthly" });
     try {
+      const amount = isAnnual && tier.annualPrice ? tier.annualPrice : tier.price;
       const { data, error } = await supabase.functions.invoke("create-credit-checkout", {
-        body: { amount: tier.price, mode: "subscription", tierId: tier.id },
+        body: { amount, mode: "subscription", tierId: tier.id, billing: isAnnual ? "annual" : "monthly" },
       });
       if (error) throw error;
       if (data?.url) window.location.href = data.url;
@@ -44,6 +46,7 @@ export default function Credits() {
     isSubscribed,
     freeUsed,
     onSubscribe: handleSubscribe,
+    annual,
   };
 
   return (
@@ -58,7 +61,6 @@ export default function Credits() {
 
         {/* Hero section */}
         <section className="relative overflow-hidden">
-          {/* Subtle atmospheric glow */}
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-primary/5 blur-[120px] rounded-full pointer-events-none" />
 
           <div className="container mx-auto px-4 pt-24 pb-16 max-w-4xl text-center relative">
@@ -77,7 +79,7 @@ export default function Credits() {
         </section>
 
         {/* Trust strip */}
-        <section className="container mx-auto px-4 max-w-4xl mb-16">
+        <section className="container mx-auto px-4 max-w-4xl mb-10">
           <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm text-muted-foreground">
             {[
               "Full source code included",
@@ -90,6 +92,33 @@ export default function Credits() {
                 <span>{item}</span>
               </div>
             ))}
+          </div>
+        </section>
+
+        {/* Annual / Monthly toggle */}
+        <section className="container mx-auto px-4 max-w-4xl mb-16">
+          <div className="flex items-center justify-center gap-4">
+            <button
+              onClick={() => setAnnual(false)}
+              className={cn(
+                "text-sm font-semibold px-4 py-2 rounded-full transition-all",
+                !annual ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              Monthly
+            </button>
+            <button
+              onClick={() => setAnnual(true)}
+              className={cn(
+                "text-sm font-semibold px-4 py-2 rounded-full transition-all relative",
+                annual ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              Annual
+              <span className="absolute -top-2.5 -right-3 text-[10px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">
+                -{ANNUAL_DISCOUNT}%
+              </span>
+            </button>
           </div>
         </section>
 
@@ -116,7 +145,6 @@ export default function Credits() {
         {/* Enterprise section */}
         {ENTERPRISE_TIERS.length > 0 && (
           <section id="enterprise" className="container mx-auto px-4 max-w-6xl mb-24">
-            {/* Separator line */}
             <div className="flex items-center gap-4 mb-12">
               <div className="flex-1 h-px bg-border/40" />
               <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
@@ -138,6 +166,35 @@ export default function Credits() {
             </div>
           </section>
         )}
+
+        {/* SaaS Savings Calculator */}
+        <section className="container mx-auto px-4 max-w-3xl mb-24">
+          <div className="rounded-2xl border border-primary/20 bg-primary/5 p-8 md:p-12 text-center">
+            <h2 className="text-2xl md:text-3xl font-black tracking-tight mb-3">
+              How much are you spending on SaaS?
+            </h2>
+            <p className="text-muted-foreground max-w-lg mx-auto leading-relaxed mb-6">
+              The average small business pays <strong className="text-foreground">$500–$2,000/mo</strong> for generic software they don't own. 
+              With OpenDraft, build custom replacements for <strong className="text-foreground">$20–$50/mo</strong> — and own the code forever.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-lg mx-auto mb-6">
+              {[
+                { saas: "CRM", cost: "$65/mo", save: "$780/yr" },
+                { saas: "Scheduling", cost: "$75/mo", save: "$900/yr" },
+                { saas: "Invoicing", cost: "$40/mo", save: "$480/yr" },
+              ].map(({ saas, cost, save }) => (
+                <div key={saas} className="rounded-xl border border-border/40 bg-card p-4">
+                  <p className="text-xs text-muted-foreground font-medium">{saas}</p>
+                  <p className="text-sm line-through text-muted-foreground">{cost}</p>
+                  <p className="text-sm font-bold text-primary">Save {save}</p>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Replace 3 SaaS tools → save <strong className="text-foreground">$2,160/yr</strong> minimum
+            </p>
+          </div>
+        </section>
 
         {/* Bottom CTA */}
         <section className="container mx-auto px-4 max-w-3xl mb-24">

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import type { PricingTier } from "@/lib/pricing-tiers";
+import { getEffectiveMonthlyPrice, getAnnualSavings } from "@/lib/pricing-tiers";
 
 interface PricingTierCardProps {
   tier: PricingTier;
@@ -14,7 +15,8 @@ interface PricingTierCardProps {
   authLoading: boolean;
   subLoading: boolean;
   subscribingTier: string | null;
-  onSubscribe: (tier: PricingTier) => void;
+  onSubscribe: (tier: PricingTier, annual: boolean) => void;
+  annual?: boolean;
 }
 
 export function PricingTierCard({
@@ -28,9 +30,12 @@ export function PricingTierCard({
   subLoading,
   subscribingTier,
   onSubscribe,
+  annual = false,
 }: PricingTierCardProps) {
   const isLoading = subscribingTier === tier.id;
   const isFree = tier.price === 0;
+  const effectivePrice = getEffectiveMonthlyPrice(tier, annual);
+  const savings = getAnnualSavings(tier);
 
   return (
     <div
@@ -60,12 +65,22 @@ export function PricingTierCard({
         <h3 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground mb-2">
           {tier.name}
         </h3>
-        <div className="flex items-baseline gap-1 mb-3">
-          <span className="text-5xl font-black tracking-tight">${tier.price / 100}</span>
+        <div className="flex items-baseline gap-1 mb-1">
+          <span className="text-5xl font-black tracking-tight">${effectivePrice / 100}</span>
           {tier.price > 0 && (
             <span className="text-base text-muted-foreground font-medium">/month</span>
           )}
         </div>
+        {annual && savings > 0 && (
+          <p className="text-xs font-semibold text-primary mb-2">
+            Save ${savings / 100}/yr with annual billing
+          </p>
+        )}
+        {annual && tier.annualPrice && (
+          <p className="text-xs text-muted-foreground line-through mb-2">
+            ${tier.price / 100}/mo billed monthly
+          </p>
+        )}
         <p className="text-sm text-muted-foreground leading-relaxed">{tier.description}</p>
       </div>
 
@@ -116,7 +131,7 @@ export function PricingTierCard({
         </div>
       ) : user ? (
         <Button
-          onClick={() => onSubscribe(tier)}
+          onClick={() => onSubscribe(tier, annual)}
           disabled={!!subscribingTier}
           className={cn(
             "w-full h-12 text-sm font-semibold",

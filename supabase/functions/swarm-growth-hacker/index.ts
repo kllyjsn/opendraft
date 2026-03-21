@@ -6,15 +6,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-/**
- * Growth Hacker Agent — runs every 4 hours via cron
- * 
- * 1. Re-engagement: Finds users who signed up but never claimed → creates notifications
- * 2. Inactive nudge: Users who claimed but haven't visited in 7 days → notification
- * 3. Milestone celebrations: Users hitting sales milestones → notification + tweet
- * 4. Referral code generation: Ensures every user has a referral code
- * 5. Urgency campaigns: Marks trending listings for scarcity UI
- */
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -25,15 +16,14 @@ serve(async (req) => {
 
   const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
   const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
-
   const results: { action: string; count: number }[] = [];
 
   try {
-    // ── 1. RE-ENGAGEMENT: Users who signed up 2+ days ago but never claimed ──
     const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString();
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
 
-    // Get users who have credit balance but 0 purchases
+    // ── 1. RE-ENGAGEMENT: Users with credits but no purchases ──
     const { data: inactiveUsers } = await supabase
       .from("credit_balances")
       .select("user_id, balance")
@@ -43,14 +33,12 @@ serve(async (req) => {
 
     let reengaged = 0;
     for (const u of (inactiveUsers || [])) {
-      // Check if they have any purchases
       const { count } = await supabase
         .from("purchases")
         .select("id", { count: "exact", head: true })
         .eq("buyer_id", u.user_id);
 
       if ((count ?? 0) === 0) {
-        // Check if we already sent this notification recently
         const { count: notifCount } = await supabase
           .from("notifications")
           .select("id", { count: "exact", head: true })
@@ -73,7 +61,79 @@ serve(async (req) => {
     }
     results.push({ action: "re_engagement_nudges", count: reengaged });
 
-    // ── 2. MILESTONE CELEBRATIONS ──
+    // ── 2. FREE-TO-PAID UPGRADE NUDGES ──
+    // Users who claimed their free app 3+ days ago but haven't subscribed
+    const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
+    const { data: freeClaimed } = await supabase
+      .from("purchases")
+      .select("buyer_id")
+      .eq("amount_paid", 0)
+      .lt("created_at", threeDaysAgo)
+      .limit(100);
+
+    let upgradeNudges = 0;
+    for (const p of (freeClaimed || [])) {
+      // Check if they have a subscription
+      const { count: subCount } = await supabase
+        .from("subscriptions")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", p.buyer_id)
+        .eq("status", "active");
+
+      if ((subCount ?? 0) === 0) {
+        const { count: nudgeCount } = await supabase
+          .from("notifications")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", p.buyer_id)
+          .eq("type", "upgrade_nudge")
+          .gt("created_at", fourteenDaysAgo);
+
+        if ((nudgeCount ?? 0) === 0) {
+          await supabase.from("notifications").insert({
+            user_id: p.buyer_id,
+            type: "upgrade_nudge",
+            title: "Ready for more? Upgrade & save 20% 🚀",
+            message: "You loved your first app. Unlock unlimited apps from $20/mo — save 20% with annual billing. Your company deserves better software.",
+            link: "/credits",
+          });
+          upgradeNudges++;
+        }
+      }
+      if (upgradeNudges >= 30) break;
+    }
+    results.push({ action: "upgrade_nudges", count: upgradeNudges });
+
+    // ── 3. WIN-BACK: Churned subscribers ──
+    const { data: churned } = await supabase
+      .from("subscriptions")
+      .select("user_id")
+      .eq("status", "canceled")
+      .gt("updated_at", fourteenDaysAgo)
+      .limit(50);
+
+    let winbacks = 0;
+    for (const sub of (churned || [])) {
+      const { count: wbCount } = await supabase
+        .from("notifications")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", sub.user_id)
+        .eq("type", "winback")
+        .gt("created_at", fourteenDaysAgo);
+
+      if ((wbCount ?? 0) === 0) {
+        await supabase.from("notifications").insert({
+          user_id: sub.user_id,
+          type: "winback",
+          title: "We miss you — come back & save 20% 💜",
+          message: "Switch to annual billing and save 20%. Your apps are still waiting, and we've added new templates since you left.",
+          link: "/credits",
+        });
+        winbacks++;
+      }
+    }
+    results.push({ action: "winback_campaigns", count: winbacks });
+
+    // ── 4. MILESTONE CELEBRATIONS ──
     const milestones = [5, 10, 25, 50, 100];
     const { data: sellers } = await supabase
       .from("profiles")
@@ -88,7 +148,6 @@ serve(async (req) => {
       const milestone = milestones.find(m => sales >= m);
       if (!milestone) continue;
 
-      // Check if we already celebrated this milestone
       const { count: celebCount } = await supabase
         .from("notifications")
         .select("id", { count: "exact", head: true })
@@ -106,7 +165,6 @@ serve(async (req) => {
         });
         celebrated++;
 
-        // Auto-tweet milestone
         try {
           await fetch(`${SUPABASE_URL}/functions/v1/post-to-x`, {
             method: "POST",
@@ -124,8 +182,7 @@ serve(async (req) => {
     }
     results.push({ action: "milestone_celebrations", count: celebrated });
 
-    // ── 3. TRENDING LISTINGS — Mark hot listings for urgency UI ──
-    // Find listings with most views in last 48h
+    // ── 5. TRENDING LISTINGS ──
     const twoDaysAgoISO = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
     const { data: recentActivity } = await supabase
       .from("activity_log")
@@ -134,7 +191,6 @@ serve(async (req) => {
       .gt("created_at", twoDaysAgoISO)
       .limit(1000);
 
-    // Count views per listing
     const viewCounts = new Map<string, number>();
     for (const a of (recentActivity || [])) {
       const listingId = (a.event_data as any)?.listing_id;
@@ -143,7 +199,6 @@ serve(async (req) => {
       }
     }
 
-    // Get top 10 trending
     const trending = [...viewCounts.entries()]
       .sort((a, b) => b[1] - a[1])
       .slice(0, 10)
@@ -151,8 +206,7 @@ serve(async (req) => {
 
     results.push({ action: "trending_identified", count: trending.length });
 
-    // ── 4. GENERATE SEO CONTENT (3x daily) ──
-    // Trigger SEO writer 
+    // ── 6. TRIGGER SEO CONTENT ──
     try {
       await fetch(`${SUPABASE_URL}/functions/v1/swarm-seo-writer`, {
         method: "POST",
@@ -167,7 +221,7 @@ serve(async (req) => {
       results.push({ action: "seo_content_triggered", count: 0 });
     }
 
-    // ── 5. AUTO-ENRICH stale listings ──
+    // ── 7. AUTO-ENRICH ──
     try {
       await fetch(`${SUPABASE_URL}/functions/v1/swarm-auto-enrich`, {
         method: "POST",

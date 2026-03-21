@@ -64,6 +64,7 @@ const AdminOutreach = lazy(() => import("./pages/AdminOutreach"));
 const AdminRevenue = lazy(() => import("./pages/AdminRevenue"));
 const GremlinsAtWork = lazy(() => import("./pages/GremlinsAtWork"));
 const AppsVertical = lazy(() => import("./pages/AppsVertical"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Ideas = lazy(() => import("./pages/Ideas"));
 
 

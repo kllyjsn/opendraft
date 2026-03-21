@@ -105,6 +105,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/listing/:id" element={<ListingDetail />} />
             <Route path="/sell" element={<Sell />} />
             <Route path="/listing/:id/edit" element={<EditListing />} />

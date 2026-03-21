@@ -316,6 +316,9 @@ export default function Index() {
       {/* ── SHOWCASE ── */}
       <AnalysisShowcase />
 
+      {/* ── SIGNUP NUDGE — signed out only ── */}
+      {!user && <HomepageSignupNudge />}
+
       {/* ── EMAIL CAPTURE — signed out only ── */}
       {!user && <EmailCapture />}
 

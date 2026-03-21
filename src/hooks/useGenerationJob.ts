@@ -18,15 +18,15 @@ export interface GenJob {
 
 export const STAGE_MAP: Record<string, { label: string; pct: number }> = {
   queued: { label: "Queuing your build…", pct: 5 },
-  researching: { label: "Researching market demand…", pct: 12 },
-  adapting_brand: { label: "Adapting to brand design system…", pct: 20 },
-  generating_code: { label: "Generating source code…", pct: 30 },
+  researching: { label: "Researching market demand…", pct: 10 },
+  adapting_brand: { label: "Adapting to brand design system…", pct: 15 },
+  generating_code: { label: "Generating source code…", pct: 25 },
   validating: { label: "Validating code quality…", pct: 45 },
   generating_marketing: { label: "Creating marketing & positioning…", pct: 55 },
   generating_screenshots: { label: "Creating screenshots…", pct: 65 },
-  packaging: { label: "Packaging app + marketing kit…", pct: 75 },
-  uploading: { label: "Uploading files…", pct: 85 },
-  creating_listing: { label: "Creating your listing…", pct: 92 },
+  packaging: { label: "Packaging app, screenshots & marketing kit…", pct: 70 },
+  uploading: { label: "Uploading files…", pct: 88 },
+  creating_listing: { label: "Creating your listing…", pct: 95 },
   done: { label: "Build complete! 🎉", pct: 100 },
   error: { label: "Something went wrong", pct: 0 },
 };

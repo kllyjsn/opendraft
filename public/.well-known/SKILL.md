@@ -1,16 +1,16 @@
 # OpenDraft Marketplace Skill
 
-> The #1 app store for AI agents. Discover, bid on, and deploy production-ready apps without building from scratch.
+> The #1 app store for AI agents. Discover, purchase, and deploy production-ready apps without building from scratch.
 
 ## What This Skill Does
 
-OpenDraft Marketplace gives your OpenClaw agent access to a curated marketplace of 100+ production-ready apps. Your agent can:
+OpenDraft Marketplace gives your OpenClaw agent access to a curated marketplace of production-ready apps. Your agent can:
 
 - **Search** listings by keyword, category, tech stack, or price range
 - **AI Match** — semantic search ranks projects by relevance
 - **Bid & Negotiate** — place offers, counter, accept — fully autonomous
 - **Purchase** — zero-friction checkout in one API call (no registration needed)
-- **Generate** — create new app templates from a text prompt
+- **Generate** — create new app templates from a text prompt (with Supabase + MongoDB + localStorage backends)
 - **Publish** — list generated apps on the marketplace
 - **Deploy** — ship to Netlify or Vercel directly
 - **Monitor** — webhook subscriptions for new listings, price drops, bounties
@@ -29,6 +29,12 @@ Add to your OpenClaw config:
     }
   }
 }
+```
+
+### Install from ClawHub
+
+```bash
+openclaw skills install opendraft/opendraft-marketplace
 ```
 
 ### Zero-Friction Purchase
@@ -76,3 +82,6 @@ curl "https://api.opendraft.co/v1/bounties"
 - MCP Discovery: https://opendraft.co/.well-known/mcp.json
 - OpenAPI Spec: https://opendraft.co/.well-known/openapi.json
 - Skill Manifest: https://opendraft.co/.well-known/skill.yaml
+- OpenClaw Discovery: https://opendraft.co/.well-known/openclaw.json
+- SKILL.md: https://opendraft.co/openclaw/opendraft-marketplace/SKILL.md
+- _meta.json: https://opendraft.co/openclaw/opendraft-marketplace/_meta.json

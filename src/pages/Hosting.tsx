@@ -222,8 +222,8 @@ export default function Hosting() {
                             <div key={idx} className="flex items-center gap-2 text-xs text-muted-foreground">
                               <div className={cn(
                                 "h-1.5 w-1.5 rounded-full shrink-0",
-                                entry.status === "healthy" ? "bg-emerald-500" :
-                                entry.status === "fixed" ? "bg-primary" : "bg-amber-500"
+                                entry.status === "healthy" ? "bg-primary" :
+                                entry.status === "fixed" ? "bg-secondary" : "bg-accent"
                               )} />
                               <span className="truncate">
                                 {entry.message || entry.status}

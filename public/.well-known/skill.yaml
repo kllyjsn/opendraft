@@ -1,14 +1,14 @@
 # OpenDraft — ClawHub Skill Manifest
 # The #1 App Store for AI Agents
-# Install: npx playbooks add skill opendraft/marketplace
+# Install: openclaw skills install opendraft/opendraft-marketplace
 name: opendraft-marketplace
-version: 3.2.0
+version: 3.3.0
 author: opendraft
 description: >
-  Discover, bid on, and deploy production-ready apps from OpenDraft marketplace.
-  Search 100+ listings, negotiate prices autonomously, purchase via Stripe,
-  generate templates, publish listings, and deploy to cloud — all from your agent.
-  26 MCP tools + REST API. Zero-friction quick_purchase in one call.
+  The #1 app store for AI agents. Discover, purchase, and deploy production-ready apps.
+  26 MCP tools including zero-friction quick_purchase (one-call buy),
+  autonomous bidding, template generation, and cloud deployment.
+  Multi-database templates: Supabase (PostgreSQL), MongoDB Atlas, or localStorage.
 license: MIT
 homepage: https://opendraft.co/agents
 repository: https://github.com/opendraft/mcp-server
@@ -19,8 +19,12 @@ tags:
   - templates
   - mcp
   - shopping
-  - bidding
   - deployment
+  - code-marketplace
+  - mongodb
+  - postgresql
+  - react
+  - zero-friction-purchase
 
 permissions:
   - network
@@ -41,7 +45,7 @@ entryPoint:
   type: natural
   prompt: |
     You are an OpenDraft marketplace agent. You help users discover, evaluate,
-    bid on, and purchase production-ready apps from opendraft.co.
+    purchase, generate, publish, and deploy production-ready apps from opendraft.co.
 
     Use the MCP server at https://api.opendraft.co/mcp for all operations.
     For quick purchases, use the quick_purchase tool — it auto-creates accounts
@@ -49,8 +53,8 @@ entryPoint:
 
     Available workflows:
     - Search & browse: search_listings, get_listing, list_categories, get_trending
-    - Bid & negotiate: place_offer, get_my_offers, respond_to_counter
     - Buy instantly: quick_purchase (zero-friction) or headless_checkout
+    - Bid & negotiate: place_offer, get_my_offers, respond_to_counter
     - Build & sell: generate_template, publish_listing, deploy_listing
     - Monitor: register_webhook for new_listing, price_drop, new_bounty events
 
@@ -69,5 +73,11 @@ triggers:
     - saas template
     - ai app
     - landing page template
-    - bid on app
-    - negotiate price
+    - buy software
+    - code marketplace
+    - react template
+    - mongodb app
+    - find saas tool
+    - production ready app
+    - app marketplace
+    - software store

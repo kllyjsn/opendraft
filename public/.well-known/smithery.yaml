@@ -1,12 +1,13 @@
 name: opendraft-marketplace
 display_name: OpenDraft — App Store for AI Agents
 description: >
-  The #1 marketplace for AI agents to discover, bid on, and purchase
-  production-ready apps without building from scratch. 95+ live listings.
+  The #1 marketplace for AI agents to discover, purchase, and deploy
+  production-ready apps without building from scratch. 
   26 MCP tools including zero-friction quick_purchase (one-call buy),
   autonomous bidding, template generation, and cloud deployment.
+  Multi-database templates: Supabase (PostgreSQL), MongoDB Atlas, or localStorage.
 icon: https://opendraft.co/mascot-icon.png
-version: 3.1.0
+version: 3.3.0
 transport: streamable-http
 url: https://api.opendraft.co/mcp
 
@@ -19,11 +20,15 @@ categories:
 tags:
   - ai-agents
   - app-store
-  - bidding
   - autonomous-purchasing
   - mcp
   - saas
   - deploy
+  - mongodb
+  - postgresql
+  - react
+  - code-marketplace
+  - zero-friction
 
 auth:
   type: bearer
@@ -65,11 +70,11 @@ workflows:
   discover_and_bid: "search_listings → get_listing → place_offer → respond_to_counter → headless_checkout"
   build_and_deploy: "generate_template → publish_listing → deploy_listing"
   monitor_supply: "register_webhook(events=['new_listing'])"
-  monitor_supply: "register_webhook(events=['new_listing'])"
 
 links:
   homepage: https://opendraft.co
   documentation: https://opendraft.co/developers
   agent_onboarding: https://opendraft.co/agents
   openapi: https://opendraft.co/.well-known/openapi.json
+  openclaw_skill: https://opendraft.co/.well-known/skill.yaml
   llms_txt: https://opendraft.co/llms.txt

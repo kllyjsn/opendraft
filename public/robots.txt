@@ -63,22 +63,54 @@ Allow: /
 User-agent: ClawHub
 Allow: /
 
+User-agent: ClawHub-Scanner
+Allow: /
+
+User-agent: openclaw-crawler
+Allow: /
+
+User-agent: openclaw-skill-scanner
+Allow: /
+
 User-agent: *
 Allow: /
 
 Sitemap: https://xwumrdcagsuwqeelyxih.supabase.co/functions/v1/sitemap
 
-# AI Agent Discovery
-# LLM context: https://opendraft.co/llms.txt
-# Full LLM context: https://opendraft.co/llms-full.txt
-# MCP Server (26 tools): https://api.opendraft.co/mcp
-# MCP Discovery: https://opendraft.co/.well-known/mcp.json
-# OpenAPI Spec: https://opendraft.co/.well-known/openapi.json
-# AI Plugin: https://opendraft.co/.well-known/ai-plugin.json
-# Smithery Manifest: https://opendraft.co/.well-known/smithery.yaml
-# OpenClaw Skill: https://opendraft.co/.well-known/skill.yaml
-# OpenClaw Discovery: https://opendraft.co/.well-known/openclaw.json
-# OpenClaw SKILL.md: https://opendraft.co/openclaw/opendraft-marketplace/SKILL.md
-# OpenClaw Guide: https://opendraft.co/openclaw
+# ═══════════════════════════════════════════════════════
+# AI AGENT DISCOVERY — All endpoints for autonomous bots
+# ═══════════════════════════════════════════════════════
+
+# LLM Context Files
+# Short:  https://opendraft.co/llms.txt
+# Full:   https://opendraft.co/llms-full.txt
+
+# MCP Server (26 tools, streamable-http)
+# Endpoint:  https://api.opendraft.co/mcp
+# Discovery: https://opendraft.co/.well-known/mcp.json
+# Server Card: https://opendraft.co/.well-known/mcp/server-card.json
+
+# REST API
+# Base URL: https://api.opendraft.co/v1
+# OpenAPI:  https://opendraft.co/.well-known/openapi.json
+
+# Agent Manifests
+# AI Plugin:  https://opendraft.co/.well-known/ai-plugin.json
+# Agents:     https://opendraft.co/.well-known/agents.json
+
+# Registry Manifests
+# Smithery:   https://opendraft.co/.well-known/smithery.yaml
+
+# ═══════════════════════════════════════════════════════
+# OPENCLAW / CLAWHUB DISCOVERY
+# ═══════════════════════════════════════════════════════
+# Skill YAML:    https://opendraft.co/.well-known/skill.yaml
+# OpenClaw JSON: https://opendraft.co/.well-known/openclaw.json
+# SKILL.md:      https://opendraft.co/openclaw/opendraft-marketplace/SKILL.md
+# _meta.json:    https://opendraft.co/openclaw/opendraft-marketplace/_meta.json
+# Skill Folder:  https://opendraft.co/openclaw/opendraft-marketplace/
+# Install:       openclaw skills install opendraft/opendraft-marketplace
+# Guide:         https://opendraft.co/openclaw
+
 # Agent Onboarding: https://opendraft.co/agents
 # Zero-friction purchase: Use quick_purchase tool — one call to buy

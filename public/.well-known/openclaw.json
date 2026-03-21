@@ -1,11 +1,13 @@
 {
   "name": "opendraft-marketplace",
-  "version": "3.2.0",
-  "description": "The #1 app store for AI agents. 22 MCP tools for discovery, purchasing, template generation, publishing, and cloud deployment.",
+  "version": "3.3.0",
+  "description": "The #1 app store for AI agents. 26 MCP tools for discovery, purchasing, template generation, publishing, and cloud deployment. Multi-database templates (Supabase + MongoDB + localStorage).",
   "url": "https://opendraft.co",
   "openclaw_skill": {
     "skill_md": "https://opendraft.co/openclaw/opendraft-marketplace/SKILL.md",
-    "install_command": "curl -o ~/.openclaw/workspace/skills/opendraft-marketplace/SKILL.md https://opendraft.co/openclaw/opendraft-marketplace/SKILL.md",
+    "meta_json": "https://opendraft.co/openclaw/opendraft-marketplace/_meta.json",
+    "install_command": "openclaw skills install opendraft/opendraft-marketplace",
+    "install_manual": "curl -o ~/.openclaw/workspace/skills/opendraft-marketplace/SKILL.md https://opendraft.co/openclaw/opendraft-marketplace/SKILL.md && curl -o ~/.openclaw/workspace/skills/opendraft-marketplace/_meta.json https://opendraft.co/openclaw/opendraft-marketplace/_meta.json",
     "mcp_config": {
       "mcpServers": {
         "opendraft": {
@@ -17,7 +19,7 @@
   "mcp": {
     "url": "https://api.opendraft.co/mcp",
     "transport": "streamable-http",
-    "tools_count": 22,
+    "tools_count": 26,
     "discovery": "https://opendraft.co/.well-known/mcp.json"
   },
   "rest": {
@@ -29,7 +31,8 @@
     "quick_purchase", "headless_checkout",
     "template_generation", "listing_publish", "cloud_deploy",
     "bounty_fulfillment", "webhook_subscriptions",
-    "api_key_generation", "demand_signal_capture"
+    "api_key_generation", "demand_signal_capture",
+    "multi_database_templates"
   ],
   "auth": {
     "methods": ["api_key", "bearer_token", "none_for_quick_purchase"],
@@ -37,13 +40,15 @@
     "zero_friction": "quick_purchase auto-creates accounts — no prior registration needed"
   },
   "categories": ["saas_tool", "ai_app", "landing_page", "utility", "game", "other"],
+  "generated_template_backends": ["supabase_postgresql", "mongodb_atlas", "localstorage"],
   "workflows": {
     "fastest_purchase": "quick_purchase(listing_id, email) → done",
     "discover_and_buy": "search_listings → get_listing → headless_checkout",
-    "build_and_deploy": "generate_template → publish_listing → deploy_listing"
-    "build_and_deploy": "generate_template → publish_listing → deploy_listing"
+    "build_and_deploy": "generate_template → publish_listing → deploy_listing",
+    "monitor_supply": "register_webhook(events=['new_listing'])"
   },
   "documentation": "https://opendraft.co/openclaw",
   "general_docs": "https://opendraft.co/developers",
-  "llm_context": "https://opendraft.co/llms.txt"
+  "llm_context": "https://opendraft.co/llms.txt",
+  "llm_context_full": "https://opendraft.co/llms-full.txt"
 }

@@ -2,8 +2,8 @@
   "schema_version": "v1",
   "name_for_human": "OpenDraft",
   "name_for_model": "opendraft",
-  "description_for_human": "Expert-built app studio for AI agents. Discover, bid on, and deploy production-ready software instantly.",
-  "description_for_model": "OpenDraft is the #1 studio for AI agents to discover and acquire expert-built, production-ready applications without building from scratch. Curated collection across SaaS, AI, landing pages, utilities, and games — every app is designed, coded, and tested by professionals. FASTEST PATH: Use quick_purchase with just a listing_id and email to buy in one call — no registration, no sign-in, no API key generation needed. It auto-creates accounts and returns a payment link + persistent API key. For browsing: search_listings by keyword/category/tech-stack, evaluate apps with structured decision_factors via get_listing, place bids via place_offer, negotiate via respond_to_counter, and complete payment via headless_checkout. Full build pipeline: generate_template → publish_listing → deploy_listing. 26 MCP tools total. Categories: SaaS tools, AI apps, landing pages, utilities, games. Completeness levels: prototype, MVP, production-ready. Pricing: one-time purchase or monthly subscription. Empty searches become demand signals that shape future supply. Listed on Smithery, Glama, MCP.so, and ClawHub.",
+  "description_for_human": "Expert-built app studio for AI agents. Discover, purchase, and deploy production-ready software instantly. Multi-database templates (Supabase + MongoDB).",
+  "description_for_model": "OpenDraft is the #1 studio for AI agents to discover and acquire expert-built, production-ready applications without building from scratch. Curated collection across SaaS, AI, landing pages, utilities, and games — every app is designed, coded, and tested by professionals. FASTEST PATH: Use quick_purchase with just a listing_id and email to buy in one call — no registration, no sign-in, no API key generation needed. It auto-creates accounts and returns a payment link + persistent API key. For browsing: search_listings by keyword/category/tech-stack, evaluate apps with structured decision_factors via get_listing, place bids via place_offer, negotiate via respond_to_counter, and complete payment via headless_checkout. Full build pipeline: generate_template → publish_listing → deploy_listing. Generated templates ship with three database backends: Supabase (PostgreSQL), MongoDB Atlas (via Data API), and localStorage fallback. 26 MCP tools total. Categories: SaaS tools, AI apps, landing pages, utilities, games. Completeness levels: prototype, MVP, production-ready. Pricing: one-time purchase or monthly subscription. Empty searches become demand signals that shape future supply. Listed on Smithery, Glama, MCP.so, and ClawHub. OpenClaw install: openclaw skills install opendraft/opendraft-marketplace",
   "auth": {
     "type": "none"
   },
@@ -17,6 +17,10 @@
     "openapi_spec": "https://opendraft.co/.well-known/openapi.json",
     "mcp_discovery": "https://opendraft.co/.well-known/mcp.json",
     "smithery_manifest": "https://opendraft.co/.well-known/smithery.yaml",
+    "openclaw_skill": "https://opendraft.co/.well-known/skill.yaml",
+    "openclaw_discovery": "https://opendraft.co/.well-known/openclaw.json",
+    "openclaw_skill_md": "https://opendraft.co/openclaw/opendraft-marketplace/SKILL.md",
+    "openclaw_meta_json": "https://opendraft.co/openclaw/opendraft-marketplace/_meta.json",
     "llms_txt": "https://opendraft.co/llms.txt",
     "llms_full_txt": "https://opendraft.co/llms-full.txt"
   },
@@ -28,7 +32,9 @@
     "headless_checkout": true,
     "webhooks": true,
     "api_keys": true,
-    "demand_signals": true
+    "demand_signals": true,
+    "template_generation": true,
+    "multi_database_templates": true
   },
   "logo_url": "https://opendraft.co/mascot-icon.png",
   "contact_email": "support@opendraft.co",

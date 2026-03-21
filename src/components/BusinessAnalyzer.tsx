@@ -37,6 +37,19 @@ interface BrandIdentity {
   visual_references: string;
 }
 
+interface SaasReplacement {
+  tool_name: string;
+  monthly_cost: number;
+  replacement_app: string;
+  difficulty: "easy" | "moderate" | "complex";
+}
+
+interface QuickWin {
+  name: string;
+  impact: string;
+  time_to_build: string;
+}
+
 interface AnalysisResult {
   business_name: string;
   industry: string;
@@ -44,6 +57,9 @@ interface AnalysisResult {
   brand_identity?: BrandIdentity;
   insights: Insight[];
   recommended_builds: RecommendedBuild[];
+  saas_replacements?: SaasReplacement[];
+  quick_wins?: QuickWin[];
+  competitive_edge?: string;
   pageTitle: string;
   url: string;
 }

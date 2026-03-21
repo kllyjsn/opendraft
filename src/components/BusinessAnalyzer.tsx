@@ -132,6 +132,17 @@ const EXAMPLE_ANALYSES: { label: string; emoji: string; data: AnalysisResult }[]
         { name: "AI Document Drafter", description: "Template-based document generation with AI clause suggestions and version history.", category: "ai_app", priority: "medium", search_query: "law firm ai document drafting tool" },
         { name: "Lead Qualification Chatbot", description: "Website chatbot that qualifies leads, books consultations, and captures case details 24/7.", category: "ai_app", priority: "medium", search_query: "law firm lead chatbot" },
       ],
+      saas_replacements: [
+        { tool_name: "Clio", monthly_cost: 89, replacement_app: "Case Management Dashboard", difficulty: "moderate" as const },
+        { tool_name: "LawPay", monthly_cost: 49, replacement_app: "Client Billing Portal", difficulty: "moderate" as const },
+        { tool_name: "Calendly", monthly_cost: 12, replacement_app: "Consultation Scheduler", difficulty: "easy" as const },
+      ],
+      quick_wins: [
+        { name: "Consultation Booking Form", impact: "Convert website visitors into booked consultations 24/7", time_to_build: "15 min" },
+        { name: "Case Status Auto-Updater", impact: "Eliminate 60% of 'what's my status?' calls", time_to_build: "30 min" },
+        { name: "Client Intake Questionnaire", impact: "Cut new client onboarding from 45 min to 8 min", time_to_build: "20 min" },
+      ],
+      competitive_edge: "Forward-thinking firms are using custom client portals that let clients check case status, sign documents, and message attorneys — eliminating the #1 complaint in legal: poor communication. Owning your tech stack means you never pay per-seat fees that punish growth.",
       pageTitle: "Meridian Legal",
       url: "https://meridianlegal.com",
     },

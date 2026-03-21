@@ -106,6 +106,17 @@ function buildFallbackAnalysis(formattedUrl: string, domain: string) {
         search_query: `${domain} roi calculator landing page`,
       },
     ],
+    saas_replacements: [
+      { tool_name: "Calendly", monthly_cost: 12, replacement_app: "Custom Booking Portal", difficulty: "easy" as const },
+      { tool_name: "HubSpot CRM", monthly_cost: 45, replacement_app: "Lightweight CRM Dashboard", difficulty: "moderate" as const },
+      { tool_name: "Zendesk", monthly_cost: 69, replacement_app: "Customer Support Portal", difficulty: "moderate" as const },
+    ],
+    quick_wins: [
+      { name: "Contact Form with Auto-Reply", impact: "Capture leads 24/7 with instant confirmation emails", time_to_build: "15 min" },
+      { name: "FAQ Knowledge Base", impact: "Reduce support tickets by 40% with self-serve answers", time_to_build: "30 min" },
+      { name: "Team Status Dashboard", impact: "Real-time visibility into project progress for stakeholders", time_to_build: "45 min" },
+    ],
+    competitive_edge: `Top performers in ${businessName}'s space are building proprietary tools that give them a 2-3x speed advantage in customer onboarding and lead conversion. By owning your software stack instead of renting generic SaaS, you control your competitive moat and eliminate per-seat pricing that scales against you.`,
     pageTitle: businessName,
     url: formattedUrl,
     analysis_source: "fallback",

@@ -165,6 +165,17 @@ const EXAMPLE_ANALYSES: { label: string; emoji: string; data: AnalysisResult }[]
         { name: "Retention Alert System", description: "AI flags at-risk members based on attendance drops and triggers personalized win-back messages.", category: "ai_app", priority: "medium", search_query: "fitness member retention automation" },
         { name: "Class Results Tracker", description: "Members log workouts, see progress charts, and share achievements — drives community and retention.", category: "utility", priority: "medium", search_query: "fitness workout tracker app" },
       ],
+      saas_replacements: [
+        { tool_name: "Mindbody", monthly_cost: 139, replacement_app: "Member Booking App", difficulty: "moderate" as const },
+        { tool_name: "Mailchimp", monthly_cost: 20, replacement_app: "Retention Alert System", difficulty: "easy" as const },
+        { tool_name: "Stripe Billing", monthly_cost: 0, replacement_app: "Membership Dashboard", difficulty: "easy" as const },
+      ],
+      quick_wins: [
+        { name: "Class Schedule Widget", impact: "Let members book from your website or Instagram bio link", time_to_build: "15 min" },
+        { name: "Attendance Tracker", impact: "Spot at-risk members before they cancel", time_to_build: "25 min" },
+        { name: "Post-Class Survey", impact: "Get real-time feedback to improve class quality", time_to_build: "10 min" },
+      ],
+      competitive_edge: "Studios using custom member apps see 25% lower churn because they catch disengagement early. While competitors pay $139/mo for Mindbody's generic experience, you can own a branded app that feels premium and costs a fraction to maintain.",
       pageTitle: "Peak Fitness",
       url: "https://peakfitness.com",
     },

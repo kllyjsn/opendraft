@@ -132,10 +132,160 @@ export const supabase = supabaseUrl && supabaseAnonKey
 /** Helper to check if backend is configured */
 export const hasBackend = () => !!supabase;
 `,
+  // MongoDB client setup for customers who prefer MongoDB
+  "src/lib/mongodb.ts": `/**
+ * MongoDB Data API client for browser-based apps.
+ * Uses MongoDB Atlas Data API (REST) — no native driver needed.
+ *
+ * Setup:
+ * 1. Create a free MongoDB Atlas cluster at https://cloud.mongodb.com
+ * 2. Enable the Data API in Atlas → App Services → Data API
+ * 3. Create an API key and set the env vars below
+ */
+
+const MONGODB_API_URL = import.meta.env.VITE_MONGODB_API_URL || '';
+const MONGODB_API_KEY = import.meta.env.VITE_MONGODB_API_KEY || '';
+const MONGODB_DATA_SOURCE = import.meta.env.VITE_MONGODB_DATA_SOURCE || 'Cluster0';
+const MONGODB_DATABASE = import.meta.env.VITE_MONGODB_DATABASE || 'app';
+
+export const hasMongoDB = () => !!(MONGODB_API_URL && MONGODB_API_KEY);
+
+interface MongoAction {
+  action: 'findOne' | 'find' | 'insertOne' | 'insertMany' | 'updateOne' | 'updateMany' | 'deleteOne' | 'deleteMany';
+  collection: string;
+  filter?: Record<string, unknown>;
+  document?: Record<string, unknown>;
+  documents?: Record<string, unknown>[];
+  update?: Record<string, unknown>;
+  sort?: Record<string, number>;
+  limit?: number;
+  projection?: Record<string, number>;
+}
+
+async function mongoRequest<T = unknown>(params: MongoAction): Promise<T> {
+  if (!hasMongoDB()) throw new Error('MongoDB not configured. Set VITE_MONGODB_* env vars.');
+
+  const { action, collection, ...rest } = params;
+  const response = await fetch(\`\${MONGODB_API_URL}/action/\${action}\`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'api-key': MONGODB_API_KEY,
+    },
+    body: JSON.stringify({
+      dataSource: MONGODB_DATA_SOURCE,
+      database: MONGODB_DATABASE,
+      collection,
+      ...rest,
+    }),
+  });
+
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(\`MongoDB \${action} failed: \${err}\`);
+  }
+  return response.json();
+}
+
+/** Typed MongoDB collection helper */
+export function collection<T = Record<string, unknown>>(name: string) {
+  return {
+    findOne: (filter: Record<string, unknown> = {}) =>
+      mongoRequest<{ document: T | null }>({ action: 'findOne', collection: name, filter }),
+    find: (filter: Record<string, unknown> = {}, options?: { sort?: Record<string, number>; limit?: number }) =>
+      mongoRequest<{ documents: T[] }>({ action: 'find', collection: name, filter, ...options }),
+    insertOne: (document: Partial<T>) =>
+      mongoRequest<{ insertedId: string }>({ action: 'insertOne', collection: name, document: document as Record<string, unknown> }),
+    insertMany: (documents: Partial<T>[]) =>
+      mongoRequest<{ insertedIds: string[] }>({ action: 'insertMany', collection: name, documents: documents as Record<string, unknown>[] }),
+    updateOne: (filter: Record<string, unknown>, update: Record<string, unknown>) =>
+      mongoRequest<{ matchedCount: number; modifiedCount: number }>({ action: 'updateOne', collection: name, filter, update }),
+    deleteOne: (filter: Record<string, unknown>) =>
+      mongoRequest<{ deletedCount: number }>({ action: 'deleteOne', collection: name, filter }),
+  };
+}
+`,
+  // Database abstraction layer — pick Supabase, MongoDB, or localStorage
+  "src/lib/database.ts": `/**
+ * Unified database abstraction layer.
+ * Auto-detects which backend is configured and provides a consistent API.
+ *
+ * Priority: Supabase → MongoDB → localStorage (fallback)
+ */
+import { supabase, hasBackend as hasSupabase } from './supabase';
+import { hasMongoDB, collection } from './mongodb';
+
+export type BackendType = 'supabase' | 'mongodb' | 'local';
+
+export function getBackendType(): BackendType {
+  if (hasSupabase()) return 'supabase';
+  if (hasMongoDB()) return 'mongodb';
+  return 'local';
+}
+
+export function getBackendLabel(): string {
+  const labels: Record<BackendType, string> = {
+    supabase: 'Supabase (PostgreSQL)',
+    mongodb: 'MongoDB Atlas',
+    local: 'Local Storage (offline)',
+  };
+  return labels[getBackendType()];
+}
+
+/** Generic CRUD helper that works with any configured backend */
+export const db = {
+  async getAll<T>(table: string): Promise<T[]> {
+    const backend = getBackendType();
+    if (backend === 'supabase' && supabase) {
+      const { data } = await supabase.from(table).select('*');
+      return (data || []) as T[];
+    }
+    if (backend === 'mongodb') {
+      const res = await collection<T>(table).find();
+      return res.documents;
+    }
+    // localStorage fallback
+    const raw = localStorage.getItem(\`db_\${table}\`);
+    return raw ? JSON.parse(raw) : [];
+  },
+
+  async insert<T extends Record<string, unknown>>(table: string, record: T): Promise<T | null> {
+    const backend = getBackendType();
+    if (backend === 'supabase' && supabase) {
+      const { data } = await supabase.from(table).insert(record).select().single();
+      return data as T | null;
+    }
+    if (backend === 'mongodb') {
+      await collection(table).insertOne(record);
+      return record;
+    }
+    const items = await this.getAll<T>(table);
+    items.push({ ...record, id: crypto.randomUUID() } as T);
+    localStorage.setItem(\`db_\${table}\`, JSON.stringify(items));
+    return record;
+  },
+
+  async delete(table: string, id: string): Promise<boolean> {
+    const backend = getBackendType();
+    if (backend === 'supabase' && supabase) {
+      const { error } = await supabase.from(table).delete().eq('id', id);
+      return !error;
+    }
+    if (backend === 'mongodb') {
+      const res = await collection(table).deleteOne({ _id: id });
+      return res.deletedCount > 0;
+    }
+    const items = await this.getAll<Record<string, unknown>>(table);
+    const filtered = items.filter(i => i.id !== id);
+    localStorage.setItem(\`db_\${table}\`, JSON.stringify(filtered));
+    return true;
+  },
+};
+`,
   "src/hooks/useLocalStorage.ts": `import { useState, useEffect } from 'react';
 
 /** Persist state to localStorage with automatic JSON serialization.
- *  Works as a drop-in replacement for useState — if Supabase is configured,
+ *  Works as a drop-in replacement for useState — if Supabase or MongoDB is configured,
  *  you can swap this for a database-backed hook later. */
 export function useLocalStorage<T>(key: string, initialValue: T) {
   const [value, setValue] = useState<T>(() => {

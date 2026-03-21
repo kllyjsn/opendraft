@@ -20,45 +20,6 @@ import { BeforeAfterDemo } from "@/components/BeforeAfterDemo";
 
 const ROTATING_WORDS = ["CRM", "scheduler", "dashboard", "portal", "tracker", "helpdesk"];
 
-function HeroTagline() {
-  const [index, setIndex] = useState(0);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setIndex((prev) => (prev + 1) % ROTATING_WORDS.length);
-    }, 2400);
-    return () => clearInterval(interval);
-  }, []);
-
-  return (
-    <div className="mb-8 md:mb-10">
-      <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-[5.5rem] font-black tracking-[-0.05em] leading-[1.05]">
-        <span className="block text-foreground">Build your own</span>
-        <span className="block text-foreground">
-          <span
-            className="inline-block relative overflow-hidden align-bottom"
-            style={{ minWidth: "7ch" }}
-          >
-            <AnimatePresence mode="wait">
-              <motion.span
-                key={ROTATING_WORDS[index]}
-                initial={{ opacity: 0, y: 36, filter: "blur(8px)" }}
-                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                exit={{ opacity: 0, y: -36, filter: "blur(8px)" }}
-                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                className="inline-block text-primary"
-              >
-                {ROTATING_WORDS[index]}
-              </motion.span>
-            </AnimatePresence>
-          </span>
-          .
-        </span>
-      </h1>
-    </div>
-  );
-}
-
 function GenerationProgress({
   isInProgress,
   genJob,
@@ -150,12 +111,21 @@ export default function Index() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [rotatingIndex, setRotatingIndex] = useState(0);
+  const [hasResults, setHasResults] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
       setRotatingIndex((prev) => (prev + 1) % ROTATING_WORDS.length);
     }, 2400);
     return () => clearInterval(interval);
+  }, []);
+
+  // Check sessionStorage on mount for persisted results
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem("opendraft_biz_analysis");
+      if (saved) setHasResults(true);
+    } catch {}
   }, []);
 
   const {
@@ -217,69 +187,85 @@ export default function Index() {
       <JsonLd data={jsonLdData} />
       <Navbar />
 
-      {/* ── HERO — Charged Stillness ── */}
-      <section className="relative flex-1 flex items-center justify-center min-h-[65vh] md:min-h-[90vh] pt-10 md:pt-0">
-        <HeroBeams />
+      {/* ── HERO — collapses when results are showing ── */}
+      <section
+        className={`relative flex items-center justify-center transition-all duration-700 ease-out ${
+          hasResults
+            ? "min-h-0 pt-6 pb-2 md:pt-10 md:pb-4"
+            : "flex-1 min-h-[65vh] md:min-h-[90vh] pt-10 md:pt-0"
+        }`}
+      >
+        {!hasResults && <HeroBeams />}
 
         <div className="container mx-auto px-4 text-center relative z-10">
-          {/* Headline */}
-          <motion.div
-            initial={{ opacity: 0, y: 24, filter: "blur(6px)" }}
-            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-            transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1] }}
-          >
-            <div className="mb-7 md:mb-9">
-              <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-[5rem] font-bold tracking-[-0.04em] leading-[1.06]">
-                <span className="block text-muted-foreground/70">Stop renting software.</span>
-                <span className="block text-foreground mt-1">
-                  Build your own{" "}
-                  <span
-                    className="inline-block relative overflow-hidden align-bottom"
-                    style={{ minWidth: "5ch" }}
-                  >
-                    <AnimatePresence mode="wait">
-                      <motion.span
-                        key={ROTATING_WORDS[rotatingIndex]}
-                        initial={{ opacity: 0, y: 24, filter: "blur(6px)" }}
-                        animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                        exit={{ opacity: 0, y: -24, filter: "blur(6px)" }}
-                        transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-                        className="inline-block text-primary"
+          {/* Headline — hides when results are showing */}
+          <AnimatePresence>
+            {!hasResults && (
+              <motion.div
+                initial={{ opacity: 0, y: 24, filter: "blur(6px)" }}
+                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                exit={{ opacity: 0, y: -20, filter: "blur(6px)" }}
+                transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+              >
+                <div className="mb-7 md:mb-9">
+                  <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-[5rem] font-bold tracking-[-0.04em] leading-[1.06]">
+                    <span className="block text-muted-foreground/70">Stop renting software.</span>
+                    <span className="block text-foreground mt-1">
+                      Build your own{" "}
+                      <span
+                        className="inline-block relative overflow-hidden align-bottom"
+                        style={{ minWidth: "5ch" }}
                       >
-                        {ROTATING_WORDS[rotatingIndex]}
-                      </motion.span>
-                    </AnimatePresence>
-                  </span>
-                  .
-                </span>
-              </h1>
-            </div>
-          </motion.div>
+                        <AnimatePresence mode="wait">
+                          <motion.span
+                            key={ROTATING_WORDS[rotatingIndex]}
+                            initial={{ opacity: 0, y: 24, filter: "blur(6px)" }}
+                            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                            exit={{ opacity: 0, y: -24, filter: "blur(6px)" }}
+                            transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+                            className="inline-block text-primary"
+                          >
+                            {ROTATING_WORDS[rotatingIndex]}
+                          </motion.span>
+                        </AnimatePresence>
+                      </span>
+                      .
+                    </span>
+                  </h1>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-          {/* Sub-headline */}
-          <motion.p
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
-            className="text-sm md:text-[15px] text-muted-foreground/60 max-w-sm mx-auto mb-9 md:mb-11 leading-[1.7]"
-          >
-            Paste your website. Get a custom app in 90 seconds.
-            <br />
-            <span className="text-foreground/70 font-medium">Free to try — no coding experience needed.</span>
-          </motion.p>
+          {/* Sub-headline — hides when results show */}
+          <AnimatePresence>
+            {!hasResults && (
+              <motion.p
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.6, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+                className="text-sm md:text-[15px] text-muted-foreground/60 max-w-sm mx-auto mb-9 md:mb-11 leading-[1.7]"
+              >
+                Paste your website. Get a custom app in 90 seconds.
+                <br />
+                <span className="text-foreground/70 font-medium">Free to try — no coding experience needed.</span>
+              </motion.p>
+            )}
+          </AnimatePresence>
 
-          {/* URL Input */}
+          {/* URL Input — always visible */}
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className="mb-7 md:mb-9"
+            transition={{ duration: 0.9, delay: hasResults ? 0 : 0.4, ease: [0.16, 1, 0.3, 1] }}
+            className={hasResults ? "mb-4" : "mb-7 md:mb-9"}
           >
-            <BusinessAnalyzer onGenerate={handleGenerate} />
+            <BusinessAnalyzer onGenerate={handleGenerate} onResultsChange={setHasResults} />
           </motion.div>
 
-          {/* Trust signals */}
-          <SocialProofBar />
+          {/* Trust signals — hide when results show */}
+          {!hasResults && <SocialProofBar />}
 
           {/* Generation progress */}
           <div className="mt-10">
@@ -303,60 +289,71 @@ export default function Index() {
         </div>
       </section>
 
-      {/* ── BEFORE/AFTER ── */}
-      <section className="py-14 md:py-24">
-        <div className="container mx-auto px-4">
-          <BeforeAfterDemo />
-        </div>
-      </section>
-
-      {/* ── VALUE PROPOSITIONS ── */}
-      <ValueProps />
-
-      {/* ── SHOWCASE ── */}
-      <AnalysisShowcase />
-
-      {/* ── SIGNUP NUDGE — signed out only ── */}
-      {!user && <HomepageSignupNudge />}
-
-      {/* ── EMAIL CAPTURE — signed out only ── */}
-      {!user && <EmailCapture />}
-
-      {/* ── CLOSING CTA — monumental stillness ── */}
-      <section className="py-28 md:py-48">
-        <div className="container mx-auto px-4 text-center">
+      {/* ── BELOW-FOLD MARKETING — hide when results active ── */}
+      <AnimatePresence>
+        {!hasResults && (
           <motion.div
-            initial={{ opacity: 0, y: 20, filter: "blur(4px)" }}
-            whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-            viewport={{ once: true }}
-            transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.5 }}
           >
-            <p className="text-[9px] font-mono tracking-[0.3em] uppercase text-muted-foreground/25 mb-8">
-              fig. 04 — the promise
-            </p>
-            <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold tracking-[-0.04em] leading-[1.06] mb-6">
-              Every business,
-              <br />
-              <span className="text-primary/80">better software.</span>
-            </h2>
-            <p className="text-sm text-muted-foreground/50 max-w-md mx-auto mb-12 leading-relaxed">
-              Your competitors rent software. You'll own it.
-            </p>
-            <Button
-              onClick={() => {
-                const input = document.querySelector<HTMLInputElement>('input[inputMode="url"]');
-                if (input) {
-                  input.focus();
-                  input.scrollIntoView({ behavior: "smooth", block: "center" });
-                }
-              }}
-              className="bg-primary text-primary-foreground hover:bg-primary/90 h-11 px-7 text-sm font-semibold rounded-lg transition-all duration-300 active:scale-[0.97]"
-            >
-              Paste your URL
-            </Button>
+            {/* BEFORE/AFTER */}
+            <section className="py-14 md:py-24">
+              <div className="container mx-auto px-4">
+                <BeforeAfterDemo />
+              </div>
+            </section>
+
+            {/* VALUE PROPOSITIONS */}
+            <ValueProps />
+
+            {/* SHOWCASE */}
+            <AnalysisShowcase />
+
+            {/* SIGNUP NUDGE — signed out only */}
+            {!user && <HomepageSignupNudge />}
+
+            {/* EMAIL CAPTURE — signed out only */}
+            {!user && <EmailCapture />}
+
+            {/* CLOSING CTA */}
+            <section className="py-28 md:py-48">
+              <div className="container mx-auto px-4 text-center">
+                <motion.div
+                  initial={{ opacity: 0, y: 20, filter: "blur(4px)" }}
+                  whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  <p className="text-[9px] font-mono tracking-[0.3em] uppercase text-muted-foreground/25 mb-8">
+                    fig. 04 — the promise
+                  </p>
+                  <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold tracking-[-0.04em] leading-[1.06] mb-6">
+                    Every business,
+                    <br />
+                    <span className="text-primary/80">better software.</span>
+                  </h2>
+                  <p className="text-sm text-muted-foreground/50 max-w-md mx-auto mb-12 leading-relaxed">
+                    Your competitors rent software. You'll own it.
+                  </p>
+                  <Button
+                    onClick={() => {
+                      const input = document.querySelector<HTMLInputElement>('input[inputMode="url"]');
+                      if (input) {
+                        input.focus();
+                        input.scrollIntoView({ behavior: "smooth", block: "center" });
+                      }
+                    }}
+                    className="bg-primary text-primary-foreground hover:bg-primary/90 h-11 px-7 text-sm font-semibold rounded-lg transition-all duration-300 active:scale-[0.97]"
+                  >
+                    Paste your URL
+                  </Button>
+                </motion.div>
+              </div>
+            </section>
           </motion.div>
-        </div>
-      </section>
+        )}
+      </AnimatePresence>
 
       <Footer />
     </div>

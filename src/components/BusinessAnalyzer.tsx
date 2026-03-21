@@ -99,6 +99,17 @@ const EXAMPLE_ANALYSES: { label: string; emoji: string; data: AnalysisResult }[]
         { name: "Customer Follow-Up System", description: "Automated texts for appointment reminders, review requests, and annual maintenance nudges.", category: "ai_app", priority: "medium", search_query: "plumbing customer follow up automation" },
         { name: "Service Area Landing Page", description: "SEO-optimized page with real-time availability, reviews, and click-to-book for each zip code.", category: "landing_page", priority: "medium", search_query: "plumbing service area landing page" },
       ],
+      saas_replacements: [
+        { tool_name: "Housecall Pro", monthly_cost: 65, replacement_app: "Custom Booking Portal", difficulty: "easy" as const },
+        { tool_name: "Jobber", monthly_cost: 49, replacement_app: "Estimate & Invoice Tool", difficulty: "moderate" as const },
+        { tool_name: "Mailchimp", monthly_cost: 20, replacement_app: "Follow-Up Automation", difficulty: "easy" as const },
+      ],
+      quick_wins: [
+        { name: "Online Booking Widget", impact: "Capture after-hours leads — 35% of searches happen at night", time_to_build: "20 min" },
+        { name: "Review Request Automator", impact: "Double Google reviews in 30 days", time_to_build: "15 min" },
+        { name: "Service Area Checker", impact: "Stop wasting time on out-of-area calls", time_to_build: "10 min" },
+      ],
+      competitive_edge: "The top 10% of home service companies use custom booking and follow-up tools that convert 3× more leads than competitors relying on phone calls and paper estimates. By owning your scheduling and estimate stack, you eliminate $134/mo in SaaS fees while delivering a faster customer experience.",
       pageTitle: "Summit Plumbing",
       url: "https://summitplumbing.com",
     },

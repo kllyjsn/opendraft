@@ -1189,7 +1189,7 @@ async function sendSingleEmail(
       from: "OpenDraft <outreach@opendraft.co>",
       to: [lead.contact_email],
       subject: msg.subject,
-      html: formatEmailHtml(msg.body, lead),
+      html: formatEmailHtml(msg.body, lead, msg.metadata),
       tags: [
         { name: "campaign_id", value: msg.campaign_id },
         { name: "lead_id", value: msg.lead_id },

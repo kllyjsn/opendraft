@@ -824,6 +824,7 @@ TONE: Friendly, helpful, not salesy. Focus on helping them, not selling.
 LENGTH: Keep emails under 150 words.
 PERSONALIZATION: Reference specific things about their business/website.
 SIGNATURE: Always sign emails as "Jason" (not [Your Name] or any placeholder). Use "Jason" as the sender name. Example sign-off: "Best,\nJason\nOpenDraft"
+${demoUrl ? `\nIMPORTANT: We built a FREE live demo specifically for this business. Include the demo link naturally in the email. Frame it as "I put together a quick prototype for you" or "I built something for your business". The demo link is: ${demoUrl}` : ""}
 
 Our services: ${SERVICES_OFFERED.map(s => `${s.name} (${s.price_range})`).join(", ")}`
           },
@@ -836,6 +837,7 @@ Website: ${lead.website_url}
 Pain points identified: ${scoring.pain_points?.join(", ") || "general website improvement"}
 Website issues: ${scoring.website_issues?.join(", ") || "N/A"}
 Recommended service: ${scoring.recommended_service || "Custom Website"}
+${demoUrl ? `Live demo we built for them: ${demoUrl}` : "No demo available yet"}
 
 Return JSON with: subject (compelling, not spammy), body (the email text), follow_up_days (when to follow up, 3-7)`
           }

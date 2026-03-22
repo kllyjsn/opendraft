@@ -80,14 +80,14 @@ Deno.serve(async (req) => {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              from: "OpenDraft <notifications@opendraft.lovable.app>",
+              from: "OpenDraft <notifications@opendraft.co>",
               to: [recipientEmail],
               subject: `${followerName} is now following you on OpenDraft`,
               html: `
               <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:500px;margin:0 auto;padding:20px;">
                 <h2 style="color:#6366f1;">New follower 🎉</h2>
                 <p><strong>${followerName}</strong> started following you on OpenDraft.</p>
-                <a href="https://opendraft.lovable.app/builder/${user.id}" style="display:inline-block;background:#6366f1;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;margin-top:8px;">View their profile</a>
+                <a href="https://opendraft.co/builder/${user.id}" style="display:inline-block;background:#6366f1;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;margin-top:8px;">View their profile</a>
                 <p style="color:#999;font-size:12px;margin-top:24px;">— OpenDraft</p>
               </div>`,
             }),

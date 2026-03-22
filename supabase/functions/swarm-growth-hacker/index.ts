@@ -174,7 +174,7 @@ serve(async (req) => {
             },
             body: JSON.stringify({
               type: "new_listing",
-              custom_text: `🏆 Builder @${seller.username || "anonymous"} just hit ${milestone} sales on OpenDraft!\n\nThe vibe coding economy is real. Build → Ship → Earn.\n\nhttps://opendraft.lovable.app`,
+              custom_text: `🏆 Builder @${seller.username || "anonymous"} just hit ${milestone} sales on OpenDraft!\n\nThe vibe coding economy is real. Build → Ship → Earn.\n\nhttps://opendraft.co`,
             }),
           });
         } catch {}

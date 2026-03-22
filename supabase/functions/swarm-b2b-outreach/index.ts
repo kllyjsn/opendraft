@@ -710,7 +710,7 @@ async function generateDemosForLeads(
       }
 
       if (completed && listingId) {
-        const demoUrl = `https://opendraft.lovable.app/listing/${listingId}`;
+        const demoUrl = `https://opendraft.co/listing/${listingId}`;
 
         // Store demo URL in lead metadata
         await supabase
@@ -1328,9 +1328,9 @@ function formatEmailHtml(body: string, lead: any, metadata?: any): string {
   ${demoCta}
   <hr style="border: none; border-top: 1px solid #e5e5e5; margin: 24px 0;">
   <p style="font-size: 12px; color: #666;">
-    Sent by OpenDraft · <a href="https://opendraft.lovable.app" style="color: #666;">opendraft.lovable.app</a>
+    Sent by OpenDraft · <a href="https://opendraft.co" style="color: #666;">opendraft.co</a>
     <br>
-    <a href="https://opendraft.lovable.app/unsubscribe?email=${encodeURIComponent(lead.contact_email || '')}" style="color: #666;">Unsubscribe</a>
+    <a href="https://opendraft.co/unsubscribe?email=${encodeURIComponent(lead.contact_email || '')}" style="color: #666;">Unsubscribe</a>
   </p>
 </body>
 </html>`;

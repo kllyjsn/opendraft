@@ -36,7 +36,7 @@ async function sendEmail(to: string, subject: string, html: string) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "OpenDraft <notifications@opendraft.lovable.app>",
+        from: "OpenDraft <notifications@opendraft.co>",
         to: [to],
         subject,
         html,
@@ -143,7 +143,7 @@ Deno.serve(async (req) => {
             <p>A buyer offered <strong>$${(offerAmount / 100).toFixed(2)}</strong> for your project <strong>"${listing.title}"</strong> (asking $${(listing.price / 100).toFixed(2)}).</p>
             ${message ? `<p style="color:#666;border-left:3px solid #e5e7eb;padding-left:12px;margin:16px 0;">"${message}"</p>` : ""}
             <p>Do you accept their offer?</p>
-            <a href="https://opendraft.lovable.app/dashboard?tab=offers" style="display:inline-block;background:#6366f1;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;margin-top:8px;">Review Offer</a>
+            <a href="https://opendraft.co/dashboard?tab=offers" style="display:inline-block;background:#6366f1;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;margin-top:8px;">Review Offer</a>
             <p style="color:#999;font-size:12px;margin-top:24px;">— OpenDraft</p>
           </div>`
         );
@@ -194,7 +194,7 @@ Deno.serve(async (req) => {
             <div style="font-family:sans-serif;max-width:500px;margin:0 auto;padding:20px;">
               <h2 style="color:#22c55e;">Offer accepted! 🎉</h2>
               <p>The seller accepted your offer of <strong>$${(offer.offer_amount / 100).toFixed(2)}</strong> for <strong>"${title}"</strong>.</p>
-              <a href="https://opendraft.lovable.app/checkout/${offer.listing_id}?offer=${offerId}" style="display:inline-block;background:#6366f1;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;margin-top:8px;">Complete Purchase</a>
+              <a href="https://opendraft.co/checkout/${offer.listing_id}?offer=${offerId}" style="display:inline-block;background:#6366f1;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;margin-top:8px;">Complete Purchase</a>
               <p style="color:#999;font-size:12px;margin-top:24px;">— OpenDraft</p>
             </div>`
           );
@@ -226,7 +226,7 @@ Deno.serve(async (req) => {
               <p>Unfortunately, the seller declined your offer of <strong>$${(offer.offer_amount / 100).toFixed(2)}</strong> for <strong>"${title}"</strong>.</p>
               ${sellerMessage ? `<p style="color:#666;border-left:3px solid #e5e7eb;padding-left:12px;">"${sellerMessage}"</p>` : ""}
               <p>You can still purchase at the full price or make a new offer.</p>
-              <a href="https://opendraft.lovable.app/listing/${offer.listing_id}" style="display:inline-block;background:#6366f1;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;margin-top:8px;">View Listing</a>
+              <a href="https://opendraft.co/listing/${offer.listing_id}" style="display:inline-block;background:#6366f1;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;margin-top:8px;">View Listing</a>
               <p style="color:#999;font-size:12px;margin-top:24px;">— OpenDraft</p>
             </div>`
           );
@@ -265,7 +265,7 @@ Deno.serve(async (req) => {
               <h2 style="color:#f59e0b;">Counter-offer! 🔄</h2>
               <p>The seller countered your offer of $${(offer.offer_amount / 100).toFixed(2)} with <strong>$${(counterAmount / 100).toFixed(2)}</strong> for <strong>"${title}"</strong>.</p>
               ${sellerMessage ? `<p style="color:#666;border-left:3px solid #e5e7eb;padding-left:12px;">"${sellerMessage}"</p>` : ""}
-              <a href="https://opendraft.lovable.app/listing/${offer.listing_id}" style="display:inline-block;background:#6366f1;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;margin-top:8px;">View Counter-Offer</a>
+              <a href="https://opendraft.co/listing/${offer.listing_id}" style="display:inline-block;background:#6366f1;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;margin-top:8px;">View Counter-Offer</a>
               <p style="color:#999;font-size:12px;margin-top:24px;">— OpenDraft</p>
             </div>`
           );

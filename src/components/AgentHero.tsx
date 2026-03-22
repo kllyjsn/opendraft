@@ -95,7 +95,7 @@ export function AgentHero() {
                 <Bot className="h-4 w-4" /> Try MCP Server
               </Button>
             </a>
-            <a href="https://opendraft.lovable.app/.well-known/openapi.json" target="_blank" rel="noopener noreferrer">
+            <a href="https://opendraft.co/.well-known/openapi.json" target="_blank" rel="noopener noreferrer">
               <Button variant="ghost" className="gap-1.5 text-muted-foreground">
                 OpenAPI Spec <ArrowRight className="h-3.5 w-3.5" />
               </Button>

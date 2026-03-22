@@ -186,7 +186,7 @@ Deno.serve(async (req) => {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              from: "OpenDraft <notifications@opendraft.lovable.app>",
+              from: "OpenDraft <notifications@opendraft.co>",
               to: [recipientEmail],
               subject: `New message from ${senderName} on OpenDraft`,
               html: `
@@ -194,7 +194,7 @@ Deno.serve(async (req) => {
                 <h2 style="color:#6366f1;">New message 💬</h2>
                 <p><strong>${senderName}</strong> sent you a message:</p>
                 <p style="color:#374151;border-left:3px solid #e5e7eb;padding-left:12px;margin:16px 0;">"${content.trim().slice(0, 200)}${content.trim().length > 200 ? "…" : ""}"</p>
-                <a href="https://opendraft.lovable.app/messages" style="display:inline-block;background:#6366f1;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;margin-top:8px;">View Messages</a>
+                <a href="https://opendraft.co/messages" style="display:inline-block;background:#6366f1;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;margin-top:8px;">View Messages</a>
                 <p style="color:#999;font-size:12px;margin-top:24px;">— OpenDraft</p>
               </div>`,
             }),

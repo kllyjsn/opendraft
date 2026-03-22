@@ -42,7 +42,7 @@ Deno.serve(async (req) => {
 
     const { amount, mode, tierId } = await req.json();
     const stripe = new Stripe(stripeKey);
-    const origin = req.headers.get("origin") || "https://opendraft.lovable.app";
+    const origin = req.headers.get("origin") || "https://opendraft.co";
 
     if (mode === "subscription") {
       const tierInfo = SUBSCRIPTION_TIERS[amount];

@@ -106,7 +106,7 @@ Deno.serve(async (req) => {
         <tr><td style="padding:8px 0;color:#888;">Purchases</td><td style="padding:8px 0;">${purchaseCount ?? 0}</td></tr>
       </table>
       <div style="margin-top:20px;text-align:center;">
-        <a href="https://opendraft.lovable.app/admin" style="display:inline-block;background:linear-gradient(135deg,#7c3aed,#ec4899);color:#fff;text-decoration:none;padding:10px 24px;border-radius:10px;font-weight:bold;font-size:13px;">
+        <a href="https://opendraft.co/admin" style="display:inline-block;background:linear-gradient(135deg,#7c3aed,#ec4899);color:#fff;text-decoration:none;padding:10px 24px;border-radius:10px;font-weight:bold;font-size:13px;">
           View Admin Dashboard →
         </a>
       </div>

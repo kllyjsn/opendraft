@@ -405,6 +405,7 @@ async function discoverBusinesses(
   ];
 
   const MAX_LEADS = opts.max_leads || 25;
+  let deepScrapeCount = 0;
 
   for (const industry of industries) {
     const niches = industry.niches.sort(() => Math.random() - 0.5).slice(0, 3);

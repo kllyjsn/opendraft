@@ -93,6 +93,9 @@ serve(async (req) => {
         case "generate_outreach":
           result = await generateOutreachMessages(supabase, LOVABLE_API_KEY, campaignId);
           break;
+        case "generate_demos":
+          result = await generateDemosForLeads(supabase, LOVABLE_API_KEY, campaignId);
+          break;
         case "send_emails":
           result = await sendOutreachEmails(supabase, RESEND_API_KEY, campaignId);
           break;

@@ -167,6 +167,7 @@ const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
 const BLOCKED_EMAIL_PATTERNS = [
   "example.com", "sentry.io", "wixpress", "googleapis", "wix.com",
   "squarespace.com", "godaddy.com", "wordpress.com", "cloudflare",
+  "schema.org", "w3.org", "json-ld", "placeholder",
 ];
 
 function extractEmails(text: string): string[] {
@@ -178,8 +179,8 @@ function extractEmails(text: string): string[] {
       !lower.startsWith("noreply") &&
       !lower.startsWith("no-reply") &&
       !lower.startsWith("support@") &&
-      !lower.startsWith("info@") // deprioritize generic but don't block
-      ? true : lower.startsWith("info@") // allow info@ as fallback
+      !lower.startsWith("info@")
+      ? true : lower.startsWith("info@")
     );
   });
 }
@@ -192,6 +193,19 @@ function extractAllEmails(text: string): string[] {
       !lower.startsWith("noreply") &&
       !lower.startsWith("no-reply");
   });
+}
+
+// ─── Helper: guess common email patterns from domain ──────────────────────────
+function guessEmailsFromDomain(domain: string): string[] {
+  // Skip obviously non-business domains
+  const skipDomains = ["gmail.com", "yahoo.com", "hotmail.com", "outlook.com", "aol.com"];
+  if (skipDomains.includes(domain.toLowerCase())) return [];
+  return [
+    `info@${domain}`,
+    `hello@${domain}`,
+    `contact@${domain}`,
+    `admin@${domain}`,
+  ];
 }
 
 // ─── Helper: get or create campaign ───────────────────────────────────────────

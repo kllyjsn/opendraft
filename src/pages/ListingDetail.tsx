@@ -17,6 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ChatDrawer } from "@/components/ChatDrawer";
 import { RemixChain } from "@/components/RemixChain";
 import { ListingImprovementPanel } from "@/components/ListingImprovementPanel";
+import { ChangelogFeed } from "@/components/ChangelogFeed";
 import { GremlinFloatingCTA } from "@/components/GremlinFloatingCTA";
 import { ProjectGoalsEditor } from "@/components/ProjectGoalsEditor";
 import { JsonLd } from "@/components/JsonLd";

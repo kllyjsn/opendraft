@@ -1296,7 +1296,7 @@ async function replyToLead(
 }
 
 // Format email as HTML
-function formatEmailHtml(body: string, lead: any): string {
+function formatEmailHtml(body: string, lead: any, metadata?: any): string {
   // Replace any AI placeholder names with Jason
   const cleanedBody = body
     .replace(/\[Your Name\]/gi, "Jason")
@@ -1305,7 +1305,17 @@ function formatEmailHtml(body: string, lead: any): string {
     .replace(/\[Sender Name\]/gi, "Jason")
     .replace(/\[sender\]/gi, "Jason");
   const paragraphs = cleanedBody.split('\n\n').map(p => `<p style="margin-bottom: 16px; line-height: 1.6;">${p}</p>`).join('');
-  
+
+  // Build demo CTA button if demo URL exists
+  const demoUrl = metadata?.demo_url || lead.metadata?.demo_url;
+  const demoCta = demoUrl ? `
+    <div style="text-align: center; margin: 28px 0;">
+      <a href="${demoUrl}" style="display: inline-block; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 15px; letter-spacing: 0.3px;">
+        👀 View Your Custom Demo
+      </a>
+      <p style="font-size: 12px; color: #888; margin-top: 8px;">Built specifically for ${lead.business_name || "your business"}</p>
+    </div>` : "";
+
   return `
 <!DOCTYPE html>
 <html>
@@ -1315,6 +1325,7 @@ function formatEmailHtml(body: string, lead: any): string {
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #1a1a1a; padding: 20px; max-width: 600px; margin: 0 auto;">
   ${paragraphs}
+  ${demoCta}
   <hr style="border: none; border-top: 1px solid #e5e5e5; margin: 24px 0;">
   <p style="font-size: 12px; color: #666;">
     Sent by OpenDraft · <a href="https://opendraft.lovable.app" style="color: #666;">opendraft.lovable.app</a>
@@ -1323,4 +1334,5 @@ function formatEmailHtml(body: string, lead: any): string {
   </p>
 </body>
 </html>`;
+}
 }

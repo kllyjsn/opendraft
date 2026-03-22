@@ -85,7 +85,7 @@ serve(async (req) => {
 
       switch (action) {
         case "discover_businesses":
-          result = await discoverBusinesses(supabase, FIRECRAWL_API_KEY, targetIndustry, targetRegion, campaignId);
+          result = await discoverBusinesses(supabase, FIRECRAWL_API_KEY, LOVABLE_API_KEY, targetIndustry, targetRegion, campaignId, body);
           break;
         case "evaluate_leads":
           result = await evaluateLeads(supabase, LOVABLE_API_KEY, FIRECRAWL_API_KEY, campaignId);
@@ -108,10 +108,15 @@ serve(async (req) => {
         case "send_follow_ups":
           result = await sendFollowUpEmails(supabase, LOVABLE_API_KEY, RESEND_API_KEY, campaignId);
           break;
+        case "add_prospect":
+          result = await addManualProspect(supabase, FIRECRAWL_API_KEY, LOVABLE_API_KEY, body);
+          break;
+        case "import_from_url":
+          result = await importProspectsFromUrl(supabase, FIRECRAWL_API_KEY, LOVABLE_API_KEY, body);
+          break;
         case "full_cycle":
         default:
-          // Run full pipeline
-          const discovered = await discoverBusinesses(supabase, FIRECRAWL_API_KEY, targetIndustry, targetRegion, campaignId);
+          const discovered = await discoverBusinesses(supabase, FIRECRAWL_API_KEY, LOVABLE_API_KEY, targetIndustry, targetRegion, campaignId, body);
           const evaluated = await evaluateLeads(supabase, LOVABLE_API_KEY, FIRECRAWL_API_KEY, campaignId);
           const demos = await generateDemosForLeads(supabase, LOVABLE_API_KEY, campaignId);
           const messages = await generateOutreachMessages(supabase, LOVABLE_API_KEY, campaignId);
@@ -157,290 +162,348 @@ serve(async (req) => {
   }
 });
 
-// Discover REAL businesses using Firecrawl search + website scraping
+// ─── Helper: extract emails from text ─────────────────────────────────────────
+const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
+const BLOCKED_EMAIL_PATTERNS = [
+  "example.com", "sentry.io", "wixpress", "googleapis", "wix.com",
+  "squarespace.com", "godaddy.com", "wordpress.com", "cloudflare",
+];
+
+function extractEmails(text: string): string[] {
+  const found = text.match(emailRegex) || [];
+  return found.filter(e => {
+    const lower = e.toLowerCase();
+    return (
+      !BLOCKED_EMAIL_PATTERNS.some(p => lower.includes(p)) &&
+      !lower.startsWith("noreply") &&
+      !lower.startsWith("no-reply") &&
+      !lower.startsWith("support@") &&
+      !lower.startsWith("info@") // deprioritize generic but don't block
+      ? true : lower.startsWith("info@") // allow info@ as fallback
+    );
+  });
+}
+
+function extractAllEmails(text: string): string[] {
+  const found = text.match(emailRegex) || [];
+  return found.filter(e => {
+    const lower = e.toLowerCase();
+    return !BLOCKED_EMAIL_PATTERNS.some(p => lower.includes(p)) &&
+      !lower.startsWith("noreply") &&
+      !lower.startsWith("no-reply");
+  });
+}
+
+// ─── Helper: get or create campaign ───────────────────────────────────────────
+async function getOrCreateCampaign(supabase: any, campaignId: string | null, industries: any[], region: string) {
+  if (campaignId) return campaignId;
+  
+  const { data: existing } = await supabase
+    .from("outreach_campaigns")
+    .select("id")
+    .eq("status", "active")
+    .single();
+
+  if (existing) return existing.id;
+
+  const { data: newCampaign } = await supabase
+    .from("outreach_campaigns")
+    .insert({
+      name: `Real Leads - ${new Date().toLocaleDateString()}`,
+      niche: "small_business",
+      industries: industries.map(i => i.name),
+      target_regions: [region],
+      services: SERVICES_OFFERED,
+      goals: { target_leads_per_week: 50, target_response_rate: 0.08 }
+    })
+    .select()
+    .single();
+  return newCampaign?.id;
+}
+
+// ─── Helper: check duplicate lead by domain ───────────────────────────────────
+async function isDuplicate(supabase: any, domain: string): Promise<boolean> {
+  const { data } = await supabase
+    .from("outreach_leads")
+    .select("id")
+    .or(`website_url.ilike.%${domain}%`)
+    .limit(1);
+  return (data && data.length > 0);
+}
+
+// ─── Helper: scrape contact info from a URL ───────────────────────────────────
+async function scrapeContactFromUrl(
+  url: string,
+  firecrawlKey: string,
+  lovableKey: string | null | undefined,
+): Promise<{ email: string | null; name: string | null; businessName: string; content: string }> {
+  let email: string | null = null;
+  let name: string | null = null;
+  let content = "";
+
+  const domain = new URL(url.startsWith("http") ? url : `https://${url}`).hostname.replace(/^www\./, "");
+  let businessName = domain.split(".")[0].replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase());
+
+  // Step 1: Scrape homepage with links
+  try {
+    const resp = await fetch("https://api.firecrawl.dev/v1/scrape", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${firecrawlKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        url: url.startsWith("http") ? url : `https://${url}`,
+        formats: ["markdown", "links"],
+        onlyMainContent: false,
+      }),
+    });
+
+    if (resp.ok) {
+      const data = await resp.json();
+      content = data.data?.markdown || data.markdown || "";
+      const meta = data.data?.metadata || data.metadata || {};
+      if (meta.title) {
+        businessName = meta.title.split(" - ")[0].split(" | ")[0].trim();
+      }
+
+      // Extract emails from homepage
+      const emails = extractAllEmails(content);
+      email = emails[0] || null;
+
+      // Step 2: If no email, try contact/about pages
+      if (!email && data.data?.links) {
+        const contactPages = (data.data.links as string[]).filter((l: string) =>
+          /contact|about|team|staff/i.test(l)
+        ).slice(0, 2);
+
+        for (const contactUrl of contactPages) {
+          try {
+            const cResp = await fetch("https://api.firecrawl.dev/v1/scrape", {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${firecrawlKey}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                url: contactUrl,
+                formats: ["markdown"],
+                onlyMainContent: false,
+              }),
+            });
+
+            if (cResp.ok) {
+              const cData = await cResp.json();
+              const cContent = cData.data?.markdown || cData.markdown || "";
+              content += "\n" + cContent;
+              const cEmails = extractAllEmails(cContent);
+              if (cEmails[0]) {
+                email = cEmails[0];
+
+                // Extract contact name via AI
+                if (lovableKey && cContent.length > 50) {
+                  try {
+                    const nameResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+                      method: "POST",
+                      headers: {
+                        Authorization: `Bearer ${lovableKey}`,
+                        "Content-Type": "application/json",
+                      },
+                      body: JSON.stringify({
+                        model: "google/gemini-2.5-flash-lite",
+                        messages: [{
+                          role: "user",
+                          content: `Extract the business owner or primary contact person's name from this page. Return ONLY the name, or "unknown" if not found.\n\n${cContent.slice(0, 1500)}`
+                        }],
+                      }),
+                    });
+                    if (nameResp.ok) {
+                      const nData = await nameResp.json();
+                      const n = nData.choices?.[0]?.message?.content?.trim();
+                      if (n && n.toLowerCase() !== "unknown" && n.length < 50) name = n;
+                    }
+                  } catch {}
+                }
+                break;
+              }
+            }
+          } catch {}
+        }
+      }
+    }
+  } catch (e) {
+    console.warn(`Failed to scrape ${url}:`, e);
+  }
+
+  return { email, name, businessName, content };
+}
+
+// ─── DISCOVER: Enhanced multi-strategy search ─────────────────────────────────
 async function discoverBusinesses(
   supabase: any,
   firecrawlKey: string | undefined,
+  lovableKey: string | undefined,
   targetIndustry: string | null,
   region: string,
-  campaignId: string | null
+  campaignId: string | null,
+  opts: any = {},
 ): Promise<any> {
-  const leads: any[] = [];
-
   if (!firecrawlKey) {
     return { leads_created: 0, error: "FIRECRAWL_API_KEY required for real business discovery" };
   }
 
-  // Pick industries to search
+  const leads: any[] = [];
+
   const industries = targetIndustry
     ? TARGET_INDUSTRIES.filter(i => i.name.toLowerCase().includes(targetIndustry.toLowerCase()))
-    : TARGET_INDUSTRIES.slice(0, 2);
+    : TARGET_INDUSTRIES.sort(() => Math.random() - 0.5).slice(0, 3);
 
-  // Get or create a campaign
-  let activeCampaignId = campaignId;
-  if (!activeCampaignId) {
-    const { data: existingCampaign } = await supabase
-      .from("outreach_campaigns")
-      .select("id")
-      .eq("status", "active")
-      .single();
+  const activeCampaignId = await getOrCreateCampaign(supabase, campaignId, industries, region);
 
-    if (existingCampaign) {
-      activeCampaignId = existingCampaign.id;
-    } else {
-      const { data: newCampaign } = await supabase
-        .from("outreach_campaigns")
-        .insert({
-          name: `Real Leads - ${new Date().toLocaleDateString()}`,
-          niche: "small_business",
-          industries: industries.map(i => i.name),
-          target_regions: [region],
-          services: SERVICES_OFFERED,
-          goals: { target_leads_per_week: 25, target_response_rate: 0.08 }
-        })
-        .select()
-        .single();
-      activeCampaignId = newCampaign?.id;
-    }
-  }
-
-  // US cities to target for local businesses
-  const targetCities = [
+  // Expanded city pool — tier-2 cities with active SMB markets
+  const allCities = [
     "Austin TX", "Denver CO", "Nashville TN", "Charlotte NC", "Tampa FL",
     "Phoenix AZ", "Portland OR", "San Antonio TX", "Columbus OH", "Indianapolis IN",
-    "Raleigh NC", "Salt Lake City UT", "Boise ID", "Jacksonville FL", "Oklahoma City OK"
+    "Raleigh NC", "Salt Lake City UT", "Boise ID", "Jacksonville FL", "Oklahoma City OK",
+    "Scottsdale AZ", "Boulder CO", "Savannah GA", "Charleston SC", "Greenville SC",
+    "Chattanooga TN", "Asheville NC", "Madison WI", "Des Moines IA", "Omaha NE",
+    "Spokane WA", "Tucson AZ", "Knoxville TN", "Lexington KY", "Fort Worth TX",
   ];
 
-  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+  const targetCities = allCities.sort(() => Math.random() - 0.5).slice(0, 4);
+
+  // Multi-strategy search queries for better coverage
+  const buildSearchQueries = (niche: string, city: string): string[] => [
+    `best ${niche} in ${city}`,
+    `${niche} near ${city} reviews`,
+    `top rated ${niche} ${city}`,
+    `${niche} ${city} website`, // finds businesses WITH websites
+    `"${niche}" "${city}" email contact`, // targets pages with contact info
+  ];
+
+  const aggregatorDomains = [
+    "yelp.com", "facebook.com", "yellowpages.com", "google.com",
+    "mapquest.com", "bbb.org", "angi.com", "thumbtack.com",
+    "homeadvisor.com", "nextdoor.com", "tripadvisor.com",
+    "instagram.com", "twitter.com", "linkedin.com", "pinterest.com",
+    "tiktok.com", "youtube.com", "reddit.com", "wikipedia.org",
+    "apple.com", "bing.com", "foursquare.com",
+  ];
+
+  const MAX_LEADS = opts.max_leads || 25;
 
   for (const industry of industries) {
-    const niches = industry.niches.sort(() => Math.random() - 0.5).slice(0, 2);
-    const cities = targetCities.sort(() => Math.random() - 0.5).slice(0, 2);
+    const niches = industry.niches.sort(() => Math.random() - 0.5).slice(0, 3);
+    const cities = targetCities.slice(0, 3);
 
     for (const niche of niches) {
       for (const city of cities) {
-        // Search for real businesses via Yelp/Google results
-        const searchQueries = [
-          `best ${niche} in ${city}`,
-          `${niche} near ${city} reviews`,
-        ];
-        const query = searchQueries[Math.floor(Math.random() * searchQueries.length)];
+        if (leads.length >= MAX_LEADS) break;
 
-        try {
-          const searchResp = await fetch("https://api.firecrawl.dev/v1/search", {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${firecrawlKey}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              query,
-              limit: 5,
-              scrapeOptions: { formats: ["markdown"], onlyMainContent: true },
-            }),
-          });
+        const queries = buildSearchQueries(niche, city);
+        // Pick 2 random query strategies
+        const selectedQueries = queries.sort(() => Math.random() - 0.5).slice(0, 2);
 
-          if (!searchResp.ok) {
-            console.warn(`Search failed (${searchResp.status}) for: ${query}`);
-            continue;
-          }
+        for (const query of selectedQueries) {
+          if (leads.length >= MAX_LEADS) break;
 
-          const searchData = await searchResp.json();
-          if (!searchData.data) continue;
-
-          // Skip aggregator sites — we want direct business websites
-          const aggregatorDomains = [
-            "yelp.com", "facebook.com", "yellowpages.com", "google.com",
-            "mapquest.com", "bbb.org", "angi.com", "thumbtack.com",
-            "homeadvisor.com", "nextdoor.com", "tripadvisor.com",
-            "instagram.com", "twitter.com", "linkedin.com", "pinterest.com",
-            "tiktok.com", "youtube.com", "reddit.com", "wikipedia.org",
-          ];
-
-          for (const result of searchData.data) {
-            if (!result.url) continue;
-            const urlLower = result.url.toLowerCase();
-            if (aggregatorDomains.some(d => urlLower.includes(d))) continue;
-
-            // Check for duplicate
-            const domain = new URL(result.url).hostname.replace(/^www\./, "");
-            const { data: existing } = await supabase
-              .from("outreach_leads")
-              .select("id")
-              .or(`website_url.ilike.%${domain}%`)
-              .limit(1);
-
-            if (existing && existing.length > 0) continue;
-
-            // Extract contact info from the page content
-            const pageContent = result.markdown || result.description || "";
-
-            // Try to extract email from page content directly
-            const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
-            const foundEmails = pageContent.match(emailRegex) || [];
-            // Filter out generic/spam emails
-            const validEmails = foundEmails.filter((e: string) => {
-              const lower = e.toLowerCase();
-              return !lower.includes("example.com") &&
-                !lower.includes("sentry.io") &&
-                !lower.includes("wixpress") &&
-                !lower.includes("googleapis") &&
-                !lower.startsWith("noreply") &&
-                !lower.startsWith("no-reply");
+          try {
+            const searchResp = await fetch("https://api.firecrawl.dev/v1/search", {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${firecrawlKey}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                query,
+                limit: 8,
+                scrapeOptions: { formats: ["markdown"], onlyMainContent: true },
+              }),
             });
 
-            let contactEmail = validEmails[0] || null;
-            let contactName: string | null = null;
-            let businessName = result.title?.split(" - ")[0]?.split(" | ")[0]?.trim() || domain;
+            if (!searchResp.ok) continue;
 
-            // If no email found in search content, scrape the business website directly
-            if (!contactEmail) {
+            const searchData = await searchResp.json();
+            if (!searchData.data) continue;
+
+            for (const result of searchData.data) {
+              if (leads.length >= MAX_LEADS) break;
+              if (!result.url) continue;
+              const urlLower = result.url.toLowerCase();
+              if (aggregatorDomains.some(d => urlLower.includes(d))) continue;
+
+              let domain: string;
               try {
-                const scrapeResp = await fetch("https://api.firecrawl.dev/v1/scrape", {
-                  method: "POST",
-                  headers: {
-                    Authorization: `Bearer ${firecrawlKey}`,
-                    "Content-Type": "application/json",
-                  },
-                  body: JSON.stringify({
-                    url: result.url,
-                    formats: ["markdown", "links"],
-                    onlyMainContent: false, // Need footer/contact sections
-                  }),
-                });
+                domain = new URL(result.url).hostname.replace(/^www\./, "");
+              } catch { continue; }
 
-                if (scrapeResp.ok) {
-                  const scrapeData = await scrapeResp.json();
-                  const fullContent = scrapeData.data?.markdown || scrapeData.markdown || "";
-                  const allEmails = fullContent.match(emailRegex) || [];
-                  const realEmails = allEmails.filter((e: string) => {
-                    const lower = e.toLowerCase();
-                    return !lower.includes("example.com") &&
-                      !lower.includes("sentry") &&
-                      !lower.includes("wixpress") &&
-                      !lower.startsWith("noreply") &&
-                      !lower.startsWith("no-reply");
-                  });
-                  contactEmail = realEmails[0] || null;
+              if (await isDuplicate(supabase, domain)) continue;
 
-                  // Also check for contact/about pages in links
-                  if (!contactEmail && scrapeData.data?.links) {
-                    const contactPages = scrapeData.data.links.filter((l: string) =>
-                      /contact|about|team/i.test(l)
-                    ).slice(0, 1);
+              // Extract from search content first (cheap)
+              const pageContent = result.markdown || result.description || "";
+              let emails = extractAllEmails(pageContent);
+              let contactEmail = emails[0] || null;
+              let contactName: string | null = null;
+              let businessName = result.title?.split(" - ")[0]?.split(" | ")[0]?.trim() || domain;
 
-                    for (const contactUrl of contactPages) {
-                      try {
-                        const contactResp = await fetch("https://api.firecrawl.dev/v1/scrape", {
-                          method: "POST",
-                          headers: {
-                            Authorization: `Bearer ${firecrawlKey}`,
-                            "Content-Type": "application/json",
-                          },
-                          body: JSON.stringify({
-                            url: contactUrl,
-                            formats: ["markdown"],
-                            onlyMainContent: false,
-                          }),
-                        });
+              // Deep scrape if no email found
+              if (!contactEmail) {
+                const scraped = await scrapeContactFromUrl(result.url, firecrawlKey, lovableKey);
+                contactEmail = scraped.email;
+                contactName = scraped.name;
+                if (scraped.businessName) businessName = scraped.businessName;
+              }
 
-                        if (contactResp.ok) {
-                          const contactData = await contactResp.json();
-                          const contactContent = contactData.data?.markdown || contactData.markdown || "";
-                          const contactEmails = contactContent.match(emailRegex) || [];
-                          const filteredContactEmails = contactEmails.filter((e: string) => {
-                            const lower = e.toLowerCase();
-                            return !lower.includes("example.com") &&
-                              !lower.includes("sentry") &&
-                              !lower.startsWith("noreply");
-                          });
-                          contactEmail = filteredContactEmails[0] || null;
+              // Only add leads with verified emails
+              if (!contactEmail) {
+                console.log(`Skipping ${businessName} — no email`);
+                continue;
+              }
 
-                          // Try to extract owner/contact name with AI
-                          if (contactEmail && LOVABLE_API_KEY && contactContent.length > 50) {
-                            try {
-                              const nameResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-                                method: "POST",
-                                headers: {
-                                  Authorization: `Bearer ${LOVABLE_API_KEY}`,
-                                  "Content-Type": "application/json",
-                                },
-                                body: JSON.stringify({
-                                  model: "google/gemini-2.5-flash-lite",
-                                  messages: [{
-                                    role: "user",
-                                    content: `Extract the business owner or primary contact person's name from this page content. Return ONLY the name, or "unknown" if not found. No explanation.\n\n${contactContent.slice(0, 1500)}`
-                                  }],
-                                }),
-                              });
-                              if (nameResp.ok) {
-                                const nameData = await nameResp.json();
-                                const name = nameData.choices?.[0]?.message?.content?.trim();
-                                if (name && name.toLowerCase() !== "unknown" && name.length < 50) {
-                                  contactName = name;
-                                }
-                              }
-                            } catch {}
-                          }
-                        }
-                      } catch {}
-                    }
-                  }
+              // Already have this email?
+              const { data: emailDup } = await supabase
+                .from("outreach_leads")
+                .select("id")
+                .eq("contact_email", contactEmail.toLowerCase())
+                .limit(1);
+              if (emailDup && emailDup.length > 0) continue;
+
+              const [cityName, stateCode] = city.split(" ");
+
+              leads.push({
+                campaign_id: activeCampaignId,
+                business_name: businessName,
+                industry: industry.name,
+                website_url: domain,
+                contact_email: contactEmail.toLowerCase(),
+                contact_name: contactName,
+                city: cityName,
+                state: stateCode,
+                country: "US",
+                source: "firecrawl_verified",
+                metadata: {
+                  search_query: query,
+                  niche,
+                  snippet: (result.description || "").slice(0, 300),
+                  discovery_method: "real_scrape",
+                  email_source: "website_scrape",
                 }
-              } catch (e) {
-                console.warn(`Failed to scrape ${result.url}:`, e);
-              }
+              });
             }
-
-            // ONLY create lead if we found a real email
-            if (!contactEmail) {
-              console.log(`Skipping ${businessName} — no email found`);
-              continue;
-            }
-
-            // Parse city/state from the search query
-            const [cityName, stateCode] = city.split(" ");
-
-            leads.push({
-              campaign_id: activeCampaignId,
-              business_name: businessName,
-              industry: industry.name,
-              website_url: domain,
-              contact_email: contactEmail.toLowerCase(),
-              contact_name: contactName,
-              city: cityName,
-              state: stateCode,
-              country: "US",
-              source: "firecrawl_verified",
-              metadata: {
-                search_query: query,
-                niche,
-                snippet: (result.description || "").slice(0, 300),
-                discovery_method: "real_scrape",
-                email_source: "website_scrape",
-              }
-            });
-
-            // Limit per batch to conserve Firecrawl credits
-            if (leads.length >= 15) break;
+          } catch (e) {
+            console.warn(`Search failed for ${niche} in ${city}:`, e);
           }
-
-          if (leads.length >= 15) break;
-        } catch (e) {
-          console.warn(`Search failed for ${niche} in ${city}:`, e);
         }
       }
-      if (leads.length >= 15) break;
+      if (leads.length >= MAX_LEADS) break;
     }
-    if (leads.length >= 15) break;
+    if (leads.length >= MAX_LEADS) break;
   }
 
-  // Insert leads
+  // Batch insert
   if (leads.length > 0) {
     const { error: insertError } = await supabase.from("outreach_leads").insert(leads);
-    if (insertError) {
-      console.error("Failed to insert leads:", insertError);
-    }
+    if (insertError) console.error("Failed to insert leads:", insertError);
   }
 
   return {
@@ -458,355 +521,344 @@ async function discoverBusinesses(
   };
 }
 
-// Evaluate and score leads
+// ─── ADD MANUAL PROSPECT ──────────────────────────────────────────────────────
+async function addManualProspect(
+  supabase: any,
+  firecrawlKey: string | undefined,
+  lovableKey: string | undefined,
+  body: any,
+): Promise<any> {
+  const { business_name, website_url, contact_email, contact_name, industry, city, state, campaign_id } = body;
+
+  if (!business_name) return { error: "business_name required" };
+
+  const activeCampaignId = await getOrCreateCampaign(supabase, campaign_id, [], "United States");
+
+  let enrichedEmail = contact_email || null;
+  let enrichedName = contact_name || null;
+  let enrichedBizName = business_name;
+
+  // If URL provided but no email, try to scrape
+  if (website_url && !enrichedEmail && firecrawlKey) {
+    const scraped = await scrapeContactFromUrl(website_url, firecrawlKey, lovableKey || null);
+    enrichedEmail = scraped.email || enrichedEmail;
+    enrichedName = scraped.name || enrichedName;
+    if (!business_name || business_name === website_url) enrichedBizName = scraped.businessName;
+  }
+
+  const { data, error } = await supabase.from("outreach_leads").insert({
+    campaign_id: activeCampaignId,
+    business_name: enrichedBizName,
+    industry: industry || "Other",
+    website_url: website_url || null,
+    contact_email: enrichedEmail?.toLowerCase() || null,
+    contact_name: enrichedName,
+    city: city || null,
+    state: state || null,
+    country: "US",
+    source: "manual",
+    metadata: { discovery_method: "manual_entry", enriched: !!website_url },
+  }).select().single();
+
+  if (error) return { error: error.message };
+  return { success: true, lead: data };
+}
+
+// ─── IMPORT FROM URL: Scrape a directory/list page for multiple prospects ─────
+async function importProspectsFromUrl(
+  supabase: any,
+  firecrawlKey: string | undefined,
+  lovableKey: string | undefined,
+  body: any,
+): Promise<any> {
+  const { url, industry, campaign_id } = body;
+  if (!url || !firecrawlKey) return { error: "url and FIRECRAWL_API_KEY required" };
+
+  const activeCampaignId = await getOrCreateCampaign(supabase, campaign_id, [], "United States");
+
+  // Scrape the directory/list page
+  const resp = await fetch("https://api.firecrawl.dev/v1/scrape", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${firecrawlKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      url,
+      formats: ["markdown", "links"],
+      onlyMainContent: true,
+    }),
+  });
+
+  if (!resp.ok) return { error: `Failed to scrape: ${resp.status}` };
+
+  const data = await resp.json();
+  const links = data.data?.links || [];
+  const content = data.data?.markdown || "";
+
+  // Use AI to extract business listings from the page
+  if (!lovableKey) return { error: "LOVABLE_API_KEY required for AI extraction" };
+
+  const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${lovableKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "google/gemini-2.5-flash",
+      messages: [{
+        role: "user",
+        content: `Extract all business listings from this page. For each business, extract: name, website_url, email (if visible), city, state.
+
+Page content:
+${content.slice(0, 8000)}
+
+Links found on page:
+${links.slice(0, 50).join("\n")}
+
+Return JSON array of businesses found.`
+      }],
+      tools: [{
+        type: "function",
+        function: {
+          name: "extract_businesses",
+          parameters: {
+            type: "object",
+            properties: {
+              businesses: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    name: { type: "string" },
+                    website_url: { type: "string" },
+                    email: { type: "string" },
+                    city: { type: "string" },
+                    state: { type: "string" },
+                  },
+                  required: ["name"],
+                },
+              },
+            },
+            required: ["businesses"],
+          },
+        },
+      }],
+      tool_choice: { type: "function", function: { name: "extract_businesses" } },
+    }),
+  });
+
+  if (!aiResp.ok) return { error: "AI extraction failed" };
+
+  const aiData = await aiResp.json();
+  const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
+  if (!toolCall) return { error: "No businesses extracted" };
+
+  const { businesses } = JSON.parse(toolCall.function.arguments);
+  const imported: any[] = [];
+
+  for (const biz of (businesses || []).slice(0, 20)) {
+    if (!biz.name) continue;
+
+    // Check duplicates
+    if (biz.website_url) {
+      try {
+        const domain = new URL(biz.website_url.startsWith("http") ? biz.website_url : `https://${biz.website_url}`).hostname.replace(/^www\./, "");
+        if (await isDuplicate(supabase, domain)) continue;
+      } catch {}
+    }
+
+    imported.push({
+      campaign_id: activeCampaignId,
+      business_name: biz.name,
+      industry: industry || "Other",
+      website_url: biz.website_url || null,
+      contact_email: biz.email?.toLowerCase() || null,
+      city: biz.city || null,
+      state: biz.state || null,
+      country: "US",
+      source: "url_import",
+      metadata: { discovery_method: "url_import", source_url: url },
+    });
+  }
+
+  if (imported.length > 0) {
+    await supabase.from("outreach_leads").insert(imported);
+  }
+
+  return { success: true, imported_count: imported.length, businesses: imported.map(b => b.business_name) };
+}
+
+// ─── EVALUATE LEADS ───────────────────────────────────────────────────────────
 async function evaluateLeads(
   supabase: any,
   lovableKey: string,
   firecrawlKey: string | undefined,
   campaignId: string | null
 ): Promise<any> {
-  // Get unscored leads
   let query = supabase
     .from("outreach_leads")
     .select("*")
     .eq("score", 0)
-    .limit(5);
+    .limit(10); // Increased batch size
 
-  if (campaignId) {
-    query = query.eq("campaign_id", campaignId);
-  }
+  if (campaignId) query = query.eq("campaign_id", campaignId);
 
   const { data: leads } = await query;
-
-  if (!leads || leads.length === 0) {
-    return { leads_scored: 0, message: "No unscored leads found" };
-  }
+  if (!leads || leads.length === 0) return { leads_scored: 0, message: "No unscored leads" };
 
   const scoredLeads: any[] = [];
 
-  for (const lead of leads) {
-    let websiteAnalysis = "";
+  // Process in parallel batches of 3
+  const batches = [];
+  for (let i = 0; i < leads.length; i += 3) {
+    batches.push(leads.slice(i, i + 3));
+  }
 
-    // Only scrape real websites (not AI-generated ones)
-    const isAiGenerated = lead.metadata?.discovery_method === "ai_generated";
-    if (firecrawlKey && lead.website_url && !isAiGenerated) {
-      try {
-        const scrapeResp = await fetch("https://api.firecrawl.dev/v1/scrape", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${firecrawlKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ 
-            url: lead.website_url, 
-            formats: ["markdown"],
-            onlyMainContent: true,
-          }),
-        });
+  for (const batch of batches) {
+    const promises = batch.map(async (lead: any) => {
+      let websiteAnalysis = "";
 
-        if (scrapeResp.ok) {
-          const scrapeData = await scrapeResp.json();
-          websiteAnalysis = scrapeData.data?.markdown?.slice(0, 2000) || "";
-        }
-      } catch (e) {
-        console.warn(`Failed to scrape ${lead.website_url}:`, e);
+      const isAiGenerated = lead.metadata?.discovery_method === "ai_generated";
+      if (firecrawlKey && lead.website_url && !isAiGenerated) {
+        try {
+          const scrapeResp = await fetch("https://api.firecrawl.dev/v1/scrape", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${firecrawlKey}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              url: lead.website_url.startsWith("http") ? lead.website_url : `https://${lead.website_url}`,
+              formats: ["markdown"],
+              onlyMainContent: true,
+            }),
+          });
+
+          if (scrapeResp.ok) {
+            const d = await scrapeResp.json();
+            websiteAnalysis = (d.data?.markdown || "").slice(0, 2000);
+          }
+        } catch {}
       }
-    }
 
-    // Use AI to score the lead
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${lovableKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          {
-            role: "system",
-            content: `You are a lead scoring expert for a web development agency. Score leads 0-100 based on their likelihood to need a new/better website. Consider:
+      const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${lovableKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-3-flash-preview",
+          messages: [
+            {
+              role: "system",
+              content: `You are a lead scoring expert for OpenDraft (opendraft.co), a marketplace for buying/selling web apps. Score leads 0-100 based on likelihood to buy a custom web app. Consider:
 - Website quality (modern, mobile-friendly, fast)
-- Business type fit
-- Signs of growth (hiring, expanding)
+- Business type fit (does this business need better digital tools?)
+- Signs of growth
 - Current online presence gaps
+- Size and revenue potential
 
-Services we offer: ${SERVICES_OFFERED.map(s => s.name).join(", ")}`
-          },
-          {
-            role: "user",
-            content: `Score this lead:
+Services: ${SERVICES_OFFERED.map(s => s.name).join(", ")}`
+            },
+            {
+              role: "user",
+              content: `Score this lead:
 Business: ${lead.business_name}
 Industry: ${lead.industry}
 Website: ${lead.website_url}
+City: ${lead.city || "unknown"}, State: ${lead.state || "unknown"}
 
-Website content (if available):
-${websiteAnalysis || "Could not scrape website"}
+Website content:
+${websiteAnalysis || "Could not scrape"}
 
-Return JSON with: score (0-100), reasoning (1 sentence), recommended_service (one from our list), pain_points (array of 2-3), website_issues (array of 2-3 if applicable)`
-          }
-        ],
-        tools: [{
-          type: "function",
-          function: {
-            name: "score_lead",
-            description: "Score the lead",
-            parameters: {
-              type: "object",
-              properties: {
-                score: { type: "number", minimum: 0, maximum: 100 },
-                reasoning: { type: "string" },
-                recommended_service: { type: "string" },
-                pain_points: { type: "array", items: { type: "string" } },
-                website_issues: { type: "array", items: { type: "string" } },
-              },
-              required: ["score", "reasoning", "recommended_service", "pain_points"]
+Return: score (0-100), reasoning (1 sentence), recommended_service, pain_points (2-3), website_issues (2-3)`
             }
-          }
-        }],
-        tool_choice: { type: "function", function: { name: "score_lead" } }
-      }),
+          ],
+          tools: [{
+            type: "function",
+            function: {
+              name: "score_lead",
+              parameters: {
+                type: "object",
+                properties: {
+                  score: { type: "number", minimum: 0, maximum: 100 },
+                  reasoning: { type: "string" },
+                  recommended_service: { type: "string" },
+                  pain_points: { type: "array", items: { type: "string" } },
+                  website_issues: { type: "array", items: { type: "string" } },
+                },
+                required: ["score", "reasoning", "recommended_service", "pain_points"]
+              }
+            }
+          }],
+          tool_choice: { type: "function", function: { name: "score_lead" } }
+        }),
+      });
+
+      if (aiResponse.ok) {
+        const aiData = await aiResponse.json();
+        const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
+        if (toolCall) {
+          const scoring = JSON.parse(toolCall.function.arguments);
+          await supabase
+            .from("outreach_leads")
+            .update({
+              score: scoring.score,
+              lead_status: scoring.score >= 70 ? "qualified" : scoring.score >= 40 ? "nurture" : "low_priority",
+              metadata: { ...lead.metadata, scoring, website_preview: websiteAnalysis.slice(0, 500) }
+            })
+            .eq("id", lead.id);
+
+          scoredLeads.push({ id: lead.id, business_name: lead.business_name, ...scoring });
+        }
+      }
     });
 
-    if (aiResponse.ok) {
-      const aiData = await aiResponse.json();
-      const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
-      
-      if (toolCall) {
-        const scoring = JSON.parse(toolCall.function.arguments);
-        
-        await supabase
-          .from("outreach_leads")
-          .update({
-            score: scoring.score,
-            lead_status: scoring.score >= 70 ? "qualified" : scoring.score >= 40 ? "nurture" : "low_priority",
-            metadata: {
-              ...lead.metadata,
-              scoring,
-              website_preview: websiteAnalysis.slice(0, 500),
-            }
-          })
-          .eq("id", lead.id);
-
-        scoredLeads.push({
-          id: lead.id,
-          business_name: lead.business_name,
-          ...scoring
-        });
-      }
-    }
+    await Promise.allSettled(promises);
   }
 
-  return {
-    leads_scored: scoredLeads.length,
-    high_quality_leads: scoredLeads.filter(l => l.score >= 70).length,
-    scored_leads: scoredLeads,
-  };
+  return { leads_scored: scoredLeads.length, leads: scoredLeads };
 }
 
-// Generate live demo apps for qualified leads
-async function generateDemosForLeads(
-  supabase: any,
-  lovableKey: string,
-  campaignId: string | null
-): Promise<any> {
-  // Get qualified leads without demo links
-  let query = supabase
-    .from("outreach_leads")
-    .select("*")
-    .in("lead_status", ["qualified", "nurture"])
-    .gte("score", 50)
-    .limit(5); // Limit to 5 at a time to avoid overloading
-
-  if (campaignId) {
-    query = query.eq("campaign_id", campaignId);
-  }
-
-  const { data: leads } = await query;
-  if (!leads || leads.length === 0) {
-    return { demos_generated: 0, message: "No qualified leads without demos" };
-  }
-
-  // Filter out leads that already have demo URLs
-  const leadsNeedingDemos = leads.filter(
-    (l: any) => !l.metadata?.demo_url && !l.metadata?.demo_generation_failed
-  );
-
-  if (leadsNeedingDemos.length === 0) {
-    return { demos_generated: 0, message: "All qualified leads already have demos" };
-  }
-
-  const demosGenerated: any[] = [];
-  const demosFailed: any[] = [];
-
-  for (const lead of leadsNeedingDemos) {
-    const scoring = lead.metadata?.scoring || {};
-    const recommendedService = scoring.recommended_service || "Custom Website";
-    const painPoints = scoring.pain_points?.join(", ") || "website improvement";
-
-    // Build a specific prompt for this business
-    const prompt = `${recommendedService} for ${lead.business_name} - a ${lead.industry} business. Include: online booking/contact form, service showcase, customer testimonials section, mobile-responsive design. Pain points to address: ${painPoints}. Use a professional color scheme appropriate for ${lead.industry}.`;
-
-    try {
-      // Create generation job
-      const { data: jobRow, error: jobErr } = await supabase
-        .from("generation_jobs")
-        .insert({
-          // Use a system user ID for automated generation
-          user_id: "00000000-0000-0000-0000-000000000000",
-          prompt,
-          status: "pending",
-          stage: "queued",
-        })
-        .select("id, status, stage, listing_id, listing_title, error")
-        .single();
-
-      if (jobErr || !jobRow) {
-        console.warn(`Failed to create generation job for ${lead.business_name}:`, jobErr);
-        demosFailed.push({ lead_id: lead.id, business_name: lead.business_name, error: "Job creation failed" });
-        continue;
-      }
-
-      // Trigger the generation
-      const genResp = await supabase.functions.invoke("generate-template-app", {
-        body: {
-          count: 1,
-          themes: [prompt],
-          job_id: jobRow.id,
-        },
-      });
-
-      if (genResp.error) {
-        console.warn(`Generation invoke failed for ${lead.business_name}:`, genResp.error);
-      }
-
-      // Poll for completion (max 120 seconds)
-      let completed = false;
-      let listingId: string | null = null;
-      let listingTitle: string | null = null;
-
-      for (let i = 0; i < 24; i++) {
-        await new Promise(r => setTimeout(r, 5000));
-
-        const { data: job } = await supabase
-          .from("generation_jobs")
-          .select("status, listing_id, listing_title, error")
-          .eq("id", jobRow.id)
-          .single();
-
-        if (!job) break;
-
-        if (job.status === "complete" && job.listing_id) {
-          completed = true;
-          listingId = job.listing_id;
-          listingTitle = job.listing_title;
-          break;
-        }
-
-        if (job.status === "failed") {
-          console.warn(`Generation failed for ${lead.business_name}: ${job.error}`);
-          break;
-        }
-      }
-
-      if (completed && listingId) {
-        const demoUrl = `https://opendraft.co/listing/${listingId}`;
-
-        // Store demo URL in lead metadata
-        await supabase
-          .from("outreach_leads")
-          .update({
-            metadata: {
-              ...lead.metadata,
-              demo_url: demoUrl,
-              demo_listing_id: listingId,
-              demo_title: listingTitle,
-              demo_generated_at: new Date().toISOString(),
-            },
-          })
-          .eq("id", lead.id);
-
-        demosGenerated.push({
-          lead_id: lead.id,
-          business_name: lead.business_name,
-          demo_url: demoUrl,
-          listing_title: listingTitle,
-        });
-      } else {
-        // Mark as failed so we don't retry endlessly
-        await supabase
-          .from("outreach_leads")
-          .update({
-            metadata: {
-              ...lead.metadata,
-              demo_generation_failed: true,
-              demo_failed_at: new Date().toISOString(),
-            },
-          })
-          .eq("id", lead.id);
-
-        demosFailed.push({ lead_id: lead.id, business_name: lead.business_name, error: "Generation timed out or failed" });
-      }
-    } catch (e) {
-      console.error(`Demo generation error for ${lead.business_name}:`, e);
-      demosFailed.push({
-        lead_id: lead.id,
-        business_name: lead.business_name,
-        error: e instanceof Error ? e.message : "Unknown error",
-      });
-    }
-  }
-
-  return {
-    demos_generated: demosGenerated.length,
-    demos_failed: demosFailed.length,
-    demos: demosGenerated,
-    failures: demosFailed,
-  };
-}
-
-// Generate personalized outreach messages
+// ─── GENERATE OUTREACH MESSAGES ───────────────────────────────────────────────
 async function generateOutreachMessages(
   supabase: any,
   lovableKey: string,
   campaignId: string | null
 ): Promise<any> {
-  // Get qualified leads that don't already have a drafted message waiting
+  // Get leads that are qualified/nurture with score >= 50 and don't have a drafted message yet
   let query = supabase
     .from("outreach_leads")
     .select("*")
-    .in("lead_status", ["qualified", "nurture"])
     .gte("score", 50)
-    .limit(20);
+    .in("lead_status", ["qualified", "nurture"])
+    .limit(10);
 
-  if (campaignId) {
-    query = query.eq("campaign_id", campaignId);
-  }
+  if (campaignId) query = query.eq("campaign_id", campaignId);
 
   const { data: leads } = await query;
+  if (!leads || leads.length === 0) return { messages_drafted: 0, message: "No eligible leads" };
 
-  if (!leads || leads.length === 0) {
-    return { messages_drafted: 0, message: "No qualified leads found" };
-  }
+  // Check which already have messages
+  const leadIds = leads.map((l: any) => l.id);
+  const { data: existingMsgs } = await supabase
+    .from("outreach_messages")
+    .select("lead_id")
+    .in("lead_id", leadIds);
 
-  const messagesCreated: any[] = [];
+  const existingLeadIds = new Set((existingMsgs || []).map((m: any) => m.lead_id));
+  const needsMessage = leads.filter((l: any) => !existingLeadIds.has(l.id));
 
-  for (const lead of leads) {
-    // Skip leads that already have a drafted (unsent) message
-    const { data: existingDraft } = await supabase
-      .from("outreach_messages")
-      .select("id")
-      .eq("lead_id", lead.id)
-      .eq("message_status", "drafted")
-      .eq("direction", "outbound")
-      .maybeSingle();
+  if (needsMessage.length === 0) return { messages_drafted: 0, message: "All leads already have drafts" };
 
-    if (existingDraft) continue;
+  const drafted: any[] = [];
 
+  for (const lead of needsMessage) {
     const scoring = lead.metadata?.scoring || {};
-    const demoUrl = lead.metadata?.demo_url || null;
-    const demoTitle = lead.metadata?.demo_title || null;
-    
+
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -814,47 +866,45 @@ async function generateOutreachMessages(
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "google/gemini-2.5-flash",
         messages: [
           {
             role: "system",
-            content: `You are an expert at writing personalized, non-spammy outreach emails for a web development agency called OpenDraft.
+            content: `You are Jason, a friendly web developer who builds custom apps for small businesses. Write a short, warm, personalized cold email.
 
-TONE: Friendly, helpful, not salesy. Focus on helping them, not selling.
-LENGTH: Keep emails under 150 words.
-PERSONALIZATION: Reference specific things about their business/website.
-SIGNATURE: Always sign emails as "Jason" (not [Your Name] or any placeholder). Use "Jason" as the sender name. Example sign-off: "Best,\nJason\nOpenDraft"
-${demoUrl ? `\nIMPORTANT: We built a FREE live demo specifically for this business. Include the demo link naturally in the email. Frame it as "I put together a quick prototype for you" or "I built something for your business". The demo link is: ${demoUrl}` : ""}
-
-Our services: ${SERVICES_OFFERED.map(s => `${s.name} (${s.price_range})`).join(", ")}`
+Rules:
+- Max 120 words body
+- Reference something specific about THEIR business (from pain points or website issues)
+- Pitch ONE specific thing you'd build for them
+- End with a casual, no-pressure CTA
+- Sound human, not salesy
+- Sign as "Jason"
+- Include "opendraft.co" as your portfolio link
+- Never use brackets or placeholders`
           },
           {
             role: "user",
-            content: `Write an outreach email for:
+            content: `Write email for:
 Business: ${lead.business_name}
 Industry: ${lead.industry}
-Website: ${lead.website_url}
-Pain points identified: ${scoring.pain_points?.join(", ") || "general website improvement"}
-Website issues: ${scoring.website_issues?.join(", ") || "N/A"}
-Recommended service: ${scoring.recommended_service || "Custom Website"}
-${demoUrl ? `Live demo we built for them: ${demoUrl}` : "No demo available yet"}
-
-Return JSON with: subject (compelling, not spammy), body (the email text), follow_up_days (when to follow up, 3-7)`
+Website: ${lead.website_url || "none"}
+Contact: ${lead.contact_name || "business owner"}
+Pain points: ${scoring.pain_points?.join(", ") || "outdated website"}
+Recommended: ${scoring.recommended_service || "Custom Website"}
+Website issues: ${scoring.website_issues?.join(", ") || "needs modernization"}`
           }
         ],
         tools: [{
           type: "function",
           function: {
             name: "draft_email",
-            description: "Draft the outreach email",
             parameters: {
               type: "object",
               properties: {
-                subject: { type: "string" },
-                body: { type: "string" },
-                follow_up_days: { type: "number" },
+                subject: { type: "string", description: "Email subject line, max 8 words" },
+                body: { type: "string", description: "Email body text" },
               },
-              required: ["subject", "body", "follow_up_days"]
+              required: ["subject", "body"]
             }
           }
         }],
@@ -865,363 +915,231 @@ Return JSON with: subject (compelling, not spammy), body (the email text), follo
     if (aiResponse.ok) {
       const aiData = await aiResponse.json();
       const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
-      
       if (toolCall) {
         const email = JSON.parse(toolCall.function.arguments);
-        
-        const { data: msg } = await supabase
-          .from("outreach_messages")
-          .insert({
-            campaign_id: lead.campaign_id,
-            lead_id: lead.id,
-            channel: "email",
-            subject: email.subject,
-            body: email.body,
-            message_status: "drafted",
-            ai_generated: true,
-            metadata: {
-              follow_up_days: email.follow_up_days,
-              recommended_service: scoring.recommended_service,
-              demo_url: demoUrl || undefined,
-            }
-          })
-          .select()
-          .single();
 
-        // Set next follow-up date
-        const followUpDate = new Date();
-        followUpDate.setDate(followUpDate.getDate() + email.follow_up_days);
-        
-        await supabase
-          .from("outreach_leads")
-          .update({ next_follow_up_at: followUpDate.toISOString() })
-          .eq("id", lead.id);
-
-        messagesCreated.push({
+        await supabase.from("outreach_messages").insert({
           lead_id: lead.id,
-          business_name: lead.business_name,
+          campaign_id: lead.campaign_id,
           subject: email.subject,
-          body_preview: email.body.slice(0, 100) + "...",
+          body: email.body,
+          channel: "email",
+          direction: "outbound",
+          ai_generated: true,
+          message_status: "drafted",
+          metadata: { template: "initial", recommended_service: scoring.recommended_service },
         });
+
+        drafted.push({ lead: lead.business_name, subject: email.subject });
       }
     }
   }
 
-  return {
-    messages_drafted: messagesCreated.length,
-    messages: messagesCreated,
-  };
+  return { messages_drafted: drafted.length, drafts: drafted };
 }
 
-// Send outreach emails via Resend
+// ─── GENERATE DEMOS FOR HIGH-INTENT LEADS ─────────────────────────────────────
+async function generateDemosForLeads(
+  supabase: any,
+  lovableKey: string,
+  campaignId: string | null
+): Promise<any> {
+  let query = supabase
+    .from("outreach_leads")
+    .select("*")
+    .gte("score", 50)
+    .in("lead_status", ["qualified", "nurture"])
+    .limit(3);
+
+  if (campaignId) query = query.eq("campaign_id", campaignId);
+
+  const { data: leads } = await query;
+  if (!leads || leads.length === 0) return { demos_generated: 0 };
+
+  // Check which already have demo generation in metadata
+  const needsDemo = leads.filter((l: any) => !l.metadata?.demo_generated);
+  if (needsDemo.length === 0) return { demos_generated: 0, message: "All eligible leads already have demos" };
+
+  const generated: any[] = [];
+
+  for (const lead of needsDemo.slice(0, 2)) {
+    const scoring = lead.metadata?.scoring || {};
+
+    try {
+      // Generate prompt for the app builder
+      const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${lovableKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash-lite",
+          messages: [{
+            role: "user",
+            content: `Create a one-paragraph prompt to build a modern web app for this business. It should be a ${scoring.recommended_service || "Custom Website"} for a ${lead.industry} business called "${lead.business_name}".
+
+Key features to include based on their pain points: ${scoring.pain_points?.join(", ") || "online presence"}
+
+Return ONLY the prompt text, no explanation.`
+          }],
+        }),
+      });
+
+      if (aiResponse.ok) {
+        const aiData = await aiResponse.json();
+        const prompt = aiData.choices?.[0]?.message?.content?.trim();
+
+        if (prompt) {
+          // Trigger the generation pipeline
+          const { data: job } = await supabase.from("generation_jobs").insert({
+            prompt,
+            user_id: "00000000-0000-0000-0000-000000000000", // system user
+            status: "pending",
+            listing_title: `${lead.business_name} - Custom ${scoring.recommended_service || "Website"}`,
+            stage: "outreach_demo",
+          }).select().single();
+
+          await supabase
+            .from("outreach_leads")
+            .update({
+              metadata: {
+                ...lead.metadata,
+                demo_generated: true,
+                demo_job_id: job?.id,
+                demo_prompt: prompt,
+              }
+            })
+            .eq("id", lead.id);
+
+          generated.push({ lead: lead.business_name, job_id: job?.id });
+        }
+      }
+    } catch (e) {
+      console.warn(`Demo generation failed for ${lead.business_name}:`, e);
+    }
+  }
+
+  return { demos_generated: generated.length, demos: generated };
+}
+
+// ─── SEND OUTREACH EMAILS ─────────────────────────────────────────────────────
 async function sendOutreachEmails(
   supabase: any,
   resendKey: string | undefined,
   campaignId: string | null
 ): Promise<any> {
-  if (!resendKey) {
-    return { error: "RESEND_API_KEY not configured", emails_sent: 0 };
-  }
+  if (!resendKey) return { sent: 0, error: "RESEND_API_KEY not configured" };
 
-  // Get drafted messages that haven't been sent
   let query = supabase
     .from("outreach_messages")
-    .select("*, outreach_leads!inner(*)")
+    .select("*, outreach_leads!inner(contact_email, contact_name, business_name)")
     .eq("message_status", "drafted")
-    .eq("channel", "email")
-    .not("outreach_leads.contact_email", "is", null)
+    .eq("direction", "outbound")
     .limit(10);
 
-  if (campaignId) {
-    query = query.eq("campaign_id", campaignId);
-  }
+  if (campaignId) query = query.eq("campaign_id", campaignId);
 
   const { data: messages } = await query;
+  if (!messages || messages.length === 0) return { sent: 0, message: "No drafted emails to send" };
 
-  if (!messages || messages.length === 0) {
-    return { emails_sent: 0, message: "No drafted emails with contact emails found" };
-  }
-
-  const sentEmails: any[] = [];
-  const failedEmails: any[] = [];
+  let sent = 0;
 
   for (const msg of messages) {
     const lead = msg.outreach_leads;
-    
+    if (!lead?.contact_email) continue;
+
     try {
-      const response = await fetch("https://api.resend.com/emails", {
+      const emailResp = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${resendKey}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          from: "OpenDraft <outreach@opendraft.co>",
-          to: [lead.contact_email],
+          from: "Jason <jason@opendraft.co>",
+          to: lead.contact_email,
           subject: msg.subject,
-          html: formatEmailHtml(msg.body, lead, msg.metadata),
-          tags: [
-            { name: "campaign_id", value: msg.campaign_id },
-            { name: "lead_id", value: msg.lead_id },
-          ],
+          text: msg.body,
         }),
       });
 
-      if (response.ok) {
-        const emailData = await response.json();
-        
-        await supabase
-          .from("outreach_messages")
-          .update({
-            message_status: "sent",
-            sent_at: new Date().toISOString(),
-            metadata: { ...msg.metadata, resend_id: emailData.id }
-          })
-          .eq("id", msg.id);
+      if (emailResp.ok) {
+        await supabase.from("outreach_messages").update({
+          message_status: "sent",
+          sent_at: new Date().toISOString(),
+        }).eq("id", msg.id);
 
-        await supabase
-          .from("outreach_leads")
-          .update({ 
-            last_contacted_at: new Date().toISOString(),
-            lead_status: "contacted"
-          })
-          .eq("id", lead.id);
+        await supabase.from("outreach_leads").update({
+          lead_status: "contacted",
+          last_contacted_at: new Date().toISOString(),
+        }).eq("id", msg.lead_id);
 
-        sentEmails.push({
-          lead_id: lead.id,
-          business_name: lead.business_name,
-          email: lead.contact_email,
-          subject: msg.subject,
-        });
+        sent++;
       } else {
-        const errorData = await response.json();
-        failedEmails.push({
-          lead_id: lead.id,
-          business_name: lead.business_name,
-          error: errorData.message || "Send failed",
-        });
+        const errText = await emailResp.text();
+        console.error(`Failed to send to ${lead.contact_email}:`, errText);
       }
     } catch (e) {
-      failedEmails.push({
-        lead_id: lead.id,
-        business_name: lead.business_name,
-        error: e instanceof Error ? e.message : "Unknown error",
-      });
+      console.error(`Email send error:`, e);
     }
   }
 
-  return {
-    emails_sent: sentEmails.length,
-    emails_failed: failedEmails.length,
-    sent: sentEmails,
-    failed: failedEmails,
-  };
+  return { sent, total_drafted: messages.length };
 }
 
-// Send follow-up emails
-async function sendFollowUpEmails(
-  supabase: any,
-  lovableKey: string,
-  resendKey: string | undefined,
-  campaignId: string | null
-): Promise<any> {
-  if (!resendKey) {
-    return { error: "RESEND_API_KEY not configured", follow_ups_sent: 0 };
-  }
-
-  // Get leads that need follow-up
-  const now = new Date().toISOString();
-  
-  let query = supabase
-    .from("outreach_leads")
-    .select("*, outreach_messages(*)")
-    .eq("lead_status", "contacted")
-    .lte("next_follow_up_at", now)
-    .not("contact_email", "is", null)
-    .limit(5);
-
-  if (campaignId) {
-    query = query.eq("campaign_id", campaignId);
-  }
-
-  const { data: leads } = await query;
-
-  if (!leads || leads.length === 0) {
-    return { follow_ups_sent: 0, message: "No leads ready for follow-up" };
-  }
-
-  const followUpsSent: any[] = [];
-
-  for (const lead of leads) {
-    const existingMessages = lead.outreach_messages || [];
-    const followUpCount = existingMessages.filter((m: any) => m.metadata?.is_follow_up).length;
-    
-    // Max 3 follow-ups
-    if (followUpCount >= 3) {
-      await supabase
-        .from("outreach_leads")
-        .update({ lead_status: "no_response" })
-        .eq("id", lead.id);
-      continue;
-    }
-
-    // Generate follow-up with AI
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${lovableKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          {
-            role: "system",
-            content: `You write friendly follow-up emails for a web dev agency called OpenDraft. Keep it SHORT (under 80 words). Be helpful, not pushy. This is follow-up #${followUpCount + 1}. Always sign off as "Jason" (never use [Your Name] or placeholders).`
-          },
-          {
-            role: "user",
-            content: `Write follow-up #${followUpCount + 1} for:
-Business: ${lead.business_name}
-Industry: ${lead.industry}
-Original pain points: ${lead.metadata?.scoring?.pain_points?.join(", ") || "website improvement"}
-Previous subject: ${existingMessages[0]?.subject || "N/A"}
-
-Return JSON: { "subject": "...", "body": "..." }`
-          }
-        ],
-        response_format: { type: "json_object" }
-      }),
-    });
-
-    if (aiResponse.ok) {
-      const aiData = await aiResponse.json();
-      const content = aiData.choices?.[0]?.message?.content;
-      
-      if (content) {
-        const followUp = JSON.parse(content);
-        
-        // Send via Resend
-        const sendResponse = await fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${resendKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            from: "OpenDraft <outreach@opendraft.co>",
-            to: [lead.contact_email],
-            subject: followUp.subject,
-            html: formatEmailHtml(followUp.body, lead),
-          }),
-        });
-
-        if (sendResponse.ok) {
-          // Save follow-up message
-          await supabase.from("outreach_messages").insert({
-            campaign_id: lead.campaign_id,
-            lead_id: lead.id,
-            channel: "email",
-            subject: followUp.subject,
-            body: followUp.body,
-            message_status: "sent",
-            sent_at: new Date().toISOString(),
-            ai_generated: true,
-            metadata: { is_follow_up: true, follow_up_number: followUpCount + 1 }
-          });
-
-          // Schedule next follow-up
-          const nextFollowUp = new Date();
-          nextFollowUp.setDate(nextFollowUp.getDate() + (followUpCount + 1) * 3);
-          
-          await supabase
-            .from("outreach_leads")
-            .update({ 
-              last_contacted_at: new Date().toISOString(),
-              next_follow_up_at: nextFollowUp.toISOString()
-            })
-            .eq("id", lead.id);
-
-          followUpsSent.push({
-            lead_id: lead.id,
-            business_name: lead.business_name,
-            follow_up_number: followUpCount + 1,
-          });
-        }
-      }
-    }
-  }
-
-  return {
-    follow_ups_sent: followUpsSent.length,
-    follow_ups: followUpsSent,
-  };
-}
-
-// Send a single drafted email by message ID
+// ─── SEND SINGLE EMAIL ───────────────────────────────────────────────────────
 async function sendSingleEmail(
   supabase: any,
   resendKey: string | undefined,
   messageId: string
 ): Promise<any> {
-  if (!resendKey) return { error: "RESEND_API_KEY not configured" };
-  if (!messageId) return { error: "message_id required" };
+  if (!resendKey) return { sent: false, error: "RESEND_API_KEY not configured" };
+  if (!messageId) return { sent: false, error: "message_id required" };
 
   const { data: msg } = await supabase
     .from("outreach_messages")
-    .select("*, outreach_leads!inner(*)")
+    .select("*, outreach_leads!inner(contact_email, contact_name, business_name)")
     .eq("id", messageId)
     .single();
 
-  if (!msg) return { error: "Message not found" };
-  if (msg.message_status !== "drafted") return { error: "Message already sent" };
+  if (!msg) return { sent: false, error: "Message not found" };
 
   const lead = msg.outreach_leads;
-  if (!lead?.contact_email) return { error: "Lead has no contact email" };
+  if (!lead?.contact_email) return { sent: false, error: "No contact email" };
 
-  const response = await fetch("https://api.resend.com/emails", {
+  const emailResp = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${resendKey}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: "OpenDraft <outreach@opendraft.co>",
-      to: [lead.contact_email],
+      from: "Jason <jason@opendraft.co>",
+      to: lead.contact_email,
       subject: msg.subject,
-      html: formatEmailHtml(msg.body, lead, msg.metadata),
-      tags: [
-        { name: "campaign_id", value: msg.campaign_id },
-        { name: "lead_id", value: msg.lead_id },
-      ],
+      text: msg.body,
     }),
   });
 
-  if (!response.ok) {
-    const errData = await response.json();
-    return { error: errData.message || "Send failed" };
-  }
-
-  const emailData = await response.json();
-
-  await supabase
-    .from("outreach_messages")
-    .update({
+  if (emailResp.ok) {
+    await supabase.from("outreach_messages").update({
       message_status: "sent",
       sent_at: new Date().toISOString(),
-      metadata: { ...msg.metadata, resend_id: emailData.id },
-    })
-    .eq("id", msg.id);
+    }).eq("id", msg.id);
 
-  await supabase
-    .from("outreach_leads")
-    .update({ last_contacted_at: new Date().toISOString(), lead_status: "contacted" })
-    .eq("id", lead.id);
+    await supabase.from("outreach_leads").update({
+      lead_status: "contacted",
+      last_contacted_at: new Date().toISOString(),
+    }).eq("id", msg.lead_id);
 
-  return { success: true, email: lead.contact_email, subject: msg.subject };
+    return { sent: true };
+  }
+
+  return { sent: false, error: await emailResp.text() };
 }
 
-// Reply to a lead from the admin dashboard
+// ─── REPLY TO LEAD ────────────────────────────────────────────────────────────
 async function replyToLead(
   supabase: any,
   resendKey: string | undefined,
@@ -1230,108 +1148,172 @@ async function replyToLead(
   subject: string,
   body: string
 ): Promise<any> {
-  if (!resendKey) return { error: "RESEND_API_KEY not configured" };
-  if (!leadId || !subject || !body) return { error: "lead_id, subject, and body are required" };
+  if (!resendKey) return { sent: false, error: "RESEND_API_KEY not configured" };
 
   const { data: lead } = await supabase
     .from("outreach_leads")
-    .select("*")
+    .select("contact_email, business_name")
     .eq("id", leadId)
     .single();
 
-  if (!lead) return { error: "Lead not found" };
-  if (!lead.contact_email) return { error: "Lead has no contact email" };
+  if (!lead?.contact_email) return { sent: false, error: "No contact email" };
 
-  // Send via Resend
-  const response = await fetch("https://api.resend.com/emails", {
+  const emailResp = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${resendKey}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: "OpenDraft <outreach@opendraft.co>",
-      to: [lead.contact_email],
-      subject,
-      html: formatEmailHtml(body, lead),
-      tags: [
-        { name: "campaign_id", value: campaignId || lead.campaign_id },
-        { name: "lead_id", value: leadId },
-        { name: "type", value: "admin_reply" },
-      ],
+      from: "Jason <jason@opendraft.co>",
+      to: lead.contact_email,
+      subject: subject || `Re: ${lead.business_name}`,
+      text: body,
     }),
   });
 
-  if (!response.ok) {
-    const errData = await response.json();
-    return { error: errData.message || "Send failed" };
-  }
-
-  const emailData = await response.json();
-
-  // Store the reply as an outreach message
-  const { data: newMsg } = await supabase
-    .from("outreach_messages")
-    .insert({
-      campaign_id: campaignId || lead.campaign_id,
+  if (emailResp.ok) {
+    await supabase.from("outreach_messages").insert({
       lead_id: leadId,
-      channel: "email",
-      subject,
+      campaign_id: campaignId,
+      subject: subject || `Re: ${lead.business_name}`,
       body,
+      channel: "email",
+      direction: "outbound",
+      ai_generated: false,
       message_status: "sent",
       sent_at: new Date().toISOString(),
-      ai_generated: false,
-      direction: "outbound",
-      metadata: { resend_id: emailData.id, type: "admin_reply" },
-    })
-    .select()
-    .single();
+      metadata: { type: "reply" },
+    });
 
-  await supabase
-    .from("outreach_leads")
-    .update({ last_contacted_at: new Date().toISOString(), lead_status: "in_conversation" })
-    .eq("id", leadId);
+    return { sent: true };
+  }
 
-  return { success: true, message_id: newMsg?.id, email: lead.contact_email };
+  return { sent: false, error: await emailResp.text() };
 }
 
-// Format email as HTML
-function formatEmailHtml(body: string, lead: any, metadata?: any): string {
-  // Replace any AI placeholder names with Jason
-  const cleanedBody = body
-    .replace(/\[Your Name\]/gi, "Jason")
-    .replace(/\[your name\]/gi, "Jason")
-    .replace(/\[Name\]/gi, "Jason")
-    .replace(/\[Sender Name\]/gi, "Jason")
-    .replace(/\[sender\]/gi, "Jason");
-  const paragraphs = cleanedBody.split('\n\n').map(p => `<p style="margin-bottom: 16px; line-height: 1.6;">${p}</p>`).join('');
+// ─── SEND FOLLOW-UP EMAILS ───────────────────────────────────────────────────
+async function sendFollowUpEmails(
+  supabase: any,
+  lovableKey: string,
+  resendKey: string | undefined,
+  campaignId: string | null
+): Promise<any> {
+  if (!resendKey) return { sent: 0, error: "RESEND_API_KEY not configured" };
 
-  // Build demo CTA button if demo URL exists
-  const demoUrl = metadata?.demo_url || lead.metadata?.demo_url;
-  const demoCta = demoUrl ? `
-    <div style="text-align: center; margin: 28px 0;">
-      <a href="${demoUrl}" style="display: inline-block; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 15px; letter-spacing: 0.3px;">
-        👀 View Your Custom Demo
-      </a>
-      <p style="font-size: 12px; color: #888; margin-top: 8px;">Built specifically for ${lead.business_name || "your business"}</p>
-    </div>` : "";
+  // Find leads contacted > 3 days ago with no response
+  const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
 
-  return `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-</head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #1a1a1a; padding: 20px; max-width: 600px; margin: 0 auto;">
-  ${paragraphs}
-  ${demoCta}
-  <hr style="border: none; border-top: 1px solid #e5e5e5; margin: 24px 0;">
-  <p style="font-size: 12px; color: #666;">
-    Sent by OpenDraft · <a href="https://opendraft.co" style="color: #666;">opendraft.co</a>
-    <br>
-    <a href="https://opendraft.co/unsubscribe?email=${encodeURIComponent(lead.contact_email || '')}" style="color: #666;">Unsubscribe</a>
-  </p>
-</body>
-</html>`;
+  let query = supabase
+    .from("outreach_leads")
+    .select("*, outreach_messages(id, subject, body, message_status, sent_at)")
+    .eq("lead_status", "contacted")
+    .lt("last_contacted_at", threeDaysAgo)
+    .limit(5);
+
+  if (campaignId) query = query.eq("campaign_id", campaignId);
+
+  const { data: leads } = await query;
+  if (!leads || leads.length === 0) return { sent: 0, message: "No leads need follow-up" };
+
+  // Filter to those with < 2 sent messages
+  const needsFollowUp = leads.filter((l: any) => {
+    const sentMsgs = (l.outreach_messages || []).filter((m: any) => m.message_status === "sent");
+    return sentMsgs.length < 2;
+  });
+
+  let sent = 0;
+
+  for (const lead of needsFollowUp) {
+    const lastMsg = (lead.outreach_messages || [])
+      .filter((m: any) => m.message_status === "sent")
+      .sort((a: any, b: any) => new Date(b.sent_at).getTime() - new Date(a.sent_at).getTime())[0];
+
+    // AI generates follow-up
+    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${lovableKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash-lite",
+        messages: [
+          {
+            role: "system",
+            content: `You are Jason. Write a very short follow-up email (max 60 words). Be casual, reference your previous email, and add one new piece of value. Sign as Jason.`
+          },
+          {
+            role: "user",
+            content: `Follow up with ${lead.business_name} (${lead.industry}).
+Previous subject: ${lastMsg?.subject || "website improvement"}
+Previous email was about: ${lastMsg?.body?.slice(0, 200) || "custom website"}
+
+Return JSON: { "subject": "...", "body": "..." }`
+          }
+        ],
+      }),
+    });
+
+    if (aiResponse.ok) {
+      const aiData = await aiResponse.json();
+      let followUp;
+      try {
+        const content = aiData.choices?.[0]?.message?.content || "";
+        followUp = JSON.parse(content.replace(/```json?\n?/g, "").replace(/```/g, "").trim());
+      } catch {
+        continue;
+      }
+
+      if (followUp?.subject && followUp?.body) {
+        const emailResp = await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${resendKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            from: "Jason <jason@opendraft.co>",
+            to: lead.contact_email,
+            subject: followUp.subject,
+            text: followUp.body,
+          }),
+        });
+
+        if (emailResp.ok) {
+          await supabase.from("outreach_messages").insert({
+            lead_id: lead.id,
+            campaign_id: lead.campaign_id,
+            subject: followUp.subject,
+            body: followUp.body,
+            channel: "email",
+            direction: "outbound",
+            ai_generated: true,
+            message_status: "sent",
+            sent_at: new Date().toISOString(),
+            metadata: { template: "follow_up" },
+          });
+
+          sent++;
+        }
+      }
+    }
+  }
+
+  // Mark stale leads
+  const { data: staleLeads } = await supabase
+    .from("outreach_leads")
+    .select("id, outreach_messages(id, message_status)")
+    .eq("lead_status", "contacted")
+    .lt("last_contacted_at", new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString())
+    .limit(10);
+
+  for (const lead of (staleLeads || [])) {
+    const sentCount = (lead.outreach_messages || []).filter((m: any) => m.message_status === "sent").length;
+    if (sentCount >= 2) {
+      await supabase.from("outreach_leads").update({ lead_status: "no_response" }).eq("id", lead.id);
+    }
+  }
+
+  return { sent, follow_ups_needed: needsFollowUp.length };
 }

@@ -3,13 +3,19 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Building2, ExternalLink, Copy, Eye, CheckCircle, Clock,
-  AlertCircle, Loader2, Mail, EyeOff
+  AlertCircle, Loader2, Mail, EyeOff, Plus, Upload, Search,
+  Globe, User, MapPin, X, Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface Lead {
   id: string;
@@ -41,31 +47,49 @@ interface Props {
   industry: string | null;
 }
 
+const INDUSTRIES = [
+  "Home Services", "Food & Beverage", "Health & Wellness",
+  "Professional Services", "Automotive", "Beauty & Personal Care",
+  "Retail & Local Shops", "Education & Childcare", "Events & Entertainment",
+  "Pet Services", "Construction & Trades", "Real Estate & Property", "Other",
+];
+
 export function OutreachLeadsList({ campaignId, industry }: Props) {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [messages, setMessages] = useState<OutreachMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showImportDialog, setShowImportDialog] = useState(false);
+  const [addingProspect, setAddingProspect] = useState(false);
+  const [importingUrl, setImportingUrl] = useState(false);
 
-  useEffect(() => {
-    fetchData();
-  }, [campaignId, industry]);
+  // Add prospect form
+  const [newProspect, setNewProspect] = useState({
+    business_name: "", website_url: "", contact_email: "",
+    contact_name: "", industry: "Other", city: "", state: "",
+  });
+  const [importUrl, setImportUrl] = useState("");
+  const [importIndustry, setImportIndustry] = useState("Other");
+
+  useEffect(() => { fetchData(); }, [campaignId, industry]);
 
   const fetchData = async () => {
     setLoading(true);
-
     let leadsQuery = supabase
       .from("outreach_leads")
       .select("*")
       .order("score", { ascending: false })
-      .limit(100);
+      .limit(200);
 
     if (campaignId) leadsQuery = leadsQuery.eq("campaign_id", campaignId);
     if (industry) leadsQuery = leadsQuery.eq("industry", industry);
 
     const [leadsRes, msgsRes] = await Promise.all([
       leadsQuery,
-      supabase.from("outreach_messages").select("id, lead_id, subject, body, message_status").limit(200),
+      supabase.from("outreach_messages").select("id, lead_id, subject, body, message_status").limit(500),
     ]);
 
     setLeads((leadsRes.data as Lead[]) || []);
@@ -80,6 +104,73 @@ export function OutreachLeadsList({ campaignId, industry }: Props) {
     toast.success("Copied to clipboard");
   };
 
+  const handleAddProspect = async () => {
+    if (!newProspect.business_name && !newProspect.website_url) {
+      toast.error("Enter a business name or website URL");
+      return;
+    }
+    setAddingProspect(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("swarm-b2b-outreach", {
+        body: {
+          action: "add_prospect",
+          ...newProspect,
+          campaign_id: campaignId,
+        },
+      });
+      if (error) throw error;
+      if (data?.result?.error) throw new Error(data.result.error);
+      toast.success(`Added ${data?.result?.lead?.business_name || "prospect"}`);
+      setShowAddDialog(false);
+      setNewProspect({ business_name: "", website_url: "", contact_email: "", contact_name: "", industry: "Other", city: "", state: "" });
+      fetchData();
+    } catch (e: any) {
+      toast.error(e.message || "Failed to add prospect");
+    } finally {
+      setAddingProspect(false);
+    }
+  };
+
+  const handleImportFromUrl = async () => {
+    if (!importUrl) { toast.error("Enter a URL"); return; }
+    setImportingUrl(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("swarm-b2b-outreach", {
+        body: {
+          action: "import_from_url",
+          url: importUrl,
+          industry: importIndustry,
+          campaign_id: campaignId,
+        },
+      });
+      if (error) throw error;
+      if (data?.result?.error) throw new Error(data.result.error);
+      toast.success(`Imported ${data?.result?.imported_count || 0} prospects`);
+      setShowImportDialog(false);
+      setImportUrl("");
+      fetchData();
+    } catch (e: any) {
+      toast.error(e.message || "Import failed");
+    } finally {
+      setImportingUrl(false);
+    }
+  };
+
+  // Filter leads
+  const filtered = leads.filter(l => {
+    if (statusFilter !== "all" && l.lead_status !== statusFilter) return false;
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      return (
+        l.business_name.toLowerCase().includes(q) ||
+        l.contact_email?.toLowerCase().includes(q) ||
+        l.industry.toLowerCase().includes(q) ||
+        l.city?.toLowerCase().includes(q)
+      );
+    }
+    return true;
+  });
+
   if (loading) {
     return (
       <div className="py-20 flex items-center justify-center">
@@ -88,42 +179,233 @@ export function OutreachLeadsList({ campaignId, industry }: Props) {
     );
   }
 
-  if (leads.length === 0) {
-    return (
-      <Card className="border-dashed border-border/60">
-        <CardContent className="py-14 sm:py-20 text-center px-4">
-          <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center mx-auto mb-4 sm:mb-5">
-            <Building2 className="h-7 w-7 sm:h-8 sm:w-8 text-primary" />
-          </div>
-          <h3 className="font-bold text-base sm:text-lg mb-1.5">No leads found</h3>
-          <p className="text-xs sm:text-sm text-muted-foreground">Run "Discover" to find businesses.</p>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  const statusCounts = ["qualified", "nurture", "new", "contacted"].map(s => ({
+  const statusCounts = ["qualified", "nurture", "new", "contacted", "no_response", "replied"].map(s => ({
     status: s,
     count: leads.filter(l => l.lead_status === s).length,
   })).filter(s => s.count > 0);
 
   return (
     <div className="space-y-3">
-      {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <p className="text-xs text-muted-foreground font-medium">{leads.length} leads</p>
+      {/* Toolbar */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <div className="relative flex-1 min-w-[140px]">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+          <Input
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Search leads..."
+            className="pl-8 h-8 text-xs rounded-lg bg-card border-border/40"
+          />
+        </div>
+
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-[110px] h-8 text-xs rounded-lg bg-card border-border/40">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Status</SelectItem>
+            {statusCounts.map(s => (
+              <SelectItem key={s.status} value={s.status}>
+                {s.status.replace(/_/g, " ")} ({s.count})
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {/* Add Prospect */}
+        <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+          <DialogTrigger asChild>
+            <Button size="sm" variant="outline" className="h-8 text-xs rounded-lg gap-1">
+              <Plus className="h-3 w-3" /> Add
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-base">
+                <Plus className="h-4 w-4" /> Add Prospect
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3 pt-2">
+              <div className="grid grid-cols-2 gap-2">
+                <div className="col-span-2">
+                  <label className="text-[11px] font-medium text-muted-foreground mb-1 block">Website URL</label>
+                  <div className="relative">
+                    <Globe className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                    <Input
+                      value={newProspect.website_url}
+                      onChange={e => setNewProspect(p => ({ ...p, website_url: e.target.value }))}
+                      placeholder="example.com"
+                      className="pl-8 h-9 text-sm"
+                    />
+                  </div>
+                  <p className="text-[10px] text-muted-foreground mt-1">We'll auto-extract business name, email & contact info</p>
+                </div>
+                <div className="col-span-2">
+                  <label className="text-[11px] font-medium text-muted-foreground mb-1 block">Business Name</label>
+                  <Input
+                    value={newProspect.business_name}
+                    onChange={e => setNewProspect(p => ({ ...p, business_name: e.target.value }))}
+                    placeholder="Acme Plumbing"
+                    className="h-9 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="text-[11px] font-medium text-muted-foreground mb-1 block">Email</label>
+                  <Input
+                    value={newProspect.contact_email}
+                    onChange={e => setNewProspect(p => ({ ...p, contact_email: e.target.value }))}
+                    placeholder="owner@example.com"
+                    className="h-9 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="text-[11px] font-medium text-muted-foreground mb-1 block">Contact Name</label>
+                  <Input
+                    value={newProspect.contact_name}
+                    onChange={e => setNewProspect(p => ({ ...p, contact_name: e.target.value }))}
+                    placeholder="John Smith"
+                    className="h-9 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="text-[11px] font-medium text-muted-foreground mb-1 block">Industry</label>
+                  <Select value={newProspect.industry} onValueChange={v => setNewProspect(p => ({ ...p, industry: v }))}>
+                    <SelectTrigger className="h-9 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {INDUSTRIES.map(i => <SelectItem key={i} value={i}>{i}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <Input
+                    value={newProspect.city}
+                    onChange={e => setNewProspect(p => ({ ...p, city: e.target.value }))}
+                    placeholder="City"
+                    className="h-9 text-sm"
+                  />
+                  <Input
+                    value={newProspect.state}
+                    onChange={e => setNewProspect(p => ({ ...p, state: e.target.value }))}
+                    placeholder="State"
+                    className="h-9 text-sm"
+                  />
+                </div>
+              </div>
+              <Button onClick={handleAddProspect} disabled={addingProspect} className="w-full h-9 text-sm gap-2">
+                {addingProspect ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+                {addingProspect ? "Enriching & adding..." : "Add & enrich prospect"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Import from URL */}
+        <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
+          <DialogTrigger asChild>
+            <Button size="sm" variant="outline" className="h-8 text-xs rounded-lg gap-1">
+              <Upload className="h-3 w-3" /> Import
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-base">
+                <Upload className="h-4 w-4" /> Import from URL
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3 pt-2">
+              <div>
+                <label className="text-[11px] font-medium text-muted-foreground mb-1 block">Directory / List URL</label>
+                <Input
+                  value={importUrl}
+                  onChange={e => setImportUrl(e.target.value)}
+                  placeholder="https://yelp.com/search?find_desc=plumber&find_loc=Austin"
+                  className="h-9 text-sm"
+                />
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  Paste a Yelp, Google Maps, or directory page — we'll extract all businesses
+                </p>
+              </div>
+              <div>
+                <label className="text-[11px] font-medium text-muted-foreground mb-1 block">Industry</label>
+                <Select value={importIndustry} onValueChange={setImportIndustry}>
+                  <SelectTrigger className="h-9 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {INDUSTRIES.map(i => <SelectItem key={i} value={i}>{i}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button onClick={handleImportFromUrl} disabled={importingUrl} className="w-full h-9 text-sm gap-2">
+                {importingUrl ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+                {importingUrl ? "Scraping & importing..." : "Import prospects"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      {/* Status chips */}
+      {statusCounts.length > 0 && (
         <div className="flex gap-1 flex-wrap">
+          <button
+            onClick={() => setStatusFilter("all")}
+            className={cn(
+              "text-[10px] font-medium px-2 py-0.5 rounded-md transition-colors",
+              statusFilter === "all" ? "bg-primary/10 text-primary" : "bg-muted/50 text-muted-foreground hover:bg-muted"
+            )}
+          >
+            All · {leads.length}
+          </button>
           {statusCounts.map(({ status, count }) => (
-            <Badge key={status} variant="secondary" className="text-[10px] font-medium rounded-md">
+            <button
+              key={status}
+              onClick={() => setStatusFilter(statusFilter === status ? "all" : status)}
+              className={cn(
+                "text-[10px] font-medium px-2 py-0.5 rounded-md transition-colors",
+                statusFilter === status ? "bg-primary/10 text-primary" : "bg-muted/50 text-muted-foreground hover:bg-muted"
+              )}
+            >
               {status.replace(/_/g, " ")} · {count}
-            </Badge>
+            </button>
           ))}
         </div>
-      </div>
+      )}
+
+      {/* Empty state */}
+      {filtered.length === 0 && (
+        <Card className="border-dashed border-border/60">
+          <CardContent className="py-14 text-center px-4">
+            <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center mx-auto mb-4">
+              <Building2 className="h-7 w-7 text-primary" />
+            </div>
+            <h3 className="font-bold text-base mb-1.5">
+              {leads.length === 0 ? "No leads yet" : "No matches"}
+            </h3>
+            <p className="text-xs text-muted-foreground mb-4">
+              {leads.length === 0
+                ? "Add prospects manually, import from a URL, or run auto-discovery."
+                : "Try adjusting your search or filters."}
+            </p>
+            {leads.length === 0 && (
+              <div className="flex gap-2 justify-center">
+                <Button size="sm" variant="outline" className="text-xs gap-1" onClick={() => setShowAddDialog(true)}>
+                  <Plus className="h-3 w-3" /> Add Prospect
+                </Button>
+                <Button size="sm" variant="outline" className="text-xs gap-1" onClick={() => setShowImportDialog(true)}>
+                  <Upload className="h-3 w-3" /> Import URL
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Lead cards */}
       <div className="space-y-1.5">
-        {leads.map((lead, i) => {
+        {filtered.map((lead, i) => {
           const scoring = lead.metadata?.scoring || {};
           const msg = getMessage(lead.id);
           const isExpanded = expandedId === lead.id;
@@ -136,9 +418,9 @@ export function OutreachLeadsList({ campaignId, industry }: Props) {
               transition={{ delay: Math.min(i * 0.02, 0.2) }}
             >
               <Card className={cn(
-                "border-border/40 transition-all",
+                "border-border/40 transition-all cursor-pointer",
                 isExpanded ? "ring-1 ring-primary/15 shadow-md border-border/60" : "hover:border-border/60 hover:shadow-sm"
-              )}>
+              )} onClick={() => setExpandedId(isExpanded ? null : lead.id)}>
                 <CardContent className="p-3 sm:p-3.5">
                   <div className="flex items-start gap-2.5 sm:gap-3">
                     {/* Score */}
@@ -157,12 +439,21 @@ export function OutreachLeadsList({ campaignId, industry }: Props) {
                       <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap">
                         <h3 className="font-bold text-xs sm:text-sm truncate max-w-[140px] sm:max-w-none">{lead.business_name}</h3>
                         <LeadStatusBadge status={lead.lead_status} />
+                        {lead.source === "manual" && (
+                          <Badge variant="outline" className="text-[8px] rounded px-1 border-primary/20 text-primary">manual</Badge>
+                        )}
+                        {lead.source === "url_import" && (
+                          <Badge variant="outline" className="text-[8px] rounded px-1 border-blue-500/20 text-blue-500">import</Badge>
+                        )}
                       </div>
 
                       <div className="flex items-center gap-1.5 sm:gap-2.5 mt-1 text-[10px] sm:text-[11px] text-muted-foreground flex-wrap">
                         <Badge variant="outline" className="text-[9px] sm:text-[10px] font-medium rounded-md px-1.5">{lead.industry}</Badge>
                         {lead.contact_email && (
                           <span className="font-mono text-[9px] sm:text-[10px] truncate max-w-[150px] sm:max-w-none">{lead.contact_email}</span>
+                        )}
+                        {!lead.contact_email && (
+                          <span className="text-[9px] text-destructive/60 italic">no email</span>
                         )}
                         {lead.city && lead.state && (
                           <span className="hidden sm:inline">{lead.city}, {lead.state}</span>
@@ -172,6 +463,7 @@ export function OutreachLeadsList({ campaignId, industry }: Props) {
                             href={lead.website_url.startsWith("http") ? lead.website_url : `https://${lead.website_url}`}
                             target="_blank" rel="noopener noreferrer"
                             className="hover:text-primary flex items-center gap-0.5 transition-colors hidden sm:flex"
+                            onClick={e => e.stopPropagation()}
                           >
                             {lead.website_url.replace(/^https?:\/\//, "").split("/")[0]}
                             <ExternalLink className="h-2.5 w-2.5" />
@@ -192,16 +484,9 @@ export function OutreachLeadsList({ campaignId, industry }: Props) {
                     </div>
 
                     <div className="flex gap-0.5 shrink-0">
-                      <Button
-                        size="sm" variant="ghost"
-                        className="h-7 w-7 sm:h-8 sm:w-8 p-0 rounded-lg"
-                        onClick={() => setExpandedId(isExpanded ? null : lead.id)}
-                      >
-                        {isExpanded ? <EyeOff className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> : <Eye className="h-3 w-3 sm:h-3.5 sm:w-3.5" />}
-                      </Button>
                       {msg && (
-                        <Button size="sm" variant="ghost" className="h-7 w-7 sm:h-8 sm:w-8 p-0 rounded-lg hidden sm:flex" onClick={() => copyMessage(msg)}>
-                          <Copy className="h-3.5 w-3.5" />
+                        <Button size="sm" variant="ghost" className="h-7 w-7 sm:h-8 sm:w-8 p-0 rounded-lg" onClick={e => { e.stopPropagation(); copyMessage(msg); }}>
+                          <Copy className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                         </Button>
                       )}
                     </div>
@@ -216,7 +501,6 @@ export function OutreachLeadsList({ campaignId, industry }: Props) {
                         transition={{ duration: 0.2 }}
                         className="overflow-hidden"
                       >
-                        {/* Show mobile-hidden info */}
                         <div className="flex gap-2 mt-2 flex-wrap sm:hidden text-[10px] text-muted-foreground">
                           {lead.contact_name && <span className="font-medium text-foreground/70">{lead.contact_name}</span>}
                           {lead.city && lead.state && <span>{lead.city}, {lead.state}</span>}
@@ -225,6 +509,7 @@ export function OutreachLeadsList({ campaignId, industry }: Props) {
                               href={lead.website_url.startsWith("http") ? lead.website_url : `https://${lead.website_url}`}
                               target="_blank" rel="noopener noreferrer"
                               className="hover:text-primary flex items-center gap-0.5 transition-colors"
+                              onClick={e => e.stopPropagation()}
                             >
                               {lead.website_url.replace(/^https?:\/\//, "").split("/")[0]}
                               <ExternalLink className="h-2.5 w-2.5" />
@@ -243,7 +528,7 @@ export function OutreachLeadsList({ campaignId, industry }: Props) {
                               <Mail className="h-3.5 w-3.5 text-primary" />
                               <span className="text-[11px] font-bold">Draft Email</span>
                               <Badge variant="outline" className="text-[10px] rounded-md">{msg.message_status}</Badge>
-                              <Button size="sm" variant="ghost" className="h-6 w-6 p-0 rounded-md sm:hidden ml-auto" onClick={() => copyMessage(msg)}>
+                              <Button size="sm" variant="ghost" className="h-6 w-6 p-0 rounded-md sm:hidden ml-auto" onClick={e => { e.stopPropagation(); copyMessage(msg); }}>
                                 <Copy className="h-3 w-3" />
                               </Button>
                             </div>

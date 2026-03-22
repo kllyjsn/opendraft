@@ -207,6 +207,18 @@ export function ImprovementDashboard() {
         </div>
       </div>
 
+      {/* Global changelog — all code changes across projects */}
+      <div className="rounded-2xl border border-border/60 bg-card p-5">
+        <h3 className="font-bold text-sm mb-3 flex items-center gap-2">
+          <GitCommit className="h-4 w-4 text-primary" />
+          Code Changelog
+        </h3>
+        <p className="text-xs text-muted-foreground mb-4">
+          All code changes made by AI across your projects
+        </p>
+        <ChangelogFeed compact />
+      </div>
+
       {/* Improvement cycles */}
       <div className="flex items-center justify-between mb-2">
         <h2 className="text-lg font-bold flex items-center gap-2">

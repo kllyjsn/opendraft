@@ -415,17 +415,17 @@ export function BusinessAnalyzer({ onGenerate, onResultsChange }: {
           <div className="relative group">
             <div className="absolute -inset-0.5 rounded-2xl bg-gradient-to-r from-primary/20 via-accent/20 to-secondary/20 opacity-0 group-focus-within:opacity-100 blur-sm transition-opacity duration-500" />
             <div className="relative flex items-center">
-              <Globe className="absolute left-4 h-4 w-4 text-muted-foreground" />
+              <Globe className="absolute left-3 md:left-4 h-4 w-4 text-muted-foreground" />
               <Input
                 type="text"
                 inputMode="url"
                 autoCapitalize="none"
                 autoCorrect="off"
                 spellCheck={false}
-                placeholder="Enter your company URL (e.g. workday.com)…"
+                placeholder="yourcompany.com"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
-                className="pl-11 pr-28 h-12 bg-card border-border/50 focus-visible:border-primary/40 focus-visible:shadow-glow transition-all rounded-xl text-sm leading-normal [&]:py-0"
+                className="pl-9 md:pl-11 pr-24 md:pr-28 h-11 md:h-12 bg-card border-border/50 focus-visible:border-primary/40 focus-visible:shadow-glow transition-all rounded-xl text-sm leading-normal [&]:py-0"
                 disabled={loading}
                 required
               />
@@ -433,12 +433,13 @@ export function BusinessAnalyzer({ onGenerate, onResultsChange }: {
                 type="submit"
                 size="sm"
                 disabled={loading || !url.trim()}
-                className="absolute right-2 gradient-hero text-primary-foreground border-0 shadow-glow hover:opacity-90 rounded-lg h-9 px-5 text-xs font-bold"
+                className="absolute right-1.5 md:right-2 gradient-hero text-primary-foreground border-0 shadow-glow hover:opacity-90 rounded-lg h-8 md:h-9 px-4 md:px-5 text-xs font-bold"
               >
                 {loading ? (
                   <>
                     <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                    Analyzing
+                    <span className="hidden sm:inline">Analyzing</span>
+                    <span className="sm:hidden">…</span>
                   </>
                 ) : (
                   "Analyze"
@@ -454,12 +455,12 @@ export function BusinessAnalyzer({ onGenerate, onResultsChange }: {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="mt-4 flex flex-col items-center gap-2"
+            className="mt-3 md:mt-4 flex flex-col items-center gap-1.5 md:gap-2"
           >
-            <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground/50 font-medium">
-              or see what we'd build for
+            <p className="text-[9px] md:text-[10px] uppercase tracking-[0.15em] text-muted-foreground/50 font-medium">
+              or try
             </p>
-            <div className="flex flex-wrap justify-center gap-2">
+            <div className="flex flex-wrap justify-center gap-1.5 md:gap-2">
               {EXAMPLE_ANALYSES.map((ex) => (
                 <button
                   key={ex.label}
@@ -469,11 +470,11 @@ export function BusinessAnalyzer({ onGenerate, onResultsChange }: {
                     setResult(ex.data);
                     saveAnalysis(ex.data);
                   }}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-card/50 backdrop-blur-sm px-3.5 py-1.5 text-xs font-medium text-foreground/80 hover:border-primary/40 hover:bg-primary/5 hover:text-primary transition-all duration-200"
+                  className="inline-flex items-center gap-1 md:gap-1.5 rounded-full border border-border/60 bg-card/50 backdrop-blur-sm px-2.5 md:px-3.5 py-1 md:py-1.5 text-[11px] md:text-xs font-medium text-foreground/80 hover:border-primary/40 hover:bg-primary/5 hover:text-primary transition-all duration-200"
                 >
                   <span>{ex.emoji}</span>
                   {ex.label}
-                  <ArrowRight className="h-3 w-3 opacity-40" />
+                  <ArrowRight className="h-2.5 md:h-3 w-2.5 md:w-3 opacity-40" />
                 </button>
               ))}
             </div>

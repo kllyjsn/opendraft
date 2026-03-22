@@ -113,10 +113,12 @@ serve(async (req) => {
           // Run full pipeline
           const discovered = await discoverBusinesses(supabase, FIRECRAWL_API_KEY, targetIndustry, targetRegion, campaignId);
           const evaluated = await evaluateLeads(supabase, LOVABLE_API_KEY, FIRECRAWL_API_KEY, campaignId);
+          const demos = await generateDemosForLeads(supabase, LOVABLE_API_KEY, campaignId);
           const messages = await generateOutreachMessages(supabase, LOVABLE_API_KEY, campaignId);
           result = {
             discovered,
             evaluated,
+            demos,
             messages,
             summary: {
               businesses_found: discovered.leads_created || 0,

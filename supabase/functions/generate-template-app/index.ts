@@ -726,12 +726,18 @@ const contactSchema = z.object({
 \`\`\`
 
 ## FILE STRUCTURE (generate ALL of these)
-- src/App.tsx — Main app with routing/layout
+- src/App.tsx — Main app with routing/layout (use default export)
 - src/components/Hero.tsx — Stunning hero section
 - src/components/Navbar.tsx — Responsive nav with mobile menu
 - src/components/Footer.tsx — Professional footer
 - src/components/ — 4-8 additional feature-specific components
 - src/data/sample-data.ts — Realistic mock data
+
+## EXPORT CONVENTION (CRITICAL — builds will fail if mismatched)
+- ALL components MUST use NAMED exports: \`export function Hero() { ... }\` — NOT \`export default function Hero()\`
+- App.tsx MUST import components with named imports: \`import { Hero } from '@/components/Hero'\`
+- Data files should also use named exports: \`export const sampleData = [...]\`
+- The ONLY file that should use default export is App.tsx itself: \`export default function App()\`
 
 ## BACKEND-READY ARCHITECTURE
 The base scaffold supports THREE database backends out of the box:

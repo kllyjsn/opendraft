@@ -167,6 +167,7 @@ const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
 const BLOCKED_EMAIL_PATTERNS = [
   "example.com", "sentry.io", "wixpress", "googleapis", "wix.com",
   "squarespace.com", "godaddy.com", "wordpress.com", "cloudflare",
+  "schema.org", "w3.org", "json-ld", "placeholder",
 ];
 
 function extractEmails(text: string): string[] {
@@ -178,8 +179,8 @@ function extractEmails(text: string): string[] {
       !lower.startsWith("noreply") &&
       !lower.startsWith("no-reply") &&
       !lower.startsWith("support@") &&
-      !lower.startsWith("info@") // deprioritize generic but don't block
-      ? true : lower.startsWith("info@") // allow info@ as fallback
+      !lower.startsWith("info@")
+      ? true : lower.startsWith("info@")
     );
   });
 }
@@ -192,6 +193,19 @@ function extractAllEmails(text: string): string[] {
       !lower.startsWith("noreply") &&
       !lower.startsWith("no-reply");
   });
+}
+
+// ─── Helper: guess common email patterns from domain ──────────────────────────
+function guessEmailsFromDomain(domain: string): string[] {
+  // Skip obviously non-business domains
+  const skipDomains = ["gmail.com", "yahoo.com", "hotmail.com", "outlook.com", "aol.com"];
+  if (skipDomains.includes(domain.toLowerCase())) return [];
+  return [
+    `info@${domain}`,
+    `hello@${domain}`,
+    `contact@${domain}`,
+    `admin@${domain}`,
+  ];
 }
 
 // ─── Helper: get or create campaign ───────────────────────────────────────────
@@ -391,6 +405,7 @@ async function discoverBusinesses(
   ];
 
   const MAX_LEADS = opts.max_leads || 25;
+  let deepScrapeCount = 0;
 
   for (const industry of industries) {
     const niches = industry.niches.sort(() => Math.random() - 0.5).slice(0, 3);
@@ -439,34 +454,49 @@ async function discoverBusinesses(
 
               if (await isDuplicate(supabase, domain)) continue;
 
-              // Extract from search content first (cheap)
+              // Extract from search content first (cheap — no extra API call)
               const pageContent = result.markdown || result.description || "";
               let emails = extractAllEmails(pageContent);
               let contactEmail = emails[0] || null;
               let contactName: string | null = null;
               let businessName = result.title?.split(" - ")[0]?.split(" | ")[0]?.trim() || domain;
+              let emailSource = "search_result";
 
-              // Deep scrape if no email found
-              if (!contactEmail) {
+              // Deep scrape only if we have budget (limit to 5 deep scrapes per run)
+              if (!contactEmail && deepScrapeCount < 5) {
+                deepScrapeCount++;
                 const scraped = await scrapeContactFromUrl(result.url, firecrawlKey, lovableKey);
                 contactEmail = scraped.email;
                 contactName = scraped.name;
                 if (scraped.businessName) businessName = scraped.businessName;
+                emailSource = "deep_scrape";
               }
 
-              // Only add leads with verified emails
+              // Fallback: guess common email patterns from domain
               if (!contactEmail) {
-                console.log(`Skipping ${businessName} — no email`);
-                continue;
+                const guessed = guessEmailsFromDomain(domain);
+                if (guessed.length > 0) {
+                  contactEmail = guessed[0]; // info@domain.com
+                  emailSource = "pattern_guess";
+                }
               }
 
-              // Already have this email?
-              const { data: emailDup } = await supabase
-                .from("outreach_leads")
-                .select("id")
-                .eq("contact_email", contactEmail.toLowerCase())
-                .limit(1);
-              if (emailDup && emailDup.length > 0) continue;
+              // Accept leads with any email (scraped or guessed) or even without
+              if (!contactEmail) {
+                // Still add the lead with no email — they have a website we can use
+                console.log(`Adding ${businessName} without email (website-only lead)`);
+                emailSource = "none";
+              }
+
+              // Dedup by email if we have one
+              if (contactEmail) {
+                const { data: emailDup } = await supabase
+                  .from("outreach_leads")
+                  .select("id")
+                  .eq("contact_email", contactEmail.toLowerCase())
+                  .limit(1);
+                if (emailDup && emailDup.length > 0) continue;
+              }
 
               const [cityName, stateCode] = city.split(" ");
 
@@ -475,18 +505,20 @@ async function discoverBusinesses(
                 business_name: businessName,
                 industry: industry.name,
                 website_url: domain,
-                contact_email: contactEmail.toLowerCase(),
+                contact_email: contactEmail?.toLowerCase() || null,
                 contact_name: contactName,
                 city: cityName,
                 state: stateCode,
                 country: "US",
                 source: "firecrawl_verified",
+                lead_status: contactEmail && emailSource !== "pattern_guess" ? "new" : "needs_enrichment",
+                score: contactEmail && emailSource !== "pattern_guess" ? 30 : 10,
                 metadata: {
                   search_query: query,
                   niche,
                   snippet: (result.description || "").slice(0, 300),
                   discovery_method: "real_scrape",
-                  email_source: "website_scrape",
+                  email_source: emailSource,
                 }
               });
             }

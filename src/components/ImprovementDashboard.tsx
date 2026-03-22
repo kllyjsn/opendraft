@@ -3,9 +3,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { ChangelogFeed } from "@/components/ChangelogFeed";
 import {
   Sparkles, CheckCircle, XCircle, Clock, Image, ChevronDown, ChevronUp,
-  Loader2, Zap, AlertTriangle, Shield, Palette, Accessibility, Bug, Code,
+  Loader2, Zap, AlertTriangle, Shield, Palette, Accessibility, Bug, Code, GitCommit,
 } from "lucide-react";
 
 interface ImprovementCycle {

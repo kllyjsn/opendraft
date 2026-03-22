@@ -1335,4 +1335,3 @@ function formatEmailHtml(body: string, lead: any, metadata?: any): string {
 </body>
 </html>`;
 }
-}

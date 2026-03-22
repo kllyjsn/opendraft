@@ -191,8 +191,8 @@ export default function Index() {
       <section
         className={`relative flex items-center justify-center transition-all duration-700 ease-out ${
           hasResults
-            ? "min-h-0 pt-6 pb-2 md:pt-10 md:pb-4"
-            : "flex-1 min-h-[65vh] md:min-h-[90vh] pt-10 md:pt-0"
+            ? "min-h-0 pt-4 pb-2 md:pt-10 md:pb-4"
+            : "flex-1 min-h-0 pt-6 pb-4 md:min-h-[90vh] md:pt-0"
         }`}
       >
         {!hasResults && <HeroBeams />}
@@ -207,10 +207,10 @@ export default function Index() {
                 exit={{ opacity: 0, y: -20, filter: "blur(6px)" }}
                 transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
               >
-                <div className="mb-7 md:mb-9">
-                  <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-[5rem] font-bold tracking-[-0.04em] leading-[1.06]">
-                    <span className="block text-muted-foreground/70">Stop renting software.</span>
-                    <span className="block text-foreground mt-1">
+                <div className="mb-4 md:mb-9">
+                  <h1 className="text-[1.65rem] sm:text-4xl md:text-6xl lg:text-[5rem] font-bold tracking-[-0.04em] leading-[1.08]">
+                    <span className="block text-muted-foreground/70 text-[0.85em]">Stop renting software.</span>
+                    <span className="block text-foreground mt-0.5 md:mt-1">
                       Build your own{" "}
                       <span
                         className="inline-block relative overflow-hidden align-bottom"
@@ -245,11 +245,12 @@ export default function Index() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.6, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-                className="text-sm md:text-[15px] text-muted-foreground/60 max-w-sm mx-auto mb-9 md:mb-11 leading-[1.7]"
+                className="text-xs md:text-[15px] text-muted-foreground/60 max-w-xs md:max-w-sm mx-auto mb-5 md:mb-11 leading-[1.6] md:leading-[1.7]"
               >
                 Paste your website. Get a custom app in 90 seconds.
-                <br />
-                <span className="text-foreground/70 font-medium">Free to try — no coding experience needed.</span>
+                <br className="hidden md:block" />
+                <span className="md:hidden"> · </span>
+                <span className="text-foreground/70 font-medium">Free — no coding needed.</span>
               </motion.p>
             )}
           </AnimatePresence>
@@ -258,8 +259,8 @@ export default function Index() {
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, delay: hasResults ? 0 : 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className={hasResults ? "mb-4" : "mb-7 md:mb-9"}
+            transition={{ duration: 0.9, delay: hasResults ? 0 : 0.25, ease: [0.16, 1, 0.3, 1] }}
+            className={hasResults ? "mb-4" : "mb-4 md:mb-9"}
           >
             <BusinessAnalyzer onGenerate={handleGenerate} onResultsChange={setHasResults} />
           </motion.div>

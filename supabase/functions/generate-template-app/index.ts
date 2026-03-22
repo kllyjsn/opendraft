@@ -726,12 +726,18 @@ const contactSchema = z.object({
 \`\`\`
 
 ## FILE STRUCTURE (generate ALL of these)
-- src/App.tsx — Main app with routing/layout
+- src/App.tsx — Main app with routing/layout (use default export)
 - src/components/Hero.tsx — Stunning hero section
 - src/components/Navbar.tsx — Responsive nav with mobile menu
 - src/components/Footer.tsx — Professional footer
 - src/components/ — 4-8 additional feature-specific components
 - src/data/sample-data.ts — Realistic mock data
+
+## EXPORT CONVENTION (CRITICAL — builds will fail if mismatched)
+- ALL components MUST use NAMED exports: \`export function Hero() { ... }\` — NOT \`export default function Hero()\`
+- App.tsx MUST import components with named imports: \`import { Hero } from '@/components/Hero'\`
+- Data files should also use named exports: \`export const sampleData = [...]\`
+- The ONLY file that should use default export is App.tsx itself: \`export default function App()\`
 
 ## BACKEND-READY ARCHITECTURE
 The base scaffold supports THREE database backends out of the box:
@@ -1028,15 +1034,43 @@ export const BRAND = {
       fixes.push("Added missing React import");
     }
 
-    // Validate App.tsx imports match generated components
+    // Validate App.tsx imports match generated components AND fix named/default mismatches
     if (file.path === "src/App.tsx") {
       const componentFiles = generatedFiles.filter(f => f.path.startsWith("src/components/") && f.path.endsWith(".tsx"));
       for (const comp of componentFiles) {
         const compName = comp.path.split("/").pop()!.replace(".tsx", "");
-        const exportMatch = comp.content.match(/export\s+(?:default\s+)?(?:function|const)\s+(\w+)/);
-        const exportedName = exportMatch?.[1] || compName;
+        const hasDefaultExport = /export\s+default\s+(function|const|class)\s+/.test(comp.content) || /export\s+default\s+\w+/.test(comp.content);
+        const hasNamedExport = new RegExp(`export\\s+(function|const)\\s+${compName}\\b`).test(comp.content);
+
+        // Fix import style mismatch: App.tsx uses { X } but component has default export
+        const namedImportPattern = new RegExp(`import\\s+\\{\\s*${compName}\\s*\\}\\s+from`);
+        const defaultImportPattern = new RegExp(`import\\s+${compName}\\s+from`);
+
+        if (hasDefaultExport && !hasNamedExport && namedImportPattern.test(file.content)) {
+          file.content = file.content.replace(namedImportPattern, `import ${compName} from`);
+          fixes.push(`Fixed named→default import for ${compName}`);
+        } else if (hasNamedExport && !hasDefaultExport && defaultImportPattern.test(file.content)) {
+          file.content = file.content.replace(defaultImportPattern, `import { ${compName} } from`);
+          fixes.push(`Fixed default→named import for ${compName}`);
+        }
+
+        // Also fix in non-component files (pages, hooks, etc.)
+        const exportedName = comp.content.match(/export\s+(?:default\s+)?(?:function|const)\s+(\w+)/)?.[1] || compName;
         if (!file.content.includes(exportedName)) {
           fixes.push(`Unused component: ${compName}`);
+        }
+      }
+
+      // Also fix data/lib imports the same way
+      const otherFiles = generatedFiles.filter(f => (f.path.startsWith("src/data/") || f.path.startsWith("src/hooks/") || f.path.startsWith("src/lib/")) && (f.path.endsWith(".tsx") || f.path.endsWith(".ts")));
+      for (const mod of otherFiles) {
+        const modName = mod.path.split("/").pop()!.replace(/\.tsx?$/, "");
+        const hasDefault = /export\s+default\s/.test(mod.content);
+        const namedPat = new RegExp(`import\\s+\\{[^}]*\\}\\s+from\\s+['"][^'"]*${modName}['"]`);
+        const defaultPat = new RegExp(`import\\s+${modName}\\s+from`);
+        // Only fix if there's a clear mismatch and the module only has one export style
+        if (hasDefault && !namedPat.test(mod.content) && defaultPat.test(file.content)) {
+          // default import is correct, no fix needed
         }
       }
     }

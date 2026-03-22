@@ -882,6 +882,7 @@ Return JSON with: subject (compelling, not spammy), body (the email text), follo
             metadata: {
               follow_up_days: email.follow_up_days,
               recommended_service: scoring.recommended_service,
+              demo_url: demoUrl || undefined,
             }
           })
           .select()

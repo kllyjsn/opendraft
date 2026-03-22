@@ -152,7 +152,7 @@ serve(async (req) => {
   }
 });
 
-// Discover businesses using Firecrawl + AI fallback
+// Discover REAL businesses using Firecrawl search + website scraping
 async function discoverBusinesses(
   supabase: any,
   firecrawlKey: string | undefined,
@@ -162,10 +162,14 @@ async function discoverBusinesses(
 ): Promise<any> {
   const leads: any[] = [];
 
+  if (!firecrawlKey) {
+    return { leads_created: 0, error: "FIRECRAWL_API_KEY required for real business discovery" };
+  }
+
   // Pick industries to search
-  const industries = targetIndustry 
+  const industries = targetIndustry
     ? TARGET_INDUSTRIES.filter(i => i.name.toLowerCase().includes(targetIndustry.toLowerCase()))
-    : TARGET_INDUSTRIES.slice(0, 3);
+    : TARGET_INDUSTRIES.slice(0, 2);
 
   // Get or create a campaign
   let activeCampaignId = campaignId;
@@ -182,15 +186,12 @@ async function discoverBusinesses(
       const { data: newCampaign } = await supabase
         .from("outreach_campaigns")
         .insert({
-          name: `Auto Discovery - ${new Date().toLocaleDateString()}`,
+          name: `Real Leads - ${new Date().toLocaleDateString()}`,
           niche: "small_business",
           industries: industries.map(i => i.name),
           target_regions: [region],
           services: SERVICES_OFFERED,
-          goals: {
-            target_leads_per_week: 50,
-            target_response_rate: 0.05,
-          }
+          goals: { target_leads_per_week: 25, target_response_rate: 0.08 }
         })
         .select()
         .single();
@@ -198,15 +199,28 @@ async function discoverBusinesses(
     }
   }
 
-  // Try Firecrawl discovery first
-  if (firecrawlKey) {
-    for (const industry of industries) {
-      const niches = industry.niches.sort(() => Math.random() - 0.5).slice(0, 2);
+  // US cities to target for local businesses
+  const targetCities = [
+    "Austin TX", "Denver CO", "Nashville TN", "Charlotte NC", "Tampa FL",
+    "Phoenix AZ", "Portland OR", "San Antonio TX", "Columbus OH", "Indianapolis IN",
+    "Raleigh NC", "Salt Lake City UT", "Boise ID", "Jacksonville FL", "Oklahoma City OK"
+  ];
 
-      for (const niche of niches) {
-        // Use simpler, more effective search queries
-        const searchQuery = `"${niche}" ${region} website contact`;
-        
+  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+
+  for (const industry of industries) {
+    const niches = industry.niches.sort(() => Math.random() - 0.5).slice(0, 2);
+    const cities = targetCities.sort(() => Math.random() - 0.5).slice(0, 2);
+
+    for (const niche of niches) {
+      for (const city of cities) {
+        // Search for real businesses via Yelp/Google results
+        const searchQueries = [
+          `best ${niche} in ${city}`,
+          `${niche} near ${city} reviews`,
+        ];
+        const query = searchQueries[Math.floor(Math.random() * searchQueries.length)];
+
         try {
           const searchResp = await fetch("https://api.firecrawl.dev/v1/search", {
             method: "POST",
@@ -214,133 +228,206 @@ async function discoverBusinesses(
               Authorization: `Bearer ${firecrawlKey}`,
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({ query: searchQuery, limit: 5 }),
-          });
-
-          if (searchResp.ok) {
-            const searchData = await searchResp.json();
-            if (searchData.data) {
-              for (const result of searchData.data) {
-                // Skip aggregator sites
-                const skipDomains = ["yelp.com", "facebook.com", "yellowpages.com", "google.com", "mapquest.com", "bbb.org", "angi.com", "thumbtack.com"];
-                if (!result.url || skipDomains.some(d => result.url.includes(d))) continue;
-
-                const { data: existing } = await supabase
-                  .from("outreach_leads")
-                  .select("id")
-                  .eq("website_url", result.url)
-                  .single();
-
-                if (!existing) {
-                  leads.push({
-                    campaign_id: activeCampaignId,
-                    business_name: result.title?.split(" - ")[0]?.split(" | ")[0] || "Unknown Business",
-                    industry: industry.name,
-                    website_url: result.url,
-                    source: "firecrawl_discovery",
-                    metadata: {
-                      search_query: searchQuery,
-                      niche,
-                      snippet: result.description,
-                    }
-                  });
-                }
-              }
-            }
-          } else {
-            const errBody = await searchResp.text();
-            console.warn(`Firecrawl search failed (${searchResp.status}): ${errBody}`);
-          }
-        } catch (e) {
-          console.warn(`Search failed for ${niche}:`, e);
-        }
-      }
-    }
-  }
-
-  // AI fallback: if Firecrawl returned nothing, use AI to generate realistic target leads
-  if (leads.length === 0) {
-    console.log("Firecrawl returned 0 leads, using AI discovery fallback...");
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    
-    if (LOVABLE_API_KEY) {
-      for (const industry of industries) {
-        const niches = industry.niches.sort(() => Math.random() - 0.5).slice(0, 2);
-        
-        try {
-          const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${LOVABLE_API_KEY}`,
-              "Content-Type": "application/json",
-            },
             body: JSON.stringify({
-              model: "google/gemini-3-flash-preview",
-              messages: [
-                {
-                  role: "system",
-                  content: `You are a B2B lead researcher. Generate realistic small business leads that would benefit from a new website or web application. Return real-looking but fictional businesses with plausible details. Always return valid JSON.`
-                },
-                {
-                  role: "user",
-                  content: `Generate 5 realistic small business leads in the "${industry.name}" industry (niches: ${niches.join(", ")}) located in ${region}.
-
-Return a JSON array of objects with these fields:
-- business_name: realistic business name
-- website_url: a plausible .com domain (make it up)
-- contact_name: a realistic contact name
-- contact_email: a plausible email at the business domain
-- city: a real US city
-- state: a real US state abbreviation
-- niche: which niche they fall under
-
-Return ONLY the JSON array, no markdown.`
-                }
-              ],
-              response_format: { type: "json_object" }
+              query,
+              limit: 5,
+              scrapeOptions: { formats: ["markdown"], onlyMainContent: true },
             }),
           });
 
-          if (aiResponse.ok) {
-            const aiData = await aiResponse.json();
-            const content = aiData.choices?.[0]?.message?.content;
-            
-            if (content) {
-              let parsed: any;
+          if (!searchResp.ok) {
+            console.warn(`Search failed (${searchResp.status}) for: ${query}`);
+            continue;
+          }
+
+          const searchData = await searchResp.json();
+          if (!searchData.data) continue;
+
+          // Skip aggregator sites — we want direct business websites
+          const aggregatorDomains = [
+            "yelp.com", "facebook.com", "yellowpages.com", "google.com",
+            "mapquest.com", "bbb.org", "angi.com", "thumbtack.com",
+            "homeadvisor.com", "nextdoor.com", "tripadvisor.com",
+            "instagram.com", "twitter.com", "linkedin.com", "pinterest.com",
+            "tiktok.com", "youtube.com", "reddit.com", "wikipedia.org",
+          ];
+
+          for (const result of searchData.data) {
+            if (!result.url) continue;
+            const urlLower = result.url.toLowerCase();
+            if (aggregatorDomains.some(d => urlLower.includes(d))) continue;
+
+            // Check for duplicate
+            const domain = new URL(result.url).hostname.replace(/^www\./, "");
+            const { data: existing } = await supabase
+              .from("outreach_leads")
+              .select("id")
+              .or(`website_url.ilike.%${domain}%`)
+              .limit(1);
+
+            if (existing && existing.length > 0) continue;
+
+            // Extract contact info from the page content
+            const pageContent = result.markdown || result.description || "";
+
+            // Try to extract email from page content directly
+            const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
+            const foundEmails = pageContent.match(emailRegex) || [];
+            // Filter out generic/spam emails
+            const validEmails = foundEmails.filter((e: string) => {
+              const lower = e.toLowerCase();
+              return !lower.includes("example.com") &&
+                !lower.includes("sentry.io") &&
+                !lower.includes("wixpress") &&
+                !lower.includes("googleapis") &&
+                !lower.startsWith("noreply") &&
+                !lower.startsWith("no-reply");
+            });
+
+            let contactEmail = validEmails[0] || null;
+            let contactName: string | null = null;
+            let businessName = result.title?.split(" - ")[0]?.split(" | ")[0]?.trim() || domain;
+
+            // If no email found in search content, scrape the business website directly
+            if (!contactEmail) {
               try {
-                parsed = JSON.parse(content);
-              } catch {
-                console.warn("Failed to parse AI response:", content.slice(0, 200));
-                continue;
-              }
-              
-              const aiLeads = Array.isArray(parsed) ? parsed : (parsed.leads || parsed.businesses || []);
-              
-              for (const aiLead of aiLeads) {
-                leads.push({
-                  campaign_id: activeCampaignId,
-                  business_name: aiLead.business_name || "Unknown Business",
-                  industry: industry.name,
-                  website_url: aiLead.website_url || null,
-                  contact_name: aiLead.contact_name || null,
-                  contact_email: aiLead.contact_email || null,
-                  city: aiLead.city || null,
-                  state: aiLead.state || null,
-                  country: "US",
-                  source: "ai_discovery",
-                  metadata: {
-                    niche: aiLead.niche || niches[0],
-                    discovery_method: "ai_generated",
-                  }
+                const scrapeResp = await fetch("https://api.firecrawl.dev/v1/scrape", {
+                  method: "POST",
+                  headers: {
+                    Authorization: `Bearer ${firecrawlKey}`,
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                    url: result.url,
+                    formats: ["markdown", "links"],
+                    onlyMainContent: false, // Need footer/contact sections
+                  }),
                 });
+
+                if (scrapeResp.ok) {
+                  const scrapeData = await scrapeResp.json();
+                  const fullContent = scrapeData.data?.markdown || scrapeData.markdown || "";
+                  const allEmails = fullContent.match(emailRegex) || [];
+                  const realEmails = allEmails.filter((e: string) => {
+                    const lower = e.toLowerCase();
+                    return !lower.includes("example.com") &&
+                      !lower.includes("sentry") &&
+                      !lower.includes("wixpress") &&
+                      !lower.startsWith("noreply") &&
+                      !lower.startsWith("no-reply");
+                  });
+                  contactEmail = realEmails[0] || null;
+
+                  // Also check for contact/about pages in links
+                  if (!contactEmail && scrapeData.data?.links) {
+                    const contactPages = scrapeData.data.links.filter((l: string) =>
+                      /contact|about|team/i.test(l)
+                    ).slice(0, 1);
+
+                    for (const contactUrl of contactPages) {
+                      try {
+                        const contactResp = await fetch("https://api.firecrawl.dev/v1/scrape", {
+                          method: "POST",
+                          headers: {
+                            Authorization: `Bearer ${firecrawlKey}`,
+                            "Content-Type": "application/json",
+                          },
+                          body: JSON.stringify({
+                            url: contactUrl,
+                            formats: ["markdown"],
+                            onlyMainContent: false,
+                          }),
+                        });
+
+                        if (contactResp.ok) {
+                          const contactData = await contactResp.json();
+                          const contactContent = contactData.data?.markdown || contactData.markdown || "";
+                          const contactEmails = contactContent.match(emailRegex) || [];
+                          const filteredContactEmails = contactEmails.filter((e: string) => {
+                            const lower = e.toLowerCase();
+                            return !lower.includes("example.com") &&
+                              !lower.includes("sentry") &&
+                              !lower.startsWith("noreply");
+                          });
+                          contactEmail = filteredContactEmails[0] || null;
+
+                          // Try to extract owner/contact name with AI
+                          if (contactEmail && LOVABLE_API_KEY && contactContent.length > 50) {
+                            try {
+                              const nameResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+                                method: "POST",
+                                headers: {
+                                  Authorization: `Bearer ${LOVABLE_API_KEY}`,
+                                  "Content-Type": "application/json",
+                                },
+                                body: JSON.stringify({
+                                  model: "google/gemini-2.5-flash-lite",
+                                  messages: [{
+                                    role: "user",
+                                    content: `Extract the business owner or primary contact person's name from this page content. Return ONLY the name, or "unknown" if not found. No explanation.\n\n${contactContent.slice(0, 1500)}`
+                                  }],
+                                }),
+                              });
+                              if (nameResp.ok) {
+                                const nameData = await nameResp.json();
+                                const name = nameData.choices?.[0]?.message?.content?.trim();
+                                if (name && name.toLowerCase() !== "unknown" && name.length < 50) {
+                                  contactName = name;
+                                }
+                              }
+                            } catch {}
+                          }
+                        }
+                      } catch {}
+                    }
+                  }
+                }
+              } catch (e) {
+                console.warn(`Failed to scrape ${result.url}:`, e);
               }
             }
+
+            // ONLY create lead if we found a real email
+            if (!contactEmail) {
+              console.log(`Skipping ${businessName} — no email found`);
+              continue;
+            }
+
+            // Parse city/state from the search query
+            const [cityName, stateCode] = city.split(" ");
+
+            leads.push({
+              campaign_id: activeCampaignId,
+              business_name: businessName,
+              industry: industry.name,
+              website_url: domain,
+              contact_email: contactEmail.toLowerCase(),
+              contact_name: contactName,
+              city: cityName,
+              state: stateCode,
+              country: "US",
+              source: "firecrawl_verified",
+              metadata: {
+                search_query: query,
+                niche,
+                snippet: (result.description || "").slice(0, 300),
+                discovery_method: "real_scrape",
+                email_source: "website_scrape",
+              }
+            });
+
+            // Limit per batch to conserve Firecrawl credits
+            if (leads.length >= 15) break;
           }
+
+          if (leads.length >= 15) break;
         } catch (e) {
-          console.warn(`AI discovery failed for ${industry.name}:`, e);
+          console.warn(`Search failed for ${niche} in ${city}:`, e);
         }
       }
+      if (leads.length >= 15) break;
     }
+    if (leads.length >= 15) break;
   }
 
   // Insert leads
@@ -355,8 +442,14 @@ Return ONLY the JSON array, no markdown.`
     campaign_id: activeCampaignId,
     industries_searched: industries.map(i => i.name),
     leads_created: leads.length,
-    discovery_method: leads.length > 0 ? (leads[0].source === "ai_discovery" ? "ai_fallback" : "firecrawl") : "none",
-    leads: leads.slice(0, 10),
+    discovery_method: "firecrawl_verified",
+    leads_with_email: leads.length,
+    leads: leads.slice(0, 10).map(l => ({
+      business_name: l.business_name,
+      email: l.contact_email,
+      website: l.website_url,
+      city: l.city,
+    })),
   };
 }
 

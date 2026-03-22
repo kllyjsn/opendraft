@@ -246,7 +246,7 @@ export default function App() {
       {/* Footer */}
       <footer className="border-t border-gray-200/60 py-8 text-center">
         <p className="text-sm text-gray-400">
-          Built with ❤️ · Available on <a href="https://opendraft.lovable.app" className="text-indigo-600 hover:underline">OpenDraft</a>
+          Built with ❤️ · Available on <a href="https://opendraft.co" className="text-indigo-600 hover:underline">OpenDraft</a>
         </p>
       </footer>
     </div>
@@ -303,7 +303,7 @@ ${techStack.map((t: string) => `- ${t}`).join("\n")}
 
 ---
 
-Listed on [OpenDraft](https://opendraft.lovable.app)
+Listed on [OpenDraft](https://opendraft.co)
 `);
 
         // Build & upload ZIP

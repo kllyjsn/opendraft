@@ -216,7 +216,7 @@ async function sendBuyerEmail({
     method: "POST",
     headers: { "Authorization": `Bearer ${resendApiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      from: "OpenDraft <noreply@opendraft.lovable.app>",
+      from: "OpenDraft <noreply@opendraft.co>",
       to: [buyerEmail],
       subject: `Welcome aboard: ${listingTitle} — here's what to expect`,
       html,
@@ -260,7 +260,7 @@ async function sendSellerEmail({
     method: "POST",
     headers: { "Authorization": `Bearer ${resendApiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      from: "OpenDraft <noreply@opendraft.lovable.app>",
+      from: "OpenDraft <noreply@opendraft.co>",
       to: [sellerEmail],
       subject: `💸 You just made ${earned} on OpenDraft!`,
       html,

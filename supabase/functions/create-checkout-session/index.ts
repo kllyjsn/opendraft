@@ -102,7 +102,7 @@ Deno.serve(async (req) => {
     // Using platform-level credentials — destination charges originate here
     // ------------------------------------------------------------------
     const stripeClient = new Stripe(stripeKey);
-    const origin = req.headers.get("origin") || "https://opendraft.lovable.app";
+    const origin = req.headers.get("origin") || "https://opendraft.co";
 
     let lineItem: Stripe.Checkout.SessionCreateParams.LineItem;
     let sellerStripeAccountId: string | null = null;

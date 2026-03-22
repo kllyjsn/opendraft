@@ -51,7 +51,7 @@ Deno.serve(async (req) => {
         <li><strong style="color:#1a1a2e;">Marketing spotlight</strong> — featured on our homepage</li>
       </ul>
       <div style="text-align:center;margin:24px 0;">
-        <a href="https://opendraft.lovable.app/guides/creators" style="display:inline-block;background:linear-gradient(135deg,#7c3aed,#ec4899);color:#fff;text-decoration:none;padding:12px 28px;border-radius:10px;font-weight:bold;font-size:14px;">
+        <a href="https://opendraft.co/guides/creators" style="display:inline-block;background:linear-gradient(135deg,#7c3aed,#ec4899);color:#fff;text-decoration:none;padding:12px 28px;border-radius:10px;font-weight:bold;font-size:14px;">
           Read the Creator Handbook →
         </a>
       </div>
@@ -64,8 +64,8 @@ Deno.serve(async (req) => {
     </div>
     <div style="background:#f8f8fa;padding:16px 24px;text-align:center;border-top:1px solid #e8e8ec;">
       <p style="color:#a0a0b0;font-size:12px;margin:0;">
-        <a href="https://opendraft.lovable.app/founders" style="color:#7c3aed;text-decoration:none;">Founder First Program</a> · 
-        <a href="https://opendraft.lovable.app/dashboard" style="color:#7c3aed;text-decoration:none;">Your Dashboard</a>
+        <a href="https://opendraft.co/founders" style="color:#7c3aed;text-decoration:none;">Founder First Program</a> · 
+        <a href="https://opendraft.co/dashboard" style="color:#7c3aed;text-decoration:none;">Your Dashboard</a>
       </p>
     </div>
   </div>

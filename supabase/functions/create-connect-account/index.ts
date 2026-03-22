@@ -76,7 +76,7 @@ Deno.serve(async (req) => {
     const stripeClient = new Stripe(stripeKey);
 
     // The return/refresh URLs tell Stripe where to redirect after onboarding
-    const origin = req.headers.get("origin") || "https://opendraft.lovable.app";
+    const origin = req.headers.get("origin") || "https://opendraft.co";
 
     // ------------------------------------------------------------------
     // Step 4: Check if seller already has a Connect account in our DB

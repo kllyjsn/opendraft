@@ -196,7 +196,7 @@ async function handlePublicTool(toolName: string, args: any): Promise<any> {
       id: l.id, title: l.title, description: l.description?.slice(0, 200), price_cents: l.price,
       pricing_type: l.pricing_type, category: l.category, completeness: l.completeness_badge,
       tech_stack: l.tech_stack, sales: l.sales_count, views: l.view_count, demo_url: l.demo_url,
-      url: `https://opendraft.lovable.app/listing/${l.id}`,
+      url: `https://opendraft.co/listing/${l.id}`,
     }));
     const response: any = { listings: mapped, total: mapped.length };
     if (results.length === 0) { response.demand_captured = true; response.message = "No results. Search logged as demand signal."; }
@@ -211,7 +211,7 @@ async function handlePublicTool(toolName: string, args: any): Promise<any> {
     const ratings = (reviews || []).map((r: any) => r.rating);
     const avgRating = ratings.length ? (ratings.reduce((a: number, b: number) => a + b, 0) / ratings.length).toFixed(1) : null;
     return { ...data, seller: profile, reviews: reviews || [], average_rating: avgRating, review_count: ratings.length,
-      url: `https://opendraft.lovable.app/listing/${data.id}`,
+      url: `https://opendraft.co/listing/${data.id}`,
       decision_factors: { has_demo: !!data.demo_url, has_source_code: !!data.file_path, has_screenshots: (data.screenshots?.length || 0) > 0, seller_verified: profile?.verified || false, seller_total_sales: profile?.total_sales || 0 },
     };
   }
@@ -235,7 +235,7 @@ async function handlePublicTool(toolName: string, args: any): Promise<any> {
       .eq("status", "open").order("budget", { ascending: false }).limit(5);
     const { data: demandSignals } = await admin.from("agent_demand_signals").select("query,category,tech_stack,created_at")
       .order("created_at", { ascending: false }).limit(10);
-    return { trending_listings: (topSales || []).map((l: any) => ({ id: l.id, title: l.title, category: l.category, price_cents: l.price, sales: l.sales_count, views: l.view_count, url: `https://opendraft.lovable.app/listing/${l.id}` })), hot_bounties: hotBounties || [], agent_demand_signals: demandSignals || [] };
+    return { trending_listings: (topSales || []).map((l: any) => ({ id: l.id, title: l.title, category: l.category, price_cents: l.price, sales: l.sales_count, views: l.view_count, url: `https://opendraft.co/listing/${l.id}` })), hot_bounties: hotBounties || [], agent_demand_signals: demandSignals || [] };
   }
 
   if (toolName === "list_bounties") {
@@ -259,7 +259,7 @@ async function handlePublicTool(toolName: string, args: any): Promise<any> {
     if (args.query) q = q.ilike("username", `%${args.query}%`);
     const { data, error } = await q;
     if (error) throw new Error(error.message);
-    return (data || []).map((p: any) => ({ ...p, profile_url: `https://opendraft.lovable.app/builder/${p.user_id}` }));
+    return (data || []).map((p: any) => ({ ...p, profile_url: `https://opendraft.co/builder/${p.user_id}` }));
   }
 
   if (toolName === "get_builder_profile") {
@@ -400,7 +400,7 @@ async function handleAuthTool(toolName: string, args: any, authHeader?: string):
     if (auth.source === "apikey") { ({ data, error } = await getAdmin().from("listings").insert(insertData).select("id").single()); }
     else { ({ data, error } = await getAnon(authHeader).from("listings").insert(insertData).select("id").single()); }
     if (error) throw new Error(error.message);
-    return { listing_id: data.id, status: "pending", url: `https://opendraft.lovable.app/listing/${data.id}` };
+    return { listing_id: data.id, status: "pending", url: `https://opendraft.co/listing/${data.id}` };
   }
 
   if (toolName === "submit_to_bounty") {
@@ -590,7 +590,7 @@ async function handleAuthTool(toolName: string, args: any, authHeader?: string):
 
     return {
       listing_id: listing.id, title: listing.title, status: "live",
-      url: `https://opendraft.lovable.app/listing/${listing.id}`,
+      url: `https://opendraft.co/listing/${listing.id}`,
       message: "Listing is now live on the marketplace.",
     };
   }

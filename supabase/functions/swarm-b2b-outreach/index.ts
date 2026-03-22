@@ -804,6 +804,8 @@ async function generateOutreachMessages(
     if (existingDraft) continue;
 
     const scoring = lead.metadata?.scoring || {};
+    const demoUrl = lead.metadata?.demo_url || null;
+    const demoTitle = lead.metadata?.demo_title || null;
     
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

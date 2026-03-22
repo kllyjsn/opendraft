@@ -93,6 +93,9 @@ serve(async (req) => {
         case "generate_outreach":
           result = await generateOutreachMessages(supabase, LOVABLE_API_KEY, campaignId);
           break;
+        case "generate_demos":
+          result = await generateDemosForLeads(supabase, LOVABLE_API_KEY, campaignId);
+          break;
         case "send_emails":
           result = await sendOutreachEmails(supabase, RESEND_API_KEY, campaignId);
           break;
@@ -110,10 +113,12 @@ serve(async (req) => {
           // Run full pipeline
           const discovered = await discoverBusinesses(supabase, FIRECRAWL_API_KEY, targetIndustry, targetRegion, campaignId);
           const evaluated = await evaluateLeads(supabase, LOVABLE_API_KEY, FIRECRAWL_API_KEY, campaignId);
+          const demos = await generateDemosForLeads(supabase, LOVABLE_API_KEY, campaignId);
           const messages = await generateOutreachMessages(supabase, LOVABLE_API_KEY, campaignId);
           result = {
             discovered,
             evaluated,
+            demos,
             messages,
             summary: {
               businesses_found: discovered.leads_created || 0,
@@ -599,6 +604,167 @@ Return JSON with: score (0-100), reasoning (1 sentence), recommended_service (on
   };
 }
 
+// Generate live demo apps for qualified leads
+async function generateDemosForLeads(
+  supabase: any,
+  lovableKey: string,
+  campaignId: string | null
+): Promise<any> {
+  // Get qualified leads without demo links
+  let query = supabase
+    .from("outreach_leads")
+    .select("*")
+    .in("lead_status", ["qualified", "nurture"])
+    .gte("score", 50)
+    .limit(5); // Limit to 5 at a time to avoid overloading
+
+  if (campaignId) {
+    query = query.eq("campaign_id", campaignId);
+  }
+
+  const { data: leads } = await query;
+  if (!leads || leads.length === 0) {
+    return { demos_generated: 0, message: "No qualified leads without demos" };
+  }
+
+  // Filter out leads that already have demo URLs
+  const leadsNeedingDemos = leads.filter(
+    (l: any) => !l.metadata?.demo_url && !l.metadata?.demo_generation_failed
+  );
+
+  if (leadsNeedingDemos.length === 0) {
+    return { demos_generated: 0, message: "All qualified leads already have demos" };
+  }
+
+  const demosGenerated: any[] = [];
+  const demosFailed: any[] = [];
+
+  for (const lead of leadsNeedingDemos) {
+    const scoring = lead.metadata?.scoring || {};
+    const recommendedService = scoring.recommended_service || "Custom Website";
+    const painPoints = scoring.pain_points?.join(", ") || "website improvement";
+
+    // Build a specific prompt for this business
+    const prompt = `${recommendedService} for ${lead.business_name} - a ${lead.industry} business. Include: online booking/contact form, service showcase, customer testimonials section, mobile-responsive design. Pain points to address: ${painPoints}. Use a professional color scheme appropriate for ${lead.industry}.`;
+
+    try {
+      // Create generation job
+      const { data: jobRow, error: jobErr } = await supabase
+        .from("generation_jobs")
+        .insert({
+          // Use a system user ID for automated generation
+          user_id: "00000000-0000-0000-0000-000000000000",
+          prompt,
+          status: "pending",
+          stage: "queued",
+        })
+        .select("id, status, stage, listing_id, listing_title, error")
+        .single();
+
+      if (jobErr || !jobRow) {
+        console.warn(`Failed to create generation job for ${lead.business_name}:`, jobErr);
+        demosFailed.push({ lead_id: lead.id, business_name: lead.business_name, error: "Job creation failed" });
+        continue;
+      }
+
+      // Trigger the generation
+      const genResp = await supabase.functions.invoke("generate-template-app", {
+        body: {
+          count: 1,
+          themes: [prompt],
+          job_id: jobRow.id,
+        },
+      });
+
+      if (genResp.error) {
+        console.warn(`Generation invoke failed for ${lead.business_name}:`, genResp.error);
+      }
+
+      // Poll for completion (max 120 seconds)
+      let completed = false;
+      let listingId: string | null = null;
+      let listingTitle: string | null = null;
+
+      for (let i = 0; i < 24; i++) {
+        await new Promise(r => setTimeout(r, 5000));
+
+        const { data: job } = await supabase
+          .from("generation_jobs")
+          .select("status, listing_id, listing_title, error")
+          .eq("id", jobRow.id)
+          .single();
+
+        if (!job) break;
+
+        if (job.status === "complete" && job.listing_id) {
+          completed = true;
+          listingId = job.listing_id;
+          listingTitle = job.listing_title;
+          break;
+        }
+
+        if (job.status === "failed") {
+          console.warn(`Generation failed for ${lead.business_name}: ${job.error}`);
+          break;
+        }
+      }
+
+      if (completed && listingId) {
+        const demoUrl = `https://opendraft.lovable.app/listing/${listingId}`;
+
+        // Store demo URL in lead metadata
+        await supabase
+          .from("outreach_leads")
+          .update({
+            metadata: {
+              ...lead.metadata,
+              demo_url: demoUrl,
+              demo_listing_id: listingId,
+              demo_title: listingTitle,
+              demo_generated_at: new Date().toISOString(),
+            },
+          })
+          .eq("id", lead.id);
+
+        demosGenerated.push({
+          lead_id: lead.id,
+          business_name: lead.business_name,
+          demo_url: demoUrl,
+          listing_title: listingTitle,
+        });
+      } else {
+        // Mark as failed so we don't retry endlessly
+        await supabase
+          .from("outreach_leads")
+          .update({
+            metadata: {
+              ...lead.metadata,
+              demo_generation_failed: true,
+              demo_failed_at: new Date().toISOString(),
+            },
+          })
+          .eq("id", lead.id);
+
+        demosFailed.push({ lead_id: lead.id, business_name: lead.business_name, error: "Generation timed out or failed" });
+      }
+    } catch (e) {
+      console.error(`Demo generation error for ${lead.business_name}:`, e);
+      demosFailed.push({
+        lead_id: lead.id,
+        business_name: lead.business_name,
+        error: e instanceof Error ? e.message : "Unknown error",
+      });
+    }
+  }
+
+  return {
+    demos_generated: demosGenerated.length,
+    demos_failed: demosFailed.length,
+    demos: demosGenerated,
+    failures: demosFailed,
+  };
+}
+
 // Generate personalized outreach messages
 async function generateOutreachMessages(
   supabase: any,
@@ -638,6 +804,8 @@ async function generateOutreachMessages(
     if (existingDraft) continue;
 
     const scoring = lead.metadata?.scoring || {};
+    const demoUrl = lead.metadata?.demo_url || null;
+    const demoTitle = lead.metadata?.demo_title || null;
     
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -656,6 +824,7 @@ TONE: Friendly, helpful, not salesy. Focus on helping them, not selling.
 LENGTH: Keep emails under 150 words.
 PERSONALIZATION: Reference specific things about their business/website.
 SIGNATURE: Always sign emails as "Jason" (not [Your Name] or any placeholder). Use "Jason" as the sender name. Example sign-off: "Best,\nJason\nOpenDraft"
+${demoUrl ? `\nIMPORTANT: We built a FREE live demo specifically for this business. Include the demo link naturally in the email. Frame it as "I put together a quick prototype for you" or "I built something for your business". The demo link is: ${demoUrl}` : ""}
 
 Our services: ${SERVICES_OFFERED.map(s => `${s.name} (${s.price_range})`).join(", ")}`
           },
@@ -668,6 +837,7 @@ Website: ${lead.website_url}
 Pain points identified: ${scoring.pain_points?.join(", ") || "general website improvement"}
 Website issues: ${scoring.website_issues?.join(", ") || "N/A"}
 Recommended service: ${scoring.recommended_service || "Custom Website"}
+${demoUrl ? `Live demo we built for them: ${demoUrl}` : "No demo available yet"}
 
 Return JSON with: subject (compelling, not spammy), body (the email text), follow_up_days (when to follow up, 3-7)`
           }
@@ -712,6 +882,7 @@ Return JSON with: subject (compelling, not spammy), body (the email text), follo
             metadata: {
               follow_up_days: email.follow_up_days,
               recommended_service: scoring.recommended_service,
+              demo_url: demoUrl || undefined,
             }
           })
           .select()
@@ -788,7 +959,7 @@ async function sendOutreachEmails(
           from: "OpenDraft <outreach@opendraft.co>",
           to: [lead.contact_email],
           subject: msg.subject,
-          html: formatEmailHtml(msg.body, lead),
+          html: formatEmailHtml(msg.body, lead, msg.metadata),
           tags: [
             { name: "campaign_id", value: msg.campaign_id },
             { name: "lead_id", value: msg.lead_id },
@@ -1018,7 +1189,7 @@ async function sendSingleEmail(
       from: "OpenDraft <outreach@opendraft.co>",
       to: [lead.contact_email],
       subject: msg.subject,
-      html: formatEmailHtml(msg.body, lead),
+      html: formatEmailHtml(msg.body, lead, msg.metadata),
       tags: [
         { name: "campaign_id", value: msg.campaign_id },
         { name: "lead_id", value: msg.lead_id },
@@ -1125,7 +1296,7 @@ async function replyToLead(
 }
 
 // Format email as HTML
-function formatEmailHtml(body: string, lead: any): string {
+function formatEmailHtml(body: string, lead: any, metadata?: any): string {
   // Replace any AI placeholder names with Jason
   const cleanedBody = body
     .replace(/\[Your Name\]/gi, "Jason")
@@ -1134,7 +1305,17 @@ function formatEmailHtml(body: string, lead: any): string {
     .replace(/\[Sender Name\]/gi, "Jason")
     .replace(/\[sender\]/gi, "Jason");
   const paragraphs = cleanedBody.split('\n\n').map(p => `<p style="margin-bottom: 16px; line-height: 1.6;">${p}</p>`).join('');
-  
+
+  // Build demo CTA button if demo URL exists
+  const demoUrl = metadata?.demo_url || lead.metadata?.demo_url;
+  const demoCta = demoUrl ? `
+    <div style="text-align: center; margin: 28px 0;">
+      <a href="${demoUrl}" style="display: inline-block; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 15px; letter-spacing: 0.3px;">
+        👀 View Your Custom Demo
+      </a>
+      <p style="font-size: 12px; color: #888; margin-top: 8px;">Built specifically for ${lead.business_name || "your business"}</p>
+    </div>` : "";
+
   return `
 <!DOCTYPE html>
 <html>
@@ -1144,6 +1325,7 @@ function formatEmailHtml(body: string, lead: any): string {
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #1a1a1a; padding: 20px; max-width: 600px; margin: 0 auto;">
   ${paragraphs}
+  ${demoCta}
   <hr style="border: none; border-top: 1px solid #e5e5e5; margin: 24px 0;">
   <p style="font-size: 12px; color: #666;">
     Sent by OpenDraft · <a href="https://opendraft.lovable.app" style="color: #666;">opendraft.lovable.app</a>

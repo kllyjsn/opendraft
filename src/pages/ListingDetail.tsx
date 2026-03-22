@@ -794,6 +794,18 @@ export default function ListingDetail() {
           </div>
         </div>
 
+        {/* Changelog — code changes made by AI */}
+        {user && purchased && (
+          <div className="mt-10">
+            <div className="mb-4 flex items-center gap-2">
+              <GitCommit className="h-5 w-5 text-primary" />
+              <h2 className="text-xl font-black">Code Changelog</h2>
+              <span className="text-xs text-muted-foreground ml-1">What's been changed</span>
+            </div>
+            <ChangelogFeed listingId={listing.id} limit={15} />
+          </div>
+        )}
+
         {/* Improvement panel for owners — prominent placement */}
         {user && purchased && (
           <div className="mt-10" id="gremlins-panel">

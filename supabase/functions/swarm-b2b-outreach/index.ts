@@ -170,6 +170,12 @@ const BLOCKED_EMAIL_PATTERNS = [
   "schema.org", "w3.org", "json-ld", "placeholder",
 ];
 
+// Known fake TLDs and patterns from AI-generated content
+const SUSPICIOUS_EMAIL_PATTERNS = [
+  /^[a-z]\.[a-z]+@/, // Single initial patterns like "m.henderson@"
+  /^(admin|webmaster|postmaster|hostmaster)@/, // System addresses rarely checked
+];
+
 function extractEmails(text: string): string[] {
   const found = text.match(emailRegex) || [];
   return found.filter(e => {
@@ -195,6 +201,80 @@ function extractAllEmails(text: string): string[] {
   });
 }
 
+// ─── Helper: verify email domain has MX records (proves domain accepts email) ─
+const mxCache = new Map<string, boolean>();
+
+async function verifyEmailDomain(email: string): Promise<boolean> {
+  const domain = email.split("@")[1]?.toLowerCase();
+  if (!domain) return false;
+
+  // Check cache first
+  if (mxCache.has(domain)) return mxCache.get(domain)!;
+
+  try {
+    // Use Google DNS-over-HTTPS to check MX records
+    const resp = await fetch(`https://dns.google/resolve?name=${encodeURIComponent(domain)}&type=MX`, {
+      headers: { Accept: "application/dns-json" },
+    });
+
+    if (!resp.ok) {
+      // If DNS lookup fails, be conservative — allow it
+      mxCache.set(domain, true);
+      return true;
+    }
+
+    const data = await resp.json();
+    // Status 0 = NOERROR, check if there are actual MX answers
+    const hasMX = data.Status === 0 && data.Answer && data.Answer.length > 0;
+
+    // If no MX, also check for A record (some domains accept email without MX)
+    if (!hasMX) {
+      const aResp = await fetch(`https://dns.google/resolve?name=${encodeURIComponent(domain)}&type=A`);
+      if (aResp.ok) {
+        const aData = await aResp.json();
+        const hasA = aData.Status === 0 && aData.Answer && aData.Answer.length > 0;
+        mxCache.set(domain, hasA);
+        return hasA;
+      }
+    }
+
+    mxCache.set(domain, !!hasMX);
+    return !!hasMX;
+  } catch (e) {
+    console.warn(`MX check failed for ${domain}:`, e);
+    // On error, be conservative — allow it
+    mxCache.set(domain, true);
+    return true;
+  }
+}
+
+// ─── Helper: check if an email looks suspicious (likely fabricated) ───────────
+function isEmailSuspicious(email: string): boolean {
+  const lower = email.toLowerCase();
+  return SUSPICIOUS_EMAIL_PATTERNS.some(p => p.test(lower));
+}
+
+// ─── Helper: verify email is likely deliverable ──────────────────────────────
+async function verifyEmail(email: string, source: string): Promise<{ valid: boolean; reason?: string }> {
+  // Step 1: Basic format check
+  if (!email || !email.includes("@") || !email.includes(".")) {
+    return { valid: false, reason: "invalid_format" };
+  }
+
+  // Step 2: Check for suspicious patterns (especially on guessed emails)
+  if (source === "pattern_guess" && isEmailSuspicious(email)) {
+    return { valid: false, reason: "suspicious_pattern" };
+  }
+
+  // Step 3: Verify domain has MX records
+  const hasMX = await verifyEmailDomain(email);
+  if (!hasMX) {
+    return { valid: false, reason: "no_mx_records" };
+  }
+
+  return { valid: true };
+}
+
 // ─── Helper: guess common email patterns from domain ──────────────────────────
 function guessEmailsFromDomain(domain: string): string[] {
   // Skip obviously non-business domains
@@ -204,7 +284,6 @@ function guessEmailsFromDomain(domain: string): string[] {
     `info@${domain}`,
     `hello@${domain}`,
     `contact@${domain}`,
-    `admin@${domain}`,
   ];
 }
 

@@ -560,9 +560,42 @@ async function discoverBusinesses(
                 }
               }
 
-              // Accept leads with any email (scraped or guessed) or even without
+              // ── VERIFY EMAIL before saving ──
+              let emailVerified = false;
+              if (contactEmail) {
+                const verification = await verifyEmail(contactEmail, emailSource);
+                if (verification.valid) {
+                  emailVerified = true;
+                } else {
+                  console.log(`Email ${contactEmail} failed verification: ${verification.reason}`);
+                  // For guessed emails that fail MX, try next guess
+                  if (emailSource === "pattern_guess") {
+                    const guessed = guessEmailsFromDomain(domain);
+                    let foundValid = false;
+                    for (const g of guessed) {
+                      if (g === contactEmail) continue;
+                      const v2 = await verifyEmail(g, "pattern_guess");
+                      if (v2.valid) {
+                        contactEmail = g;
+                        emailVerified = true;
+                        foundValid = true;
+                        break;
+                      }
+                    }
+                    if (!foundValid) {
+                      // Domain doesn't accept email at all — drop the email
+                      contactEmail = null;
+                      emailSource = "none";
+                    }
+                  } else {
+                    // Scraped email but domain has no MX — mark unverified
+                    emailVerified = false;
+                  }
+                }
+              }
+
+              // Accept leads with any email or even without
               if (!contactEmail) {
-                // Still add the lead with no email — they have a website we can use
                 console.log(`Adding ${businessName} without email (website-only lead)`);
                 emailSource = "none";
               }
@@ -589,15 +622,17 @@ async function discoverBusinesses(
                 city: cityName,
                 state: stateCode,
                 country: "US",
-                source: "firecrawl_verified",
-                lead_status: contactEmail && emailSource !== "pattern_guess" ? "new" : "needs_enrichment",
-                score: contactEmail && emailSource !== "pattern_guess" ? 30 : 10,
+                source: emailVerified ? "firecrawl_verified" : "firecrawl_unverified",
+                lead_status: emailVerified && emailSource !== "pattern_guess" ? "new" : "needs_enrichment",
+                score: emailVerified ? (emailSource === "pattern_guess" ? 20 : 35) : 10,
                 metadata: {
                   search_query: query,
                   niche,
                   snippet: (result.description || "").slice(0, 300),
                   discovery_method: "real_scrape",
                   email_source: emailSource,
+                  email_verified: emailVerified,
+                  mx_checked: true,
                 }
               });
             }

@@ -1269,7 +1269,7 @@ async function sendSingleEmail(
 
   const { data: msg } = await supabase
     .from("outreach_messages")
-    .select("*, outreach_leads!inner(contact_email, contact_name, business_name)")
+    .select("*, outreach_leads!inner(contact_email, contact_name, business_name, metadata)")
     .eq("id", messageId)
     .single();
 
@@ -1277,6 +1277,16 @@ async function sendSingleEmail(
 
   const lead = msg.outreach_leads;
   if (!lead?.contact_email) return { sent: false, error: "No contact email" };
+
+  // Pre-send MX verification
+  const emailCheck = await verifyEmail(lead.contact_email, lead.metadata?.email_source || "unknown");
+  if (!emailCheck.valid) {
+    await supabase.from("outreach_messages").update({
+      message_status: "failed",
+      metadata: { ...msg.metadata, skip_reason: emailCheck.reason },
+    }).eq("id", msg.id);
+    return { sent: false, error: `Email verification failed: ${emailCheck.reason}` };
+  }
 
   const emailResp = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -1293,9 +1303,11 @@ async function sendSingleEmail(
   });
 
   if (emailResp.ok) {
+    const resendData = await emailResp.json();
     await supabase.from("outreach_messages").update({
       message_status: "sent",
       sent_at: new Date().toISOString(),
+      metadata: { ...msg.metadata, resend_id: resendData.id, mx_verified: true },
     }).eq("id", msg.id);
 
     await supabase.from("outreach_leads").update({
@@ -1303,7 +1315,7 @@ async function sendSingleEmail(
       last_contacted_at: new Date().toISOString(),
     }).eq("id", msg.lead_id);
 
-    return { sent: true };
+    return { sent: true, mx_verified: true };
   }
 
   return { sent: false, error: await emailResp.text() };

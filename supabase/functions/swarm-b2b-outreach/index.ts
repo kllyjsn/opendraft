@@ -1179,10 +1179,10 @@ async function sendOutreachEmails(
 
   let query = supabase
     .from("outreach_messages")
-    .select("*, outreach_leads!inner(contact_email, contact_name, business_name)")
+    .select("*, outreach_leads!inner(contact_email, contact_name, business_name, metadata)")
     .eq("message_status", "drafted")
     .eq("direction", "outbound")
-    .limit(10);
+    .limit(15);
 
   if (campaignId) query = query.eq("campaign_id", campaignId);
 
@@ -1190,10 +1190,25 @@ async function sendOutreachEmails(
   if (!messages || messages.length === 0) return { sent: 0, message: "No drafted emails to send" };
 
   let sent = 0;
+  let skippedMx = 0;
+  let failed = 0;
 
   for (const msg of messages) {
     const lead = msg.outreach_leads;
     if (!lead?.contact_email) continue;
+
+    // ── Pre-send MX verification ──
+    const emailCheck = await verifyEmail(lead.contact_email, lead.metadata?.email_source || "unknown");
+    if (!emailCheck.valid) {
+      console.log(`Skipping ${lead.contact_email} — ${emailCheck.reason}`);
+      // Mark as failed so we don't retry
+      await supabase.from("outreach_messages").update({
+        message_status: "failed",
+        metadata: { ...msg.metadata, skip_reason: emailCheck.reason, mx_verified: false },
+      }).eq("id", msg.id);
+      skippedMx++;
+      continue;
+    }
 
     try {
       const emailResp = await fetch("https://api.resend.com/emails", {
@@ -1211,9 +1226,11 @@ async function sendOutreachEmails(
       });
 
       if (emailResp.ok) {
+        const resendData = await emailResp.json();
         await supabase.from("outreach_messages").update({
           message_status: "sent",
           sent_at: new Date().toISOString(),
+          metadata: { ...msg.metadata, resend_id: resendData.id, mx_verified: true },
         }).eq("id", msg.id);
 
         await supabase.from("outreach_leads").update({
@@ -1225,13 +1242,20 @@ async function sendOutreachEmails(
       } else {
         const errText = await emailResp.text();
         console.error(`Failed to send to ${lead.contact_email}:`, errText);
+        // Mark as failed with error details
+        await supabase.from("outreach_messages").update({
+          message_status: "failed",
+          metadata: { ...msg.metadata, send_error: errText.slice(0, 500) },
+        }).eq("id", msg.id);
+        failed++;
       }
     } catch (e) {
       console.error(`Email send error:`, e);
+      failed++;
     }
   }
 
-  return { sent, total_drafted: messages.length };
+  return { sent, skipped_mx_invalid: skippedMx, failed, total_drafted: messages.length };
 }
 
 // ─── SEND SINGLE EMAIL ───────────────────────────────────────────────────────

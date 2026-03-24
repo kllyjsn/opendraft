@@ -25,6 +25,7 @@ import { MetaTags } from "@/components/MetaTags";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { FlagListingButton } from "@/components/FlagListingButton";
 import { AgentReadyBadge } from "@/components/AgentReadyBadge";
+import { PostClaimUpsell } from "@/components/PostClaimUpsell";
 
 import { GoogleSignInButton } from "@/components/GoogleSignInButton";
 const BUILT_WITH_LABELS: Record<string, string> = {

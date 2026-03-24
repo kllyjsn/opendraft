@@ -1,7 +1,6 @@
 /**
  * AI-generated tweet content using Lovable AI Gateway
- * Narrative: "Every business, better software."
- * Voice: Ogilvy-crisp, ownership-first, anti-SaaS-rent, margin-obsessed
+ * V2: Value-first content, diverse voices, anti-repetition
  */
 
 const SITE_URL = "https://opendraft.co";
@@ -11,97 +10,109 @@ function pick<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-const BLOG_TOPICS = [
-  // Ownership narrative
-  "owning your software vs renting SaaS", "killing per-seat pricing",
-  "code ownership for small business", "the SaaS subscription trap",
-  "why your margins shrink with every SaaS tool", "software you own forever",
-  // Product narrative
-  "paste your URL get an app", "custom apps from your website",
-  "90-second app deployment", "replacing SaaS with owned software",
-  // Tech / builder
-  "vibe coding", "AI agents", "MCP servers", "monetizing side projects",
-  "AI-built SaaS", "template marketplaces", "shipping faster with AI",
-  "autonomous software", "multi-agent workflows", "indie hacking in 2026",
-  "self-healing deployments", "agent commerce", "security-hardened templates",
-  "the assembly era of software", "buy vs build decision", "micro-SaaS portfolios",
-  "non-technical founders shipping code", "software as a commodity",
+// ── VALUE-FIRST TOPICS (teach something, don't just sell) ──
+const VALUE_TOPICS = [
+  // Actionable tips (no pitch needed)
+  "a specific tactic to reduce SaaS spend this week",
+  "how to audit your software stack in 30 minutes",
+  "the 3-question framework for build vs buy decisions",
+  "why your per-seat costs compound faster than you think",
+  "a hidden cost of SaaS most founders miss: data portability",
+  "how one founder automated their entire ops with 4 owned tools",
+  // Industry insights
+  "the shift from SaaS subscriptions to owned software in 2026",
+  "why VCs are now asking about software ownership in due diligence",
+  "the margin advantage companies get from owning their tools",
+  "how AI maintenance eliminates the biggest objection to custom software",
+  // Builder/creator angles
+  "how a side project became a $2k/month passive income stream",
+  "the economics of selling code templates vs building SaaS",
+  "why the best developers are becoming product owners",
+  "how vibe coding is creating a new generation of builder-entrepreneurs",
+  // Contrarian/thought leadership
+  "why 'best-in-class SaaS' is often 90% features you'll never use",
+  "the psychology behind why businesses over-pay for software subscriptions",
+  "how the SaaS pricing model was designed to extract maximum revenue, not deliver maximum value",
+  "what the shift from renting to owning means for the future of business software",
 ];
 
+// ── DIVERSE PERSONAS (not just anti-SaaS crusaders) ──
 const PERSONAS = [
-  "a sharp CFO who hates per-seat pricing",
-  "a serial founder who replaced 8 SaaS tools with owned apps",
-  "a developer-turned-CEO sharing hard-won wisdom",
-  "a witty business strategist",
-  "a data-obsessed analyst dropping margin insights",
-  "an irreverent indie hacker who owns all their code",
-  "a reformed SaaS addict who saw the light",
-  "a contrarian thinker challenging subscription economics",
+  "a pragmatic CFO sharing a money-saving insight",
+  "an experienced founder giving genuine advice to early-stage entrepreneurs",
+  "a developer who discovered they could earn more selling code than working a 9-5",
+  "a small business owner who figured out a better way",
+  "a curious analyst breaking down industry economics",
+  "a mentor sharing a lesson they learned the hard way",
+  "a startup advisor who's seen this pattern across 50+ companies",
+  "a builder sharing their weekly revenue numbers transparently",
 ];
 
+// ── TWEET STYLES (variety prevents feed fatigue) ──
 const FORMATS = [
-  "a provocative one-liner about software ownership",
-  "a mini-story about a founder who stopped renting software",
-  "a numbered list of 3-4 reasons to own your code",
-  "a before/after comparison: renting SaaS vs owning your app",
-  "a hot take about per-seat pricing that makes people stop scrolling",
-  "a question about why businesses still rent software they could own",
-  "a stat-driven observation that reframes SaaS spending",
-  "a short dialogue between a CFO and a SaaS salesperson",
+  "a surprising insight that makes people think differently — no hard sell",
+  "a concrete tip someone can act on today",
+  "a short story (3-4 lines) about a real-world scenario",
+  "a contrarian observation that invites discussion",
+  "a before/after comparison with specific numbers",
+  "a question that sparks genuine conversation in the replies",
+  "a data point or stat with brief analysis",
+  "a lesson learned, told humbly",
 ];
+
+/**
+ * Check recent posts to avoid repetition
+ */
+async function getRecentPostTypes(supabaseUrl: string, supabaseKey: string): Promise<string[]> {
+  try {
+    const headers = { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` };
+    const since = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
+    const res = await fetch(
+      `${supabaseUrl}/rest/v1/swarm_tasks?agent_type=eq.social_poster&created_at=gte.${since}&order=created_at.desc&limit=10&select=output`,
+      { headers }
+    );
+    const tasks = await res.json().catch(() => []);
+    return tasks
+      .map((t: any) => t.output?.post_type || t.output?.resolved_type || "")
+      .filter(Boolean);
+  } catch {
+    return [];
+  }
+}
 
 export async function generateBlogTweet(supabaseUrl: string, supabaseKey: string): Promise<string> {
   const headers = { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` };
 
-  const [trendingRes, demandRes, recentRes, statsRes] = await Promise.all([
-    fetch(`${supabaseUrl}/rest/v1/listings?status=eq.live&order=sales_count.desc.nullslast&limit=5&select=title,category,tech_stack,price,sales_count`, { headers }),
-    fetch(`${supabaseUrl}/rest/v1/agent_demand_signals?order=created_at.desc&limit=8&select=query,category`, { headers }),
-    fetch(`${supabaseUrl}/rest/v1/listings?status=eq.live&order=created_at.desc&limit=5&select=title,category,price`, { headers }),
-    fetch(`${supabaseUrl}/rest/v1/listings?status=eq.live&select=id`, { headers: { ...headers, Prefer: "count=exact" } }),
-  ]);
+  // Get a recent blog post to promote
+  const blogRes = await fetch(
+    `${supabaseUrl}/rest/v1/blog_posts?published=eq.true&order=created_at.desc&limit=5&select=title,slug,description,category`,
+    { headers }
+  );
+  const posts = await blogRes.json().catch(() => []);
+  const post = posts.length > 0 ? pick(posts) : null;
 
-  const [trending, demand, recent] = await Promise.all([
-    trendingRes.json().catch(() => []),
-    demandRes.json().catch(() => []),
-    recentRes.json().catch(() => []),
-  ]);
-
-  const totalApps = parseInt(statsRes.headers.get("content-range")?.split("/")?.[1] || "500");
-  const trendingInfo = (trending || []).map((l: any) => `"${l.title}" (${l.sales_count} sales, $${(l.price/100).toFixed(0)})`).join(", ");
-  const demandQueries = (demand || []).map((d: any) => d.query).join(", ");
-  const recentTitles = (recent || []).map((l: any) => `"${l.title}"`).join(", ");
-
-  const topic = pick(BLOG_TOPICS);
   const persona = pick(PERSONAS);
-  const format = pick(FORMATS);
-  const dateContext = new Date().toLocaleString("en-US", { month: "long", year: "numeric" });
-  const dayOfWeek = new Date().toLocaleString("en-US", { weekday: "long" });
+  const dateContext = new Date().toLocaleString("en-US", { weekday: "long", month: "long" });
 
-  const prompt = `You are ${persona}, writing for OpenDraft (opendraft.co) — where businesses replace rented SaaS with software they own.
+  const blogUrl = post ? `${SITE_URL}/blog/${post.slug}` : SITE_URL;
+  const blogTitle = post?.title || "software ownership";
+  const blogDesc = post?.description || "";
 
-Brand line: "Every business, better software."
-Core message: Paste your site. We build the app. You own the code. Forever.
+  const prompt = `You are ${persona}. Write ONE tweet promoting a blog post.
 
-Write ONE tweet as ${format} about "${topic}".
+BLOG: "${blogTitle}"
+SUMMARY: ${blogDesc}
+URL: ${blogUrl}
 
-CRITICAL: MUST be under 270 characters including the URL and any hashtags. Count carefully.
-
-REAL-TIME CONTEXT (weave in naturally, don't force):
-- Date: ${dayOfWeek}, ${dateContext}
-- ${totalApps}+ apps available — all with full source code
-- Trending: ${trendingInfo || "custom business apps replacing SaaS"}
-- Demand: ${demandQueries || "CRM alternatives, booking systems, dashboards"}
-- Just listed: ${recentTitles || "new apps"}
-
-VOICE RULES:
-- First line MUST stop the scroll — no emojis in the first line
-- Thread the ownership narrative: own > rent, your code > their platform
-- Sound like a real person who's fed up with per-seat pricing
-- Include ${SITE_URL} naturally (never as the first word)
-- 0-2 relevant hashtags at the end (optional)
-- NEVER start with "Just published", "New blog", "Check out", or "Excited to"
-- No corporate speak. Crisp like Ogilvy. Sharp like a founder.
-- Make people think about what they're renting vs what they could own
+CRITICAL RULES:
+- MUST be under 270 characters including the URL
+- DO NOT just say "New blog post!" — pull out the most interesting INSIGHT from the title/summary
+- Lead with a hook that makes someone curious enough to click
+- The tweet should provide partial value on its own (a teaser insight)
+- Sound like a real person sharing something interesting they read, NOT a brand account
+- Include the URL naturally, ideally at the end
+- No emojis in the first line
+- 0-1 hashtags max
 - Output ONLY the tweet text, nothing else`;
 
   try {
@@ -124,65 +135,63 @@ VOICE RULES:
       let text = aiData?.choices?.[0]?.message?.content?.trim();
       if (text) text = text.replace(/^```[\s\S]*?```$/gm, "").replace(/^["'`]+|["'`]+$/g, "").trim();
       if (text && text.length > 20) {
-        if (text.length > 280) {
-          console.log(`AI tweet was ${text.length} chars, truncating`);
-          text = text.substring(0, 277) + "...";
-        }
+        if (text.length > 280) text = text.substring(0, 277) + "...";
         return text;
       }
-      console.log("AI returned unusable text:", text?.length, text?.substring(0, 50));
-    } else {
-      console.error("AI gateway returned", aiRes.status, await aiRes.text());
     }
   } catch (e) {
-    console.error("AI blog tweet generation failed, using fallback:", e);
+    console.error("AI blog tweet generation failed:", e);
   }
 
-  const fallbacks = [
-    `Every per-seat fee is a tax on your growth.\n\nOwn your software instead.\n\n${SITE_URL}`,
-    `Paste your site. Get a custom app. Own the code. Forever.\n\nThat's the whole pitch.\n\n${SITE_URL}`,
-    `Your SaaS bill grows with every hire. Your owned software doesn't.\n\nBetter margins start here.\n\n${SITE_URL}`,
-  ];
-  return pick(fallbacks);
+  return post
+    ? `${post.description}\n\n${blogUrl}`
+    : `Own your software. Kill per-seat fees.\n\n${SITE_URL}`;
 }
 
 /**
- * Generate a fully AI-crafted tweet using real marketplace data
+ * Generate a value-first AI tweet — teaches or provokes thought
+ * Only ~30% of these include a direct CTA
  */
 export async function generateDynamicTweet(supabaseUrl: string, supabaseKey: string): Promise<string> {
   const headers = { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` };
 
-  const [trendingRes, recentSalesRes, totalRes] = await Promise.all([
+  const recentTypes = await getRecentPostTypes(supabaseUrl, supabaseKey);
+
+  const [trendingRes, totalRes] = await Promise.all([
     fetch(`${supabaseUrl}/rest/v1/listings?status=eq.live&order=sales_count.desc.nullslast&limit=3&select=title,sales_count,price,category`, { headers }),
-    fetch(`${supabaseUrl}/rest/v1/purchases?order=created_at.desc&limit=5&select=amount_paid,created_at`, { headers }),
     fetch(`${supabaseUrl}/rest/v1/listings?status=eq.live&select=id`, { headers: { ...headers, Prefer: "count=exact" } }),
   ]);
 
   const trending = await trendingRes.json().catch(() => []);
-  const recentSales = await recentSalesRes.json().catch(() => []);
   const totalApps = parseInt(totalRes.headers.get("content-range")?.split("/")?.[1] || "500");
 
-  const topic = pick(BLOG_TOPICS);
+  const topic = pick(VALUE_TOPICS);
   const persona = pick(PERSONAS);
   const format = pick(FORMATS);
   const dateContext = new Date().toLocaleString("en-US", { weekday: "long", month: "long", day: "numeric" });
 
-  const prompt = `You are ${persona}. Write ONE viral tweet as ${format} about "${topic}" for OpenDraft (opendraft.co).
+  // 30% include CTA, 70% are pure value
+  const includeCTA = Math.random() < 0.3;
 
-Brand: "Every business, better software." Own your code. Kill per-seat fees. Paste your site, get an app.
+  const prompt = `You are ${persona}. Write ONE tweet as ${format} about "${topic}".
 
-CONTEXT:
-- ${dateContext}
-- ${totalApps}+ apps on the marketplace, all with full source code
-- Top app: "${trending[0]?.title || "AI Dashboard"}" with ${trending[0]?.sales_count || 10} sales
-- ${recentSales.length} purchases in the last 24 hours
+DATE: ${dateContext}
+MARKETPLACE CONTEXT: ${totalApps}+ owned apps available, top: "${trending[0]?.title || "AI Dashboard"}"
 
-RULES:
-- MUST be under 270 characters total (including URL)
-- First line must be a SCROLL-STOPPER about ownership or SaaS waste
+${includeCTA
+    ? `Include ${SITE_URL} naturally at the end — but the tweet must provide value BEFORE the link.`
+    : `Do NOT include any links or URLs. This tweet should be pure value — an insight, tip, or thought that stands on its own. People will check the profile if they're interested.`
+  }
+
+ANTI-REPETITION: Recent post themes to AVOID: ${recentTypes.slice(0, 5).join(", ") || "none"}
+
+CRITICAL RULES:
+- MUST be under 270 characters total
+- First line must be a genuine insight or hook — NOT a sales pitch
+- Sound like a real human sharing knowledge, NOT a brand account blasting promos
+- No corporate language ("excited to announce", "check out", "don't miss")
 - No emojis in the first line
-- Include ${SITE_URL} once, naturally
-- Sound genuinely human — a founder fed up with software rent
+- If it reads like an ad, rewrite it as advice
 - 0-1 hashtags max
 - Output ONLY the tweet text`;
 
@@ -212,26 +221,25 @@ RULES:
     console.error("Dynamic tweet generation failed:", e);
   }
 
-  return `${totalApps}+ apps. Full source code. No per-seat fees. Ever.\n\nOwn your software.\n\n${SITE_URL}`;
+  return `The average business spends $14k/month on SaaS.\n\n80% of those tools could be owned outright for a one-time cost.\n\nThe math is worth checking.`;
 }
 
 export async function generateVibeReportTweet(supabaseUrl: string, supabaseKey: string): Promise<string> {
   const dateContext = new Date().toLocaleString("en-US", { month: "long", day: "numeric", year: "numeric" });
   const persona = pick(PERSONAS);
 
-  const prompt = `You are ${persona}. Write ONE tweet (max 270 chars) promoting our "Vibe Coding: State of the Market" report.
+  const prompt = `You are ${persona}. Write ONE tweet (max 270 chars) sharing an insight from the "Vibe Coding: State of the Market" report.
 
 DATE: ${dateContext}
 REPORT URL: ${REPORT_URL}
-BRAND: "Every business, better software." The report proves the shift from renting SaaS to owning custom software.
 
-The report covers how 2M+ people now build software using AI coding tools (Lovable, Cursor, Claude Code, Bolt, Replit, Windsurf). Key themes: non-technical founders owning their code, the death of per-seat pricing, software ownership as a margin advantage.
+Key data: 2M+ people now build software using AI coding tools. Non-technical founders are owning their code. The subscription model is being challenged.
 
 RULES:
-- Lead with a provocative insight about ownership or SaaS waste
-- Sound like ${persona}
-- Include ${REPORT_URL} naturally
-- 1-2 hashtags at end (#vibecoding always)
+- Lead with the most INTERESTING data point or insight — not "check out our report"
+- Sound like someone genuinely excited by the data, not marketing it
+- Include ${REPORT_URL} at the end
+- 1 hashtag max (#vibecoding)
 - No emojis in the first line
 - Output ONLY the tweet text`;
 
@@ -260,8 +268,8 @@ RULES:
       }
     }
   } catch (e) {
-    console.error("AI vibe report tweet failed, using fallback:", e);
+    console.error("AI vibe report tweet failed:", e);
   }
 
-  return `The era of renting software is ending. 2M+ people now build and own their apps with AI.\n\nFull report → ${REPORT_URL}\n\n#vibecoding`;
+  return `2M+ people now build and own their apps with AI.\n\nThe era of renting software is ending.\n\nFull report → ${REPORT_URL}\n\n#vibecoding`;
 }

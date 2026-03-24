@@ -26,6 +26,7 @@ import {
   getTweetArtPrompt,
 } from "./templates.ts";
 import { generateBlogTweet, generateVibeReportTweet, generateDynamicTweet } from "./ai-tweets.ts";
+import { tipTweet, insightTweet, discussionTweet, builderStoryTweet } from "./value-tweets.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -268,38 +269,75 @@ Deno.serve(async (req) => {
     } else if (postType === "ai_generated") {
       tweetText = await generateDynamicTweet(supabaseUrl, supabaseKey);
 
-    // ─── SMART RANDOM — weighted selection with anti-repetition ──
+    // ─── NEW VALUE-FIRST POST TYPES ─────────────────────────────
+    } else if (postType === "tip") {
+      tweetText = tipTweet();
+    } else if (postType === "insight") {
+      tweetText = insightTweet();
+    } else if (postType === "discussion") {
+      tweetText = discussionTweet();
+    } else if (postType === "builder_story") {
+      tweetText = builderStoryTweet();
+
+    // ─── SMART RANDOM — rebalanced: 50% value, 50% promotional ──
     } else if (postType === "random_conversion") {
-      // Weighted type selection — threads and AI tweets get higher weight for novelty
+      // VALUE-FIRST types (no hard CTA — build trust & followers)
+      // PROMOTIONAL types (include CTA — drive traffic)
       const weightedTypes = [
-        { type: "engagement_hook", weight: 10 },
-        { type: "fomo", weight: 8 },
-        { type: "pain_point", weight: 8 },
-        { type: "gremlin_update", weight: 7 },
-        { type: "question", weight: 6 },
-        { type: "success_story", weight: 7 },
-        { type: "direct_cta", weight: 5 },
-        { type: "hot_take", weight: 9 },
-        { type: "data_drop", weight: 6 },
-        { type: "builder_spotlight", weight: 4 },
-        { type: "mini_thread", weight: 8 },
-        { type: "ai_generated", weight: 12 },
-        { type: "blog_post", weight: 5 },
+        // Value-first (50% of total weight)
+        { type: "tip", weight: 12 },
+        { type: "insight", weight: 12 },
+        { type: "discussion", weight: 10 },
+        { type: "builder_story", weight: 8 },
+        { type: "ai_generated", weight: 10 },  // now value-first with 70% no-CTA
+        // Promotional (50% of total weight)
+        { type: "engagement_hook", weight: 6 },
+        { type: "pain_point", weight: 5 },
+        { type: "hot_take", weight: 6 },
+        { type: "success_story", weight: 5 },
+        { type: "blog_post", weight: 8 },
+        { type: "mini_thread", weight: 6 },
+        { type: "gremlin_update", weight: 4 },
+        { type: "fomo", weight: 3 },
+        { type: "direct_cta", weight: 3 },
+        { type: "data_drop", weight: 2 },
       ];
 
-      const totalWeight = weightedTypes.reduce((sum, t) => sum + t.weight, 0);
+      // Anti-repetition: check recent posts and de-weight
+      let recentTypes: string[] = [];
+      try {
+        const since = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
+        const recentRes = await fetch(
+          `${supabaseUrl}/rest/v1/swarm_tasks?agent_type=eq.social_poster&created_at=gte.${since}&order=created_at.desc&limit=8&select=output`,
+          { headers: supaHeaders }
+        );
+        const recentTasks = await recentRes.json().catch(() => []);
+        recentTypes = recentTasks.map((t: any) => t.output?.resolved_type || t.output?.post_type || "").filter(Boolean);
+      } catch {}
+
+      // De-weight recently used types
+      const adjusted = weightedTypes.map(wt => ({
+        ...wt,
+        weight: recentTypes.includes(wt.type) ? Math.max(1, wt.weight * 0.3) : wt.weight,
+      }));
+
+      const totalWeight = adjusted.reduce((sum, t) => sum + t.weight, 0);
       let roll = Math.random() * totalWeight;
-      let chosen = weightedTypes[0].type;
-      for (const wt of weightedTypes) {
+      let chosen = adjusted[0].type;
+      for (const wt of adjusted) {
         roll -= wt.weight;
         if (roll <= 0) { chosen = wt.type; break; }
       }
 
       resolvedType = chosen;
-      console.log(`Random conversion chose: ${chosen}`);
+      console.log(`Random chose: ${chosen} (de-weighted: ${recentTypes.join(",")})`);
 
-      // Recursively handle the chosen type
-      if (chosen === "engagement_hook") tweetText = engagementHookTweet();
+      // Handle chosen type
+      if (chosen === "tip") tweetText = tipTweet();
+      else if (chosen === "insight") tweetText = insightTweet();
+      else if (chosen === "discussion") tweetText = discussionTweet();
+      else if (chosen === "builder_story") tweetText = builderStoryTweet();
+      else if (chosen === "engagement_hook") tweetText = engagementHookTweet();
       else if (chosen === "fomo") tweetText = fomoTweet({ browsing: 80 + Math.floor(Math.random() * 100) });
       else if (chosen === "pain_point") tweetText = painPointTweet();
       else if (chosen === "gremlin_update") tweetText = gremlinTweet();
@@ -313,9 +351,7 @@ Deno.serve(async (req) => {
       else if (chosen === "data_drop") {
         const totalRes = await fetch(`${supabaseUrl}/rest/v1/listings?status=eq.live&select=id`, { headers: { ...supaHeaders, Prefer: "count=exact" } });
         tweetText = dataDropTweet({ totalApps: parseInt(totalRes.headers.get("content-range")?.split("/")?.[1] || "500") });
-      } else if (chosen === "builder_spotlight") {
-        tweetText = builderSpotlightTweet({});
-      } else tweetText = directCtaTweet();
+      } else tweetText = tipTweet();
 
     // ─── ORIGINAL POST TYPES ─────────────────────────────────────
 
@@ -369,7 +405,7 @@ Deno.serve(async (req) => {
     }
 
     // ─── Generate art for types that don't have images ───────────
-    const noArtTypes = new Set(["random_conversion", "blog_post", "custom", "question", "mini_thread"]);
+    const noArtTypes = new Set(["random_conversion", "blog_post", "custom", "question", "mini_thread", "tip", "insight", "discussion", "builder_story"]);
     if (!screenshotUrl && !generatedArtUrl && !skipArt && !noArtTypes.has(postType)) {
       // 70% chance to generate art (up from 60%)
       if (Math.random() < 0.7) {

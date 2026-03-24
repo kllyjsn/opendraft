@@ -405,7 +405,7 @@ Deno.serve(async (req) => {
     }
 
     // ─── Generate art for types that don't have images ───────────
-    const noArtTypes = new Set(["random_conversion", "blog_post", "custom", "question", "mini_thread"]);
+    const noArtTypes = new Set(["random_conversion", "blog_post", "custom", "question", "mini_thread", "tip", "insight", "discussion", "builder_story"]);
     if (!screenshotUrl && !generatedArtUrl && !skipArt && !noArtTypes.has(postType)) {
       // 70% chance to generate art (up from 60%)
       if (Math.random() < 0.7) {

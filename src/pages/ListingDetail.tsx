@@ -210,7 +210,10 @@ export default function ListingDetail() {
 
       setPurchased(true);
       toast({ title: "Project claimed! 🎉", description: "You can now download it and chat with your builder." });
-      // Auto-open chat drawer after claiming
+      // Show upsell for free-tier users, then open chat
+      if (!isSubscribed) {
+        setShowUpsell(true);
+      }
       setChatOpen(true);
     } catch (e) {
       toast({ title: "Claim failed", description: e instanceof Error ? e.message : "Unknown error", variant: "destructive" });

@@ -21,7 +21,7 @@ export const Scene2Problem = () => {
   const headY = interpolate(headSpring, [0, 1], [60, 0]);
 
   // "Stop renting" flash
-  const flashOpacity = interpolate(frame, [70, 85, 85, 100], [0, 1, 1, 0.9], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const flashOpacity = interpolate(frame, [70, 85, 100], [0, 1, 0.9], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
   const flashScale = interpolate(frame, [70, 90], [0.9, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
 
   // Label

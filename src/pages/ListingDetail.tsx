@@ -881,6 +881,12 @@ export default function ListingDetail() {
           otherUserId={listing.seller_id}
         />
       )}
+
+      <PostClaimUpsell
+        open={showUpsell}
+        onClose={() => setShowUpsell(false)}
+        claimedTitle={listing?.title}
+      />
     </div>
   );
 }

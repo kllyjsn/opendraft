@@ -7,12 +7,16 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-/**
- * Autonomous SEO Content Agent
- * Narrative: "Every business, better software."
- * Generates long-tail blog posts targeting 150+ keywords across ownership,
- * SaaS replacement, margin improvement, and all verticals.
- */
+// High-traffic categories get prioritized (based on analytics: India 44%, mobile 86%, Google Discover)
+const HIGH_PRIORITY_CATEGORIES = new Set([
+  "Creator Economy",   // "developer-side-hustle-ideas" is top blog traffic
+  "Vibe Coding",       // developer audience matches
+  "Replace Your SaaS", // core value prop
+  "SMB Growth",        // matches target audience
+  "Better Margins",    // business owner angle
+  "Paste and Build",   // product experience
+]);
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -39,8 +43,19 @@ serve(async (req) => {
       });
     }
 
-    // Pick random topic
-    const topic = available[Math.floor(Math.random() * available.length)];
+    // Weighted topic selection: prioritize high-traffic categories
+    const weighted = available.map(t => ({
+      topic: t,
+      weight: HIGH_PRIORITY_CATEGORIES.has(t.category) ? 3 : 1,
+    }));
+    const totalWeight = weighted.reduce((sum, w) => sum + w.weight, 0);
+    let roll = Math.random() * totalWeight;
+    let topic = weighted[0].topic;
+    for (const w of weighted) {
+      roll -= w.weight;
+      if (roll <= 0) { topic = w.topic; break; }
+    }
+
     const slug = topic.keyword.replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "").slice(0, 80);
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -57,26 +72,35 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `You are a world-class SEO content writer for OpenDraft (opendraft.co). OpenDraft's mission: every business deserves better software — software they own, not rent.
+            content: `You are a world-class content writer creating blog posts for OpenDraft (opendraft.co).
 
-BRAND VOICE — Ogilvy-crisp, declarative, founder-sharp:
-- Core line: "Every business, better software."
-- Key themes: own your code forever, kill per-seat fees, paste your URL and get a custom app in 90 seconds, your code · your margins · your rules
-- Positioning: replace expensive SaaS subscriptions with custom apps you own outright. No lock-in. No per-seat tax. Full source code.
+BRAND: "Every business, better software." — own your code, kill per-seat fees.
 
-Write blog posts that:
-- Target the exact keyword naturally (use it 3-5 times)
-- Are 1500-2500 words, practical, and authoritative
-- Thread the ownership narrative throughout — every business paying SaaS fees is overpaying
-- Include specific examples: a restaurant replacing Toast, a gym replacing Mindbody, a founder replacing Notion
-- Use the "paste your site → get an app → own the code" flow as a concrete example
-- Reference OpenDraft features: URL analyzer, one-click deploy, AI agents, full source code, remix economy
-- Use markdown headers (## and ###) to structure content with 5-7 sections
-- Include a comparison table or numbered list for scannability
-- End with a strong CTA: "Paste your site. Own the result."
-- Sound like a sharp, opinionated founder — NOT generic AI content
-- Include contrarian takes: "Per-seat pricing is a tax on growth", "SaaS companies profit from your dependency"
-- Mention competitor alternatives fairly but position ownership as the winning strategy`
+AUDIENCE: Non-technical business owners and entrepreneurs, primarily mobile readers (86%), many from India and developing markets. They find content via Google Discover and search.
+
+CONTENT STRATEGY — Write like the best business blogs (First Round Review, Paul Graham, Stratechery):
+- Lead with a HOOK: a surprising stat, a provocative question, or a mini-story
+- Every section must teach something actionable — no filler paragraphs
+- Use specific numbers and examples: "$14k/month → $340 one-time" is better than "save money"
+- Write in short paragraphs (2-3 sentences max) for mobile readability
+- Include real-world scenarios: a restaurant owner, a gym owner, a startup founder
+- Thread the ownership narrative naturally — don't force it into every paragraph
+- End sections with mini-takeaways readers can act on immediately
+
+STRUCTURE:
+- Title: under 60 chars, includes the keyword, makes someone want to click
+- Opening paragraph: hook + promise of what they'll learn (no throat-clearing)
+- 5-7 sections with ## headers that work as standalone insights
+- Include at least one comparison table or numbered list
+- Sprinkle internal links: mention OpenDraft's URL analyzer, marketplace, or deploy features where natural
+- End with a strong, specific CTA
+
+VOICE:
+- Confident but not arrogant — like a friend who's done the research
+- Use "you" language, not "we" or "one"
+- Contrarian takes welcome: challenge conventional wisdom
+- Avoid: "In today's fast-paced world", "It's no secret that", "Let's dive in", "In conclusion"
+- Avoid: walls of text, generic advice, content that could be about anything`
           },
           {
             role: "user",
@@ -85,7 +109,9 @@ Write blog posts that:
 Category: ${topic.category}
 Vertical: ${topic.vertical}
 
-Return JSON: { "title": "under 65 chars with keyword", "description": "meta description under 155 chars", "content": "full markdown", "read_time": "X min read" }`
+IMPORTANT: The content must be genuinely useful — someone should bookmark this. If it reads like generic AI content, it fails.
+
+Return JSON: { "title": "under 60 chars with keyword", "description": "meta description under 155 chars — include a specific benefit or number", "content": "full markdown, 1500-2500 words", "read_time": "X min read" }`
           }
         ],
         tools: [{
@@ -136,7 +162,7 @@ Return JSON: { "title": "under 65 chars with keyword", "description": "meta desc
 
     if (insertErr) throw insertErr;
 
-    // Auto-tweet
+    // Auto-tweet with better format — pull an insight from the post
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
     try {
@@ -148,7 +174,6 @@ Return JSON: { "title": "under 65 chars with keyword", "description": "meta desc
         },
         body: JSON.stringify({
           type: "blog_post",
-          text: `📝 New: "${args.title}"\n\n${args.description}\n\nhttps://opendraft.co/blog/${slug}`,
           skip_art: false,
         }),
       });

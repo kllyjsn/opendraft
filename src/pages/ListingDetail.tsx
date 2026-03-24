@@ -87,6 +87,7 @@ export default function ListingDetail() {
   const [downloading, setDownloading] = useState(false);
   const [claiming, setClaiming] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  const [showUpsell, setShowUpsell] = useState(false);
 
   useEffect(() => {
     if (!id) return;

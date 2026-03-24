@@ -64,7 +64,7 @@ export default function Credits() {
         <section className="relative overflow-hidden">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-primary/5 blur-[120px] rounded-full pointer-events-none" />
 
-          <div className="container mx-auto px-4 pt-24 pb-16 max-w-4xl text-center relative">
+          <div className="container mx-auto px-4 pt-16 sm:pt-24 pb-10 sm:pb-16 max-w-4xl text-center relative">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary mb-6">
               Pricing
             </p>

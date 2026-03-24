@@ -26,6 +26,7 @@ import {
   getTweetArtPrompt,
 } from "./templates.ts";
 import { generateBlogTweet, generateVibeReportTweet, generateDynamicTweet } from "./ai-tweets.ts";
+import { tipTweet, insightTweet, discussionTweet, builderStoryTweet } from "./value-tweets.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

@@ -97,29 +97,33 @@ export default function Credits() {
         </section>
 
         {/* Annual / Monthly toggle */}
-        <section className="container mx-auto px-4 max-w-4xl mb-16">
-          <div className="flex items-center justify-center gap-4">
-            <button
-              onClick={() => setAnnual(false)}
-              className={cn(
-                "text-sm font-semibold px-4 py-2 rounded-full transition-all",
-                !annual ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              Monthly
-            </button>
-            <button
-              onClick={() => setAnnual(true)}
-              className={cn(
-                "text-sm font-semibold px-4 py-2 rounded-full transition-all relative",
-                annual ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              Annual
-              <span className="absolute -top-2.5 -right-3 text-[10px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">
-                -{ANNUAL_DISCOUNT}%
+        <section className="container mx-auto px-4 max-w-4xl mb-10 sm:mb-16">
+          <div className="flex items-center justify-center gap-2">
+            <div className="inline-flex items-center rounded-full bg-muted/60 p-1">
+              <button
+                onClick={() => setAnnual(false)}
+                className={cn(
+                  "text-sm font-semibold px-4 py-2 rounded-full transition-all",
+                  !annual ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                Monthly
+              </button>
+              <button
+                onClick={() => setAnnual(true)}
+                className={cn(
+                  "text-sm font-semibold px-4 py-2 rounded-full transition-all",
+                  annual ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                Annual
+              </button>
+            </div>
+            {annual && (
+              <span className="text-[11px] font-bold text-primary bg-primary/10 px-2 py-1 rounded-full whitespace-nowrap">
+                Save {ANNUAL_DISCOUNT}%
               </span>
-            </button>
+            )}
           </div>
         </section>
 

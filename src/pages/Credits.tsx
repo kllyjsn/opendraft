@@ -197,6 +197,11 @@ export default function Credits() {
           </div>
         </section>
 
+        {/* Enterprise Contact Form */}
+        <section className="container mx-auto px-4 max-w-3xl mb-24">
+          <EnterpriseContactForm />
+        </section>
+
         {/* Bottom CTA */}
         <section className="container mx-auto px-4 max-w-3xl mb-24">
           <div className="rounded-2xl border border-border/40 bg-card p-8 md:p-12 text-center">

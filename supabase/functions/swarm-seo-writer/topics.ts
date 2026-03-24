@@ -183,4 +183,30 @@ export const TOPIC_BANK: SEOTopic[] = [
   { keyword: "vercel templates vs opendraft", vertical: "developers", category: "Comparison" },
   { keyword: "gumroad alternatives for developers", vertical: "creators", category: "Comparison" },
   { keyword: "themeforest alternatives 2026", vertical: "creators", category: "Comparison" },
+
+  // ── HIGH-TRAFFIC TOPICS (matched to analytics: side hustles, how-tos, listicles) ──
+  { keyword: "best side hustles for developers 2026", vertical: "creators", category: "Creator Economy" },
+  { keyword: "passive income ideas for programmers", vertical: "creators", category: "Creator Economy" },
+  { keyword: "how to make money coding from home", vertical: "creators", category: "Creator Economy" },
+  { keyword: "sell digital products as a developer", vertical: "creators", category: "Creator Economy" },
+  { keyword: "how to start a micro saas business", vertical: "creators", category: "Creator Economy" },
+  { keyword: "best ways to monetize coding skills 2026", vertical: "creators", category: "Creator Economy" },
+  { keyword: "freelance vs product income for developers", vertical: "creators", category: "Creator Economy" },
+  { keyword: "how to build and sell apps without a team", vertical: "creators", category: "Creator Economy" },
+
+  // ── MOBILE-FIRST / INDIA MARKET (44% of traffic) ──
+  { keyword: "best business apps for indian startups", vertical: "smb", category: "SMB Growth" },
+  { keyword: "cheap alternatives to expensive business software", vertical: "smb", category: "Replace Your SaaS" },
+  { keyword: "free business tools for small companies", vertical: "smb", category: "SMB Growth" },
+  { keyword: "how to reduce business software costs", vertical: "smb", category: "Better Margins" },
+  { keyword: "affordable crm for small business india", vertical: "smb", category: "SMB Growth" },
+  { keyword: "best free app builders 2026", vertical: "general", category: "Vibe Coding" },
+
+  // ── GOOGLE DISCOVER BAIT (listicles, how-tos, trends) ──
+  { keyword: "top 10 saas tools you can replace for free", vertical: "general", category: "Replace Your SaaS" },
+  { keyword: "software trends every business owner should know 2026", vertical: "general", category: "Own Your Software" },
+  { keyword: "how ai is changing small business software", vertical: "smb", category: "AI Apps" },
+  { keyword: "biggest mistakes startups make with software spending", vertical: "founders", category: "Better Margins" },
+  { keyword: "why smart founders are ditching saas subscriptions", vertical: "founders", category: "Own Your Software" },
+  { keyword: "complete guide to owning your business software stack", vertical: "smb", category: "Own Your Software" },
 ];

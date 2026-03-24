@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { MetaTags } from "@/components/MetaTags";
 import { Check, Loader2, Zap, Sparkles, Building2, ArrowRight, Shield, Headphones } from "lucide-react";
+import { EnterpriseContactForm } from "@/components/EnterpriseContactForm";
 import { cn } from "@/lib/utils";
 import { FREE_TIER, CORE_PAID_TIERS, ENTERPRISE_TIERS, ANNUAL_DISCOUNT, type PricingTier } from "@/lib/pricing-tiers";
 import { trackFunnel } from "@/hooks/useFunnelTracker";
@@ -194,6 +195,11 @@ export default function Credits() {
               Replace 3 SaaS tools → save <strong className="text-foreground">$2,160/yr</strong> minimum
             </p>
           </div>
+        </section>
+
+        {/* Enterprise Contact Form */}
+        <section className="container mx-auto px-4 max-w-3xl mb-24">
+          <EnterpriseContactForm />
         </section>
 
         {/* Bottom CTA */}

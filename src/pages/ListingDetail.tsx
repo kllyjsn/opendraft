@@ -25,6 +25,7 @@ import { MetaTags } from "@/components/MetaTags";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { FlagListingButton } from "@/components/FlagListingButton";
 import { AgentReadyBadge } from "@/components/AgentReadyBadge";
+import { PostClaimUpsell } from "@/components/PostClaimUpsell";
 
 import { GoogleSignInButton } from "@/components/GoogleSignInButton";
 const BUILT_WITH_LABELS: Record<string, string> = {
@@ -87,6 +88,7 @@ export default function ListingDetail() {
   const [downloading, setDownloading] = useState(false);
   const [claiming, setClaiming] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  const [showUpsell, setShowUpsell] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -209,7 +211,10 @@ export default function ListingDetail() {
 
       setPurchased(true);
       toast({ title: "Project claimed! 🎉", description: "You can now download it and chat with your builder." });
-      // Auto-open chat drawer after claiming
+      // Show upsell for free-tier users, then open chat
+      if (!isSubscribed) {
+        setShowUpsell(true);
+      }
       setChatOpen(true);
     } catch (e) {
       toast({ title: "Claim failed", description: e instanceof Error ? e.message : "Unknown error", variant: "destructive" });
@@ -876,6 +881,12 @@ export default function ListingDetail() {
           otherUserId={listing.seller_id}
         />
       )}
+
+      <PostClaimUpsell
+        open={showUpsell}
+        onClose={() => setShowUpsell(false)}
+        claimedTitle={listing?.title}
+      />
     </div>
   );
 }

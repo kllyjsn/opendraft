@@ -1,118 +1,167 @@
-import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, spring } from "remotion";
+import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, spring, Img, staticFile } from "remotion";
 import { loadFont } from "@remotion/google-fonts/Italiana";
 import { loadFont as loadJura } from "@remotion/google-fonts/Jura";
 
 const { fontFamily: italiana } = loadFont();
 const { fontFamily: jura } = loadJura();
 
-const features = [
-  { label: "Full source code", desc: "You own every line" },
-  { label: "No per-seat fees", desc: "One price, unlimited users" },
-  { label: "Deploy in minutes", desc: "Production-ready, instantly" },
-  { label: "AI-maintained", desc: "Agents improve it 24/7" },
-];
-
 export const Scene3Solution = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
+  // Two screenshots side by side — dashboard and builders — with slow drift
+  const drift = interpolate(frame, [0, 180], [0, -30], { extrapolateRight: "clamp" });
+  
+  // Left card (dashboard)
+  const leftSpring = spring({ frame: frame - 10, fps, config: { damping: 18, stiffness: 60, mass: 2 } });
+  const leftScale = interpolate(leftSpring, [0, 1], [0.85, 1]);
+  const leftOpacity = interpolate(leftSpring, [0, 1], [0, 1]);
+  const leftRotate = interpolate(leftSpring, [0, 1], [-3, -2]);
+
+  // Right card (builders)
+  const rightSpring = spring({ frame: frame - 25, fps, config: { damping: 18, stiffness: 60, mass: 2 } });
+  const rightScale = interpolate(rightSpring, [0, 1], [0.85, 1]);
+  const rightOpacity = interpolate(rightSpring, [0, 1], [0, 1]);
+  const rightRotate = interpolate(rightSpring, [0, 1], [3, 2]);
+
+  // Heading
   const headSpring = spring({ frame: frame - 5, fps, config: { damping: 20, stiffness: 80, mass: 1.5 } });
-  const headY = interpolate(headSpring, [0, 1], [80, 0]);
+  const headY = interpolate(headSpring, [0, 1], [60, 0]);
   const headOpacity = interpolate(headSpring, [0, 1], [0, 1]);
 
-  const labelOpacity = interpolate(frame, [10, 30], [0, 0.4], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const labelOpacity = interpolate(frame, [5, 25], [0, 0.35], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
 
-  // "OpenDraft" brand reveal
-  const brandSpring = spring({ frame: frame - 40, fps, config: { damping: 15, stiffness: 60, mass: 2 } });
-  const brandScale = interpolate(brandSpring, [0, 1], [0.8, 1]);
-  const brandOpacity = interpolate(brandSpring, [0, 1], [0, 1]);
+  // Feature tags
+  const features = ["Full source code", "No per-seat fees", "Deploy instantly", "AI-maintained"];
 
   return (
-    <AbsoluteFill style={{ justifyContent: "center", alignItems: "center" }}>
+    <AbsoluteFill style={{ backgroundColor: "#09080E" }}>
       {/* Specimen label */}
       <div style={{
-        position: "absolute", top: 80, left: 120,
+        position: "absolute", top: 80, left: 120, zIndex: 10,
         opacity: labelOpacity,
         fontFamily: "monospace", fontSize: 11,
         letterSpacing: "0.3em", textTransform: "uppercase",
         color: "rgba(255,255,255,0.4)",
       }}>
-        fig. 03 — the shift
+        fig. 03 — the ecosystem
       </div>
 
-      <div style={{ textAlign: "center", maxWidth: 1400 }}>
-        {/* Brand name */}
+      {/* Heading */}
+      <div style={{
+        position: "absolute",
+        top: 70,
+        left: 0,
+        right: 0,
+        textAlign: "center",
+        zIndex: 5,
+      }}>
         <div style={{
           fontFamily: jura,
-          fontSize: 18,
+          fontSize: 16,
           letterSpacing: "0.35em",
           textTransform: "uppercase",
           color: "#E8380D",
-          marginBottom: 24,
-          opacity: brandOpacity,
-          transform: `scale(${brandScale})`,
+          marginBottom: 16,
+          opacity: headOpacity,
         }}>
           OpenDraft
         </div>
-
-        {/* Headline */}
         <div style={{
           fontFamily: italiana,
-          fontSize: 96,
+          fontSize: 72,
           color: "#FAFAF9",
-          lineHeight: 1.08,
           letterSpacing: "-0.03em",
           transform: `translateY(${headY}px)`,
           opacity: headOpacity,
-          marginBottom: 60,
         }}>
-          Start owning it.
+          Own every line of code.
         </div>
+      </div>
 
-        {/* Feature grid */}
+      {/* Floating screenshots */}
+      <div style={{
+        position: "absolute",
+        top: "50%",
+        left: "50%",
+        transform: `translate(-50%, -40%) translateY(${drift}px)`,
+        display: "flex",
+        gap: 40,
+      }}>
+        {/* Dashboard screenshot */}
         <div style={{
-          display: "flex",
-          gap: 32,
-          justifyContent: "center",
+          width: 640,
+          height: 400,
+          borderRadius: 16,
+          overflow: "hidden",
+          border: "1px solid rgba(255,255,255,0.06)",
+          boxShadow: "0 30px 80px -20px rgba(0,0,0,0.6)",
+          transform: `scale(${leftScale}) rotate(${leftRotate}deg)`,
+          opacity: leftOpacity,
         }}>
-          {features.map((feat, i) => {
-            const cardSpring = spring({ frame: frame - 55 - i * 10, fps, config: { damping: 20, stiffness: 120 } });
-            const cardY = interpolate(cardSpring, [0, 1], [50, 0]);
-            const cardOpacity = interpolate(cardSpring, [0, 1], [0, 1]);
-
-            return (
-              <div key={i} style={{
-                width: 280,
-                padding: "32px 24px",
-                borderRadius: 16,
-                border: "1px solid rgba(255,255,255,0.06)",
-                background: "rgba(255,255,255,0.02)",
-                opacity: cardOpacity,
-                transform: `translateY(${cardY}px)`,
-                textAlign: "center",
-              }}>
-                <div style={{
-                  fontFamily: jura,
-                  fontSize: 20,
-                  color: "#FAFAF9",
-                  fontWeight: 500,
-                  marginBottom: 8,
-                  letterSpacing: "0.02em",
-                }}>
-                  {feat.label}
-                </div>
-                <div style={{
-                  fontFamily: jura,
-                  fontSize: 14,
-                  color: "rgba(250,250,249,0.4)",
-                  letterSpacing: "0.04em",
-                }}>
-                  {feat.desc}
-                </div>
-              </div>
-            );
-          })}
+          <Img
+            src={staticFile("screens/dashboard-demo.png")}
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+            }}
+          />
         </div>
+
+        {/* Builders screenshot */}
+        <div style={{
+          width: 640,
+          height: 400,
+          borderRadius: 16,
+          overflow: "hidden",
+          border: "1px solid rgba(255,255,255,0.06)",
+          boxShadow: "0 30px 80px -20px rgba(0,0,0,0.6)",
+          transform: `scale(${rightScale}) rotate(${rightRotate}deg)`,
+          opacity: rightOpacity,
+        }}>
+          <Img
+            src={staticFile("screens/builders.png")}
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Feature tags at bottom */}
+      <div style={{
+        position: "absolute",
+        bottom: 70,
+        left: 0,
+        right: 0,
+        display: "flex",
+        justifyContent: "center",
+        gap: 24,
+      }}>
+        {features.map((feat, i) => {
+          const tagSpring = spring({ frame: frame - 80 - i * 8, fps, config: { damping: 20, stiffness: 150 } });
+          const tagOpacity = interpolate(tagSpring, [0, 1], [0, 1]);
+          const tagY = interpolate(tagSpring, [0, 1], [20, 0]);
+          return (
+            <div key={i} style={{
+              padding: "10px 20px",
+              borderRadius: 100,
+              background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              fontFamily: jura,
+              fontSize: 14,
+              color: "rgba(250,250,249,0.7)",
+              letterSpacing: "0.04em",
+              opacity: tagOpacity,
+              transform: `translateY(${tagY}px)`,
+            }}>
+              {feat}
+            </div>
+          );
+        })}
       </div>
     </AbsoluteFill>
   );

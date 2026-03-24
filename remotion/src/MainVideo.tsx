@@ -1,4 +1,4 @@
-import { AbsoluteFill, Sequence } from "remotion";
+import { AbsoluteFill } from "remotion";
 import { TransitionSeries, springTiming } from "@remotion/transitions";
 import { wipe } from "@remotion/transitions/wipe";
 import { fade } from "@remotion/transitions/fade";
@@ -16,7 +16,7 @@ export const MainVideo = () => {
       <PersistentBackground />
 
       <TransitionSeries>
-        {/* Scene 1: Hook - "You deserve more" */}
+        {/* Scene 1: Hook — "Your career deserves better tools" */}
         <TransitionSeries.Sequence durationInFrames={150}>
           <Scene1Hook />
         </TransitionSeries.Sequence>
@@ -26,8 +26,8 @@ export const MainVideo = () => {
           timing={springTiming({ config: { damping: 200 }, durationInFrames: 20 })}
         />
 
-        {/* Scene 2: The Problem - SaaS trap */}
-        <TransitionSeries.Sequence durationInFrames={150}>
+        {/* Scene 2: Paste URL → Get App (live app pan) */}
+        <TransitionSeries.Sequence durationInFrames={180}>
           <Scene2Problem />
         </TransitionSeries.Sequence>
 
@@ -36,8 +36,8 @@ export const MainVideo = () => {
           timing={springTiming({ config: { damping: 200 }, durationInFrames: 25 })}
         />
 
-        {/* Scene 3: The Solution - Own your tools */}
-        <TransitionSeries.Sequence durationInFrames={160}>
+        {/* Scene 3: The Ecosystem (dual screenshot pan) */}
+        <TransitionSeries.Sequence durationInFrames={180}>
           <Scene3Solution />
         </TransitionSeries.Sequence>
 
@@ -46,8 +46,8 @@ export const MainVideo = () => {
           timing={springTiming({ config: { damping: 200 }, durationInFrames: 20 })}
         />
 
-        {/* Scene 4: Career transformation */}
-        <TransitionSeries.Sequence durationInFrames={170}>
+        {/* Scene 4: Career trajectory with pricing bg */}
+        <TransitionSeries.Sequence durationInFrames={180}>
           <Scene4Jobs />
         </TransitionSeries.Sequence>
 
@@ -56,7 +56,7 @@ export const MainVideo = () => {
           timing={springTiming({ config: { damping: 200 }, durationInFrames: 20 })}
         />
 
-        {/* Scene 5: CTA - Start building */}
+        {/* Scene 5: CTA */}
         <TransitionSeries.Sequence durationInFrames={165}>
           <Scene5CTA />
         </TransitionSeries.Sequence>

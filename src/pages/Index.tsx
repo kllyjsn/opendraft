@@ -195,6 +195,7 @@ export default function Index() {
         }`}
       >
         {!hasResults && <HeroBeams />}
+        {!hasResults && <HomepageGremlins />}
 
         <div className="container mx-auto px-4 text-center relative z-10">
           <AnimatePresence>

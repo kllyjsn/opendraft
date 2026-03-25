@@ -284,7 +284,7 @@ Rules:
       }
 
       // Rate limit
-      await new Promise(r => setTimeout(r, 1000));
+      await new Promise(r => setTimeout(r, 3000)); // Throttled from 1s to 3s
     }
 
     // ── 5. Auto-upgrade completeness badges based on signals ──

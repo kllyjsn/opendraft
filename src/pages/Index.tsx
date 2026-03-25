@@ -293,7 +293,7 @@ export default function Index() {
             {!user && <HomepageSignupNudge />}
             {!user && <EmailCapture />}
 
-            <section className="py-28 md:py-48">
+            <section className="py-16 md:py-48">
               <div className="container mx-auto px-4 text-center">
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}

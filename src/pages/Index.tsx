@@ -219,7 +219,7 @@ export default function Index() {
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: -24 }}
                           transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                          className="inline-block text-muted-foreground"
+                          className="inline-block text-secondary"
                         >
                           {ROTATING_WORDS[rotatingIndex]}
                         </motion.span>

@@ -240,9 +240,10 @@ export default function Index() {
                 transition={{ duration: 0.6, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
                 className="text-sm md:text-base text-muted-foreground max-w-md mx-auto mb-6 md:mb-12 leading-relaxed"
               >
-                Paste your website. Get a custom app in 90 seconds.
+                We generate custom apps from your website, then autonomously
+                monitor, fix, and maintain them — so they never break.
                 <br />
-                <span className="text-foreground font-medium">Free — no coding needed.</span>
+                <span className="text-foreground font-medium">Free to start. No coding needed.</span>
               </motion.p>
             )}
           </AnimatePresence>

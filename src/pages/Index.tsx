@@ -39,11 +39,11 @@ function GenerationProgress({
     >
       <div className="relative h-14 w-14 mx-auto">
         <div
-          className="absolute inset-0 rounded-full border-2 border-primary animate-spin"
+          className="absolute inset-0 rounded-full border-2 border-foreground animate-spin"
           style={{ animationDuration: "2s", borderTopColor: "transparent" }}
         />
         <div className="absolute inset-0 flex items-center justify-center">
-          <Wand2 className="h-5 w-5 text-primary" />
+          <Wand2 className="h-5 w-5 text-foreground" />
         </div>
       </div>
       <div>
@@ -53,7 +53,7 @@ function GenerationProgress({
             ? `Building "${genJob.listing_title}"`
             : "This usually takes 60–90 seconds"}
         </p>
-        <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 mt-2.5 text-[10px] text-muted-foreground/60">
+        <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 mt-2.5 text-[10px] text-muted-foreground">
           <span className="flex items-center gap-1"><Code className="h-2.5 w-2.5" /> Full source code</span>
           <span className="flex items-center gap-1"><Rocket className="h-2.5 w-2.5" /> Ready to deploy</span>
           <span className="flex items-center gap-1"><FileText className="h-2.5 w-2.5" /> Marketing kit</span>
@@ -63,20 +63,20 @@ function GenerationProgress({
       <div className="w-full max-w-xs mx-auto">
         <div className="h-1 rounded-full bg-muted overflow-hidden">
           <div
-            className="h-full rounded-full bg-primary transition-all duration-1000 ease-out"
+            className="h-full rounded-full bg-foreground transition-all duration-1000 ease-out"
             style={{ width: `${currentStage.pct}%` }}
           />
         </div>
         <div className="flex justify-between mt-1.5">
           <span className="text-[10px] text-muted-foreground">Building</span>
-          <span className="text-[10px] font-semibold text-primary">
+          <span className="text-[10px] font-semibold text-foreground">
             {currentStage.pct}%
           </span>
         </div>
       </div>
       <p className="text-[10px] text-muted-foreground">
         You can leave this page — track progress in your{" "}
-        <a href="/dashboard" className="text-primary underline underline-offset-2">dashboard</a>.
+        <a href="/dashboard" className="text-foreground underline underline-offset-2">dashboard</a>.
       </p>
     </motion.div>
   );
@@ -120,7 +120,6 @@ export default function Index() {
     return () => clearInterval(interval);
   }, []);
 
-  // Check sessionStorage on mount for persisted results
   useEffect(() => {
     try {
       const saved = sessionStorage.getItem("opendraft_biz_analysis");
@@ -137,7 +136,6 @@ export default function Index() {
     reset,
   } = useGenerationJob();
 
-  // Auto-trigger generation from ?generate= param or pending session storage
   useEffect(() => {
     if (!user) return;
     const params = new URLSearchParams(window.location.search);
@@ -163,7 +161,7 @@ export default function Index() {
         "@type": "WebSite",
         name: "OpenDraft",
         url: "https://opendraft.co",
-        description: "Every business, better software. Paste your site, own the app.",
+        description: "The software platform built for enterprises. Own your tools.",
       },
       {
         "@context": "https://schema.org",
@@ -178,58 +176,52 @@ export default function Index() {
   );
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-background">
       <MetaTags
-        title="Every Business, Better Software | OpenDraft"
-        description="Paste your website. Get custom apps that make your team faster and your boss impressed — no per-seat fees, no lock-in."
+        title="The Software Platform Built for Enterprises | OpenDraft"
+        description="Paste your website. Get custom enterprise software you own — no per-seat fees, no lock-in, deploy in 90 seconds."
         path="/"
       />
       <JsonLd data={jsonLdData} />
       <Navbar />
 
-      {/* ── HERO — collapses when results are showing ── */}
+      {/* ── HERO ── */}
       <section
         className={`relative flex items-center justify-center transition-all duration-700 ease-out ${
           hasResults
             ? "min-h-0 pt-4 pb-2 md:pt-10 md:pb-4"
-            : "flex-1 min-h-0 pt-6 pb-4 md:min-h-[90vh] md:pt-0"
+            : "flex-1 min-h-0 pt-8 pb-6 md:min-h-[90vh] md:pt-0"
         }`}
       >
         {!hasResults && <HeroBeams />}
 
         <div className="container mx-auto px-4 text-center relative z-10">
-          {/* Headline — hides when results are showing */}
           <AnimatePresence>
             {!hasResults && (
               <motion.div
-                initial={{ opacity: 0, y: 24, filter: "blur(6px)" }}
-                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                exit={{ opacity: 0, y: -20, filter: "blur(6px)" }}
+                initial={{ opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
               >
-                <div className="mb-4 md:mb-9">
-                  <h1 className="text-[1.65rem] sm:text-4xl md:text-6xl lg:text-[5rem] font-bold tracking-[-0.04em] leading-[1.08]">
-                    <span className="block text-muted-foreground/70 text-[0.85em]">Stop renting software.</span>
-                    <span className="block text-foreground mt-0.5 md:mt-1">
-                      Build your own{" "}
-                      <span
-                        className="inline-block relative overflow-hidden align-bottom"
-                        style={{ minWidth: "5ch" }}
-                      >
-                        <AnimatePresence mode="wait">
-                          <motion.span
-                            key={ROTATING_WORDS[rotatingIndex]}
-                            initial={{ opacity: 0, y: 24, filter: "blur(6px)" }}
-                            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                            exit={{ opacity: 0, y: -24, filter: "blur(6px)" }}
-                            transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-                            className="inline-block text-primary"
-                          >
-                            {ROTATING_WORDS[rotatingIndex]}
-                          </motion.span>
-                        </AnimatePresence>
-                      </span>
-                      .
+                <div className="mb-5 md:mb-10">
+                  <h1 className="text-[1.75rem] sm:text-4xl md:text-6xl lg:text-[4.5rem] font-bold tracking-[-0.03em] leading-[1.1] text-foreground">
+                    The software platform
+                    <br />
+                    built for{" "}
+                    <span className="inline-block relative overflow-hidden align-bottom" style={{ minWidth: "5ch" }}>
+                      <AnimatePresence mode="wait">
+                        <motion.span
+                          key={ROTATING_WORDS[rotatingIndex]}
+                          initial={{ opacity: 0, y: 24 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -24 }}
+                          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                          className="inline-block text-muted-foreground"
+                        >
+                          {ROTATING_WORDS[rotatingIndex]}
+                        </motion.span>
+                      </AnimatePresence>
                     </span>
                   </h1>
                 </div>
@@ -237,7 +229,6 @@ export default function Index() {
             )}
           </AnimatePresence>
 
-          {/* Sub-headline — hides when results show */}
           <AnimatePresence>
             {!hasResults && (
               <motion.p
@@ -245,30 +236,26 @@ export default function Index() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.6, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-                className="text-xs md:text-[15px] text-muted-foreground/60 max-w-xs md:max-w-sm mx-auto mb-5 md:mb-11 leading-[1.6] md:leading-[1.7]"
+                className="text-sm md:text-base text-muted-foreground max-w-md mx-auto mb-6 md:mb-12 leading-relaxed"
               >
                 Paste your website. Get a custom app in 90 seconds.
-                <br className="hidden md:block" />
-                <span className="md:hidden"> · </span>
-                <span className="text-foreground/70 font-medium">Free — no coding needed.</span>
+                <br />
+                <span className="text-foreground font-medium">Free — no coding needed.</span>
               </motion.p>
             )}
           </AnimatePresence>
 
-          {/* URL Input — always visible */}
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.9, delay: hasResults ? 0 : 0.25, ease: [0.16, 1, 0.3, 1] }}
-            className={hasResults ? "mb-4" : "mb-4 md:mb-9"}
+            className={hasResults ? "mb-4" : "mb-6 md:mb-10"}
           >
             <BusinessAnalyzer onGenerate={handleGenerate} onResultsChange={setHasResults} />
           </motion.div>
 
-          {/* Trust signals — hide when results show */}
           {!hasResults && <SocialProofBar />}
 
-          {/* Generation progress */}
           <div className="mt-10">
             <AnimatePresence>
               <GenerationProgress
@@ -277,20 +264,16 @@ export default function Index() {
                 currentStage={currentStage}
               />
             </AnimatePresence>
-
             <AnimatePresence>
               {genJob?.status === "failed" && !isInProgress && (
-                <BuildError
-                  genJob={genJob}
-                  handleGenerate={handleGenerate}
-                />
+                <BuildError genJob={genJob} handleGenerate={handleGenerate} />
               )}
             </AnimatePresence>
           </div>
         </div>
       </section>
 
-      {/* ── BELOW-FOLD MARKETING — hide when results active ── */}
+      {/* ── BELOW-FOLD ── */}
       <AnimatePresence>
         {!hasResults && (
           <motion.div
@@ -298,43 +281,32 @@ export default function Index() {
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.5 }}
           >
-            {/* BEFORE/AFTER */}
             <section className="py-14 md:py-24">
               <div className="container mx-auto px-4">
                 <BeforeAfterDemo />
               </div>
             </section>
 
-            {/* VALUE PROPOSITIONS */}
             <ValueProps />
-
-            {/* SHOWCASE */}
             <AnalysisShowcase />
 
-            {/* SIGNUP NUDGE — signed out only */}
             {!user && <HomepageSignupNudge />}
-
-            {/* EMAIL CAPTURE — signed out only */}
             {!user && <EmailCapture />}
 
-            {/* CLOSING CTA */}
             <section className="py-28 md:py-48">
               <div className="container mx-auto px-4 text-center">
                 <motion.div
-                  initial={{ opacity: 0, y: 20, filter: "blur(4px)" }}
-                  whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
                 >
-                  <p className="text-[9px] font-mono tracking-[0.3em] uppercase text-muted-foreground/25 mb-8">
-                    fig. 04 — the promise
-                  </p>
-                  <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold tracking-[-0.04em] leading-[1.06] mb-6">
+                  <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold tracking-[-0.03em] leading-[1.1] mb-6 text-foreground">
                     Every business,
                     <br />
-                    <span className="text-primary/80">better software.</span>
+                    better software.
                   </h2>
-                  <p className="text-sm text-muted-foreground/50 max-w-md mx-auto mb-12 leading-relaxed">
+                  <p className="text-sm text-muted-foreground max-w-md mx-auto mb-12 leading-relaxed">
                     Your competitors rent software. You'll own it.
                   </p>
                   <Button
@@ -345,7 +317,7 @@ export default function Index() {
                         input.scrollIntoView({ behavior: "smooth", block: "center" });
                       }
                     }}
-                    className="bg-primary text-primary-foreground hover:bg-primary/90 h-11 px-7 text-sm font-semibold rounded-lg transition-all duration-300 active:scale-[0.97]"
+                    className="bg-foreground text-background hover:bg-foreground/90 h-12 px-8 text-sm font-semibold rounded-full transition-all duration-300 active:scale-[0.97]"
                   >
                     Paste your URL
                   </Button>

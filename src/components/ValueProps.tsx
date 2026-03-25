@@ -27,22 +27,23 @@ export function ValueProps() {
   return (
     <section className="py-20 md:py-36 relative">
       <div className="container mx-auto px-4 max-w-4xl">
-        {/* Section marker — specimen label style */}
-        <motion.p
+        <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
-          className="text-[9px] font-mono tracking-[0.3em] uppercase text-muted-foreground/30 mb-16 md:mb-24"
+          className="mb-16 md:mb-24"
         >
-          fig. 01 — principles
-        </motion.p>
+          <h2 className="text-2xl md:text-4xl font-bold tracking-[-0.02em] text-foreground">
+            Why enterprises choose OpenDraft
+          </h2>
+        </motion.div>
 
         {propositions.map((prop, i) => (
           <motion.div
             key={prop.number}
-            initial={{ opacity: 0, y: 20, filter: "blur(4px)" }}
-            whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.3 }}
             transition={{
               duration: 0.7,
@@ -50,19 +51,18 @@ export function ValueProps() {
               ease: [0.16, 1, 0.3, 1],
             }}
             className={`flex flex-col md:flex-row md:items-baseline gap-4 md:gap-12 ${
-              i < propositions.length - 1 ? "mb-20 md:mb-28" : ""
+              i < propositions.length - 1 ? "mb-16 md:mb-24" : ""
             }`}
           >
-            {/* Number — thin, restrained */}
-            <span className="text-[10px] font-mono tracking-[0.2em] text-muted-foreground/20 shrink-0 md:w-14 md:text-right tabular-nums">
+            <span className="text-xs font-mono tracking-widest text-muted-foreground shrink-0 md:w-14 md:text-right tabular-nums">
               {prop.number}
             </span>
 
             <div className="flex-1">
-              <h3 className="text-xl md:text-3xl lg:text-4xl font-bold tracking-[-0.03em] text-foreground mb-3 leading-[1.12]">
+              <h3 className="text-xl md:text-3xl lg:text-4xl font-bold tracking-[-0.02em] text-foreground mb-3 leading-[1.12]">
                 {prop.headline}
               </h3>
-              <p className="text-sm md:text-[15px] text-muted-foreground leading-[1.7] max-w-lg">
+              <p className="text-sm md:text-base text-muted-foreground leading-relaxed max-w-lg">
                 {prop.body}
               </p>
             </div>
@@ -70,10 +70,7 @@ export function ValueProps() {
         ))}
       </div>
 
-      {/* Vermillion accent rule — short, loaded */}
-      <div className="absolute bottom-0 left-0 right-0 flex items-center">
-        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-border/30 to-transparent" />
-      </div>
+      <div className="absolute bottom-0 left-0 right-0 h-px bg-border" />
     </section>
   );
 }

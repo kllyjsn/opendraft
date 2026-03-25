@@ -208,9 +208,9 @@ export default function Index() {
               >
                 <div className="mb-5 md:mb-10">
                   <h1 className="text-[1.75rem] sm:text-4xl md:text-6xl lg:text-[4.5rem] font-bold tracking-[-0.03em] leading-[1.1] text-foreground">
-                    The software platform
+                    Software that builds,
                     <br />
-                    built for{" "}
+                    heals &amp; supports{" "}
                     <span className="inline-block relative overflow-hidden align-bottom" style={{ minWidth: "5ch" }}>
                       <AnimatePresence mode="wait">
                         <motion.span

@@ -17,6 +17,7 @@ import { ValueProps } from "@/components/ValueProps";
 import { HeroBeams } from "@/components/HeroBeams";
 import { SocialProofBar } from "@/components/SocialProofBar";
 import { BeforeAfterDemo } from "@/components/BeforeAfterDemo";
+import { HomepageGremlins } from "@/components/HomepageGremlins";
 
 const ROTATING_WORDS = ["CRM", "scheduler", "dashboard", "portal", "tracker", "helpdesk"];
 
@@ -194,6 +195,7 @@ export default function Index() {
         }`}
       >
         {!hasResults && <HeroBeams />}
+        {!hasResults && <HomepageGremlins />}
 
         <div className="container mx-auto px-4 text-center relative z-10">
           <AnimatePresence>

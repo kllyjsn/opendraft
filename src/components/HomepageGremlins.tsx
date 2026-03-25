@@ -6,7 +6,7 @@ import { SpaceGremlin } from "@/components/SpaceGremlin";
  */
 export function HomepageGremlins() {
   return (
-    <div className="pointer-events-none hidden md:block absolute inset-0 overflow-hidden z-[1]">
+    <div className="pointer-events-none absolute inset-0 overflow-hidden z-[1]">
       <svg
         className="absolute inset-0 w-full h-full"
         viewBox="0 0 1200 700"

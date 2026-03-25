@@ -208,9 +208,9 @@ export default function Index() {
               >
                 <div className="mb-5 md:mb-10">
                   <h1 className="text-[1.75rem] sm:text-4xl md:text-6xl lg:text-[4.5rem] font-bold tracking-[-0.03em] leading-[1.1] text-foreground">
-                    The software platform
+                    Software that builds,
                     <br />
-                    built for{" "}
+                    heals &amp; supports{" "}
                     <span className="inline-block relative overflow-hidden align-bottom" style={{ minWidth: "5ch" }}>
                       <AnimatePresence mode="wait">
                         <motion.span
@@ -240,9 +240,10 @@ export default function Index() {
                 transition={{ duration: 0.6, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
                 className="text-sm md:text-base text-muted-foreground max-w-md mx-auto mb-6 md:mb-12 leading-relaxed"
               >
-                Paste your website. Get a custom app in 90 seconds.
+                We generate custom apps from your website, then autonomously
+                monitor, fix, and maintain them — so they never break.
                 <br />
-                <span className="text-foreground font-medium">Free — no coding needed.</span>
+                <span className="text-foreground font-medium">Free to start. No coding needed.</span>
               </motion.p>
             )}
           </AnimatePresence>

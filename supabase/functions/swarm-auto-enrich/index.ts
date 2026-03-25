@@ -39,7 +39,7 @@ serve(async (req) => {
 
   try {
     const body = await req.json().catch(() => ({}));
-    const batchSize = body.batch_size || 50;
+    const batchSize = body.batch_size || 20; // Throttled from 50 to conserve Firecrawl credits
     const dryRun = body.dry_run || false;
 
     // Track this run

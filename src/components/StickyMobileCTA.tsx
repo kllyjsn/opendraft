@@ -67,7 +67,7 @@ export function StickyMobileCTA() {
           transition={{ type: "spring", damping: 25, stiffness: 300 }}
           className="fixed bottom-0 left-0 right-0 z-50 md:hidden"
         >
-          <div className="bg-card/95 backdrop-blur-xl border-t border-border px-4 py-3 safe-area-bottom">
+          <div className="bg-background/95 backdrop-blur-xl border-t border-border px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
             <div className="flex items-center gap-3">
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-bold text-foreground flex items-center gap-1.5">

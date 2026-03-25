@@ -6,10 +6,10 @@ import { motion } from "framer-motion";
  */
 export function HeroBeams() {
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+    <div className="absolute inset-0 overflow-hidden pointer-events-none hidden md:block">
       {/* Top-left geometric cluster */}
       <motion.div
-        className="absolute -top-8 -left-12 w-48 h-56 md:w-64 md:h-72"
+        className="absolute -top-8 -left-12 w-64 h-72"
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}

@@ -281,7 +281,7 @@ export default function Index() {
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <section className="py-14 md:py-24">
+            <section className="py-10 md:py-24">
               <div className="container mx-auto px-4">
                 <BeforeAfterDemo />
               </div>

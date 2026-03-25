@@ -50,8 +50,8 @@ export function ValueProps() {
               delay: i * 0.06,
               ease: [0.16, 1, 0.3, 1],
             }}
-            className={`flex flex-col md:flex-row md:items-baseline gap-4 md:gap-12 ${
-              i < propositions.length - 1 ? "mb-16 md:mb-24" : ""
+            className={`flex flex-col md:flex-row md:items-baseline gap-2 md:gap-12 ${
+              i < propositions.length - 1 ? "mb-10 md:mb-24" : ""
             }`}
           >
             <span className="text-xs font-mono tracking-widest text-muted-foreground shrink-0 md:w-14 md:text-right tabular-nums">

@@ -4,9 +4,9 @@ export function Footer() {
   return (
     <footer className="border-t border-border bg-background mt-16 md:mt-24">
       <div className="container mx-auto px-4 pt-14 pb-8">
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-10 mb-14">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-8 md:gap-10 mb-14">
           {/* Brand */}
-          <div className="md:col-span-1">
+          <div className="col-span-2 md:col-span-1">
             <div className="flex items-center gap-2 font-bold text-lg mb-4">
               <svg width="24" height="24" viewBox="0 0 28 28" fill="none" className="shrink-0">
                 <circle cx="14" cy="14" r="13" stroke="currentColor" strokeWidth="1.5" />

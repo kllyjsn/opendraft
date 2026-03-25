@@ -39,7 +39,7 @@ serve(async (req) => {
 
   try {
     const body = await req.json().catch(() => ({}));
-    const batchSize = body.batch_size || 50;
+    const batchSize = body.batch_size || 20; // Throttled from 50 to conserve Firecrawl credits
     const dryRun = body.dry_run || false;
 
     // Track this run
@@ -231,7 +231,7 @@ Rules:
     // ── 4. Trigger screenshot capture for listings with demo_url but no screenshots ──
     const needScreenshot = needsWork.filter((l: any) => l._gaps?.includes("missing_screenshot"));
 
-    for (const l of needScreenshot.slice(0, 15)) { // Max 15 at a time
+    for (const l of needScreenshot.slice(0, 5)) { // Throttled: max 5 screenshots per run to conserve Firecrawl credits
       if (dryRun) {
         results.details.push({ id: l.id, action: "screenshot_skipped_dry_run" });
         continue;
@@ -284,7 +284,7 @@ Rules:
       }
 
       // Rate limit
-      await new Promise(r => setTimeout(r, 1000));
+      await new Promise(r => setTimeout(r, 3000)); // Throttled from 1s to 3s
     }
 
     // ── 5. Auto-upgrade completeness badges based on signals ──

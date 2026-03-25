@@ -81,8 +81,8 @@ serve(async (req) => {
       }
     }
 
-    const eightHoursAgo = new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString();
-    const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString();
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(); // Throttled from 8h
+    const fiveDaysAgo = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(); // Throttled from 2d
 
     let triggered = 0;
     const results: { listing_id: string; status: string }[] = [];
@@ -95,7 +95,7 @@ serve(async (req) => {
           Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ batch_size: 50, triggered_by: "cron" }),
+        body: JSON.stringify({ batch_size: 15, triggered_by: "cron" }),
       });
       results.push({ listing_id: "auto-enrich", status: "triggered" });
     } catch (e) {
@@ -135,7 +135,7 @@ serve(async (req) => {
     // ── PHASE 3: Deep analysis per listing ──
     for (const target of allTargets) {
       const isDeployed = deployedIds.has(target.listing_id);
-      const cooldown = isDeployed ? eightHoursAgo : twoDaysAgo;
+      const cooldown = isDeployed ? oneDayAgo : fiveDaysAgo;
 
       const lastAnalysis = recentMap.get(target.listing_id);
       if (lastAnalysis && lastAnalysis > cooldown) {

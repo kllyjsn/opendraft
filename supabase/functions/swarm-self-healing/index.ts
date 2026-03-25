@@ -81,8 +81,8 @@ serve(async (req) => {
       }
     }
 
-    const eightHoursAgo = new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString();
-    const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString();
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(); // Throttled from 8h
+    const fiveDaysAgo = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(); // Throttled from 2d
 
     let triggered = 0;
     const results: { listing_id: string; status: string }[] = [];

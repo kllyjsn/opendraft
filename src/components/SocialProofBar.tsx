@@ -14,7 +14,7 @@ export function SocialProofBar() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 1.2, delay: 0.6 }}
-      className="flex flex-wrap items-center justify-center gap-x-4 md:gap-x-8 gap-y-1 md:gap-y-2 text-[9px] md:text-[10px] tracking-[0.08em] uppercase text-muted-foreground/40 font-medium"
+      className="flex flex-wrap items-center justify-center gap-x-5 md:gap-x-8 gap-y-2 text-[10px] md:text-xs tracking-wide text-muted-foreground font-medium"
     >
       {proofs.map((p, i) => (
         <motion.span
@@ -22,9 +22,9 @@ export function SocialProofBar() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.7 + i * 0.08 }}
-          className="flex items-center gap-1"
+          className="flex items-center gap-1.5"
         >
-          <p.icon className="h-2.5 md:h-3 w-2.5 md:w-3" />
+          <p.icon className="h-3 w-3" />
           {p.text}
         </motion.span>
       ))}

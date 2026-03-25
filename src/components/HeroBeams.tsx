@@ -1,65 +1,55 @@
 import { motion } from "framer-motion";
 
 /**
- * Kanso Voltage — atmospheric field.
- * A restrained vermillion glow and structural hairlines
- * creating charged negative space.
+ * Enterprise geometric shapes — Pylon-inspired abstract accents.
+ * Soft pastel rectangles and triangles floating at edges.
  */
 export function HeroBeams() {
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {/* Primary glow — warm vermillion shifted from center, like a distant lantern */}
+      {/* Top-left geometric cluster */}
       <motion.div
-        className="absolute top-[25%] left-[40%] -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px]"
-        initial={{ opacity: 0, scale: 0.85 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 3, ease: [0.16, 1, 0.3, 1] }}
+        className="absolute -top-8 -left-12 w-48 h-56 md:w-64 md:h-72"
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
       >
-        <div
-          className="absolute inset-0 rounded-full blur-[180px]"
-          style={{ background: "radial-gradient(ellipse, hsl(8 70% 45% / 0.04), transparent 70%)" }}
-        />
+        {/* Lavender rectangle */}
+        <div className="absolute top-12 left-8 w-32 h-40 md:w-44 md:h-52 bg-secondary/40 rounded-sm" />
+        {/* Outlined rectangle */}
+        <div className="absolute top-0 left-24 w-24 h-32 md:w-32 md:h-40 border border-border rounded-sm" />
+        {/* Triangle */}
+        <svg className="absolute bottom-0 left-0 w-20 h-20 md:w-28 md:h-28 text-border" viewBox="0 0 100 100" fill="none">
+          <polygon points="0,100 100,100 50,0" stroke="currentColor" strokeWidth="1" fill="none" />
+        </svg>
       </motion.div>
 
-      {/* Secondary cooler glow — counterbalance */}
+      {/* Top-right geometric cluster */}
       <motion.div
-        className="absolute top-[60%] right-[15%] w-[500px] h-[300px]"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 3.5, delay: 0.3 }}
+        className="absolute -top-4 -right-8 w-48 h-48 md:w-56 md:h-56"
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 1.2, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
       >
-        <div
-          className="absolute inset-0 rounded-full blur-[160px]"
-          style={{ background: "radial-gradient(ellipse, hsl(265 40% 50% / 0.025), transparent 70%)" }}
-        />
+        {/* Outlined rectangles */}
+        <div className="absolute top-0 right-0 w-28 h-36 md:w-36 md:h-44 border border-border rounded-sm" />
+        <div className="absolute top-8 right-12 w-20 h-28 md:w-28 md:h-36 border border-border rounded-sm" />
+        {/* Diagonal line */}
+        <svg className="absolute top-4 right-4 w-24 h-24 md:w-32 md:h-32 text-border" viewBox="0 0 100 100" fill="none">
+          <line x1="0" y1="100" x2="100" y2="0" stroke="currentColor" strokeWidth="1" />
+        </svg>
       </motion.div>
 
-      {/* Vertical spine — hairline conducting energy */}
+      {/* Right-side accent — mint block */}
       <motion.div
-        className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-full"
-        style={{
-          background: "linear-gradient(to bottom, transparent 5%, hsl(8 60% 50% / 0.06) 30%, hsl(265 50% 60% / 0.04) 70%, transparent 95%)",
-        }}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 2.5, delay: 0.8 }}
+        className="absolute top-1/3 -right-6 w-24 h-32 md:w-36 md:h-44 bg-accent/30 rounded-sm"
+        initial={{ opacity: 0, x: 30 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 1, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
       />
 
-      {/* Horizontal rule — ma divider at golden section */}
-      <motion.div
-        className="absolute top-[62%] left-0 right-0 h-px"
-        style={{
-          background: "linear-gradient(to right, transparent, hsl(0 0% 100% / 0.03) 20%, hsl(8 60% 50% / 0.06) 35%, hsl(0 0% 100% / 0.03) 50%, transparent 80%)",
-        }}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 2, delay: 1.2 }}
-      />
-
-      {/* Top fade */}
-      <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-background to-transparent" />
-      {/* Bottom fade */}
-      <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-background to-transparent" />
+      {/* Bottom decorative line */}
+      <div className="absolute bottom-0 left-0 right-0 h-px bg-border" />
     </div>
   );
 }

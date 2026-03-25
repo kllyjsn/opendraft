@@ -25,14 +25,14 @@ const propositions = [
 
 export function ValueProps() {
   return (
-    <section className="py-20 md:py-36 relative">
+    <section className="py-12 md:py-36 relative">
       <div className="container mx-auto px-4 max-w-4xl">
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
-          className="mb-16 md:mb-24"
+          className="mb-10 md:mb-24"
         >
           <h2 className="text-2xl md:text-4xl font-bold tracking-[-0.02em] text-foreground">
             Why enterprises choose OpenDraft

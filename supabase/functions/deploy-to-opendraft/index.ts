@@ -948,17 +948,20 @@ serve(async (req) => {
     const siteUrl = `https://${deployData.url}`;
     const adminUrl = `https://vercel.com/${projectData.accountId || projectData.id}/${projectName}`;
 
-    // Track deployment
+    // Track deployment + auto-set demo_url on listing
     try {
-      await supabase.from("deployed_sites").insert({
-        listing_id: listingId,
-        user_id: user.id,
-        provider: "opendraft",
-        site_id: projectData.id,
-        site_url: siteUrl,
-        deploy_id: deployData.id,
-        status: "building",
-      });
+      await Promise.all([
+        supabase.from("deployed_sites").insert({
+          listing_id: listingId,
+          user_id: user.id,
+          provider: "opendraft",
+          site_id: projectData.id,
+          site_url: siteUrl,
+          deploy_id: deployData.id,
+          status: "building",
+        }),
+        supabase.from("listings").update({ demo_url: siteUrl }).eq("id", listingId),
+      ]);
     } catch (e) {
       console.warn("Failed to track deployment:", e);
     }

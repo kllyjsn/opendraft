@@ -58,10 +58,11 @@ serve(async (req) => {
     // Step 1: Screenshot the deployed app (if demo_url available)
     let screenshotBase64: string | null = null;
     let screenshotUrl: string | null = null;
+    let siteMarkdown: string | null = null;
 
     if (listing.demo_url && FIRECRAWL_API_KEY) {
       try {
-        console.log("Capturing screenshot of:", listing.demo_url);
+        console.log("Capturing screenshot + content of:", listing.demo_url);
         const scrapeResp = await fetch("https://api.firecrawl.dev/v1/scrape", {
           method: "POST",
           headers: {
@@ -78,10 +79,11 @@ serve(async (req) => {
         if (scrapeResp.ok) {
           const scrapeData = await scrapeResp.json();
           screenshotBase64 = scrapeData.data?.screenshot || scrapeData.screenshot || null;
-          console.log("Screenshot captured:", screenshotBase64 ? "yes" : "no");
+          siteMarkdown = scrapeData.data?.markdown || scrapeData.markdown || null;
+          console.log("Screenshot:", screenshotBase64 ? "yes" : "no", "Markdown:", siteMarkdown ? `${siteMarkdown.length} chars` : "no");
         }
       } catch (e) {
-        console.error("Screenshot capture failed:", e);
+        console.error("Screenshot/content capture failed:", e);
       }
     }
 

@@ -102,10 +102,70 @@ serve(async (req) => {
       }
     }
 
-    const hasLiveContext = Boolean(screenshotBase64 || (siteMarkdown && siteMarkdown.trim().length > 20));
+    // Step 1b: Fetch actual source code from GitHub or storage
+    let sourceCodeContext: string | null = null;
 
-    // Even without live context, we can still analyze using listing metadata (description, tech stack, goals, category)
-    const hasMetadataContext = Boolean(listing.description && listing.description.trim().length > 10);
+    if (listing.github_url) {
+      try {
+        // Extract owner/repo from GitHub URL
+        const ghMatch = listing.github_url.match(/github\.com\/([^\/]+)\/([^\/\s?#]+)/);
+        if (ghMatch) {
+          const [, owner, repo] = ghMatch;
+          const repoName = repo.replace(/\.git$/, "");
+          console.log("Fetching source from GitHub:", owner, repoName);
+
+          // Fetch key files in parallel: package.json, README, and src directory listing
+          const filesToFetch = ["package.json", "README.md", "src/App.tsx", "src/pages/Index.tsx", "src/main.tsx", "index.html"];
+          const fileContents: string[] = [];
+
+          const fetchResults = await Promise.allSettled(
+            filesToFetch.map(async (filePath) => {
+              const resp = await fetch(`https://api.github.com/repos/${owner}/${repoName}/contents/${filePath}`, {
+                headers: { Accept: "application/vnd.github.v3.raw", "User-Agent": "OpenDraft-Analyzer" },
+              });
+              if (resp.ok) {
+                const content = await resp.text();
+                return { path: filePath, content: content.substring(0, 3000) };
+              }
+              return null;
+            })
+          );
+
+          for (const result of fetchResults) {
+            if (result.status === "fulfilled" && result.value) {
+              fileContents.push(`--- ${result.value.path} ---\n${result.value.content}`);
+            }
+          }
+
+          // Also fetch src directory tree
+          try {
+            const treeResp = await fetch(`https://api.github.com/repos/${owner}/${repoName}/git/trees/main?recursive=1`, {
+              headers: { Accept: "application/vnd.github.v3+json", "User-Agent": "OpenDraft-Analyzer" },
+            });
+            if (treeResp.ok) {
+              const treeData = await treeResp.json();
+              const srcFiles = (treeData.tree || [])
+                .filter((f: any) => f.type === "blob" && (f.path.startsWith("src/") || f.path === "index.html" || f.path === "package.json"))
+                .map((f: any) => f.path)
+                .slice(0, 80);
+              if (srcFiles.length) {
+                fileContents.unshift(`--- FILE TREE (src/) ---\n${srcFiles.join("\n")}`);
+              }
+            }
+          } catch (_) { /* ignore tree fetch errors */ }
+
+          if (fileContents.length > 0) {
+            sourceCodeContext = fileContents.join("\n\n").substring(0, 15000);
+            console.log("Source code context:", sourceCodeContext.length, "chars from", fileContents.length, "files");
+          }
+        }
+      } catch (e) {
+        console.error("GitHub source fetch failed:", e);
+      }
+    }
+
+    const hasLiveContext = Boolean(screenshotBase64 || (siteMarkdown && siteMarkdown.trim().length > 20));
+    const hasSourceCode = Boolean(sourceCodeContext && sourceCodeContext.length > 50);
 
     // If we captured a screenshot, upload it
     if (screenshotBase64) {

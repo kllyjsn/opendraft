@@ -157,14 +157,15 @@ ${siteSummary ? `\nPAGE SUMMARY:\n${siteSummary}\n` : ""}
 
 ${truncatedMarkdown ? `\nACTUAL SCRAPED PAGE CONTENT:\n\`\`\`\n${truncatedMarkdown}\n\`\`\`\n` : ""}
 
-You must ground suggestions in the observed site content. Do NOT give generic advice.
-For each suggestion, refer to a concrete element/page section/problem visible in the scraped content or screenshot.
+${hasLiveContext ? `You must ground suggestions in the observed site content. Do NOT give generic advice.
+For each suggestion, refer to a concrete element/page section/problem visible in the scraped content or screenshot.` : `No live site content was available. Analyze based on the listing metadata above (title, description, tech stack, category, goals).
+Ground your suggestions in what this specific product IS — its category, its tech stack, its stated purpose. Be specific to THIS app, not generic.`}
 
 Priorities:
 1. Better align the app with its stated goals
-2. Improve UX/UI quality based on observed content
+2. ${hasLiveContext ? 'Improve UX/UI quality based on observed content' : 'Suggest UX/UI improvements specific to this type of app'}
 3. Add missing features expected for this exact product
-4. Fix obvious issues or content gaps you can identify
+4. ${hasLiveContext ? 'Fix obvious issues or content gaps you can identify' : 'Identify likely gaps based on the description and category'}
 5. Improve performance/accessibility where relevant
 
 ${focus_prompt ? `\nUSER'S SPECIFIC REQUEST: "${focus_prompt}"\nPrioritize this first, then other improvements.\n` : ""}

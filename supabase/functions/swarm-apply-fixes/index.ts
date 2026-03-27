@@ -21,8 +21,6 @@ serve(async (req) => {
   );
 
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-  const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-  const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 
   if (!LOVABLE_API_KEY) {
     return new Response(JSON.stringify({ error: "LOVABLE_API_KEY not configured" }), {

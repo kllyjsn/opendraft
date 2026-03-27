@@ -21,8 +21,6 @@ serve(async (req) => {
   );
 
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-  const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-  const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 
   if (!LOVABLE_API_KEY) {
     return new Response(JSON.stringify({ error: "LOVABLE_API_KEY not configured" }), {
@@ -316,33 +314,93 @@ Rules:
       .update({ status: "applied", analysis: { ...cycle.analysis, apply_summary: summary } })
       .eq("id", cycle_id);
 
-    // ── STEP 5: Trigger redeploy ──
+    // ── STEP 5: Redeploy to existing Vercel project ──
     let deployResult = null;
+    const VERCEL_PLATFORM_TOKEN = Deno.env.get("VERCEL_PLATFORM_TOKEN");
+
     const { data: deployedSite } = await supabase
       .from("deployed_sites")
       .select("*")
       .eq("listing_id", listing_id)
-      .in("status", ["healthy", "degraded"])
+      .in("status", ["healthy", "degraded", "building"])
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
 
-    if (deployedSite) {
+    if (deployedSite && VERCEL_PLATFORM_TOKEN) {
       try {
-        const deployResp = await fetch(`${SUPABASE_URL}/functions/v1/deploy-to-opendraft`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ listing_id, user_id: sellerId }),
-        });
+        // Upload each file to Vercel and collect refs
+        const fileRefs: Array<{ file: string; sha: string; size: number }> = [];
+        for (const [path, content] of Object.entries(mergedFiles)) {
+          const encoded = new TextEncoder().encode(content);
+          const hashBuffer = await crypto.subtle.digest("SHA-1", encoded);
+          const sha = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, "0")).join("");
 
-        if (deployResp.ok) {
-          deployResult = await deployResp.json();
-          console.log("Redeploy triggered:", deployResult);
-        } else {
-          console.error("Redeploy failed:", await deployResp.text());
+          const uploadRes = await fetch("https://api.vercel.com/v2/files", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${VERCEL_PLATFORM_TOKEN}`,
+              "Content-Type": "application/octet-stream",
+              "x-vercel-digest": sha,
+              "Content-Length": String(encoded.byteLength),
+            },
+            body: encoded,
+          });
+          if (!uploadRes.ok && uploadRes.status !== 409) {
+            await uploadRes.text();
+            console.warn(`File upload failed for ${path}: ${uploadRes.status}`);
+            continue;
+          } else {
+            await uploadRes.text();
+          }
+          fileRefs.push({ file: path, sha, size: encoded.byteLength });
+        }
+
+        if (fileRefs.length > 0) {
+          // Deploy to the EXISTING project (site_id = Vercel project ID)
+          const deployRes = await fetch("https://api.vercel.com/v13/deployments", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${VERCEL_PLATFORM_TOKEN}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              name: deployedSite.site_id,
+              project: deployedSite.site_id,
+              files: fileRefs,
+              projectSettings: {
+                framework: "vite",
+                installCommand: "npm install",
+                buildCommand: "vite build",
+                outputDirectory: "dist",
+              },
+            }),
+          });
+
+          if (deployRes.ok) {
+            const deployData = await deployRes.json();
+            deployResult = deployData;
+            const newUrl = `https://${deployData.url}`;
+            console.log("Redeployed to existing project:", newUrl);
+
+            // Update deployed_sites with new deploy info
+            await supabase.from("deployed_sites")
+              .update({
+                deploy_id: deployData.id,
+                site_url: newUrl,
+                status: "building",
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", deployedSite.id);
+
+            // Update listing demo_url
+            await supabase.from("listings")
+              .update({ demo_url: newUrl })
+              .eq("id", listing_id);
+          } else {
+            const errText = await deployRes.text();
+            console.error("Vercel redeploy failed:", deployRes.status, errText);
+          }
         }
       } catch (e) {
         console.error("Redeploy error:", e);

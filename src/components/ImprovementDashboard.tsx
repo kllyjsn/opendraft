@@ -163,6 +163,39 @@ export function ImprovementDashboard() {
     );
   }
 
+  async function applyAndDeploy(cycleId: string, listingId: string) {
+    if (!user) return;
+    setApplyingCycle(cycleId);
+
+    try {
+      // First approve all unapproved changes
+      await approveAllInCycle(cycleId);
+
+      // Trigger the apply-fixes function
+      const { data, error } = await supabase.functions.invoke("swarm-apply-fixes", {
+        body: { cycle_id: cycleId, listing_id: listingId, user_id: user.id },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: `Fixes applied & deployed! 🚀`,
+        description: `${data.modified_files} files updated. ${data.deployed ? "Redeployment triggered." : "Upload complete — deploy manually."}`,
+      });
+
+      // Update local state
+      setCycles((prev) =>
+        prev.map((c) => (c.id === cycleId ? { ...c, status: "applied" } : c))
+      );
+
+      loadData();
+    } catch (e: any) {
+      toast({ title: "Apply failed", description: e.message, variant: "destructive" });
+    } finally {
+      setApplyingCycle(null);
+    }
+  }
+
   if (loading) {
     return (
       <div className="space-y-3">

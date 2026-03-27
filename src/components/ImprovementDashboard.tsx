@@ -128,7 +128,7 @@ export function ImprovementDashboard() {
   async function approveChange(changeId: string, approved: boolean) {
     await supabase
       .from("improvement_changes" as any)
-      .update({ approved, applied_at: approved ? new Date().toISOString() : null })
+      .update({ approved })
       .eq("id", changeId);
 
     setChanges((prev) => {

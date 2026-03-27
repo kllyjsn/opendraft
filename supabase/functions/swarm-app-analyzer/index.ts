@@ -104,22 +104,8 @@ serve(async (req) => {
 
     const hasLiveContext = Boolean(screenshotBase64 || (siteMarkdown && siteMarkdown.trim().length > 20));
 
-    if (!hasLiveContext) {
-      const reason = !listing.demo_url
-        ? "No live demo URL found for this listing. Add a demo URL to get website-specific suggestions."
-        : "Could not capture readable live content from the demo URL. Ensure the URL is public and renders correctly.";
-
-      if (trigger === "manual") {
-        return new Response(JSON.stringify({ error: reason }), {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
-      return new Response(JSON.stringify({ success: true, skipped: true, reason }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    // Even without live context, we can still analyze using listing metadata (description, tech stack, goals, category)
+    const hasMetadataContext = Boolean(listing.description && listing.description.trim().length > 10);
 
     // If we captured a screenshot, upload it
     if (screenshotBase64) {

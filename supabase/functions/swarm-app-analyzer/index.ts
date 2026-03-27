@@ -104,22 +104,8 @@ serve(async (req) => {
 
     const hasLiveContext = Boolean(screenshotBase64 || (siteMarkdown && siteMarkdown.trim().length > 20));
 
-    if (!hasLiveContext) {
-      const reason = !listing.demo_url
-        ? "No live demo URL found for this listing. Add a demo URL to get website-specific suggestions."
-        : "Could not capture readable live content from the demo URL. Ensure the URL is public and renders correctly.";
-
-      if (trigger === "manual") {
-        return new Response(JSON.stringify({ error: reason }), {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
-      return new Response(JSON.stringify({ success: true, skipped: true, reason }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    // Even without live context, we can still analyze using listing metadata (description, tech stack, goals, category)
+    const hasMetadataContext = Boolean(listing.description && listing.description.trim().length > 10);
 
     // If we captured a screenshot, upload it
     if (screenshotBase64) {
@@ -171,14 +157,15 @@ ${siteSummary ? `\nPAGE SUMMARY:\n${siteSummary}\n` : ""}
 
 ${truncatedMarkdown ? `\nACTUAL SCRAPED PAGE CONTENT:\n\`\`\`\n${truncatedMarkdown}\n\`\`\`\n` : ""}
 
-You must ground suggestions in the observed site content. Do NOT give generic advice.
-For each suggestion, refer to a concrete element/page section/problem visible in the scraped content or screenshot.
+${hasLiveContext ? `You must ground suggestions in the observed site content. Do NOT give generic advice.
+For each suggestion, refer to a concrete element/page section/problem visible in the scraped content or screenshot.` : `No live site content was available. Analyze based on the listing metadata above (title, description, tech stack, category, goals).
+Ground your suggestions in what this specific product IS — its category, its tech stack, its stated purpose. Be specific to THIS app, not generic.`}
 
 Priorities:
 1. Better align the app with its stated goals
-2. Improve UX/UI quality based on observed content
+2. ${hasLiveContext ? 'Improve UX/UI quality based on observed content' : 'Suggest UX/UI improvements specific to this type of app'}
 3. Add missing features expected for this exact product
-4. Fix obvious issues or content gaps you can identify
+4. ${hasLiveContext ? 'Fix obvious issues or content gaps you can identify' : 'Identify likely gaps based on the description and category'}
 5. Improve performance/accessibility where relevant
 
 ${focus_prompt ? `\nUSER'S SPECIFIC REQUEST: "${focus_prompt}"\nPrioritize this first, then other improvements.\n` : ""}
@@ -194,10 +181,15 @@ Be specific and implementation-ready.`
           { type: "image_url", image_url: { url: `data:image/png;base64,${screenshotBase64}` } },
         ],
       });
-    } else {
+    } else if (hasLiveContext) {
       analysisMessages.push({
         role: "user",
         content: `Analyze "${listing.title}" using the scraped live page content provided in the system prompt and suggest concrete improvements.`,
+      });
+    } else {
+      analysisMessages.push({
+        role: "user",
+        content: `Analyze "${listing.title}" based on its listing metadata: "${listing.description}". Category: ${listing.category || 'unknown'}. Tech stack: ${listing.tech_stack?.join(', ') || 'unknown'}. Suggest concrete, specific improvements for this exact type of app.`,
       });
     }
 

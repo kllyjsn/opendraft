@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ChangelogFeed } from "@/components/ChangelogFeed";
 import {
   Sparkles, CheckCircle, XCircle, Clock, Image, ChevronDown, ChevronUp,
-  Loader2, Zap, AlertTriangle, Shield, Palette, Accessibility, Bug, Code, GitCommit,
+  Loader2, Zap, AlertTriangle, Shield, Palette, Accessibility, Bug, Code, GitCommit, Rocket,
 } from "lucide-react";
 
 interface ImprovementCycle {
@@ -61,6 +61,7 @@ export function ImprovementDashboard() {
   const [loading, setLoading] = useState(true);
   const [expandedCycle, setExpandedCycle] = useState<string | null>(null);
   const [analyzingListing, setAnalyzingListing] = useState<string | null>(null);
+  const [applyingCycle, setApplyingCycle] = useState<string | null>(null);
   const [listings, setListings] = useState<{ id: string; title: string; demo_url: string | null }[]>([]);
 
   useEffect(() => {
@@ -160,6 +161,39 @@ export function ImprovementDashboard() {
     setCycles((prev) =>
       prev.map((c) => (c.id === cycleId ? { ...c, status: "approved" } : c))
     );
+  }
+
+  async function applyAndDeploy(cycleId: string, listingId: string) {
+    if (!user) return;
+    setApplyingCycle(cycleId);
+
+    try {
+      // First approve all unapproved changes
+      await approveAllInCycle(cycleId);
+
+      // Trigger the apply-fixes function
+      const { data, error } = await supabase.functions.invoke("swarm-apply-fixes", {
+        body: { cycle_id: cycleId, listing_id: listingId, user_id: user.id },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: `Fixes applied & deployed! 🚀`,
+        description: `${data.modified_files} files updated. ${data.deployed ? "Redeployment triggered." : "Upload complete — deploy manually."}`,
+      });
+
+      // Update local state
+      setCycles((prev) =>
+        prev.map((c) => (c.id === cycleId ? { ...c, status: "applied" } : c))
+      );
+
+      loadData();
+    } catch (e: any) {
+      toast({ title: "Apply failed", description: e.message, variant: "destructive" });
+    } finally {
+      setApplyingCycle(null);
+    }
   }
 
   if (loading) {
@@ -345,11 +379,32 @@ export function ImprovementDashboard() {
                   })}
 
                   {/* Bulk actions */}
-                  {cycle.status === "pending" && cycleChanges.some((c) => c.approved === null) && (
+                  {(cycle.status === "pending" || cycle.status === "approved") && (
                     <div className="flex justify-end gap-2 pt-2">
-                      <Button size="sm" onClick={() => approveAllInCycle(cycle.id)} className="gradient-hero text-white border-0 text-xs">
-                        <CheckCircle className="h-3.5 w-3.5 mr-1" /> Approve All
+                      {cycle.status === "pending" && cycleChanges.some((c) => c.approved === null) && (
+                        <Button size="sm" variant="outline" onClick={() => approveAllInCycle(cycle.id)} className="text-xs">
+                          <CheckCircle className="h-3.5 w-3.5 mr-1" /> Approve All
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        onClick={() => applyAndDeploy(cycle.id, cycle.listing_id)}
+                        disabled={applyingCycle === cycle.id}
+                        className="gradient-hero text-white border-0 text-xs"
+                      >
+                        {applyingCycle === cycle.id ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
+                        ) : (
+                          <Rocket className="h-3.5 w-3.5 mr-1" />
+                        )}
+                        {applyingCycle === cycle.id ? "Applying fixes..." : "Apply & Deploy"}
                       </Button>
+                    </div>
+                  )}
+                  {cycle.status === "applied" && (
+                    <div className="flex items-center gap-2 pt-2 text-xs text-green-600">
+                      <CheckCircle className="h-4 w-4" />
+                      <span className="font-semibold">Fixes applied and deployed</span>
                     </div>
                   )}
                 </div>

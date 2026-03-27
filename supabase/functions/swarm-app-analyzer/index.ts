@@ -205,7 +205,7 @@ serve(async (req) => {
     const analysisMessages: any[] = [
       {
         role: "system",
-        content: `You are a senior product analyst and UX expert. You're analyzing a deployed web application to suggest improvements.
+        content: `You are a senior product analyst, UX expert, and code reviewer. You're analyzing a web application to suggest improvements.
 
 The app's stated goals/purpose:
 "${goalsPrompt}"
@@ -215,21 +215,24 @@ ${listing.category ? `Category: ${listing.category}` : ""}
 ${targetUrl ? `Live URL: ${targetUrl}` : ""}
 ${siteSummary ? `\nPAGE SUMMARY:\n${siteSummary}\n` : ""}
 
-${truncatedMarkdown ? `\nACTUAL SCRAPED PAGE CONTENT:\n\`\`\`\n${truncatedMarkdown}\n\`\`\`\n` : ""}
+${truncatedMarkdown ? `\nLIVE SITE CONTENT:\n\`\`\`\n${truncatedMarkdown}\n\`\`\`\n` : ""}
 
-${hasLiveContext ? `You must ground suggestions in the observed site content. Do NOT give generic advice.
-For each suggestion, refer to a concrete element/page section/problem visible in the scraped content or screenshot.` : `No live site content was available. Analyze based on the listing metadata above (title, description, tech stack, category, goals).
-Ground your suggestions in what this specific product IS — its category, its tech stack, its stated purpose. Be specific to THIS app, not generic.`}
+${sourceCodeContext ? `\nACTUAL SOURCE CODE:\n\`\`\`\n${sourceCodeContext}\n\`\`\`\n` : ""}
+
+${hasSourceCode ? `You have the ACTUAL SOURCE CODE of this application. Ground ALL suggestions in specific files, components, and code patterns you can see.
+Reference specific file names, component names, missing imports, code smells, architectural issues, and concrete bugs.
+Do NOT give generic advice — every suggestion must point to something real in the codebase.` : hasLiveContext ? `You must ground suggestions in the observed site content. Do NOT give generic advice.
+For each suggestion, refer to a concrete element/page section/problem visible in the scraped content or screenshot.` : `Analyze based on the listing metadata above. Be as specific as possible to this app's category and tech stack.`}
 
 Priorities:
-1. Better align the app with its stated goals
-2. ${hasLiveContext ? 'Improve UX/UI quality based on observed content' : 'Suggest UX/UI improvements specific to this type of app'}
-3. Add missing features expected for this exact product
-4. ${hasLiveContext ? 'Fix obvious issues or content gaps you can identify' : 'Identify likely gaps based on the description and category'}
+1. ${hasSourceCode ? 'Find real bugs, code smells, missing error handling, and security issues in the actual code' : 'Better align the app with its stated goals'}
+2. ${hasSourceCode ? 'Identify missing features by looking at the component structure and routes' : hasLiveContext ? 'Improve UX/UI quality based on observed content' : 'Suggest improvements specific to this type of app'}
+3. ${hasSourceCode ? 'Spot UX problems from the component code (missing loading states, no error boundaries, poor accessibility)' : 'Add missing features expected for this exact product'}
+4. ${hasSourceCode ? 'Suggest architectural improvements based on the file tree and code patterns' : 'Fix obvious issues or content gaps'}
 5. Improve performance/accessibility where relevant
 
 ${focus_prompt ? `\nUSER'S SPECIFIC REQUEST: "${focus_prompt}"\nPrioritize this first, then other improvements.\n` : ""}
-Be specific and implementation-ready.`
+Be specific and implementation-ready. Reference actual file paths and code when possible.`
       },
     ];
 
@@ -237,14 +240,19 @@ Be specific and implementation-ready.`
       analysisMessages.push({
         role: "user",
         content: [
-          { type: "text", text: `Here is the live screenshot for "${listing.title}". Analyze it together with the scraped page content from the system prompt.` },
+          { type: "text", text: `Here is the live screenshot for "${listing.title}". Analyze it together with the source code and scraped content.` },
           { type: "image_url", image_url: { url: `data:image/png;base64,${screenshotBase64}` } },
         ],
+      });
+    } else if (hasSourceCode) {
+      analysisMessages.push({
+        role: "user",
+        content: `Analyze "${listing.title}" using the actual source code provided. Find real problems, missing features, and concrete improvements based on what the code actually does.`,
       });
     } else if (hasLiveContext) {
       analysisMessages.push({
         role: "user",
-        content: `Analyze "${listing.title}" using the scraped live page content provided in the system prompt and suggest concrete improvements.`,
+        content: `Analyze "${listing.title}" using the scraped live page content and suggest concrete improvements.`,
       });
     } else {
       analysisMessages.push({

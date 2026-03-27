@@ -120,6 +120,9 @@ serve(async (req) => {
       .single();
 
     // Step 2: AI Analysis — compare screenshot + current state vs goals
+    // Truncate markdown to avoid token limits
+    const truncatedMarkdown = siteMarkdown ? siteMarkdown.substring(0, 8000) : null;
+
     const analysisMessages: any[] = [
       {
         role: "system",
@@ -131,15 +134,24 @@ The app's stated goals/purpose:
 ${listing.tech_stack?.length ? `Tech stack: ${listing.tech_stack.join(", ")}` : ""}
 ${listing.category ? `Category: ${listing.category}` : ""}
 
-Analyze the current state and suggest specific, actionable improvements that would:
+${truncatedMarkdown ? `
+**ACTUAL SITE CONTENT (scraped from the live page):**
+\`\`\`
+${truncatedMarkdown}
+\`\`\`
+` : ""}
+
+Analyze the current state and suggest specific, actionable improvements. Base your analysis on the ACTUAL content visible on the site, not generic best practices. Reference specific text, sections, or UI elements you can see.
+
+Priorities:
 1. Better align the app with its stated goals
-2. Improve UX/UI quality
-3. Add missing features that users would expect
-4. Fix any obvious issues or gaps
+2. Improve UX/UI quality based on what you observe
+3. Add missing features that users would expect given what the app does
+4. Fix any obvious issues or gaps you notice in the content
 5. Enhance performance or accessibility
 
 ${focus_prompt ? `\n**USER'S SPECIFIC REQUEST**: The owner specifically asked you to focus on: "${focus_prompt}"\nPrioritize suggestions that address this request first, then add other improvements.\n` : ""}
-Be specific — include exact component names, CSS changes, or feature descriptions.
+Be specific — reference actual content, sections, or elements from the scraped page. Include exact component names, CSS changes, or feature descriptions.
 Prioritize suggestions by impact (high → low).`
       },
     ];
@@ -148,14 +160,19 @@ Prioritize suggestions by impact (high → low).`
       analysisMessages.push({
         role: "user",
         content: [
-          { type: "text", text: `Here is a screenshot of the currently deployed app "${listing.title}". Analyze it against the goals and suggest improvements.` },
+          { type: "text", text: `Here is a screenshot of the currently deployed app "${listing.title}". Combined with the scraped page content in the system prompt, analyze it against the goals and suggest improvements based on what you actually see.` },
           { type: "image_url", image_url: { url: `data:image/png;base64,${screenshotBase64}` } },
         ],
+      });
+    } else if (truncatedMarkdown) {
+      analysisMessages.push({
+        role: "user",
+        content: `Analyze the app "${listing.title}" based on the scraped content provided in the system prompt. Suggest specific improvements based on what the page actually contains.`,
       });
     } else {
       analysisMessages.push({
         role: "user",
-        content: `The app "${listing.title}" doesn't have a live screenshot available. Based on its description and goals, suggest improvements:\n\nDescription: ${listing.description}\nGoals: ${goalsPrompt}`,
+        content: `The app "${listing.title}" doesn't have live content available. Based on its description and goals, suggest improvements:\n\nDescription: ${listing.description}\nGoals: ${goalsPrompt}`,
       });
     }
 

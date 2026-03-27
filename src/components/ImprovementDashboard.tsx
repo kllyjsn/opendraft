@@ -379,11 +379,32 @@ export function ImprovementDashboard() {
                   })}
 
                   {/* Bulk actions */}
-                  {cycle.status === "pending" && cycleChanges.some((c) => c.approved === null) && (
+                  {(cycle.status === "pending" || cycle.status === "approved") && (
                     <div className="flex justify-end gap-2 pt-2">
-                      <Button size="sm" onClick={() => approveAllInCycle(cycle.id)} className="gradient-hero text-white border-0 text-xs">
-                        <CheckCircle className="h-3.5 w-3.5 mr-1" /> Approve All
+                      {cycle.status === "pending" && cycleChanges.some((c) => c.approved === null) && (
+                        <Button size="sm" variant="outline" onClick={() => approveAllInCycle(cycle.id)} className="text-xs">
+                          <CheckCircle className="h-3.5 w-3.5 mr-1" /> Approve All
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        onClick={() => applyAndDeploy(cycle.id, cycle.listing_id)}
+                        disabled={applyingCycle === cycle.id}
+                        className="gradient-hero text-white border-0 text-xs"
+                      >
+                        {applyingCycle === cycle.id ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
+                        ) : (
+                          <Rocket className="h-3.5 w-3.5 mr-1" />
+                        )}
+                        {applyingCycle === cycle.id ? "Applying fixes..." : "Apply & Deploy"}
                       </Button>
+                    </div>
+                  )}
+                  {cycle.status === "applied" && (
+                    <div className="flex items-center gap-2 pt-2 text-xs text-green-600">
+                      <CheckCircle className="h-4 w-4" />
+                      <span className="font-semibold">Fixes applied and deployed</span>
                     </div>
                   )}
                 </div>

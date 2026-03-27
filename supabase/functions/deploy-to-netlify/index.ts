@@ -228,6 +228,7 @@ serve(async (req) => {
           netlify_token_hash: "set",
           status: "healthy",
         }, { onConflict: "site_id" }),
+        supabase.from("listings").update({ demo_url: siteUrl }).eq("id", listingId),
       ]);
 
       return new Response(JSON.stringify({

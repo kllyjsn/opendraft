@@ -181,10 +181,15 @@ Be specific and implementation-ready.`
           { type: "image_url", image_url: { url: `data:image/png;base64,${screenshotBase64}` } },
         ],
       });
-    } else {
+    } else if (hasLiveContext) {
       analysisMessages.push({
         role: "user",
         content: `Analyze "${listing.title}" using the scraped live page content provided in the system prompt and suggest concrete improvements.`,
+      });
+    } else {
+      analysisMessages.push({
+        role: "user",
+        content: `Analyze "${listing.title}" based on its listing metadata: "${listing.description}". Category: ${listing.category || 'unknown'}. Tech stack: ${listing.tech_stack?.join(', ') || 'unknown'}. Suggest concrete, specific improvements for this exact type of app.`,
       });
     }
 

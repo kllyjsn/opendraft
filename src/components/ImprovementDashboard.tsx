@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ChangelogFeed } from "@/components/ChangelogFeed";
 import {
   Sparkles, CheckCircle, XCircle, Clock, Image, ChevronDown, ChevronUp,
-  Loader2, Zap, AlertTriangle, Shield, Palette, Accessibility, Bug, Code, GitCommit,
+  Loader2, Zap, AlertTriangle, Shield, Palette, Accessibility, Bug, Code, GitCommit, Rocket,
 } from "lucide-react";
 
 interface ImprovementCycle {

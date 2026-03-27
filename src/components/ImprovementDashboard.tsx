@@ -61,6 +61,7 @@ export function ImprovementDashboard() {
   const [loading, setLoading] = useState(true);
   const [expandedCycle, setExpandedCycle] = useState<string | null>(null);
   const [analyzingListing, setAnalyzingListing] = useState<string | null>(null);
+  const [applyingCycle, setApplyingCycle] = useState<string | null>(null);
   const [listings, setListings] = useState<{ id: string; title: string; demo_url: string | null }[]>([]);
 
   useEffect(() => {

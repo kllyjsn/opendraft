@@ -102,10 +102,70 @@ serve(async (req) => {
       }
     }
 
-    const hasLiveContext = Boolean(screenshotBase64 || (siteMarkdown && siteMarkdown.trim().length > 20));
+    // Step 1b: Fetch actual source code from GitHub or storage
+    let sourceCodeContext: string | null = null;
 
-    // Even without live context, we can still analyze using listing metadata (description, tech stack, goals, category)
-    const hasMetadataContext = Boolean(listing.description && listing.description.trim().length > 10);
+    if (listing.github_url) {
+      try {
+        // Extract owner/repo from GitHub URL
+        const ghMatch = listing.github_url.match(/github\.com\/([^\/]+)\/([^\/\s?#]+)/);
+        if (ghMatch) {
+          const [, owner, repo] = ghMatch;
+          const repoName = repo.replace(/\.git$/, "");
+          console.log("Fetching source from GitHub:", owner, repoName);
+
+          // Fetch key files in parallel: package.json, README, and src directory listing
+          const filesToFetch = ["package.json", "README.md", "src/App.tsx", "src/pages/Index.tsx", "src/main.tsx", "index.html"];
+          const fileContents: string[] = [];
+
+          const fetchResults = await Promise.allSettled(
+            filesToFetch.map(async (filePath) => {
+              const resp = await fetch(`https://api.github.com/repos/${owner}/${repoName}/contents/${filePath}`, {
+                headers: { Accept: "application/vnd.github.v3.raw", "User-Agent": "OpenDraft-Analyzer" },
+              });
+              if (resp.ok) {
+                const content = await resp.text();
+                return { path: filePath, content: content.substring(0, 3000) };
+              }
+              return null;
+            })
+          );
+
+          for (const result of fetchResults) {
+            if (result.status === "fulfilled" && result.value) {
+              fileContents.push(`--- ${result.value.path} ---\n${result.value.content}`);
+            }
+          }
+
+          // Also fetch src directory tree
+          try {
+            const treeResp = await fetch(`https://api.github.com/repos/${owner}/${repoName}/git/trees/main?recursive=1`, {
+              headers: { Accept: "application/vnd.github.v3+json", "User-Agent": "OpenDraft-Analyzer" },
+            });
+            if (treeResp.ok) {
+              const treeData = await treeResp.json();
+              const srcFiles = (treeData.tree || [])
+                .filter((f: any) => f.type === "blob" && (f.path.startsWith("src/") || f.path === "index.html" || f.path === "package.json"))
+                .map((f: any) => f.path)
+                .slice(0, 80);
+              if (srcFiles.length) {
+                fileContents.unshift(`--- FILE TREE (src/) ---\n${srcFiles.join("\n")}`);
+              }
+            }
+          } catch (_) { /* ignore tree fetch errors */ }
+
+          if (fileContents.length > 0) {
+            sourceCodeContext = fileContents.join("\n\n").substring(0, 15000);
+            console.log("Source code context:", sourceCodeContext.length, "chars from", fileContents.length, "files");
+          }
+        }
+      } catch (e) {
+        console.error("GitHub source fetch failed:", e);
+      }
+    }
+
+    const hasLiveContext = Boolean(screenshotBase64 || (siteMarkdown && siteMarkdown.trim().length > 20));
+    const hasSourceCode = Boolean(sourceCodeContext && sourceCodeContext.length > 50);
 
     // If we captured a screenshot, upload it
     if (screenshotBase64) {
@@ -145,7 +205,7 @@ serve(async (req) => {
     const analysisMessages: any[] = [
       {
         role: "system",
-        content: `You are a senior product analyst and UX expert. You're analyzing a deployed web application to suggest improvements.
+        content: `You are a senior product analyst, UX expert, and code reviewer. You're analyzing a web application to suggest improvements.
 
 The app's stated goals/purpose:
 "${goalsPrompt}"
@@ -155,21 +215,24 @@ ${listing.category ? `Category: ${listing.category}` : ""}
 ${targetUrl ? `Live URL: ${targetUrl}` : ""}
 ${siteSummary ? `\nPAGE SUMMARY:\n${siteSummary}\n` : ""}
 
-${truncatedMarkdown ? `\nACTUAL SCRAPED PAGE CONTENT:\n\`\`\`\n${truncatedMarkdown}\n\`\`\`\n` : ""}
+${truncatedMarkdown ? `\nLIVE SITE CONTENT:\n\`\`\`\n${truncatedMarkdown}\n\`\`\`\n` : ""}
 
-${hasLiveContext ? `You must ground suggestions in the observed site content. Do NOT give generic advice.
-For each suggestion, refer to a concrete element/page section/problem visible in the scraped content or screenshot.` : `No live site content was available. Analyze based on the listing metadata above (title, description, tech stack, category, goals).
-Ground your suggestions in what this specific product IS — its category, its tech stack, its stated purpose. Be specific to THIS app, not generic.`}
+${sourceCodeContext ? `\nACTUAL SOURCE CODE:\n\`\`\`\n${sourceCodeContext}\n\`\`\`\n` : ""}
+
+${hasSourceCode ? `You have the ACTUAL SOURCE CODE of this application. Ground ALL suggestions in specific files, components, and code patterns you can see.
+Reference specific file names, component names, missing imports, code smells, architectural issues, and concrete bugs.
+Do NOT give generic advice — every suggestion must point to something real in the codebase.` : hasLiveContext ? `You must ground suggestions in the observed site content. Do NOT give generic advice.
+For each suggestion, refer to a concrete element/page section/problem visible in the scraped content or screenshot.` : `Analyze based on the listing metadata above. Be as specific as possible to this app's category and tech stack.`}
 
 Priorities:
-1. Better align the app with its stated goals
-2. ${hasLiveContext ? 'Improve UX/UI quality based on observed content' : 'Suggest UX/UI improvements specific to this type of app'}
-3. Add missing features expected for this exact product
-4. ${hasLiveContext ? 'Fix obvious issues or content gaps you can identify' : 'Identify likely gaps based on the description and category'}
+1. ${hasSourceCode ? 'Find real bugs, code smells, missing error handling, and security issues in the actual code' : 'Better align the app with its stated goals'}
+2. ${hasSourceCode ? 'Identify missing features by looking at the component structure and routes' : hasLiveContext ? 'Improve UX/UI quality based on observed content' : 'Suggest improvements specific to this type of app'}
+3. ${hasSourceCode ? 'Spot UX problems from the component code (missing loading states, no error boundaries, poor accessibility)' : 'Add missing features expected for this exact product'}
+4. ${hasSourceCode ? 'Suggest architectural improvements based on the file tree and code patterns' : 'Fix obvious issues or content gaps'}
 5. Improve performance/accessibility where relevant
 
 ${focus_prompt ? `\nUSER'S SPECIFIC REQUEST: "${focus_prompt}"\nPrioritize this first, then other improvements.\n` : ""}
-Be specific and implementation-ready.`
+Be specific and implementation-ready. Reference actual file paths and code when possible.`
       },
     ];
 
@@ -177,14 +240,19 @@ Be specific and implementation-ready.`
       analysisMessages.push({
         role: "user",
         content: [
-          { type: "text", text: `Here is the live screenshot for "${listing.title}". Analyze it together with the scraped page content from the system prompt.` },
+          { type: "text", text: `Here is the live screenshot for "${listing.title}". Analyze it together with the source code and scraped content.` },
           { type: "image_url", image_url: { url: `data:image/png;base64,${screenshotBase64}` } },
         ],
+      });
+    } else if (hasSourceCode) {
+      analysisMessages.push({
+        role: "user",
+        content: `Analyze "${listing.title}" using the actual source code provided. Find real problems, missing features, and concrete improvements based on what the code actually does.`,
       });
     } else if (hasLiveContext) {
       analysisMessages.push({
         role: "user",
-        content: `Analyze "${listing.title}" using the scraped live page content provided in the system prompt and suggest concrete improvements.`,
+        content: `Analyze "${listing.title}" using the scraped live page content and suggest concrete improvements.`,
       });
     } else {
       analysisMessages.push({

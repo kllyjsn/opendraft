@@ -55,14 +55,18 @@ serve(async (req) => {
 
     const goalsPrompt = goals?.[0]?.goals_prompt || listing.description;
 
-    // Step 1: Screenshot the deployed app (if demo_url available)
+    // Step 1: Capture live site context (screenshot + markdown + summary)
     let screenshotBase64: string | null = null;
     let screenshotUrl: string | null = null;
     let siteMarkdown: string | null = null;
+    let siteSummary: string | null = null;
 
-    if (listing.demo_url && FIRECRAWL_API_KEY) {
+    const normalizeUrl = (url: string) => (/^https?:\/\//i.test(url) ? url : `https://${url}`);
+    const targetUrl = listing.demo_url ? normalizeUrl(listing.demo_url) : null;
+
+    if (targetUrl && FIRECRAWL_API_KEY) {
       try {
-        console.log("Capturing screenshot + content of:", listing.demo_url);
+        console.log("Capturing screenshot + content of:", targetUrl);
         const scrapeResp = await fetch("https://api.firecrawl.dev/v1/scrape", {
           method: "POST",
           headers: {
@@ -70,8 +74,9 @@ serve(async (req) => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            url: listing.demo_url,
-            formats: ["screenshot", "markdown"],
+            url: targetUrl,
+            formats: ["screenshot", "markdown", "summary"],
+            onlyMainContent: true,
             waitFor: 3000,
           }),
         });
@@ -80,11 +85,40 @@ serve(async (req) => {
           const scrapeData = await scrapeResp.json();
           screenshotBase64 = scrapeData.data?.screenshot || scrapeData.screenshot || null;
           siteMarkdown = scrapeData.data?.markdown || scrapeData.markdown || null;
-          console.log("Screenshot:", screenshotBase64 ? "yes" : "no", "Markdown:", siteMarkdown ? `${siteMarkdown.length} chars` : "no");
+          siteSummary = scrapeData.data?.summary || scrapeData.summary || null;
+          console.log(
+            "Screenshot:",
+            screenshotBase64 ? "yes" : "no",
+            "Markdown:",
+            siteMarkdown ? `${siteMarkdown.length} chars` : "no",
+            "Summary:",
+            siteSummary ? "yes" : "no",
+          );
+        } else {
+          console.error("Firecrawl scrape failed with status:", scrapeResp.status);
         }
       } catch (e) {
         console.error("Screenshot/content capture failed:", e);
       }
+    }
+
+    const hasLiveContext = Boolean(screenshotBase64 || (siteMarkdown && siteMarkdown.trim().length > 20));
+
+    if (!hasLiveContext) {
+      const reason = !listing.demo_url
+        ? "No live demo URL found for this listing. Add a demo URL to get website-specific suggestions."
+        : "Could not capture readable live content from the demo URL. Ensure the URL is public and renders correctly.";
+
+      if (trigger === "manual") {
+        return new Response(JSON.stringify({ error: reason }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      return new Response(JSON.stringify({ success: true, skipped: true, reason }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     // If we captured a screenshot, upload it
@@ -119,9 +153,8 @@ serve(async (req) => {
       .select()
       .single();
 
-    // Step 2: AI Analysis — compare screenshot + current state vs goals
-    // Truncate markdown to avoid token limits
-    const truncatedMarkdown = siteMarkdown ? siteMarkdown.substring(0, 8000) : null;
+    // Step 2: AI Analysis — compare live site content + screenshot vs goals
+    const truncatedMarkdown = siteMarkdown ? siteMarkdown.substring(0, 10000) : null;
 
     const analysisMessages: any[] = [
       {
@@ -133,26 +166,23 @@ The app's stated goals/purpose:
 
 ${listing.tech_stack?.length ? `Tech stack: ${listing.tech_stack.join(", ")}` : ""}
 ${listing.category ? `Category: ${listing.category}` : ""}
+${targetUrl ? `Live URL: ${targetUrl}` : ""}
+${siteSummary ? `\nPAGE SUMMARY:\n${siteSummary}\n` : ""}
 
-${truncatedMarkdown ? `
-**ACTUAL SITE CONTENT (scraped from the live page):**
-\`\`\`
-${truncatedMarkdown}
-\`\`\`
-` : ""}
+${truncatedMarkdown ? `\nACTUAL SCRAPED PAGE CONTENT:\n\`\`\`\n${truncatedMarkdown}\n\`\`\`\n` : ""}
 
-Analyze the current state and suggest specific, actionable improvements. Base your analysis on the ACTUAL content visible on the site, not generic best practices. Reference specific text, sections, or UI elements you can see.
+You must ground suggestions in the observed site content. Do NOT give generic advice.
+For each suggestion, refer to a concrete element/page section/problem visible in the scraped content or screenshot.
 
 Priorities:
 1. Better align the app with its stated goals
-2. Improve UX/UI quality based on what you observe
-3. Add missing features that users would expect given what the app does
-4. Fix any obvious issues or gaps you notice in the content
-5. Enhance performance or accessibility
+2. Improve UX/UI quality based on observed content
+3. Add missing features expected for this exact product
+4. Fix obvious issues or content gaps you can identify
+5. Improve performance/accessibility where relevant
 
-${focus_prompt ? `\n**USER'S SPECIFIC REQUEST**: The owner specifically asked you to focus on: "${focus_prompt}"\nPrioritize suggestions that address this request first, then add other improvements.\n` : ""}
-Be specific — reference actual content, sections, or elements from the scraped page. Include exact component names, CSS changes, or feature descriptions.
-Prioritize suggestions by impact (high → low).`
+${focus_prompt ? `\nUSER'S SPECIFIC REQUEST: "${focus_prompt}"\nPrioritize this first, then other improvements.\n` : ""}
+Be specific and implementation-ready.`
       },
     ];
 
@@ -160,19 +190,14 @@ Prioritize suggestions by impact (high → low).`
       analysisMessages.push({
         role: "user",
         content: [
-          { type: "text", text: `Here is a screenshot of the currently deployed app "${listing.title}". Combined with the scraped page content in the system prompt, analyze it against the goals and suggest improvements based on what you actually see.` },
+          { type: "text", text: `Here is the live screenshot for "${listing.title}". Analyze it together with the scraped page content from the system prompt.` },
           { type: "image_url", image_url: { url: `data:image/png;base64,${screenshotBase64}` } },
         ],
-      });
-    } else if (truncatedMarkdown) {
-      analysisMessages.push({
-        role: "user",
-        content: `Analyze the app "${listing.title}" based on the scraped content provided in the system prompt. Suggest specific improvements based on what the page actually contains.`,
       });
     } else {
       analysisMessages.push({
         role: "user",
-        content: `The app "${listing.title}" doesn't have live content available. Based on its description and goals, suggest improvements:\n\nDescription: ${listing.description}\nGoals: ${goalsPrompt}`,
+        content: `Analyze "${listing.title}" using the scraped live page content provided in the system prompt and suggest concrete improvements.`,
       });
     }
 

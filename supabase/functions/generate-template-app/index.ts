@@ -799,12 +799,16 @@ const [count, setCount] = useState(0);
 useEffect(() => { const timer = setInterval(() => setCount(prev => prev < target ? prev + 1 : target), 20); return () => clearInterval(timer); }, []);
 \`\`\`
 
-## WHAT MAKES A TEMPLATE SELL
-- A jaw-dropping hero section that screenshots beautifully
-- Interactive elements (hover states, toggles, tabs) that feel alive
-- Realistic data that tells a story
-- Professional color palette that looks intentional
-- At least one "wow" moment (animated counter, particle effect, gradient shift)
+## WHAT MAKES AN APP VALUABLE (NOT a landing page — a FUNCTIONAL APP)
+- A polished dashboard that shows real data at a glance
+- CRUD workflows where users can create, edit, delete items
+- Data tables with search, sort, and filter functionality
+- Detail views with rich information display
+- Charts and analytics that visualize trends over time
+- Settings pages with toggles, dropdowns, and configuration options
+- Multi-step forms with validation and progress indicators
+- Real navigation between 5+ distinct pages via react-router-dom
+- Mobile-responsive sidebar that collapses to bottom nav or hamburger menu
 
 ${demandContext ? "\n--- MARKET INTELLIGENCE ---\n" + demandContext : ""}`;
 

@@ -1271,6 +1271,9 @@ Generate a complete marketing kit that helps sell this app internally and extern
     }
     pf.file("public/_redirects", "/*    /index.html   200\n");
     for (const file of generatedFiles) { if (file.path && file.content) pf.file(file.path, file.content); }
+    // Force-ensure critical scaffold files are never overwritten by AI output
+    const CRITICAL_FILES = ["src/lib/utils.ts", "vite.config.ts", "tsconfig.json", "postcss.config.js", "tailwind.config.js"];
+    for (const cf of CRITICAL_FILES) { if (BASE_FILES[cf]) pf.file(cf, BASE_FILES[cf]); }
     const readme = `# ${template.title || "Template"}\n\n${template.tagline ? "> " + template.tagline + "\n\n" : ""}${template.description || ""}\n\n## Quick Start\n\n\`\`\`bash\nnpm install\nnpm run dev\n\`\`\`\n\n## Tech Stack\n\n${(template.tech_stack || []).map((t: string) => "- " + t).join("\n")}\n\nBuilt with ❤️ on [OpenDraft](https://opendraft.co)\n`;
     pf.file("README.md", readme);
     // Wait for marketing files and add them to ZIP

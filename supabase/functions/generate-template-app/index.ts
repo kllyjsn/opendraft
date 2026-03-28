@@ -844,7 +844,7 @@ Requirements:
 13. Cohesive dark or light theme with professional color palette
 14. Rich, realistic seed data — 15-25 items with names, dates, statuses, relationships
 15. Must compile and work immediately with the base scaffold (React 18, Tailwind, lucide-react, framer-motion, recharts, date-fns, zod)`;
-16: 
+
   const aiResponse = await fetch(
     "https://ai.gateway.lovable.dev/v1/chat/completions",
     {

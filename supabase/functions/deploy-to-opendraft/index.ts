@@ -672,6 +672,15 @@ async function autoPatchMissingDependencies(
     const devDependencies = packageJson.devDependencies || {};
     const autoAddedDependencies: string[] = [];
 
+    // Force-add deps required by known critical files (e.g. patched src/lib/utils.ts)
+    const CRITICAL_DEPS = ["clsx", "tailwind-merge"];
+    for (const dep of CRITICAL_DEPS) {
+      if (!dependencies[dep] && !devDependencies[dep] && AUTO_DEPENDENCY_VERSIONS[dep]) {
+        dependencies[dep] = AUTO_DEPENDENCY_VERSIONS[dep];
+        autoAddedDependencies.push(dep);
+      }
+    }
+
     if (hasReact) {
       for (const [dep, version] of Object.entries(AUTO_DEPENDENCY_VERSIONS)) {
         const isUsed = importedPackages.has(dep);

@@ -28,6 +28,8 @@ const BASE_FILES: Record<string, string> = {
         "date-fns": "^3.6.0",
         sonner: "^1.7.0",
         zod: "^3.23.0",
+        clsx: "^2.1.1",
+        "tailwind-merge": "^2.6.0",
         "@supabase/supabase-js": "^2.97.0",
       },
       devDependencies: {
@@ -123,6 +125,13 @@ export default {
 </html>
 `,
   // Backend scaffolding — Supabase client setup for data persistence
+  "src/lib/utils.ts": `import { type ClassValue, clsx } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+`,
   "src/lib/supabase.ts": `import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';

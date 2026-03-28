@@ -753,13 +753,15 @@ const contactSchema = z.object({
 // Validate: const result = contactSchema.safeParse(formData);
 \`\`\`
 
-## FILE STRUCTURE (generate ALL of these)
-- src/App.tsx — Main app with routing/layout (use default export)
-- src/components/Hero.tsx — Stunning hero section
-- src/components/Navbar.tsx — Responsive nav with mobile menu
-- src/components/Footer.tsx — Professional footer
-- src/components/ — 4-8 additional feature-specific components
-- src/data/sample-data.ts — Realistic mock data
+## FILE STRUCTURE (generate ALL of these — minimum 15 files for a full app)
+- src/App.tsx — Main app with react-router-dom BrowserRouter, sidebar/nav layout, route definitions (use default export)
+- src/components/Layout.tsx — App shell with sidebar navigation, header, and content area
+- src/components/Sidebar.tsx — Collapsible sidebar with nav links, icons, active state highlighting
+- src/pages/Dashboard.tsx — Overview page with stat cards, recent activity feed, quick action buttons
+- src/pages/ — 4-7 additional page components (e.g., Contacts.tsx, Calendar.tsx, Settings.tsx, Analytics.tsx, Details.tsx)
+- src/components/ — 6-10 shared components (DataTable, StatCard, Modal, FormField, EmptyState, StatusBadge, etc.)
+- src/data/sample-data.ts — Rich, realistic seed data with 10-20+ items, timestamps, relationships
+- src/hooks/ — Custom hooks for data management (useItems.ts, useFilters.ts, etc.)
 
 ## EXPORT CONVENTION (CRITICAL — builds will fail if mismatched)
 - ALL components MUST use NAMED exports: \`export function Hero() { ... }\` — NOT \`export default function Hero()\`

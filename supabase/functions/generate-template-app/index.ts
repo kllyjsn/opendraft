@@ -664,10 +664,38 @@ ${brandContext.business_name ? `- **For**: ${brandContext.business_name} — mak
 CRITICAL: The Tailwind config and index.css MUST define CSS custom properties matching these brand colors. Generate a tailwind.config.js that extends colors with the brand palette. The index.css should set :root variables for --brand-primary, --brand-secondary, --brand-accent.
 ` : '';
 
-  const systemContent = `You are a WORLD-CLASS React developer and UI designer who creates STUNNING, production-grade React + Tailwind template apps that developers would happily pay for.
+  const systemContent = `You are a WORLD-CLASS React developer and UI designer who creates STUNNING, production-grade FULL-SUITE React + Tailwind applications — NOT landing pages, NOT marketing sites, but COMPLETE FUNCTIONAL APPS with real workflows, multiple pages, and interactive features.
 
 ## YOUR QUALITY BAR
-Think Vercel's templates, Linear's UI, Stripe's dashboard — that level of craft. Every template you generate should look like it was hand-built by a top design agency. Buyers should think "I can't believe this is a template."
+Think Linear's app, Notion's workspace, Stripe's dashboard, Calendly's booking flow — that level of FUNCTIONAL depth. Every app you generate should feel like a real SaaS product with working features, navigation between pages, data management, and interactive UI. Buyers should think "This replaces a $50/month SaaS tool."
+
+## CRITICAL: BUILD A FULL APPLICATION, NOT A LANDING PAGE
+You MUST generate a MULTI-PAGE APPLICATION with:
+- **react-router-dom routing** with at least 5-8 distinct routes/pages
+- **Sidebar or top navigation** for navigating between pages (NOT just a landing page navbar)
+- **Dashboard/home page** with overview stats, recent activity, quick actions
+- **CRUD workflows** — users can create, view, edit, and manage data (using localStorage via useLocalStorage hook)
+- **Data tables/lists** with sorting, filtering, search
+- **Detail views** — click an item to see full details in a modal or dedicated page
+- **Settings/configuration page** with toggleable options
+- **Form flows** with multi-step or tabbed interfaces and Zod validation
+- **Interactive charts/analytics** using recharts with realistic time-series data
+- **Empty states, loading states, success/error feedback** — real app patterns
+- **Mobile-responsive layout** with collapsible sidebar or bottom navigation on mobile
+
+DO NOT generate:
+- Marketing landing pages with hero/features/pricing/CTA sections
+- Single-page websites with scroll sections
+- Brochure-style templates
+- Portfolio sites
+
+Instead, generate FUNCTIONAL TOOLS like:
+- Project management boards with task CRUD
+- CRM dashboards with contact management
+- Scheduling apps with calendar views and booking flows
+- Analytics dashboards with drill-down capabilities
+- Inventory management systems
+- Team collaboration tools with real workflows
 ${brandDirective}
 ## DESIGN PRINCIPLES (MANDATORY)
 1. **VISUAL HIERARCHY**: Bold headlines (text-4xl to text-6xl font-black), clear information architecture, strategic whitespace

@@ -812,22 +812,27 @@ useEffect(() => { const timer = setInterval(() => setCount(prev => prev < target
 
 ${demandContext ? "\n--- MARKET INTELLIGENCE ---\n" + demandContext : ""}`;
 
-  const userContent = `Generate an EXCEPTIONAL template app with theme: "${theme}".
+  const userContent = `Generate a FULL-SUITE APPLICATION (NOT a landing page) with theme: "${theme}".
 
-This template needs to be so polished that developers will pay $15/month for it. Make it visually STUNNING with rich animations, professional color palette, realistic data, and at least 8 source files including a knockout hero section.
+This app should REPLACE a paid SaaS tool. It must be a complete, multi-page application with working workflows, data management, and interactive features. Think "Calendly replacement" or "Linear alternative" — a real product, not a marketing site.
 
 Requirements:
-1. At LEAST 8 component files + App.tsx + sample data file
-2. Every section animated with framer-motion
-3. Responsive navigation with mobile menu
-4. Professional footer
-5. Cohesive color scheme — NOT random colors
-6. Realistic mock data — names, numbers, descriptions that tell a story
-7. At least one interactive feature (tabs, filters, toggles, etc.)
-8. Gradient backgrounds and modern card designs
-9. The app should feel COMPLETE, not like a skeleton
-10. Must compile and work immediately with the base scaffold (React 18, Tailwind, lucide-react, framer-motion only)`;
-
+1. At LEAST 15 source files: App.tsx + Layout + Sidebar + 5-7 pages + 6-10 shared components + sample data + custom hooks
+2. react-router-dom with BrowserRouter and at LEAST 5 distinct routes/pages
+3. Sidebar or top navigation for app-style navigation (NOT a landing page navbar)
+4. Dashboard/home page with stat cards, charts (recharts), and recent activity
+5. CRUD functionality — create, view, edit, delete items using useLocalStorage hook for persistence
+6. Data tables with search, sort, and filter capabilities
+7. Detail views — click items to see expanded information
+8. Settings page with configuration options (toggles, selects, inputs)
+9. Form flows with Zod validation and proper error states
+10. Empty states, loading skeletons, and success/error toast feedback
+11. framer-motion animations on page transitions, list items, and interactive elements
+12. Mobile-responsive: sidebar collapses to hamburger menu or bottom nav on mobile
+13. Cohesive dark or light theme with professional color palette
+14. Rich, realistic seed data — 15-25 items with names, dates, statuses, relationships
+15. Must compile and work immediately with the base scaffold (React 18, Tailwind, lucide-react, framer-motion, recharts, date-fns, zod)`;
+16: 
   const aiResponse = await fetch(
     "https://ai.gateway.lovable.dev/v1/chat/completions",
     {

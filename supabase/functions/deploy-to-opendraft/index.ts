@@ -555,21 +555,44 @@ async function autoPatchMissingDependencies(
       const imports = collectImportedPackages(sourceFile.content);
       for (const dep of imports) importedPackages.add(dep);
 
+      // Resolve @/ alias imports to relative src/ paths
+      const resolveSpecifier = (specifier: string, importerPath: string): { resolved: string; isLocal: boolean } => {
+        if (specifier.startsWith("@/")) {
+          return { resolved: "src/" + specifier.slice(2), isLocal: true };
+        }
+        if (specifier.startsWith(".")) {
+          return { resolved: specifier, isLocal: true };
+        }
+        return { resolved: specifier, isLocal: false };
+      };
+
       const importFromRegex = /import\s+(type\s+)?([^"']+?)\s+from\s+["']([^"']+)["']/g;
       let fromMatch: RegExpExecArray | null;
       while ((fromMatch = importFromRegex.exec(sourceFile.content)) !== null) {
         const isTypeOnly = Boolean(fromMatch[1]);
         const importClause = fromMatch[2].trim();
-        const specifier = fromMatch[3].trim();
-        if (isTypeOnly || !specifier.startsWith(".")) continue;
+        const rawSpecifier = fromMatch[3].trim();
+        const { resolved: specifier, isLocal } = resolveSpecifier(rawSpecifier, sourceFile.path);
+        if (isTypeOnly || !isLocal) continue;
 
-        const resolved = resolveRelativeImport(sourceFile.path, specifier, false);
-        if (resolved.exists && !brokenFiles.has(resolved.targetPath)) continue;
+        const isAlias = rawSpecifier.startsWith("@/");
+        const resolvedImport = isAlias
+          ? (() => {
+              const basePath = specifier;
+              const candidates = [".ts", ".tsx", ".js", ".jsx", ".mjs", "/index.ts", "/index.tsx", "/index.js"];
+              for (const ext of candidates) {
+                if (hasZipFile(basePath + ext)) return { exists: true, targetPath: basePath + ext };
+              }
+              return { exists: false, targetPath: basePath + ".ts" };
+            })()
+          : resolveRelativeImport(sourceFile.path, specifier, false);
+
+        if (resolvedImport.exists && !brokenFiles.has(resolvedImport.targetPath)) continue;
 
         const parsed = parseImportClause(importClause);
-        addOrMergeMissingModule(resolved.targetPath, {
+        addOrMergeMissingModule(resolvedImport.targetPath, {
           importerPath: sourceFile.path,
-          specifier,
+          specifier: rawSpecifier,
           sideEffect: false,
           defaultImport: parsed.defaultImport,
           namedImports: parsed.namedImports,
@@ -580,15 +603,27 @@ async function autoPatchMissingDependencies(
       const sideEffectRegex = /import\s+["']([^"']+)["']/g;
       let sideEffectMatch: RegExpExecArray | null;
       while ((sideEffectMatch = sideEffectRegex.exec(sourceFile.content)) !== null) {
-        const specifier = sideEffectMatch[1].trim();
-        if (!specifier.startsWith(".")) continue;
+        const rawSpecifier = sideEffectMatch[1].trim();
+        const { resolved: specifier, isLocal } = resolveSpecifier(rawSpecifier, sourceFile.path);
+        if (!isLocal) continue;
 
-        const resolved = resolveRelativeImport(sourceFile.path, specifier, true);
-        if (resolved.exists && !brokenFiles.has(resolved.targetPath)) continue;
+        const isAlias = rawSpecifier.startsWith("@/");
+        const resolvedImport = isAlias
+          ? (() => {
+              const basePath = specifier;
+              const candidates = [".css", ".scss", ".ts", ".tsx", ".js", ".jsx"];
+              for (const ext of candidates) {
+                if (hasZipFile(basePath + ext)) return { exists: true, targetPath: basePath + ext };
+              }
+              return { exists: false, targetPath: basePath + ".css" };
+            })()
+          : resolveRelativeImport(sourceFile.path, specifier, true);
 
-        addOrMergeMissingModule(resolved.targetPath, {
+        if (resolvedImport.exists && !brokenFiles.has(resolvedImport.targetPath)) continue;
+
+        addOrMergeMissingModule(resolvedImport.targetPath, {
           importerPath: sourceFile.path,
-          specifier,
+          specifier: rawSpecifier,
           sideEffect: true,
           defaultImport: null,
           namedImports: [],

@@ -24,6 +24,9 @@ const BASE_FILES: Record<string, string> = {
         "react-router-dom": "^6.30.1",
         "lucide-react": "^0.462.0",
         "framer-motion": "^12.0.0",
+        recharts: "^2.15.0",
+        "date-fns": "^3.6.0",
+        sonner: "^1.7.0",
         zod: "^3.23.0",
         "@supabase/supabase-js": "^2.97.0",
       },
@@ -664,10 +667,38 @@ ${brandContext.business_name ? `- **For**: ${brandContext.business_name} — mak
 CRITICAL: The Tailwind config and index.css MUST define CSS custom properties matching these brand colors. Generate a tailwind.config.js that extends colors with the brand palette. The index.css should set :root variables for --brand-primary, --brand-secondary, --brand-accent.
 ` : '';
 
-  const systemContent = `You are a WORLD-CLASS React developer and UI designer who creates STUNNING, production-grade React + Tailwind template apps that developers would happily pay for.
+  const systemContent = `You are a WORLD-CLASS React developer and UI designer who creates STUNNING, production-grade FULL-SUITE React + Tailwind applications — NOT landing pages, NOT marketing sites, but COMPLETE FUNCTIONAL APPS with real workflows, multiple pages, and interactive features.
 
 ## YOUR QUALITY BAR
-Think Vercel's templates, Linear's UI, Stripe's dashboard — that level of craft. Every template you generate should look like it was hand-built by a top design agency. Buyers should think "I can't believe this is a template."
+Think Linear's app, Notion's workspace, Stripe's dashboard, Calendly's booking flow — that level of FUNCTIONAL depth. Every app you generate should feel like a real SaaS product with working features, navigation between pages, data management, and interactive UI. Buyers should think "This replaces a $50/month SaaS tool."
+
+## CRITICAL: BUILD A FULL APPLICATION, NOT A LANDING PAGE
+You MUST generate a MULTI-PAGE APPLICATION with:
+- **react-router-dom routing** with at least 5-8 distinct routes/pages
+- **Sidebar or top navigation** for navigating between pages (NOT just a landing page navbar)
+- **Dashboard/home page** with overview stats, recent activity, quick actions
+- **CRUD workflows** — users can create, view, edit, and manage data (using localStorage via useLocalStorage hook)
+- **Data tables/lists** with sorting, filtering, search
+- **Detail views** — click an item to see full details in a modal or dedicated page
+- **Settings/configuration page** with toggleable options
+- **Form flows** with multi-step or tabbed interfaces and Zod validation
+- **Interactive charts/analytics** using recharts with realistic time-series data
+- **Empty states, loading states, success/error feedback** — real app patterns
+- **Mobile-responsive layout** with collapsible sidebar or bottom navigation on mobile
+
+DO NOT generate:
+- Marketing landing pages with hero/features/pricing/CTA sections
+- Single-page websites with scroll sections
+- Brochure-style templates
+- Portfolio sites
+
+Instead, generate FUNCTIONAL TOOLS like:
+- Project management boards with task CRUD
+- CRM dashboards with contact management
+- Scheduling apps with calendar views and booking flows
+- Analytics dashboards with drill-down capabilities
+- Inventory management systems
+- Team collaboration tools with real workflows
 ${brandDirective}
 ## DESIGN PRINCIPLES (MANDATORY)
 1. **VISUAL HIERARCHY**: Bold headlines (text-4xl to text-6xl font-black), clear information architecture, strategic whitespace
@@ -692,7 +723,7 @@ ${brandDirective}
 ## CODE QUALITY REQUIREMENTS
 - TypeScript strict mode — proper types for all props and state
 - Custom hooks for reusable logic
-- Component composition — break UI into small, reusable pieces (min 6-8 component files)
+- Component composition — break UI into small, reusable pieces (min 15 source files for a full app)
 - Meaningful variable names and JSDoc comments on complex components
 - Use React.useState, useEffect properly with cleanup
 - Responsive grid layouts with Tailwind (grid-cols-1 md:grid-cols-2 lg:grid-cols-3)
@@ -725,13 +756,15 @@ const contactSchema = z.object({
 // Validate: const result = contactSchema.safeParse(formData);
 \`\`\`
 
-## FILE STRUCTURE (generate ALL of these)
-- src/App.tsx — Main app with routing/layout (use default export)
-- src/components/Hero.tsx — Stunning hero section
-- src/components/Navbar.tsx — Responsive nav with mobile menu
-- src/components/Footer.tsx — Professional footer
-- src/components/ — 4-8 additional feature-specific components
-- src/data/sample-data.ts — Realistic mock data
+## FILE STRUCTURE (generate ALL of these — minimum 15 files for a full app)
+- src/App.tsx — Main app with react-router-dom BrowserRouter, sidebar/nav layout, route definitions (use default export)
+- src/components/Layout.tsx — App shell with sidebar navigation, header, and content area
+- src/components/Sidebar.tsx — Collapsible sidebar with nav links, icons, active state highlighting
+- src/pages/Dashboard.tsx — Overview page with stat cards, recent activity feed, quick action buttons
+- src/pages/ — 4-7 additional page components (e.g., Contacts.tsx, Calendar.tsx, Settings.tsx, Analytics.tsx, Details.tsx)
+- src/components/ — 6-10 shared components (DataTable, StatCard, Modal, FormField, EmptyState, StatusBadge, etc.)
+- src/data/sample-data.ts — Rich, realistic seed data with 10-20+ items, timestamps, relationships
+- src/hooks/ — Custom hooks for data management (useItems.ts, useFilters.ts, etc.)
 
 ## EXPORT CONVENTION (CRITICAL — builds will fail if mismatched)
 - ALL components MUST use NAMED exports: \`export function Hero() { ... }\` — NOT \`export default function Hero()\`
@@ -769,31 +802,40 @@ const [count, setCount] = useState(0);
 useEffect(() => { const timer = setInterval(() => setCount(prev => prev < target ? prev + 1 : target), 20); return () => clearInterval(timer); }, []);
 \`\`\`
 
-## WHAT MAKES A TEMPLATE SELL
-- A jaw-dropping hero section that screenshots beautifully
-- Interactive elements (hover states, toggles, tabs) that feel alive
-- Realistic data that tells a story
-- Professional color palette that looks intentional
-- At least one "wow" moment (animated counter, particle effect, gradient shift)
+## WHAT MAKES AN APP VALUABLE (NOT a landing page — a FUNCTIONAL APP)
+- A polished dashboard that shows real data at a glance
+- CRUD workflows where users can create, edit, delete items
+- Data tables with search, sort, and filter functionality
+- Detail views with rich information display
+- Charts and analytics that visualize trends over time
+- Settings pages with toggles, dropdowns, and configuration options
+- Multi-step forms with validation and progress indicators
+- Real navigation between 5+ distinct pages via react-router-dom
+- Mobile-responsive sidebar that collapses to bottom nav or hamburger menu
 
 ${demandContext ? "\n--- MARKET INTELLIGENCE ---\n" + demandContext : ""}`;
 
-  const userContent = `Generate an EXCEPTIONAL template app with theme: "${theme}".
+  const userContent = `Generate a FULL-SUITE APPLICATION (NOT a landing page) with theme: "${theme}".
 
-This template needs to be so polished that developers will pay $15/month for it. Make it visually STUNNING with rich animations, professional color palette, realistic data, and at least 8 source files including a knockout hero section.
+This app should REPLACE a paid SaaS tool. It must be a complete, multi-page application with working workflows, data management, and interactive features. Think "Calendly replacement" or "Linear alternative" — a real product, not a marketing site.
 
 Requirements:
-1. At LEAST 8 component files + App.tsx + sample data file
-2. Every section animated with framer-motion
-3. Responsive navigation with mobile menu
-4. Professional footer
-5. Cohesive color scheme — NOT random colors
-6. Realistic mock data — names, numbers, descriptions that tell a story
-7. At least one interactive feature (tabs, filters, toggles, etc.)
-8. Gradient backgrounds and modern card designs
-9. The app should feel COMPLETE, not like a skeleton
-10. Must compile and work immediately with the base scaffold (React 18, Tailwind, lucide-react, framer-motion only)`;
-
+1. At LEAST 15 source files: App.tsx + Layout + Sidebar + 5-7 pages + 6-10 shared components + sample data + custom hooks
+2. react-router-dom with BrowserRouter and at LEAST 5 distinct routes/pages
+3. Sidebar or top navigation for app-style navigation (NOT a landing page navbar)
+4. Dashboard/home page with stat cards, charts (recharts), and recent activity
+5. CRUD functionality — create, view, edit, delete items using useLocalStorage hook for persistence
+6. Data tables with search, sort, and filter capabilities
+7. Detail views — click items to see expanded information
+8. Settings page with configuration options (toggles, selects, inputs)
+9. Form flows with Zod validation and proper error states
+10. Empty states, loading skeletons, and success/error toast feedback
+11. framer-motion animations on page transitions, list items, and interactive elements
+12. Mobile-responsive: sidebar collapses to hamburger menu or bottom nav on mobile
+13. Cohesive dark or light theme with professional color palette
+14. Rich, realistic seed data — 15-25 items with names, dates, statuses, relationships
+15. Must compile and work immediately with the base scaffold (React 18, Tailwind, lucide-react, framer-motion, recharts, date-fns, zod)`;
+16: 
   const aiResponse = await fetch(
     "https://ai.gateway.lovable.dev/v1/chat/completions",
     {

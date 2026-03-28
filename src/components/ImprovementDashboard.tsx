@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { ChangelogFeed } from "@/components/ChangelogFeed";
 import {
-  Sparkles, CheckCircle, XCircle, Clock, Image, ChevronDown, ChevronUp,
+  Sparkles, CheckCircle, XCircle, Clock, ChevronDown, ChevronUp,
   Loader2, Zap, AlertTriangle, Shield, Palette, Accessibility, Bug, Code, GitCommit, Rocket,
+  Eye, ExternalLink, ArrowUpCircle,
 } from "lucide-react";
 
 interface ImprovementCycle {
@@ -62,6 +63,7 @@ export function ImprovementDashboard() {
   const [expandedCycle, setExpandedCycle] = useState<string | null>(null);
   const [analyzingListing, setAnalyzingListing] = useState<string | null>(null);
   const [applyingCycle, setApplyingCycle] = useState<string | null>(null);
+  const [promotingCycle, setPromotingCycle] = useState<string | null>(null);
   const [listings, setListings] = useState<{ id: string; title: string; demo_url: string | null }[]>([]);
 
   useEffect(() => {
@@ -71,7 +73,6 @@ export function ImprovementDashboard() {
 
   async function loadData() {
     if (!user) return;
-
     const [{ data: cycleData }, { data: listingData }] = await Promise.all([
       supabase
         .from("improvement_cycles" as any)
@@ -85,12 +86,9 @@ export function ImprovementDashboard() {
         .eq("seller_id", user.id)
         .eq("status", "live"),
     ]);
-
     setCycles((cycleData as any[]) ?? []);
     setListings(listingData ?? []);
     setLoading(false);
-
-    // Auto-expand most recent
     if (cycleData?.length) {
       setExpandedCycle((cycleData as any[])[0].id);
       loadChanges((cycleData as any[])[0].id);
@@ -109,12 +107,10 @@ export function ImprovementDashboard() {
   async function triggerAnalysis(listingId: string) {
     if (!user) return;
     setAnalyzingListing(listingId);
-
     try {
       const { data, error } = await supabase.functions.invoke("swarm-app-analyzer", {
         body: { listing_id: listingId, trigger: "manual", user_id: user.id },
       });
-
       if (error) throw error;
       toast({ title: `Analysis complete — Score: ${data.score}/100 🔍` });
       loadData();
@@ -130,7 +126,6 @@ export function ImprovementDashboard() {
       .from("improvement_changes" as any)
       .update({ approved })
       .eq("id", changeId);
-
     setChanges((prev) => {
       const updated = { ...prev };
       for (const cycleId in updated) {
@@ -140,7 +135,6 @@ export function ImprovementDashboard() {
       }
       return updated;
     });
-
     toast({ title: approved ? "Change approved ✓" : "Change rejected" });
   }
 
@@ -151,48 +145,62 @@ export function ImprovementDashboard() {
         await approveChange(change.id, true);
       }
     }
-
-    // Update cycle status
     await supabase
       .from("improvement_cycles" as any)
       .update({ status: "approved" })
       .eq("id", cycleId);
-
     setCycles((prev) =>
       prev.map((c) => (c.id === cycleId ? { ...c, status: "approved" } : c))
     );
   }
 
-  async function applyAndDeploy(cycleId: string, listingId: string) {
+  // Step 1: Apply fixes → deploy to staging preview
+  async function applyAndPreview(cycleId: string, listingId: string) {
     if (!user) return;
     setApplyingCycle(cycleId);
-
     try {
-      // First approve all unapproved changes
       await approveAllInCycle(cycleId);
-
-      // Trigger the apply-fixes function
       const { data, error } = await supabase.functions.invoke("swarm-apply-fixes", {
-        body: { cycle_id: cycleId, listing_id: listingId, user_id: user.id },
+        body: { cycle_id: cycleId, listing_id: listingId, user_id: user.id, mode: "preview" },
       });
-
       if (error) throw error;
-
       toast({
-        title: `Fixes applied & deployed! 🚀`,
-        description: `${data.modified_files} files updated. ${data.deployed ? "Redeployment triggered." : "Upload complete — deploy manually."}`,
+        title: "Preview deployed! 👀",
+        description: `${data.modified_files} files patched. ${data.preview_url ? "Click Preview to inspect." : "Preview URL pending."}`,
       });
-
-      // Update local state
       setCycles((prev) =>
-        prev.map((c) => (c.id === cycleId ? { ...c, status: "applied" } : c))
+        prev.map((c) => c.id === cycleId ? {
+          ...c, status: "preview",
+          analysis: { ...c.analysis, preview_url: data.preview_url, preview_zip_path: data.zip_path, apply_summary: data.summary }
+        } : c)
       );
-
-      loadData();
     } catch (e: any) {
       toast({ title: "Apply failed", description: e.message, variant: "destructive" });
     } finally {
       setApplyingCycle(null);
+    }
+  }
+
+  // Step 2: Promote preview to production
+  async function promoteToProduction(cycleId: string, listingId: string) {
+    if (!user) return;
+    setPromotingCycle(cycleId);
+    try {
+      const { data, error } = await supabase.functions.invoke("swarm-apply-fixes", {
+        body: { cycle_id: cycleId, listing_id: listingId, user_id: user.id, mode: "promote" },
+      });
+      if (error) throw error;
+      toast({
+        title: "Promoted to production! 🚀",
+        description: data.deployed ? "Live site updated." : "Files updated — deploy manually.",
+      });
+      setCycles((prev) =>
+        prev.map((c) => c.id === cycleId ? { ...c, status: "applied" } : c)
+      );
+    } catch (e: any) {
+      toast({ title: "Promote failed", description: e.message, variant: "destructive" });
+    } finally {
+      setPromotingCycle(null);
     }
   }
 
@@ -215,23 +223,13 @@ export function ImprovementDashboard() {
           Analyze & Improve
         </h3>
         <p className="text-xs text-muted-foreground mb-4">
-          AI screenshots your deployed app, compares it to your goals, and suggests improvements.
+          AI reads your source code, finds issues, and suggests improvements you can preview before deploying.
         </p>
         <div className="flex flex-wrap gap-2">
           {listings.map((l) => (
-            <Button
-              key={l.id}
-              size="sm"
-              variant="outline"
-              disabled={analyzingListing === l.id}
-              onClick={() => triggerAnalysis(l.id)}
-              className="text-xs"
-            >
-              {analyzingListing === l.id ? (
-                <Loader2 className="h-3 w-3 animate-spin mr-1" />
-              ) : (
-                <Sparkles className="h-3 w-3 mr-1" />
-              )}
+            <Button key={l.id} size="sm" variant="outline" disabled={analyzingListing === l.id}
+              onClick={() => triggerAnalysis(l.id)} className="text-xs">
+              {analyzingListing === l.id ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Sparkles className="h-3 w-3 mr-1" />}
               {l.title.slice(0, 30)}
             </Button>
           ))}
@@ -241,19 +239,17 @@ export function ImprovementDashboard() {
         </div>
       </div>
 
-      {/* Global changelog — all code changes across projects */}
+      {/* Code changelog */}
       <div className="rounded-2xl border border-border/60 bg-card p-5">
         <h3 className="font-bold text-sm mb-3 flex items-center gap-2">
           <GitCommit className="h-4 w-4 text-primary" />
           Code Changelog
         </h3>
-        <p className="text-xs text-muted-foreground mb-4">
-          All code changes made by AI across your projects
-        </p>
+        <p className="text-xs text-muted-foreground mb-4">All code changes made by AI across your projects</p>
         <ChangelogFeed compact />
       </div>
 
-      {/* Improvement cycles */}
+      {/* Cycles */}
       <div className="flex items-center justify-between mb-2">
         <h2 className="text-lg font-bold flex items-center gap-2">
           <Sparkles className="h-5 w-5 text-primary" />
@@ -273,11 +269,21 @@ export function ImprovementDashboard() {
           const isExpanded = expandedCycle === cycle.id;
           const cycleChanges = changes[cycle.id] || [];
           const score = cycle.analysis?.overall_score;
+          const previewUrl = cycle.analysis?.preview_url;
+
           const statusIcon =
+            cycle.status === "applied" ? <CheckCircle className="h-4 w-4 text-green-500" /> :
+            cycle.status === "preview" ? <Eye className="h-4 w-4 text-blue-500" /> :
             cycle.status === "approved" ? <CheckCircle className="h-4 w-4 text-green-500" /> :
             cycle.status === "rejected" ? <XCircle className="h-4 w-4 text-red-500" /> :
-            cycle.status === "analyzing" ? <Loader2 className="h-4 w-4 animate-spin text-primary" /> :
+            cycle.status === "analyzing" || cycle.status === "applying" ? <Loader2 className="h-4 w-4 animate-spin text-primary" /> :
             <Clock className="h-4 w-4 text-orange-500" />;
+
+          const statusLabel =
+            cycle.status === "preview" ? "Preview Ready" :
+            cycle.status === "applied" ? "Live" :
+            cycle.status === "applying" ? "Applying…" :
+            cycle.status;
 
           return (
             <div key={cycle.id} className="rounded-2xl border border-border/60 bg-card shadow-card overflow-hidden">
@@ -299,6 +305,7 @@ export function ImprovementDashboard() {
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {new Date(cycle.created_at).toLocaleDateString()} — {cycle.suggestions?.length || 0} suggestions
+                      {cycle.status === "preview" && " — ✨ Preview ready"}
                     </p>
                   </div>
                 </div>
@@ -312,23 +319,68 @@ export function ImprovementDashboard() {
                       {score}/100
                     </div>
                   )}
+                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ${
+                    cycle.status === "preview" ? "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300" :
+                    cycle.status === "applied" ? "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300" :
+                    "bg-muted text-muted-foreground"
+                  }`}>
+                    {statusLabel}
+                  </span>
                   {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                 </div>
               </button>
 
               {isExpanded && (
                 <div className="border-t border-border/40 p-5 space-y-4">
-                  {/* Screenshot */}
                   {cycle.screenshot_url && (
                     <div className="rounded-lg overflow-hidden border border-border/40">
                       <img src={cycle.screenshot_url} alt="App screenshot" className="w-full max-h-64 object-cover" />
                     </div>
                   )}
 
-                  {/* Overall assessment */}
                   {cycle.analysis?.overall_assessment && (
                     <div className="rounded-lg bg-muted/30 p-4">
                       <p className="text-sm text-muted-foreground">{cycle.analysis.overall_assessment}</p>
+                    </div>
+                  )}
+
+                  {/* Preview banner when in preview status */}
+                  {cycle.status === "preview" && previewUrl && (
+                    <div className="rounded-xl border-2 border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-950/40 p-4 space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Eye className="h-4 w-4 text-blue-600" />
+                        <span className="font-bold text-sm text-blue-800 dark:text-blue-200">Staging Preview Ready</span>
+                      </div>
+                      <p className="text-xs text-blue-700 dark:text-blue-300">
+                        Your changes are deployed to a staging URL. Review them before pushing to production.
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        <Button size="sm" variant="outline" asChild
+                          className="text-xs border-blue-300 text-blue-700 hover:bg-blue-100">
+                          <a href={previewUrl} target="_blank" rel="noopener noreferrer">
+                            <ExternalLink className="h-3.5 w-3.5 mr-1" />
+                            Open Preview
+                          </a>
+                        </Button>
+                        <Button size="sm" onClick={() => promoteToProduction(cycle.id, cycle.listing_id)}
+                          disabled={promotingCycle === cycle.id}
+                          className="gradient-hero text-white border-0 text-xs">
+                          {promotingCycle === cycle.id ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
+                          ) : (
+                            <ArrowUpCircle className="h-3.5 w-3.5 mr-1" />
+                          )}
+                          {promotingCycle === cycle.id ? "Promoting…" : "Promote to Production"}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* AI summary when preview/applied */}
+                  {cycle.analysis?.apply_summary && (cycle.status === "preview" || cycle.status === "applied") && (
+                    <div className="rounded-lg bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 p-3">
+                      <p className="text-xs font-semibold text-green-800 dark:text-green-200 mb-1">AI Summary</p>
+                      <p className="text-xs text-green-700 dark:text-green-300">{cycle.analysis.apply_summary}</p>
                     </div>
                   )}
 
@@ -357,8 +409,7 @@ export function ImprovementDashboard() {
                             {suggestion.implementation_hint}
                           </pre>
                         )}
-                        {/* Approve/Reject buttons */}
-                        {change && change.approved === null && (
+                        {change && change.approved === null && cycle.status !== "preview" && cycle.status !== "applied" && (
                           <div className="flex gap-2 pt-1">
                             <Button size="sm" variant="outline" onClick={() => approveChange(change.id, true)} className="text-xs text-green-600 hover:text-green-700">
                               <CheckCircle className="h-3 w-3 mr-1" /> Approve
@@ -378,7 +429,7 @@ export function ImprovementDashboard() {
                     );
                   })}
 
-                  {/* Bulk actions */}
+                  {/* Action buttons */}
                   {(cycle.status === "pending" || cycle.status === "approved") && (
                     <div className="flex justify-end gap-2 pt-2">
                       {cycle.status === "pending" && cycleChanges.some((c) => c.approved === null) && (
@@ -386,25 +437,22 @@ export function ImprovementDashboard() {
                           <CheckCircle className="h-3.5 w-3.5 mr-1" /> Approve All
                         </Button>
                       )}
-                      <Button
-                        size="sm"
-                        onClick={() => applyAndDeploy(cycle.id, cycle.listing_id)}
-                        disabled={applyingCycle === cycle.id}
-                        className="gradient-hero text-white border-0 text-xs"
-                      >
+                      <Button size="sm" onClick={() => applyAndPreview(cycle.id, cycle.listing_id)}
+                        disabled={applyingCycle === cycle.id} className="gradient-hero text-white border-0 text-xs">
                         {applyingCycle === cycle.id ? (
                           <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
                         ) : (
-                          <Rocket className="h-3.5 w-3.5 mr-1" />
+                          <Eye className="h-3.5 w-3.5 mr-1" />
                         )}
-                        {applyingCycle === cycle.id ? "Applying fixes..." : "Apply & Deploy"}
+                        {applyingCycle === cycle.id ? "Building preview…" : "Apply & Preview"}
                       </Button>
                     </div>
                   )}
+
                   {cycle.status === "applied" && (
                     <div className="flex items-center gap-2 pt-2 text-xs text-green-600">
                       <CheckCircle className="h-4 w-4" />
-                      <span className="font-semibold">Fixes applied and deployed</span>
+                      <span className="font-semibold">Promoted to production ✓</span>
                     </div>
                   )}
                 </div>

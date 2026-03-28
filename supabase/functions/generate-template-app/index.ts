@@ -720,7 +720,7 @@ ${brandDirective}
 ## CODE QUALITY REQUIREMENTS
 - TypeScript strict mode — proper types for all props and state
 - Custom hooks for reusable logic
-- Component composition — break UI into small, reusable pieces (min 6-8 component files)
+- Component composition — break UI into small, reusable pieces (min 15 source files for a full app)
 - Meaningful variable names and JSDoc comments on complex components
 - Use React.useState, useEffect properly with cleanup
 - Responsive grid layouts with Tailwind (grid-cols-1 md:grid-cols-2 lg:grid-cols-3)

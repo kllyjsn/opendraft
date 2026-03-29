@@ -35,7 +35,7 @@ export function EmailAuthForm({ defaultMode = "signup" }: EmailAuthFormProps) {
           options: { emailRedirectTo: window.location.origin },
         });
         if (error) throw error;
-        toast.success("Check your email to confirm your account.");
+        toast.success("Account created! You're all set.");
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email: email.trim(),

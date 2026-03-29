@@ -61,6 +61,7 @@ export function StickyMobileCTA() {
     <AnimatePresence>
       {visible && (
         <motion.div
+          key="sticky-cta"
           initial={{ y: 100 }}
           animate={{ y: 0 }}
           exit={{ y: 100 }}

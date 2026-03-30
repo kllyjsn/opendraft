@@ -191,7 +191,7 @@ export default function Index() {
         className={`relative flex items-center justify-center transition-all duration-700 ease-out ${
           hasResults
             ? "min-h-0 pt-4 pb-2 md:pt-10 md:pb-4"
-            : "flex-1 min-h-0 pt-8 pb-6 md:min-h-[90vh] md:pt-0"
+            : "flex-1 min-h-0 pt-6 pb-4 md:min-h-[90vh] md:pt-0"
         }`}
       >
         {!hasResults && <HeroBeams />}
@@ -206,12 +206,12 @@ export default function Index() {
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
               >
-                <div className="mb-5 md:mb-10">
-                  <h1 className="text-[1.75rem] sm:text-4xl md:text-6xl lg:text-[4.5rem] font-bold tracking-[-0.03em] leading-[1.1] text-foreground">
-                    Software that builds,
+                <div className="mb-3 md:mb-10">
+                  <h1 className="text-2xl sm:text-4xl md:text-6xl lg:text-[4.5rem] font-bold tracking-[-0.03em] leading-[1.1] text-foreground">
+                    Paste your website,
                     <br />
-                    heals &amp; supports{" "}
-                    <span className="inline-block relative overflow-hidden align-bottom" style={{ minWidth: "5ch" }}>
+                    get a custom{" "}
+                    <span className="inline-block relative overflow-hidden align-bottom" style={{ minWidth: "4ch" }}>
                       <AnimatePresence mode="wait">
                         <motion.span
                           key={ROTATING_WORDS[rotatingIndex]}
@@ -238,12 +238,9 @@ export default function Index() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.6, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-                className="text-sm md:text-base text-muted-foreground max-w-md mx-auto mb-6 md:mb-12 leading-relaxed"
+                className="text-xs md:text-base text-muted-foreground max-w-sm mx-auto mb-4 md:mb-12 leading-relaxed"
               >
-                We generate custom apps from your website, then autonomously
-                monitor, fix, and maintain them — so they never break.
-                <br />
-                <span className="text-foreground font-medium">Free to start. No coding needed.</span>
+                We scan your site, then build and maintain apps for your business — free, no coding needed.
               </motion.p>
             )}
           </AnimatePresence>

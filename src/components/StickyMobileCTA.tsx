@@ -43,11 +43,11 @@ export function StickyMobileCTA() {
           className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-card/95 backdrop-blur-lg py-3 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:hidden"
         >
           <Button
-            onClick={scrollToInput}
+            onClick={scrollToDemo}
             className="w-full bg-foreground text-background hover:bg-foreground/90 border-0 gap-2 h-11 text-sm font-bold rounded-full"
           >
             <Zap className="h-4 w-4" />
-            See What Apps You Need — Free
+            See a Free Audit — Pick an Industry
           </Button>
         </MotionDiv>
       )}

@@ -2,10 +2,10 @@ import { motion } from "framer-motion";
 import { Shield, Code, Zap, TrendingUp } from "lucide-react";
 
 const proofs = [
-  { icon: TrendingUp, text: "340+ businesses analyzed" },
-  { icon: Code, text: "You own the code" },
-  { icon: Zap, text: "Ready in 90 sec" },
-  { icon: Shield, text: "Free forever plan" },
+  { icon: TrendingUp, text: "340+ sites audited this month" },
+  { icon: Code, text: "Full source code — yours forever" },
+  { icon: Zap, text: "Results in 20 seconds" },
+  { icon: Shield, text: "No signup needed" },
 ];
 
 export function SocialProofBar() {

@@ -422,7 +422,7 @@ export function BusinessAnalyzer({ onGenerate, onResultsChange }: {
                 autoCapitalize="none"
                 autoCorrect="off"
                 spellCheck={false}
-                placeholder="yourcompany.com"
+                placeholder="e.g. acmeplumbing.com"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 className="pl-9 md:pl-11 pr-24 md:pr-28 h-11 md:h-12 bg-card border-border/50 focus-visible:border-primary/40 focus-visible:shadow-glow transition-all rounded-xl text-sm leading-normal [&]:py-0"

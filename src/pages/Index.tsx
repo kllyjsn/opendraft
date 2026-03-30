@@ -171,7 +171,7 @@ export default function Index() {
   );
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-background drafting-grid">
       <MetaTags
         title="The Software Platform Built for Enterprises | OpenDraft"
         description="Paste your website. Get custom enterprise software you own — no per-seat fees, no lock-in, deploy in 90 seconds."

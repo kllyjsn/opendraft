@@ -455,10 +455,10 @@ export function BusinessAnalyzer({ onGenerate, onResultsChange }: {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="mt-3 md:mt-4 flex flex-col items-center gap-1.5 md:gap-2"
+            className="mt-2.5 md:mt-4 flex flex-col items-center gap-1 md:gap-2"
           >
             <p className="text-[9px] md:text-[10px] uppercase tracking-[0.15em] text-muted-foreground/50 font-medium">
-              or try
+              try a demo
             </p>
             <div className="flex flex-wrap justify-center gap-1.5 md:gap-2">
               {EXAMPLE_ANALYSES.map((ex) => (

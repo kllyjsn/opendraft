@@ -46,7 +46,7 @@ export function StickyMobileCTA() {
             className="w-full bg-foreground text-background hover:bg-foreground/90 border-0 gap-2 h-11 text-sm font-bold rounded-full"
           >
             <Zap className="h-4 w-4" />
-            Analyze Your Website — Free
+            See What Apps You Need — Free
           </Button>
         </MotionDiv>
       )}

@@ -1,92 +1,54 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, forwardRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Zap } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { GoogleSignInButton } from "@/components/GoogleSignInButton";
-import { Sparkles, Wand2 } from "lucide-react";
-import { getVariant, trackImpression, trackClick } from "@/lib/ab-test";
 
-const COPY_VARIANTS = {
-  a: { headline: "Get your first app free", sub: "Own the code · No per-seat fees" },
-  b: { headline: "Build your custom app now", sub: "90 seconds · You own everything" },
-  c: { headline: "Replace your SaaS today", sub: "Own the code · Zero monthly fees" },
-} as const;
-
-const RESULTS_COPY = { headline: "Your apps are ready", sub: "Pick one and build it in 90 seconds" };
-
-type Variant = keyof typeof COPY_VARIANTS;
+const MotionDiv = motion.div;
 
 export function StickyMobileCTA() {
   const [visible, setVisible] = useState(false);
   const { user } = useAuth();
-  const [variant] = useState<Variant>(() => getVariant("sticky_cta", ["a", "b", "c"]));
-  const [hasResults, setHasResults] = useState(false);
-  const impressionLogged = useRef(false);
 
   useEffect(() => {
     if (user) return;
 
     const handleScroll = () => {
-      setVisible(window.scrollY > 300);
-      // Check if analysis results are showing
-      try {
-        setHasResults(!!sessionStorage.getItem("opendraft_biz_analysis"));
-      } catch {}
+      setVisible(window.scrollY > 400);
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, [user]);
 
-  useEffect(() => {
-    if (visible && !impressionLogged.current && !user) {
-      impressionLogged.current = true;
-      trackImpression("sticky_cta", variant, "mobile_bar");
-    }
-  }, [visible, variant, user]);
-
   if (user) return null;
 
-  const copy = hasResults ? RESULTS_COPY : COPY_VARIANTS[variant];
-
-  const handleClick = () => {
-    trackClick("sticky_cta", variant, "mobile_bar");
-    if (hasResults) {
-      // Scroll to results
-      const results = document.querySelector('[data-results-section]');
-      results?.scrollIntoView({ behavior: "smooth", block: "start" });
+  const scrollToInput = () => {
+    const input = document.querySelector<HTMLInputElement>('input[inputMode="url"]');
+    if (input) {
+      input.focus();
+      input.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   };
 
   return (
     <AnimatePresence>
       {visible && (
-        <motion.div
+        <MotionDiv
           key="sticky-cta"
           initial={{ y: 100 }}
           animate={{ y: 0 }}
           exit={{ y: 100 }}
-          transition={{ type: "spring", damping: 25, stiffness: 300 }}
-          className="fixed bottom-0 left-0 right-0 z-50 md:hidden"
+          className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-card/95 backdrop-blur-lg py-3 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:hidden"
         >
-          <div className="bg-background/95 backdrop-blur-xl border-t border-border px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-            <div className="flex items-center gap-3">
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                  {hasResults
-                    ? <Wand2 className="h-3.5 w-3.5 text-primary shrink-0" />
-                    : <Sparkles className="h-3.5 w-3.5 text-primary shrink-0" />}
-                  {copy.headline}
-                </p>
-                <p className="text-[10px] text-muted-foreground mt-0.5 truncate">
-                  {copy.sub}
-                </p>
-              </div>
-              <div className="shrink-0 w-[180px]" onClick={handleClick}>
-                <GoogleSignInButton label={hasResults ? "Sign up to build" : "Sign up free"} className="!h-9 !text-xs" />
-              </div>
-            </div>
-          </div>
-        </motion.div>
+          <Button
+            onClick={scrollToInput}
+            className="w-full bg-foreground text-background hover:bg-foreground/90 border-0 gap-2 h-11 text-sm font-bold rounded-full"
+          >
+            <Zap className="h-4 w-4" />
+            Analyze Your Website — Free
+          </Button>
+        </MotionDiv>
       )}
     </AnimatePresence>
   );

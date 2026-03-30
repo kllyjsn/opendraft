@@ -425,10 +425,11 @@ export function BusinessAnalyzer({ onGenerate, onResultsChange }: {
               Pick an industry to see the audit:
             </p>
             <div className="flex flex-wrap justify-center gap-2.5 md:gap-3">
-              {EXAMPLE_ANALYSES.map((ex) => (
+              {EXAMPLE_ANALYSES.map((ex, i) => (
                 <button
                   key={ex.label}
                   type="button"
+                  data-demo-btn={i === 0 ? "" : undefined}
                   onClick={() => {
                     logActivity({ event_type: "example_clicked", event_data: { label: ex.label }, page: "/" });
                     setResult(ex.data);

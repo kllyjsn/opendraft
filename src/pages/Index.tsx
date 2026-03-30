@@ -207,7 +207,7 @@ export default function Index() {
                     your business needs
                   </h1>
                   <p className="mt-2 md:mt-3 text-xs md:text-sm text-muted-foreground/70 font-medium">
-                    Free audit in 20 seconds · No signup required
+                    Pick an industry below — instant results, no signup
                   </p>
                 </div>
               </motion.div>

@@ -232,6 +232,7 @@ export function BusinessAnalyzer({ onGenerate, onResultsChange }: {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [showUrlInput, setShowUrlInput] = useState(false);
 
   // Notify parent when results change
   useEffect(() => {
@@ -407,76 +408,99 @@ export function BusinessAnalyzer({ onGenerate, onResultsChange }: {
     clearAnalysis();
   }
 
+  
+
   // ── Input Form ──
   if (!result) {
     return (
       <div className="max-w-lg mx-auto w-full">
-        <form onSubmit={handleAnalyze}>
-          <div className="relative group">
-            <div className="absolute -inset-0.5 rounded-2xl bg-gradient-to-r from-primary/20 via-accent/20 to-secondary/20 opacity-0 group-focus-within:opacity-100 blur-sm transition-opacity duration-500" />
-            <div className="relative flex items-center">
-              <Globe className="absolute left-3 md:left-4 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="text"
-                inputMode="url"
-                autoCapitalize="none"
-                autoCorrect="off"
-                spellCheck={false}
-                placeholder="e.g. acmeplumbing.com"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                className="pl-9 md:pl-11 pr-24 md:pr-28 h-11 md:h-12 bg-card border-border/50 focus-visible:border-primary/40 focus-visible:shadow-glow transition-all rounded-xl text-sm leading-normal [&]:py-0"
-                disabled={loading}
-                required
-              />
-              <Button
-                type="submit"
-                size="sm"
-                disabled={loading || !url.trim()}
-                className="absolute right-1.5 md:right-2 gradient-hero text-primary-foreground border-0 shadow-glow hover:opacity-90 rounded-lg h-8 md:h-9 px-4 md:px-5 text-xs font-bold"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                    <span className="hidden sm:inline">Analyzing</span>
-                    <span className="sm:hidden">…</span>
-                  </>
-                ) : (
-                  "Audit free"
-                )}
-              </Button>
-            </div>
-          </div>
-        </form>
-
-        {/* One-tap examples — zero friction instant results */}
+        {/* PRIMARY: One-tap demo examples — highest conversion action */}
         {!loading && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="mt-3 md:mt-5 flex flex-col items-center gap-2 md:gap-3"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="flex flex-col items-center gap-3 md:gap-4"
           >
-            <p className="text-[10px] md:text-xs text-muted-foreground font-medium">
-              No website handy? Try a sample:
+            <p className="text-xs md:text-sm text-muted-foreground font-medium">
+              Pick an industry to see the audit:
             </p>
-            <div className="flex flex-wrap justify-center gap-2 md:gap-2.5">
-              {EXAMPLE_ANALYSES.map((ex) => (
+            <div className="flex flex-wrap justify-center gap-2.5 md:gap-3">
+              {EXAMPLE_ANALYSES.map((ex, i) => (
                 <button
                   key={ex.label}
                   type="button"
+                  data-demo-btn={i === 0 ? "" : undefined}
                   onClick={() => {
                     logActivity({ event_type: "example_clicked", event_data: { label: ex.label }, page: "/" });
                     setResult(ex.data);
                     saveAnalysis(ex.data);
                   }}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/5 px-3.5 md:px-4 py-1.5 md:py-2 text-xs md:text-sm font-semibold text-primary hover:bg-primary/10 hover:border-primary/50 transition-all duration-200 active:scale-[0.97]"
+                  className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-5 md:px-6 py-2.5 md:py-3 text-sm md:text-base font-semibold text-foreground hover:bg-primary/5 hover:border-primary/40 transition-all duration-200 active:scale-[0.97] shadow-sm"
                 >
-                  <span>{ex.emoji}</span>
+                  <span className="text-base md:text-lg">{ex.emoji}</span>
                   {ex.label}
-                  <ArrowRight className="h-3 w-3 opacity-60" />
+                  <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
                 </button>
               ))}
+            </div>
+
+            {/* SECONDARY: URL input — revealed on tap */}
+            <div className="w-full mt-2 md:mt-4">
+              {!showUrlInput ? (
+                <button
+                  type="button"
+                  onClick={() => setShowUrlInput(true)}
+                  className="text-xs md:text-sm text-muted-foreground hover:text-foreground transition-colors font-medium underline underline-offset-4 decoration-border hover:decoration-foreground"
+                >
+                  Or audit your own website →
+                </button>
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <form onSubmit={handleAnalyze} className="mt-1">
+                    <div className="relative group">
+                      <div className="absolute -inset-0.5 rounded-2xl bg-gradient-to-r from-primary/20 via-accent/20 to-secondary/20 opacity-0 group-focus-within:opacity-100 blur-sm transition-opacity duration-500" />
+                      <div className="relative flex items-center">
+                        <Globe className="absolute left-3 md:left-4 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          type="text"
+                          inputMode="url"
+                          autoCapitalize="none"
+                          autoCorrect="off"
+                          spellCheck={false}
+                          placeholder="e.g. acmeplumbing.com"
+                          value={url}
+                          onChange={(e) => setUrl(e.target.value)}
+                          className="pl-9 md:pl-11 pr-24 md:pr-28 h-11 md:h-12 bg-card border-border/50 focus-visible:border-primary/40 focus-visible:shadow-glow transition-all rounded-xl text-sm leading-normal [&]:py-0"
+                          disabled={loading}
+                          autoFocus
+                          required
+                        />
+                        <Button
+                          type="submit"
+                          size="sm"
+                          disabled={loading || !url.trim()}
+                          className="absolute right-1.5 md:right-2 gradient-hero text-primary-foreground border-0 shadow-glow hover:opacity-90 rounded-lg h-8 md:h-9 px-4 md:px-5 text-xs font-bold"
+                        >
+                          {loading ? (
+                            <>
+                              <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                              <span className="hidden sm:inline">Analyzing</span>
+                              <span className="sm:hidden">…</span>
+                            </>
+                          ) : (
+                            "Audit free"
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  </form>
+                </motion.div>
+              )}
             </div>
           </motion.div>
         )}

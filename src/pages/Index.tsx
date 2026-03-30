@@ -111,7 +111,7 @@ function BuildError({
 export default function Index() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [rotatingIndex, setRotatingIndex] = useState(0);
+  
   const [hasResults, setHasResults] = useState(false);
 
   useEffect(() => {

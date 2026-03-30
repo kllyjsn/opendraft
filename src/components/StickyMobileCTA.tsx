@@ -23,11 +23,12 @@ export function StickyMobileCTA() {
 
   if (user) return null;
 
-  const scrollToInput = () => {
-    const input = document.querySelector<HTMLInputElement>('input[inputMode="url"]');
-    if (input) {
-      input.focus();
-      input.scrollIntoView({ behavior: "smooth", block: "center" });
+  const scrollToDemo = () => {
+    // Click the first demo button if visible, otherwise scroll to the demo area
+    const demoBtn = document.querySelector<HTMLButtonElement>('[data-demo-btn]');
+    if (demoBtn) {
+      demoBtn.scrollIntoView({ behavior: "smooth", block: "center" });
+      setTimeout(() => demoBtn.click(), 400);
     }
   };
 

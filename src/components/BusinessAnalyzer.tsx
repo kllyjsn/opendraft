@@ -407,7 +407,7 @@ export function BusinessAnalyzer({ onGenerate, onResultsChange }: {
     clearAnalysis();
   }
 
-  const [showUrlInput, setShowUrlInput] = useState(false);
+  
 
   // ── Input Form ──
   if (!result) {

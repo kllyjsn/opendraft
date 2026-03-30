@@ -449,18 +449,18 @@ export function BusinessAnalyzer({ onGenerate, onResultsChange }: {
           </div>
         </form>
 
-        {/* One-tap examples — the key conversion lever */}
+        {/* One-tap examples — zero friction instant results */}
         {!loading && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="mt-2.5 md:mt-4 flex flex-col items-center gap-1 md:gap-2"
+            transition={{ delay: 0.2 }}
+            className="mt-3 md:mt-5 flex flex-col items-center gap-2 md:gap-3"
           >
-            <p className="text-[9px] md:text-[10px] uppercase tracking-[0.15em] text-muted-foreground/50 font-medium">
-              try a demo
+            <p className="text-[10px] md:text-xs text-muted-foreground font-medium">
+              No website handy? Try a sample:
             </p>
-            <div className="flex flex-wrap justify-center gap-1.5 md:gap-2">
+            <div className="flex flex-wrap justify-center gap-2 md:gap-2.5">
               {EXAMPLE_ANALYSES.map((ex) => (
                 <button
                   key={ex.label}
@@ -470,11 +470,11 @@ export function BusinessAnalyzer({ onGenerate, onResultsChange }: {
                     setResult(ex.data);
                     saveAnalysis(ex.data);
                   }}
-                  className="inline-flex items-center gap-1 md:gap-1.5 rounded-full border border-border/60 bg-card/50 backdrop-blur-sm px-2.5 md:px-3.5 py-1 md:py-1.5 text-[11px] md:text-xs font-medium text-foreground/80 hover:border-primary/40 hover:bg-primary/5 hover:text-primary transition-all duration-200"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/5 px-3.5 md:px-4 py-1.5 md:py-2 text-xs md:text-sm font-semibold text-primary hover:bg-primary/10 hover:border-primary/50 transition-all duration-200 active:scale-[0.97]"
                 >
                   <span>{ex.emoji}</span>
                   {ex.label}
-                  <ArrowRight className="h-2.5 md:h-3 w-2.5 md:w-3 opacity-40" />
+                  <ArrowRight className="h-3 w-3 opacity-60" />
                 </button>
               ))}
             </div>

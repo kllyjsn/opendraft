@@ -229,7 +229,7 @@ export default function Index() {
                 transition={{ duration: 0.6, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
                 className="text-xs md:text-base text-muted-foreground max-w-sm mx-auto mb-4 md:mb-12 leading-relaxed"
               >
-                We scan your site, then build and maintain apps for your business — free, no coding needed.
+                We'll find the SaaS you're overpaying for and show you custom replacements you can own.
               </motion.p>
             )}
           </AnimatePresence>

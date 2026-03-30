@@ -114,12 +114,6 @@ export default function Index() {
   
   const [hasResults, setHasResults] = useState(false);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setRotatingIndex((prev) => (prev + 1) % ROTATING_WORDS.length);
-    }, 2400);
-    return () => clearInterval(interval);
-  }, []);
 
   useEffect(() => {
     try {

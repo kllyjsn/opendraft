@@ -110,6 +110,13 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
+  .drafting-grid {
+    background-image:
+      linear-gradient(hsl(var(--border) / 0.45) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--border) / 0.45) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+
   *:focus-visible {
     @apply outline-none ring-2 ring-ring/40 ring-offset-2 ring-offset-background;
     transition: box-shadow 0.2s ease;

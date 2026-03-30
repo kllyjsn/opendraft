@@ -442,7 +442,7 @@ export function BusinessAnalyzer({ onGenerate, onResultsChange }: {
                     <span className="sm:hidden">…</span>
                   </>
                 ) : (
-                  "Analyze"
+                  "Audit free"
                 )}
               </Button>
             </div>

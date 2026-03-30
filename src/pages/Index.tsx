@@ -19,7 +19,7 @@ import { SocialProofBar } from "@/components/SocialProofBar";
 import { BeforeAfterDemo } from "@/components/BeforeAfterDemo";
 import { HomepageGremlins } from "@/components/HomepageGremlins";
 
-const ROTATING_WORDS = ["CRM", "scheduler", "dashboard", "portal", "tracker", "helpdesk"];
+
 
 function GenerationProgress({
   isInProgress,

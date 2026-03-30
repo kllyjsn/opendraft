@@ -208,24 +208,13 @@ export default function Index() {
               >
                 <div className="mb-3 md:mb-10">
                   <h1 className="text-2xl sm:text-4xl md:text-6xl lg:text-[4.5rem] font-bold tracking-[-0.03em] leading-[1.1] text-foreground">
-                    Paste your website,
+                    See what apps
                     <br />
-                    get a custom{" "}
-                    <span className="inline-block relative overflow-hidden align-bottom" style={{ minWidth: "4ch" }}>
-                      <AnimatePresence mode="wait">
-                        <motion.span
-                          key={ROTATING_WORDS[rotatingIndex]}
-                          initial={{ opacity: 0, y: 24 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -24 }}
-                          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                          className="inline-block text-secondary"
-                        >
-                          {ROTATING_WORDS[rotatingIndex]}
-                        </motion.span>
-                      </AnimatePresence>
-                    </span>
+                    your business needs
                   </h1>
+                  <p className="mt-2 md:mt-3 text-xs md:text-sm text-muted-foreground/70 font-medium">
+                    Free audit in 20 seconds · No signup required
+                  </p>
                 </div>
               </motion.div>
             )}

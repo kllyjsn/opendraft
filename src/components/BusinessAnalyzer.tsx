@@ -357,6 +357,13 @@ export function BusinessAnalyzer({ onGenerate, onResultsChange }: {
       setResult(data);
       saveAnalysis(data);
       saveAnalysisToDb(data, false);
+      // Save to persistent history for returning visitors
+      saveToHistory({
+        business_name: data.business_name,
+        industry: data.industry,
+        url: data.url,
+        top_app: data.recommended_builds?.[0]?.name || "Custom app",
+      });
     } catch (err) {
       const fallback = buildInstantFallback(normalizedUrl);
       setResult(fallback);

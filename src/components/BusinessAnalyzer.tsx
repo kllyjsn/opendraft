@@ -377,6 +377,13 @@ export function BusinessAnalyzer({ onGenerate, onResultsChange }: {
   }
 
   function handleGenerateClick(prompt: string) {
+    // Track ROI savings from SaaS replacements
+    if (result?.saas_replacements?.length) {
+      const monthlySavings = result.saas_replacements.reduce((s, r) => s + r.monthly_cost, 0);
+      const toolNames = result.saas_replacements.map((r) => r.tool_name);
+      addSavings(monthlySavings, toolNames);
+    }
+
     if (!user) {
       // Persist analysis so it survives the sign-in redirect
       if (result) saveAnalysis(result);

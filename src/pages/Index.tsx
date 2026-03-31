@@ -15,7 +15,7 @@ import { HomepageSignupNudge } from "@/components/HomepageSignupNudge";
 import { AnalysisShowcase } from "@/components/AnalysisShowcase";
 import { ValueProps } from "@/components/ValueProps";
 import { HeroBeams } from "@/components/HeroBeams";
-import { SocialProofBar } from "@/components/SocialProofBar";
+import { LiveSocialProof } from "@/components/LiveSocialProof";
 import { BeforeAfterDemo } from "@/components/BeforeAfterDemo";
 import { HomepageGremlins } from "@/components/HomepageGremlins";
 import { ReturningVisitorBanner } from "@/components/ReturningVisitorBanner";
@@ -252,7 +252,7 @@ export default function Index() {
             <BusinessAnalyzer onGenerate={handleGenerate} onResultsChange={setHasResults} />
           </motion.div>
 
-          {!hasResults && <SocialProofBar />}
+          {!hasResults && <LiveSocialProof />}
 
           <div className="mt-10">
             <AnimatePresence>

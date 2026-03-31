@@ -15,6 +15,9 @@ import { useSavedIdeas } from "@/hooks/useSavedIdeas";
 import { saveToHistory } from "@/components/ReturningVisitorBanner";
 import { addSavings } from "@/components/ROISavingsTracker";
 import { AdvisorPanel } from "@/components/AdvisorPanel";
+import { IntegrationPicker, getIntegrationNames } from "@/components/IntegrationPicker";
+import { AppPreviewMockup } from "@/components/AppPreviewMockup";
+import { PostAuditEmailCapture } from "@/components/PostAuditEmailCapture";
 
 interface Insight {
   title: string;
@@ -236,6 +239,7 @@ export function BusinessAnalyzer({ onGenerate, onResultsChange }: {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [showUrlInput, setShowUrlInput] = useState(false);
+  const [selectedIntegrations, setSelectedIntegrations] = useState<string[]>([]);
 
   // Notify parent when results change
   useEffect(() => {
@@ -404,12 +408,17 @@ export function BusinessAnalyzer({ onGenerate, onResultsChange }: {
     setResult(null);
     setError(null);
     setNotice(null);
+    // Append integration context to prompt
+    const integrationSuffix = selectedIntegrations.length > 0
+      ? ` with ${getIntegrationNames(selectedIntegrations).join(", ")} integrations`
+      : "";
+    const enrichedPrompt = prompt + integrationSuffix;
     if (onGenerate) {
-      onGenerate(prompt, brandCtx as any);
+      onGenerate(enrichedPrompt, brandCtx as any);
     } else {
       // Store brand context in sessionStorage for cross-page generation
       if (brandCtx) sessionStorage.setItem("opendraft_brand_context", JSON.stringify(brandCtx));
-      navigate(`/?generate=${encodeURIComponent(prompt)}`);
+      navigate(`/?generate=${encodeURIComponent(enrichedPrompt)}`);
     }
   }
 
@@ -684,6 +693,9 @@ export function BusinessAnalyzer({ onGenerate, onResultsChange }: {
         </motion.div>
       )}
 
+      {/* ── Integration Picker ── */}
+      <IntegrationPicker selected={selectedIntegrations} onChange={setSelectedIntegrations} />
+
       {/* Insights Strip */}
       <motion.div
         initial={{ opacity: 0, y: 8 }}
@@ -847,12 +859,23 @@ export function BusinessAnalyzer({ onGenerate, onResultsChange }: {
                 <p className="text-xs text-muted-foreground mt-1 leading-snug">{heroBuild.description}</p>
               </div>
             </div>
+            {/* App Preview Mockup */}
+            <div className="mb-3 ml-[52px]">
+              <AppPreviewMockup
+                appName={heroBuild.name}
+                category={heroBuild.category}
+                brandColors={result?.brand_identity}
+              />
+              <p className="text-[9px] text-muted-foreground/60 mt-1.5 text-center">
+                Deploys to <span className="font-mono font-bold text-foreground/70">{heroBuild.name.toLowerCase().replace(/\s+/g, "-")}.opendraft.app</span>
+              </p>
+            </div>
             <div className="flex flex-wrap gap-x-4 gap-y-1 mb-3 ml-[52px]">
               <span className="text-[10px] text-muted-foreground/70 flex items-center gap-1">
                 <Code className="h-2.5 w-2.5" /> Full source code
               </span>
               <span className="text-[10px] text-muted-foreground/70 flex items-center gap-1">
-                <Rocket className="h-2.5 w-2.5" /> Live deploy
+                <Rocket className="h-2.5 w-2.5" /> One-click deploy
               </span>
               <span className="text-[10px] text-muted-foreground/70 flex items-center gap-1">
                 <Megaphone className="h-2.5 w-2.5" /> Marketing kit
@@ -976,6 +999,17 @@ export function BusinessAnalyzer({ onGenerate, onResultsChange }: {
             })}
           </div>
         </motion.div>
+      )}
+
+      {/* ── Post-Audit Email Capture ── */}
+      {!user && (
+        <PostAuditEmailCapture
+          businessName={result.business_name}
+          industry={result.industry}
+          topApp={heroBuild?.name || "Custom App"}
+          monthlySavings={totalSaasSavings}
+          url={result.url}
+        />
       )}
 
       {/* ── AI Advisor Panel ── */}

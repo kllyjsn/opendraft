@@ -12,6 +12,8 @@ import { logActivity } from "@/lib/activity-logger";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useSavedIdeas } from "@/hooks/useSavedIdeas";
+import { saveToHistory } from "@/components/ReturningVisitorBanner";
+import { addSavings } from "@/components/ROISavingsTracker";
 
 interface Insight {
   title: string;
@@ -355,6 +357,13 @@ export function BusinessAnalyzer({ onGenerate, onResultsChange }: {
       setResult(data);
       saveAnalysis(data);
       saveAnalysisToDb(data, false);
+      // Save to persistent history for returning visitors
+      saveToHistory({
+        business_name: data.business_name,
+        industry: data.industry,
+        url: data.url,
+        top_app: data.recommended_builds?.[0]?.name || "Custom app",
+      });
     } catch (err) {
       const fallback = buildInstantFallback(normalizedUrl);
       setResult(fallback);
@@ -368,6 +377,13 @@ export function BusinessAnalyzer({ onGenerate, onResultsChange }: {
   }
 
   function handleGenerateClick(prompt: string) {
+    // Track ROI savings from SaaS replacements
+    if (result?.saas_replacements?.length) {
+      const monthlySavings = result.saas_replacements.reduce((s, r) => s + r.monthly_cost, 0);
+      const toolNames = result.saas_replacements.map((r) => r.tool_name);
+      addSavings(monthlySavings, toolNames);
+    }
+
     if (!user) {
       // Persist analysis so it survives the sign-in redirect
       if (result) saveAnalysis(result);
@@ -435,6 +451,12 @@ export function BusinessAnalyzer({ onGenerate, onResultsChange }: {
                     logActivity({ event_type: "example_clicked", event_data: { label: ex.label }, page: "/" });
                     setResult(ex.data);
                     saveAnalysis(ex.data);
+                    saveToHistory({
+                      business_name: ex.data.business_name,
+                      industry: ex.data.industry,
+                      url: ex.data.url,
+                      top_app: ex.data.recommended_builds?.[0]?.name || "Custom app",
+                    });
                   }}
                   className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-5 md:px-6 py-2.5 md:py-3 text-sm md:text-base font-semibold text-foreground hover:bg-primary/5 hover:border-primary/40 transition-all duration-200 active:scale-[0.97] shadow-sm"
                 >

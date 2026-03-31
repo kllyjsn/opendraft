@@ -18,6 +18,8 @@ import { HeroBeams } from "@/components/HeroBeams";
 import { SocialProofBar } from "@/components/SocialProofBar";
 import { BeforeAfterDemo } from "@/components/BeforeAfterDemo";
 import { HomepageGremlins } from "@/components/HomepageGremlins";
+import { ReturningVisitorBanner } from "@/components/ReturningVisitorBanner";
+import { ROISavingsTracker } from "@/components/ROISavingsTracker";
 
 
 
@@ -192,6 +194,17 @@ export default function Index() {
         
 
         <div className="container mx-auto px-4 text-center relative z-10">
+          {!hasResults && (
+            <ReturningVisitorBanner
+              onRestore={(url) => {
+                const input = document.querySelector<HTMLInputElement>('input[inputMode="url"]');
+                if (input) {
+                  input.focus();
+                  input.scrollIntoView({ behavior: "smooth", block: "center" });
+                }
+              }}
+            />
+          )}
           <AnimatePresence>
             {!hasResults && (
               <motion.div

@@ -21,6 +21,8 @@ import { AgentDemandFeed } from "@/components/AgentDemandFeed";
 import { ForkRequestsManager } from "@/components/ForkRequestsManager";
 import { ImprovementDashboard } from "@/components/ImprovementDashboard";
 import { ActiveBuilds, ActiveBuildsBanner } from "@/components/ActiveBuilds";
+import { DashboardWelcomeBack } from "@/components/DashboardWelcomeBack";
+import { ROISavingsTracker } from "@/components/ROISavingsTracker";
 
 interface Sale {
   id: string;
@@ -147,6 +149,8 @@ export default function Dashboard() {
       <Navbar />
       <main className="flex-1 container mx-auto px-4 py-8 sm:py-12 page-enter">
         <ActiveBuildsBanner />
+        <DashboardWelcomeBack />
+        <ROISavingsTracker />
 
         {/* ── Header ── */}
         <div className="mb-10">

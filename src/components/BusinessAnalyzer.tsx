@@ -14,6 +14,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useSavedIdeas } from "@/hooks/useSavedIdeas";
 import { saveToHistory } from "@/components/ReturningVisitorBanner";
 import { addSavings } from "@/components/ROISavingsTracker";
+import { AdvisorPanel } from "@/components/AdvisorPanel";
 
 interface Insight {
   title: string;

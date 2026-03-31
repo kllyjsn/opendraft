@@ -205,6 +205,7 @@ export default function Index() {
               }}
             />
           )}
+          <AnimatePresence>
             {!hasResults && (
               <motion.div
                 initial={{ opacity: 0, y: 24 }}

@@ -408,8 +408,13 @@ export function BusinessAnalyzer({ onGenerate, onResultsChange }: {
     setResult(null);
     setError(null);
     setNotice(null);
+    // Append integration context to prompt
+    const integrationSuffix = selectedIntegrations.length > 0
+      ? ` with ${getIntegrationNames(selectedIntegrations).join(", ")} integrations`
+      : "";
+    const enrichedPrompt = prompt + integrationSuffix;
     if (onGenerate) {
-      onGenerate(prompt, brandCtx as any);
+      onGenerate(enrichedPrompt, brandCtx as any);
     } else {
       // Store brand context in sessionStorage for cross-page generation
       if (brandCtx) sessionStorage.setItem("opendraft_brand_context", JSON.stringify(brandCtx));

@@ -21,6 +21,8 @@ import { AgentDemandFeed } from "@/components/AgentDemandFeed";
 import { ForkRequestsManager } from "@/components/ForkRequestsManager";
 import { ImprovementDashboard } from "@/components/ImprovementDashboard";
 import { ActiveBuilds, ActiveBuildsBanner } from "@/components/ActiveBuilds";
+import { DashboardWelcomeBack } from "@/components/DashboardWelcomeBack";
+import { ROISavingsTracker } from "@/components/ROISavingsTracker";
 
 interface Sale {
   id: string;

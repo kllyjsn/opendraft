@@ -239,6 +239,7 @@ export function BusinessAnalyzer({ onGenerate, onResultsChange }: {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [showUrlInput, setShowUrlInput] = useState(false);
+  const [selectedIntegrations, setSelectedIntegrations] = useState<string[]>([]);
 
   // Notify parent when results change
   useEffect(() => {

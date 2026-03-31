@@ -15,6 +15,9 @@ import { useSavedIdeas } from "@/hooks/useSavedIdeas";
 import { saveToHistory } from "@/components/ReturningVisitorBanner";
 import { addSavings } from "@/components/ROISavingsTracker";
 import { AdvisorPanel } from "@/components/AdvisorPanel";
+import { IntegrationPicker, getIntegrationNames } from "@/components/IntegrationPicker";
+import { AppPreviewMockup } from "@/components/AppPreviewMockup";
+import { PostAuditEmailCapture } from "@/components/PostAuditEmailCapture";
 
 interface Insight {
   title: string;

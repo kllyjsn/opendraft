@@ -20,6 +20,8 @@ import { BeforeAfterDemo } from "@/components/BeforeAfterDemo";
 import { HomepageGremlins } from "@/components/HomepageGremlins";
 import { ReturningVisitorBanner } from "@/components/ReturningVisitorBanner";
 import { ROISavingsTracker } from "@/components/ROISavingsTracker";
+import { PricingCalculator } from "@/components/PricingCalculator";
+import { CompetitorComparison } from "@/components/CompetitorComparison";
 
 
 
@@ -284,6 +286,8 @@ export default function Index() {
             </section>
 
             <ValueProps />
+            <PricingCalculator />
+            <CompetitorComparison />
             <AnalysisShowcase />
 
             {!user && <HomepageSignupNudge />}

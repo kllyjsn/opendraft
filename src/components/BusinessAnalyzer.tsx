@@ -14,6 +14,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useSavedIdeas } from "@/hooks/useSavedIdeas";
 import { saveToHistory } from "@/components/ReturningVisitorBanner";
 import { addSavings } from "@/components/ROISavingsTracker";
+import { AdvisorPanel } from "@/components/AdvisorPanel";
 
 interface Insight {
   title: string;
@@ -976,6 +977,14 @@ export function BusinessAnalyzer({ onGenerate, onResultsChange }: {
           </div>
         </motion.div>
       )}
+
+      {/* ── AI Advisor Panel ── */}
+      <AdvisorPanel
+        businessName={result.business_name}
+        industry={result.industry}
+        saasReplacements={result.saas_replacements}
+        recommendedApps={result.recommended_builds?.map(b => ({ title: b.name, description: b.description }))}
+      />
 
     </motion.div>
   );

@@ -18,6 +18,8 @@ import { HeroBeams } from "@/components/HeroBeams";
 import { SocialProofBar } from "@/components/SocialProofBar";
 import { BeforeAfterDemo } from "@/components/BeforeAfterDemo";
 import { HomepageGremlins } from "@/components/HomepageGremlins";
+import { ReturningVisitorBanner } from "@/components/ReturningVisitorBanner";
+import { ROISavingsTracker } from "@/components/ROISavingsTracker";
 
 
 

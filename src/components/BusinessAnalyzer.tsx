@@ -859,12 +859,23 @@ export function BusinessAnalyzer({ onGenerate, onResultsChange }: {
                 <p className="text-xs text-muted-foreground mt-1 leading-snug">{heroBuild.description}</p>
               </div>
             </div>
+            {/* App Preview Mockup */}
+            <div className="mb-3 ml-[52px]">
+              <AppPreviewMockup
+                appName={heroBuild.name}
+                category={heroBuild.category}
+                brandColors={result?.brand_identity}
+              />
+              <p className="text-[9px] text-muted-foreground/60 mt-1.5 text-center">
+                Deploys to <span className="font-mono font-bold text-foreground/70">{heroBuild.name.toLowerCase().replace(/\s+/g, "-")}.opendraft.app</span>
+              </p>
+            </div>
             <div className="flex flex-wrap gap-x-4 gap-y-1 mb-3 ml-[52px]">
               <span className="text-[10px] text-muted-foreground/70 flex items-center gap-1">
                 <Code className="h-2.5 w-2.5" /> Full source code
               </span>
               <span className="text-[10px] text-muted-foreground/70 flex items-center gap-1">
-                <Rocket className="h-2.5 w-2.5" /> Live deploy
+                <Rocket className="h-2.5 w-2.5" /> One-click deploy
               </span>
               <span className="text-[10px] text-muted-foreground/70 flex items-center gap-1">
                 <Megaphone className="h-2.5 w-2.5" /> Marketing kit

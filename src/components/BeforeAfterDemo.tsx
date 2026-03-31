@@ -2,9 +2,9 @@ import { motion } from "framer-motion";
 import { ArrowRight, Globe, Layout } from "lucide-react";
 
 const examples = [
-  { site: "acmeplumbing.com", app: "Customer Portal + Scheduling" },
   { site: "modernlaw.co", app: "Client Intake + Case Tracker" },
   { site: "peakfitness.com", app: "Member Dashboard + Booking" },
+  { site: "acmeplumbing.com", app: "Customer Portal + Scheduling" },
 ];
 
 export function BeforeAfterDemo() {

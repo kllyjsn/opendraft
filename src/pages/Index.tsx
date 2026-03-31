@@ -194,7 +194,17 @@ export default function Index() {
         
 
         <div className="container mx-auto px-4 text-center relative z-10">
-          <AnimatePresence>
+          {!hasResults && (
+            <ReturningVisitorBanner
+              onRestore={(url) => {
+                const input = document.querySelector<HTMLInputElement>('input[inputMode="url"]');
+                if (input) {
+                  input.focus();
+                  input.scrollIntoView({ behavior: "smooth", block: "center" });
+                }
+              }}
+            />
+          )}
             {!hasResults && (
               <motion.div
                 initial={{ opacity: 0, y: 24 }}

@@ -978,6 +978,14 @@ export function BusinessAnalyzer({ onGenerate, onResultsChange }: {
         </motion.div>
       )}
 
+      {/* ── AI Advisor Panel ── */}
+      <AdvisorPanel
+        businessName={result.business_name}
+        industry={result.industry}
+        saasReplacements={result.saas_replacements}
+        recommendedApps={result.recommended_builds?.map(b => ({ title: b.name, description: b.description }))}
+      />
+
     </motion.div>
   );
 }

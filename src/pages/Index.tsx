@@ -286,6 +286,8 @@ export default function Index() {
             </section>
 
             <ValueProps />
+            <PricingCalculator />
+            <CompetitorComparison />
             <AnalysisShowcase />
 
             {!user && <HomepageSignupNudge />}

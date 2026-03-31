@@ -12,6 +12,8 @@ import { logActivity } from "@/lib/activity-logger";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useSavedIdeas } from "@/hooks/useSavedIdeas";
+import { saveToHistory } from "@/components/ReturningVisitorBanner";
+import { addSavings } from "@/components/ROISavingsTracker";
 
 interface Insight {
   title: string;

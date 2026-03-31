@@ -451,6 +451,12 @@ export function BusinessAnalyzer({ onGenerate, onResultsChange }: {
                     logActivity({ event_type: "example_clicked", event_data: { label: ex.label }, page: "/" });
                     setResult(ex.data);
                     saveAnalysis(ex.data);
+                    saveToHistory({
+                      business_name: ex.data.business_name,
+                      industry: ex.data.industry,
+                      url: ex.data.url,
+                      top_app: ex.data.recommended_builds?.[0]?.name || "Custom app",
+                    });
                   }}
                   className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-5 md:px-6 py-2.5 md:py-3 text-sm md:text-base font-semibold text-foreground hover:bg-primary/5 hover:border-primary/40 transition-all duration-200 active:scale-[0.97] shadow-sm"
                 >

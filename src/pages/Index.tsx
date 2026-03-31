@@ -252,7 +252,7 @@ export default function Index() {
             <BusinessAnalyzer onGenerate={handleGenerate} onResultsChange={setHasResults} />
           </motion.div>
 
-          {!hasResults && <SocialProofBar />}
+          {!hasResults && <LiveSocialProof />}
 
           <div className="mt-10">
             <AnimatePresence>

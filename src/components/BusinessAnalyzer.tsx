@@ -693,6 +693,9 @@ export function BusinessAnalyzer({ onGenerate, onResultsChange }: {
         </motion.div>
       )}
 
+      {/* ── Integration Picker ── */}
+      <IntegrationPicker selected={selectedIntegrations} onChange={setSelectedIntegrations} />
+
       {/* Insights Strip */}
       <motion.div
         initial={{ opacity: 0, y: 8 }}

@@ -121,8 +121,8 @@ const App = () => (
             <Route path="/storefront" element={<Storefront />} />
             <Route path="/cloud" element={<CloudPage />} />
             <Route path="/messages" element={<Messages />} />
-            <Route path="/bounties" element={<Bounties />} />
-            <Route path="/bounty/:id" element={<BountyDetail />} />
+            {/* <Route path="/bounties" element={<Bounties />} /> */}
+            {/* <Route path="/bounty/:id" element={<BountyDetail />} /> */}
             <Route path="/builders" element={<Builders />} />
             <Route path="/builder/:userId" element={<BuilderProfile />} />
             <Route path="/category/:slug" element={<Category />} />

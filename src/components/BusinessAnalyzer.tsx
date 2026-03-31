@@ -418,7 +418,7 @@ export function BusinessAnalyzer({ onGenerate, onResultsChange }: {
     } else {
       // Store brand context in sessionStorage for cross-page generation
       if (brandCtx) sessionStorage.setItem("opendraft_brand_context", JSON.stringify(brandCtx));
-      navigate(`/?generate=${encodeURIComponent(prompt)}`);
+      navigate(`/?generate=${encodeURIComponent(enrichedPrompt)}`);
     }
   }
 

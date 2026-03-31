@@ -1001,6 +1001,17 @@ export function BusinessAnalyzer({ onGenerate, onResultsChange }: {
         </motion.div>
       )}
 
+      {/* ── Post-Audit Email Capture ── */}
+      {!user && (
+        <PostAuditEmailCapture
+          businessName={result.business_name}
+          industry={result.industry}
+          topApp={heroBuild?.name || "Custom App"}
+          monthlySavings={totalSaasSavings}
+          url={result.url}
+        />
+      )}
+
       {/* ── AI Advisor Panel ── */}
       <AdvisorPanel
         businessName={result.business_name}

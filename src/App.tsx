@@ -123,7 +123,7 @@ const App = () => (
             <Route path="/messages" element={<Messages />} />
             {/* <Route path="/bounties" element={<Bounties />} /> */}
             {/* <Route path="/bounty/:id" element={<BountyDetail />} /> */}
-            <Route path="/builders" element={<Builders />} />
+            {/* <Route path="/builders" element={<Builders />} /> */}
             <Route path="/builder/:userId" element={<BuilderProfile />} />
             <Route path="/category/:slug" element={<Category />} />
             <Route path="/lifestyle/:slug" element={<LifestyleCategory />} />

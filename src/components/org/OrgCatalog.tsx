@@ -58,7 +58,6 @@ export function OrgCatalog({ orgId, isAdmin }: OrgCatalogProps) {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
   const [submitOpen, setSubmitOpen] = useState(false);
-  const [listingUrl, setListingUrl] = useState("");
   const [department, setDepartment] = useState("");
   const [submitting, setSubmitting] = useState(false);
 

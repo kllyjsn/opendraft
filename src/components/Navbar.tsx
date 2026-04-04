@@ -33,6 +33,7 @@ export function Navbar() {
   const { user, signOut, loading } = useAuth();
   const { isAdmin } = useAdmin();
   const { unreadCount } = useUnreadMessages();
+  const { org: myOrg } = useMyOrg();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
 

@@ -972,6 +972,7 @@ export type Database = {
           built_with: string | null
           category: Database["public"]["Enums"]["listing_category"]
           completeness_badge: Database["public"]["Enums"]["completeness_badge"]
+          compliance_tags: string[] | null
           created_at: string
           demo_url: string | null
           description: string
@@ -1001,6 +1002,7 @@ export type Database = {
           built_with?: string | null
           category?: Database["public"]["Enums"]["listing_category"]
           completeness_badge?: Database["public"]["Enums"]["completeness_badge"]
+          compliance_tags?: string[] | null
           created_at?: string
           demo_url?: string | null
           description: string
@@ -1030,6 +1032,7 @@ export type Database = {
           built_with?: string | null
           category?: Database["public"]["Enums"]["listing_category"]
           completeness_badge?: Database["public"]["Enums"]["completeness_badge"]
+          compliance_tags?: string[] | null
           created_at?: string
           demo_url?: string | null
           description?: string
@@ -1187,6 +1190,143 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      org_listings: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          compliance_tags: string[] | null
+          created_at: string
+          department: string | null
+          id: string
+          listing_id: string
+          notes: string | null
+          org_id: string
+          status: Database["public"]["Enums"]["org_listing_status"]
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          compliance_tags?: string[] | null
+          created_at?: string
+          department?: string | null
+          id?: string
+          listing_id: string
+          notes?: string | null
+          org_id: string
+          status?: Database["public"]["Enums"]["org_listing_status"]
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          compliance_tags?: string[] | null
+          created_at?: string
+          department?: string | null
+          id?: string
+          listing_id?: string
+          notes?: string | null
+          org_id?: string
+          status?: Database["public"]["Enums"]["org_listing_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_listings_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "org_listings_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      org_members: {
+        Row: {
+          created_at: string
+          id: string
+          invited_by: string | null
+          org_id: string
+          role: Database["public"]["Enums"]["org_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          invited_by?: string | null
+          org_id: string
+          role?: Database["public"]["Enums"]["org_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          invited_by?: string | null
+          org_id?: string
+          role?: Database["public"]["Enums"]["org_role"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_members_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          brand_colors: Json | null
+          created_at: string
+          created_by: string
+          domain: string | null
+          id: string
+          logo_url: string | null
+          max_apps: number | null
+          max_seats: number | null
+          name: string
+          slug: string
+          sso_config: Json | null
+          subscription_tier: string | null
+          updated_at: string
+        }
+        Insert: {
+          brand_colors?: Json | null
+          created_at?: string
+          created_by: string
+          domain?: string | null
+          id?: string
+          logo_url?: string | null
+          max_apps?: number | null
+          max_seats?: number | null
+          name: string
+          slug: string
+          sso_config?: Json | null
+          subscription_tier?: string | null
+          updated_at?: string
+        }
+        Update: {
+          brand_colors?: Json | null
+          created_at?: string
+          created_by?: string
+          domain?: string | null
+          id?: string
+          logo_url?: string | null
+          max_apps?: number | null
+          max_seats?: number | null
+          name?: string
+          slug?: string
+          sso_config?: Json | null
+          subscription_tier?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       outreach_campaigns: {
         Row: {
@@ -1906,6 +2046,14 @@ export type Database = {
         Args: { seller_id_param: string }
         Returns: undefined
       }
+      is_org_admin: {
+        Args: { _org_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_org_member: {
+        Args: { _org_id: string; _user_id: string }
+        Returns: boolean
+      }
       listing_has_screenshot: {
         Args: { screenshots: string[] }
         Returns: boolean
@@ -1961,6 +2109,8 @@ export type Database = {
         | "game"
         | "other"
       listing_status: "pending" | "live" | "hidden"
+      org_listing_status: "pending" | "approved" | "rejected"
+      org_role: "owner" | "admin" | "builder" | "member"
       pricing_type: "one_time" | "monthly"
     }
     CompositeTypes: {
@@ -2101,6 +2251,8 @@ export const Constants = {
         "other",
       ],
       listing_status: ["pending", "live", "hidden"],
+      org_listing_status: ["pending", "approved", "rejected"],
+      org_role: ["owner", "admin", "builder", "member"],
       pricing_type: ["one_time", "monthly"],
     },
   },

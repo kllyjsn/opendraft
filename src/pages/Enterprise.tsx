@@ -226,7 +226,7 @@ function ContactForm() {
 }
 
 export default function Enterprise() {
-  return (
+  const { user } = useAuth();
     <div className="min-h-screen bg-background">
       <MetaTags
         title="Enterprise Private App Marketplace | OpenDraft"

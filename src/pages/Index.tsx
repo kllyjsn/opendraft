@@ -287,6 +287,7 @@ export default function Index() {
             </section>
 
             <ValueProps />
+            <AppShowcase />
             <PricingCalculator />
             <CompetitorComparison />
             <AnalysisShowcase />

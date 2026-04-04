@@ -49,8 +49,8 @@ async function generateTweetArt(postType: string): Promise<string | null> {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${lovableApiKey}` },
       body: JSON.stringify({
-        model: "google/gemini-3.1-flash-image-preview",
-        messages: [{ role: "user", content: `Generate an image: ${prompt}. The image should be 1200x675 pixels (Twitter optimal), landscape orientation.` }],
+        model: "google/gemini-3-pro-image-preview",
+        messages: [{ role: "user", content: `Create a stunning, award-winning editorial photograph or photorealistic CGI render. ${prompt}. Output a single landscape-oriented image at the highest quality possible. This will be published by a premium brand — the quality bar is a Bloomberg Businessweek cover or Apple marketing asset.` }],
         modalities: ["image", "text"],
       }),
     });

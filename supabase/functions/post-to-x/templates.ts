@@ -292,61 +292,73 @@ export function weeklyStatsTweet(stats: { listings: number; sales: number; build
 }
 
 // ═══════════════════════════════════════════════════════════════
-// ART PROMPT GENERATOR
+// ART PROMPT GENERATOR — PREMIUM TIER
 // ═══════════════════════════════════════════════════════════════
+// Each prompt is a self-contained cinematic brief. The model receives ONE
+// prompt — no style-mixing, no generic fallbacks. Every image should feel
+// like a hero shot from a Bloomberg or McKinsey digital report.
 export function getTweetArtPrompt(postType: string): string {
-  const styles = [
-    "clean modern corporate illustration, dark navy background, subtle gold and white accents, professional and sophisticated, no text, no words, no letters, no watermarks",
-    "minimalist geometric composition, deep charcoal with subtle blue gradients, elegant and restrained, no text, no words, no letters",
-    "abstract data visualization aesthetic, interconnected nodes and lines, navy and teal color scheme, enterprise quality, no text, no words, no letters",
-    "architectural blueprint style with glowing white lines on deep blue background, precision and clarity, no text, no words, no letters",
-    "sophisticated 3D rendered scene with soft studio lighting, matte materials, dark neutral tones with warm accent, no text, no words, no letters",
-    "editorial illustration style, bold shapes with limited color palette of navy, white, and gold, thoughtful composition, no text, no words, no letters",
-    "abstract landscape of geometric forms suggesting growth and structure, cool blue and warm amber, contemplative mood, no text, no words, no letters",
-  ];
-  const styleBase = pick(styles);
+  // QUALITY DIRECTIVE appended to every prompt — enforces premium bar
+  const QD = "Photorealistic CGI quality, 8K render, dramatic cinematic lighting with a single warm key light and cool ambient fill, shallow depth-of-field bokeh on background elements, ultra-clean composition with generous negative space, no text, no words, no letters, no watermarks, no logos, no UI elements, aspect ratio 16:9";
 
   const prompts: Record<string, string[]> = {
     engagement_hook: [
-      `An elegant visualization of interconnected systems — some glowing with autonomy, others dimmed by dependency. ${styleBase}`,
-      `A sophisticated balance scale with a single owned key on one side outweighing a pile of subscription invoices. ${styleBase}`,
-      `An abstract architectural structure being built from solid owned components, stable and permanent. ${styleBase}`,
+      `A massive obsidian monolith standing alone in a vast salt flat at golden hour — its surface reflecting a single luminous keyhole. Surrounding it, hundreds of translucent subscription cards dissolve into dust carried by wind. The scale conveys permanence vs ephemerality. ${QD}`,
+      `An aerial view of two cities at dusk: one is a chaotic tangle of glowing wires and blinking SaaS logos fading into static, the other is a serene grid of self-illuminated buildings with warm interior light. A single bridge connects them, half-built. ${QD}`,
+      `A lone figure in a tailored suit stands at the edge of an infinite glass floor, beneath which thousands of spinning gears and data streams are visible. They hold a single brass key that glows faintly. Corporate power, quiet confidence. ${QD}`,
     ],
     fomo: [
-      `A subtle upward-trending graph rendered as an elegant 3D landscape, conveying steady momentum. ${styleBase}`,
-      `A sophisticated dashboard showing metrics trending positively, rendered as abstract art. ${styleBase}`,
+      `A sweeping time-lapse composite: a barren desert landscape on the left gradually transitions to a thriving metropolis of crystalline towers on the right, with a subtle upward-curving horizon line connecting them. Golden hour light bathes the city side. ${QD}`,
+      `An enormous hourglass made of polished black marble, suspended in a void. The top chamber holds dissolving subscription receipts, the bottom fills with solid gold ingots. Light refracts through the glass creating caustic patterns on surrounding darkness. ${QD}`,
     ],
     pain_point: [
-      `An abstract representation of complexity — tangled connections gradually being simplified into clean, direct lines. ${styleBase}`,
-      `A sophisticated visualization of resource allocation — showing the gap between what's used and what's paid for. ${styleBase}`,
+      `Close-up macro shot of a tangled mass of fiber-optic cables, each glowing a different corporate color — gradually being replaced by a single elegant conduit of white light that cuts through the chaos diagonally. Shallow DOF, moody blue-gray atmosphere. ${QD}`,
+      `A boardroom table seen from directly above. On one half: scattered invoices, multiple laptop screens showing different vendor dashboards. On the other half: a single clean tablet displaying one unified interface, a coffee cup, a calm hand. The contrast tells the story. ${QD}`,
     ],
     gremlin: [
-      `Abstract AI agents represented as elegant geometric forms, maintaining and optimizing a system of interconnected apps. ${styleBase}`,
-      `A sophisticated control room visualization — calm, automated, everything monitored. ${styleBase}`,
+      `A futuristic server room rendered as a cathedral — towering columns of light, with tiny luminous autonomous agents (abstract geometric forms, not humanoid) floating between racks, performing maintenance. Volumetric fog, teal and amber accent lighting, reverent atmosphere. ${QD}`,
+      `An abstract control surface — a vast dark desk with a single glowing orb at its center, from which thin golden threads extend outward to dozens of floating app interfaces arranged in a perfect constellation. Each interface pulses with healthy green status indicators. ${QD}`,
     ],
     question: [
-      `A contemplative abstract scene — a fork in a path, one leading to complexity, the other to clarity. ${styleBase}`,
+      `A dramatic crossroads in an impossible landscape: one path is paved with glowing subscription tiles that fade into fog, the other is a solid stone bridge leading to a single illuminated fortress on a cliff. Storm clouds above, breaking sunlight on the fortress. ${QD}`,
+      `An enormous question mark sculpted from brushed titanium, standing in a minimalist gallery space with polished concrete floors. Its shadow on the wall forms the silhouette of a building. Single spotlight, museum-quality presentation. ${QD}`,
     ],
     success_story: [
-      `An elegant before/after visualization — complexity transforming into clarity, represented through architectural forms. ${styleBase}`,
+      `Split composition: left side shows a cramped, cable-cluttered server closet in cold fluorescent light. Right side shows the same space transformed into an airy, plant-filled modern office with a single elegant terminal. A person walks confidently through the right side. ${QD}`,
+      `An architect's hands placing the final crystalline block atop a pristine tower model. The model glows from within. Behind them, through floor-to-ceiling windows, a real city skyline mirrors the model's form. Dawn light, sense of completion. ${QD}`,
     ],
     direct_cta: [
-      `A sophisticated gateway or portal rendered in elegant geometric forms, suggesting access and possibility. ${styleBase}`,
+      `A massive vault door, slightly ajar, with warm golden light spilling out into a dark marble corridor. The door's surface is brushed steel with minimal geometric patterns. The light reveals a glimpse of organized, beautiful software interfaces within. Cinematic scale. ${QD}`,
+      `A hand reaching toward a floating translucent cube that contains a miniature, perfectly-running software ecosystem — tiny dashboards, data flows, user interfaces all alive and glowing. The background is pure black with subtle particle effects. ${QD}`,
     ],
     hot_take: [
-      `An abstract scene of transformation — solid forms emerging from dissolving structures, suggesting evolution. ${styleBase}`,
+      `A colossal wave frozen mid-crash, rendered in obsidian and gold. Within the wave's translucent body, you can see the outlines of legacy software interfaces being swept away. On the shore, a single modern structure stands unmoved, its foundations deep. ${QD}`,
+      `A chess endgame on an enormous board in an empty grand hall — most pieces have fallen. A single unconventional piece (a key-shaped piece) stands in a winning position against a scattered army of identical pawns. Dramatic side-lighting, dust particles in air. ${QD}`,
     ],
     data_drop: [
-      `An elegant data visualization — precise, clean, with subtle depth and dimensionality. ${styleBase}`,
+      `An enormous holographic data visualization floating above a polished obsidian table in a dark executive briefing room. The visualization shows an inflection point — a curve breaking sharply upward. Teal and white light, no labels, pure visual impact. ${QD}`,
+      `Thousands of tiny luminous data points arranged in 3D space, forming the unmistakable shape of an ascending staircase. Each step is a different shade from deep blue to brilliant gold. Shot from a low angle looking up, conveying scale and progress. ${QD}`,
     ],
     new_listing: [
-      `A pristine, newly-minted product rendered as a precious geometric form — polished and ready. ${styleBase}`,
+      `A product reveal moment: a single app interface floating on a pedestal of light in a dark showroom space, with subtle lens flares and volumetric light rays from above. The interface glows with warm amber and clean white — like an Apple keynote product shot. ${QD}`,
+      `A freshly-minted coin made of iridescent material, resting on black velvet. The coin's surface shows abstract circuit patterns that catch the light. A single dramatic spotlight from the upper right creates a long shadow. Macro photography quality. ${QD}`,
     ],
     blog_post: [
-      `An open book or document rendered as an elegant 3D form, with knowledge emanating as subtle light. ${styleBase}`,
+      `An open journal on a mahogany desk, its pages transforming into luminous data streams that rise and merge with a holographic globe above. The room is a sophisticated study — leather, brass, warm lamplight. The streams are cool blue against the warm interior. ${QD}`,
+      `A typewriter made of polished steel and glass, with each key press releasing a tiny constellation of light upward. The scene is captured in a grand library with floor-to-ceiling bookshelves, dramatic window light, and floating dust particles. ${QD}`,
+    ],
+    builder_spotlight: [
+      `A craftsperson's workbench viewed from a dramatic low angle — precise tools arranged with surgical precision, a glowing prototype at center. Warm workshop lighting mixed with cool screen glow. Hands in frame suggest mastery. Tilt-shift photography style. ${QD}`,
+    ],
+    vibe_report: [
+      `An enormous transparent sphere containing a living ecosystem of software — interconnected modules orbiting each other like planets. Outside the sphere, abstract market forces swirl as colorful nebulae. Observatory aesthetic, scientific wonder. ${QD}`,
+    ],
+    value_tweet: [
+      `A single perfect diamond resting on raw graphite — both made of carbon, utterly different in value. Shot macro with extreme shallow DOF, studio lighting. The metaphor for transformation is visual, not stated. ${QD}`,
+      `A lighthouse beam cutting through dense fog at night, illuminating a narrow but clear path across dark water. Seen from aerial perspective. The beam is warm gold, everything else is moody blue-gray. Solitary, authoritative. ${QD}`,
     ],
   };
 
-  const typePrompts = prompts[postType] || prompts.engagement_hook;
+  const typePrompts = prompts[postType] || prompts.value_tweet;
   return pick(typePrompts);
 }

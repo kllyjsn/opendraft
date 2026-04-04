@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -8,7 +8,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Check, X, Loader2, Package, Shield, Clock } from "lucide-react";
+import { Plus, Check, X, Loader2, Package, Shield, Clock, Search } from "lucide-react";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+
+interface CatalogSearchResult {
+  id: string;
+  title: string;
+  description: string;
+  price: number;
+  category: string;
+  screenshots: string[] | null;
+}
 
 interface OrgListing {
   id: string;

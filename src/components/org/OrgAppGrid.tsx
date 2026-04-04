@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, ExternalLink, Shield, Star, Loader2, LayoutGrid, List } from "lucide-react";
+import { Search, Shield, Loader2, LayoutGrid, List, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface AppItem {
@@ -23,12 +23,11 @@ interface AppItem {
   };
 }
 
-// Deterministic pastel color from string
 function appColor(str: string): string {
   let hash = 0;
   for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
   const hue = Math.abs(hash) % 360;
-  return `hsl(${hue}, 60%, 88%)`;
+  return `hsl(${hue}, 55%, 52%)`;
 }
 
 function appIconLetter(title: string): string {
@@ -37,9 +36,10 @@ function appIconLetter(title: string): string {
 
 interface OrgAppGridProps {
   orgId: string;
+  orgSlug?: string;
 }
 
-export function OrgAppGrid({ orgId }: OrgAppGridProps) {
+export function OrgAppGrid({ orgId, orgSlug }: OrgAppGridProps) {
   const [apps, setApps] = useState<AppItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -93,6 +93,11 @@ export function OrgAppGrid({ orgId }: OrgAppGridProps) {
     );
   });
 
+  const handleOpen = (listingId: string) => {
+    const params = orgSlug ? `?org=${orgSlug}` : "";
+    navigate(`/listing/${listingId}${params}`);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -108,7 +113,7 @@ export function OrgAppGrid({ orgId }: OrgAppGridProps) {
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search your apps..."
+            placeholder="Search apps…"
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="pl-9 bg-card border-border/40"
@@ -155,7 +160,7 @@ export function OrgAppGrid({ orgId }: OrgAppGridProps) {
         </div>
       )}
 
-      {/* Apps */}
+      {/* Empty state */}
       {filtered.length === 0 ? (
         <div className="text-center py-20 text-muted-foreground">
           <div className="h-16 w-16 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
@@ -171,98 +176,110 @@ export function OrgAppGrid({ orgId }: OrgAppGridProps) {
           </p>
         </div>
       ) : viewMode === "grid" ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {filtered.map(app => (
-            <button
-              key={app.id}
-              onClick={() => navigate(`/listing/${app.listing_id}`)}
-              className="group flex flex-col items-center gap-3 p-5 rounded-2xl border border-border/30 bg-card hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-200 text-center"
-            >
-              {/* App Icon */}
-              {app.listing?.screenshots?.[0] ? (
-                <div className="h-14 w-14 rounded-xl overflow-hidden ring-1 ring-border/20 shadow-sm">
-                  <img
-                    src={app.listing.screenshots[0]}
-                    alt={app.listing.title}
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-              ) : (
-                <div
-                  className="h-14 w-14 rounded-xl flex items-center justify-center text-xl font-black shadow-sm ring-1 ring-black/5"
-                  style={{ backgroundColor: appColor(app.listing?.title ?? app.listing_id) }}
-                >
-                  {appIconLetter(app.listing?.title ?? "A")}
-                </div>
-              )}
-
-              {/* Title */}
-              <div className="space-y-1 min-w-0 w-full">
-                <p className="text-xs font-semibold truncate group-hover:text-primary transition-colors">
-                  {app.listing?.title ?? "Unknown App"}
-                </p>
-                {app.department && (
-                  <p className="text-[10px] text-muted-foreground truncate">{app.department}</p>
+        /* ── Okta-style tile grid ── */
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
+          {filtered.map(app => {
+            const title = app.listing?.title ?? "App";
+            const color = appColor(title);
+            return (
+              <button
+                key={app.id}
+                onClick={() => handleOpen(app.listing_id)}
+                className="group relative flex flex-col items-center gap-3 p-6 rounded-2xl bg-card border border-border/20 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_8px_30px_-8px_hsl(var(--foreground)/0.12)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                style={{ boxShadow: "0 2px 12px -4px hsl(var(--foreground) / 0.08)" }}
+              >
+                {/* Tile icon */}
+                {app.listing?.screenshots?.[0] ? (
+                  <div className="h-16 w-16 rounded-[18px] overflow-hidden shadow-md ring-1 ring-border/10 transition-transform duration-200 group-hover:scale-105">
+                    <img
+                      src={app.listing.screenshots[0]}
+                      alt={title}
+                      className="h-full w-full object-cover"
+                      loading="lazy"
+                    />
+                  </div>
+                ) : (
+                  <div
+                    className="h-16 w-16 rounded-[18px] flex items-center justify-center text-2xl font-black text-white shadow-md transition-transform duration-200 group-hover:scale-105"
+                    style={{ backgroundColor: color, boxShadow: `0 4px 14px -4px ${color}` }}
+                  >
+                    {appIconLetter(title)}
+                  </div>
                 )}
-              </div>
 
-              {/* Compliance */}
-              {app.compliance_tags.length > 0 && (
-                <div className="flex items-center gap-1">
-                  <Shield className="h-2.5 w-2.5 text-emerald-500" />
-                  <span className="text-[9px] font-medium text-emerald-600">
-                    {app.compliance_tags[0]}
-                    {app.compliance_tags.length > 1 && ` +${app.compliance_tags.length - 1}`}
-                  </span>
+                {/* Label */}
+                <div className="space-y-0.5 w-full text-center min-w-0">
+                  <p className="text-xs font-semibold truncate leading-tight group-hover:text-primary transition-colors">
+                    {title}
+                  </p>
+                  {app.department && (
+                    <p className="text-[10px] text-muted-foreground truncate">{app.department}</p>
+                  )}
                 </div>
-              )}
-            </button>
-          ))}
+
+                {/* Compliance chip */}
+                {app.compliance_tags.length > 0 && (
+                  <div className="absolute top-2 right-2 flex items-center gap-0.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 rounded-md">
+                    <Shield className="h-2.5 w-2.5" />
+                    <span className="text-[8px] font-bold uppercase tracking-wide">
+                      {app.compliance_tags[0]}
+                    </span>
+                  </div>
+                )}
+              </button>
+            );
+          })}
         </div>
       ) : (
+        /* ── List view ── */
         <div className="space-y-2">
-          {filtered.map(app => (
-            <button
-              key={app.id}
-              onClick={() => navigate(`/listing/${app.listing_id}`)}
-              className="group w-full flex items-center gap-4 p-4 rounded-xl border border-border/30 bg-card hover:border-primary/30 hover:shadow-md transition-all text-left"
-            >
-              {app.listing?.screenshots?.[0] ? (
-                <div className="h-10 w-10 rounded-lg overflow-hidden ring-1 ring-border/20 shrink-0">
-                  <img src={app.listing.screenshots[0]} alt="" className="h-full w-full object-cover" />
-                </div>
-              ) : (
-                <div
-                  className="h-10 w-10 rounded-lg flex items-center justify-center text-sm font-black shrink-0 ring-1 ring-black/5"
-                  style={{ backgroundColor: appColor(app.listing?.title ?? app.listing_id) }}
-                >
-                  {appIconLetter(app.listing?.title ?? "A")}
-                </div>
-              )}
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold truncate group-hover:text-primary transition-colors">
-                  {app.listing?.title ?? "Unknown App"}
-                </p>
-                <p className="text-xs text-muted-foreground truncate">
-                  {app.listing?.description?.slice(0, 80)}
-                </p>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                {app.department && (
-                  <span className="text-[10px] font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full hidden sm:inline">
-                    {app.department}
-                  </span>
+          {filtered.map(app => {
+            const title = app.listing?.title ?? "App";
+            const color = appColor(title);
+            return (
+              <button
+                key={app.id}
+                onClick={() => handleOpen(app.listing_id)}
+                className="group w-full flex items-center gap-4 p-4 rounded-xl bg-card border border-border/20 hover:shadow-[0_4px_20px_-6px_hsl(var(--foreground)/0.1)] hover:-translate-y-px transition-all text-left"
+                style={{ boxShadow: "0 1px 6px -2px hsl(var(--foreground) / 0.06)" }}
+              >
+                {app.listing?.screenshots?.[0] ? (
+                  <div className="h-11 w-11 rounded-xl overflow-hidden ring-1 ring-border/10 shadow-sm shrink-0">
+                    <img src={app.listing.screenshots[0]} alt="" className="h-full w-full object-cover" />
+                  </div>
+                ) : (
+                  <div
+                    className="h-11 w-11 rounded-xl flex items-center justify-center text-sm font-black text-white shrink-0 shadow-sm"
+                    style={{ backgroundColor: color }}
+                  >
+                    {appIconLetter(title)}
+                  </div>
                 )}
-                {app.compliance_tags.length > 0 && (
-                  <Badge variant="outline" className="text-[10px] text-emerald-600 border-emerald-500/20 bg-emerald-500/5 hidden sm:flex">
-                    <Shield className="h-2.5 w-2.5 mr-1" />
-                    {app.compliance_tags[0]}
-                  </Badge>
-                )}
-                <ExternalLink className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-              </div>
-            </button>
-          ))}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold truncate group-hover:text-primary transition-colors">
+                    {title}
+                  </p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {app.listing?.description?.slice(0, 80)}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  {app.department && (
+                    <span className="text-[10px] font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full hidden sm:inline">
+                      {app.department}
+                    </span>
+                  )}
+                  {app.compliance_tags.length > 0 && (
+                    <Badge variant="outline" className="text-[10px] text-emerald-600 border-emerald-500/20 bg-emerald-500/5 hidden sm:flex">
+                      <Shield className="h-2.5 w-2.5 mr-1" />
+                      {app.compliance_tags[0]}
+                    </Badge>
+                  )}
+                  <ChevronRight className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+              </button>
+            );
+          })}
         </div>
       )}
     </div>

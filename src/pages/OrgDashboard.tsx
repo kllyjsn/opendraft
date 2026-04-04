@@ -204,7 +204,7 @@ export default function OrgDashboard() {
             </TabsList>
 
             <TabsContent value="apps">
-              <OrgAppGrid orgId={orgData.id} />
+              <OrgAppGrid orgId={orgData.id} orgSlug={slug} />
             </TabsContent>
 
             <TabsContent value="members">

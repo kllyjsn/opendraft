@@ -90,6 +90,9 @@ export default function ListingDetail() {
   const [chatOpen, setChatOpen] = useState(false);
   const [showUpsell, setShowUpsell] = useState(false);
 
+  // Team context — passed via ?org=slug from OrgAppGrid
+  const orgSlug = new URLSearchParams(window.location.search).get("org");
+
   useEffect(() => {
     if (!id) return;
     Promise.all([
@@ -368,13 +371,29 @@ export default function ListingDetail() {
       {productSchema && <JsonLd data={productSchema} />}
       {faqSchema && <JsonLd data={faqSchema} />}
       <main className="flex-1 container mx-auto px-4 py-10 page-enter">
+        {/* Team context banner */}
+        {orgSlug && (
+          <div className="mb-6 flex items-center gap-3 px-4 py-3 rounded-xl bg-secondary/20 border border-secondary/30">
+            <Shield className="h-4 w-4 text-secondary-foreground shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-semibold text-foreground">Viewing as team member</p>
+              <p className="text-[11px] text-muted-foreground">This app is approved for your workspace.</p>
+            </div>
+            <Link
+              to={`/org/${orgSlug}`}
+              className="text-xs font-medium text-foreground hover:underline shrink-0"
+            >
+              ← Back to workspace
+            </Link>
+          </div>
+        )}
         {/* Breadcrumb */}
         <Link
-          to="/"
+          to={orgSlug ? `/org/${orgSlug}` : "/"}
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-8 group"
         >
           <ChevronLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" />
-          Back to browse
+          {orgSlug ? "Back to workspace" : "Back to browse"}
         </Link>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">

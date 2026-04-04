@@ -219,7 +219,7 @@ export function OrgAppGrid({ orgId, orgSlug }: OrgAppGridProps) {
 
                 {/* Compliance chip */}
                 {app.compliance_tags.length > 0 && (
-                  <div className="absolute top-2 right-2 flex items-center gap-0.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 rounded-md">
+                  <div className="absolute top-2 right-2 flex items-center gap-0.5 bg-accent/20 text-accent-foreground px-1.5 py-0.5 rounded-md">
                     <Shield className="h-2.5 w-2.5" />
                     <span className="text-[8px] font-bold uppercase tracking-wide">
                       {app.compliance_tags[0]}

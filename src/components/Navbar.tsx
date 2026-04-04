@@ -70,6 +70,13 @@ export function Navbar() {
             <>
               <NavItem to="/ideas">Ideas</NavItem>
               <NavItem to="/dashboard">My Apps</NavItem>
+              {myOrg && (
+                <NavItem to={`/org/${myOrg.slug}`}>
+                  <span className="inline-flex items-center gap-1">
+                    <Building2 className="h-3.5 w-3.5" /> My Org
+                  </span>
+                </NavItem>
+              )}
               <NavItem to="/messages">
                 <span className="relative inline-flex items-center">
                   Messages

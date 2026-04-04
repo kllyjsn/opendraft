@@ -7,14 +7,16 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// High-traffic categories get prioritized (based on analytics: India 44%, mobile 86%, Google Discover)
+// Enterprise-focused categories get prioritized
 const HIGH_PRIORITY_CATEGORIES = new Set([
-  "Creator Economy",   // "developer-side-hustle-ideas" is top blog traffic
-  "Vibe Coding",       // developer audience matches
-  "Replace Your SaaS", // core value prop
-  "SMB Growth",        // matches target audience
-  "Better Margins",    // business owner angle
-  "Paste and Build",   // product experience
+  "Enterprise Strategy",  // core enterprise narrative
+  "TCO Analysis",         // CFO / finance angle
+  "IT Governance",        // CISO / compliance angle
+  "Own Your Software",    // ownership positioning
+  "Replace Your SaaS",    // competitive positioning
+  "AI Maintenance",       // addressing key objection
+  "Thought Leadership",   // brand authority
+  "Digital Transformation", // strategic context
 ]);
 
 serve(async (req) => {

@@ -161,6 +161,8 @@ export default function Credits() {
             ))}
           </div>
         </section>
+        </>
+        )}
 
         {/* Team workspace showcase */}
         <section className="container mx-auto px-4 max-w-5xl mb-24">

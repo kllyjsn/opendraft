@@ -90,6 +90,9 @@ export default function ListingDetail() {
   const [chatOpen, setChatOpen] = useState(false);
   const [showUpsell, setShowUpsell] = useState(false);
 
+  // Team context — passed via ?org=slug from OrgAppGrid
+  const orgSlug = new URLSearchParams(window.location.search).get("org");
+
   useEffect(() => {
     if (!id) return;
     Promise.all([

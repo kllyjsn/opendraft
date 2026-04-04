@@ -12,7 +12,9 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 
 const COMPLIANCE_FRAMEWORKS = [
   { name: "SOC 2 Type II", desc: "Full audit trail, access controls, encryption at rest" },

@@ -4,7 +4,7 @@ import { GoogleSignInButton } from "@/components/GoogleSignInButton";
 import { EmailAuthForm } from "@/components/EmailAuthForm";
 import { useAuth } from "@/hooks/useAuth";
 import { Navigate, Link } from "react-router-dom";
-import { Zap } from "lucide-react";
+
 import { useState } from "react";
 
 const TRUST_POINTS = [
@@ -31,8 +31,14 @@ export default function Login() {
 
         <div className="w-full max-w-sm relative z-10 page-enter">
           <div className="text-center mb-8">
-            <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl gradient-hero shadow-glow mb-5">
-              <Zap className="h-7 w-7 text-white" />
+            <div className="inline-flex items-center gap-2 mb-5">
+              <svg width="36" height="36" viewBox="0 0 28 28" fill="none" className="shrink-0">
+                <circle cx="14" cy="14" r="13" stroke="currentColor" strokeWidth="1.5" />
+                <circle cx="14" cy="14" r="6" stroke="currentColor" strokeWidth="1.5" />
+                <line x1="14" y1="1" x2="14" y2="8" stroke="currentColor" strokeWidth="1.5" />
+                <line x1="14" y1="20" x2="14" y2="27" stroke="currentColor" strokeWidth="1.5" />
+              </svg>
+              <span className="text-xl font-bold tracking-tight text-foreground">OpenDraft</span>
             </div>
             <h1 className="text-2xl font-black mb-2">Claim your free app</h1>
             <p className="text-muted-foreground text-sm leading-relaxed">

@@ -206,6 +206,25 @@ export default function Credits() {
           <EnterpriseContactForm />
         </section>
 
+        {/* Enterprise CTA */}
+        <section className="container mx-auto px-4 max-w-3xl mb-24">
+          <div className="rounded-2xl border border-primary/20 bg-card p-8 md:p-12 text-center">
+            <Building2 className="h-8 w-8 text-primary mx-auto mb-4" />
+            <h2 className="text-2xl md:text-3xl font-black tracking-tight mb-3">
+              Need a private app marketplace for your team?
+            </h2>
+            <p className="text-muted-foreground max-w-lg mx-auto leading-relaxed mb-6">
+              Create a compliant, company-owned catalog of apps your entire organization can deploy — no per-seat SaaS fees, ever.
+            </p>
+            <Link to="/enterprise">
+              <Button size="lg" className="bg-foreground text-background hover:bg-foreground/90 rounded-full px-8 font-semibold group">
+                Explore Enterprise
+                <ArrowRight className="h-4 w-4 ml-2 transition-transform group-hover:translate-x-1" />
+              </Button>
+            </Link>
+          </div>
+        </section>
+
         {/* Bottom CTA */}
         <section className="container mx-auto px-4 max-w-3xl mb-24">
           <div className="rounded-2xl border border-border/40 bg-card p-8 md:p-12 text-center">

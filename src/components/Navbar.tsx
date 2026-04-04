@@ -62,6 +62,7 @@ export function Navbar() {
           <NavItem to="/credits">Pricing</NavItem>
           <NavItem to="/builders">Builders</NavItem>
           <NavItem to="/faq">FAQ</NavItem>
+          <NavItem to="/enterprise">Enterprise</NavItem>
           {user && (
             <>
               <NavItem to="/ideas">Ideas</NavItem>
@@ -150,6 +151,7 @@ export function Navbar() {
           <NavItem to="/credits" onClick={() => setMenuOpen(false)}>Pricing</NavItem>
           <NavItem to="/builders" onClick={() => setMenuOpen(false)}>Builders</NavItem>
           <NavItem to="/faq" onClick={() => setMenuOpen(false)}>FAQ</NavItem>
+          <NavItem to="/enterprise" onClick={() => setMenuOpen(false)}>Enterprise</NavItem>
           {user ? (
             <>
               <NavItem to="/ideas" onClick={() => setMenuOpen(false)}>Ideas</NavItem>

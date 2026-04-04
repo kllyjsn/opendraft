@@ -270,7 +270,7 @@ export function OrgAppGrid({ orgId, orgSlug }: OrgAppGridProps) {
                     </span>
                   )}
                   {app.compliance_tags.length > 0 && (
-                    <Badge variant="outline" className="text-[10px] text-emerald-600 border-emerald-500/20 bg-emerald-500/5 hidden sm:flex">
+                    <Badge variant="outline" className="text-[10px] text-accent-foreground border-accent/30 bg-accent/10 hidden sm:flex">
                       <Shield className="h-2.5 w-2.5 mr-1" />
                       {app.compliance_tags[0]}
                     </Badge>

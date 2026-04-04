@@ -92,6 +92,8 @@ export default function Credits() {
         </section>
         )}
 
+        {(isSubscribed || !user) && (
+        <>
         {/* Trust strip */}
         <section className="container mx-auto px-4 max-w-4xl mb-6 sm:mb-10">
           <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm text-muted-foreground">

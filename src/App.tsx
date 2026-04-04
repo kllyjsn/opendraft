@@ -151,6 +151,7 @@ const App = () => (
             <Route path="/apps/:vertical" element={<AppsVertical />} />
             <Route path="/ideas" element={<Ideas />} />
             <Route path="/hosting" element={<Hosting />} />
+            <Route path="/enterprise" element={<Enterprise />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>

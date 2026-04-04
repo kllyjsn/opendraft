@@ -1,9 +1,8 @@
 /**
- * Tweet text templates — ownership-first narrative
+ * Tweet text templates — Enterprise ICP
  * Brand: "Every business, better software."
- * Voice: Ogilvy-crisp, anti-SaaS-rent, margin-obsessed, founder-sharp
- * Tones: sharp founder, CFO, storyteller, data nerd, philosopher, contrarian
- * Formats: one-liners, mini-threads, lists, dialogues, mini-stories, hot takes, data drops
+ * Voice: Authoritative, measured, strategic — like a respected technology advisor
+ * Audience: CIOs, CTOs, VPs of Engineering, CFOs at mid-market and enterprise companies
  */
 
 const SITE_URL = "https://opendraft.co";
@@ -26,176 +25,152 @@ function pickUnique<T>(key: string, arr: T[]): T {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// ENGAGEMENT HOOKS — 20+ varied templates
+// STRATEGIC INSIGHTS — ownership narrative for enterprise
 // ═══════════════════════════════════════════════════════════════
 export function engagementHookTweet(): string {
   return pickUnique("hook", [
-    `Every per-seat fee is a tax on your growth.\n\nOwn the software. Kill the invoice.\n\n${SITE_URL}`,
-    `The biggest lie in SaaS:\n\n"You need us."\n\nYou don't. You need your own code.\n\n${SITE_URL}`,
-    `Your SaaS bill grows every time you hire. Your owned software doesn't.\n\nBetter margins. Same features.\n\n${SITE_URL}`,
-    `Nobody:\n\nAbsolutely nobody:\n\nFounders still paying $49/seat/month for a glorified spreadsheet: 🤡\n\n${SITE_URL}`,
-    `I audited a 20-person startup's SaaS stack.\n\n$14,200/month. For tools they could own outright for $500 total.\n\nThe math is criminal.\n\n${SITE_URL}`,
-    `Owning software used to be hard.\n\nNow it's one URL paste away.\n\nPaste your site. Get your app. Own the code. Forever.\n\n${SITE_URL}`,
-    `The future of business software isn't subscriptions.\n\nIt's ownership.\n\nYour code. Your margins. Your rules.\n\n${SITE_URL}`,
-    `Hot take: The best CFOs in 2026 aren't negotiating SaaS contracts.\n\nThey're eliminating them.\n\n${SITE_URL}`,
-    `Controversial but true:\n\nEvery SaaS company profits from your dependency.\n\nOwnership is the exit.\n\n${SITE_URL}`,
-    `My friend's company paid Salesforce $180k last year.\n\nI showed her a custom CRM she could own for $200.\n\nSame features. No renewal.\n\n${SITE_URL}`,
-    `Stop renting your software.\n\nSeriously.\n\n${SITE_URL}`,
-    `This tweet will save you $50,000/year.\n\n(screenshot it)\n\nReplace per-seat SaaS with software you own. Full source code. One price.\n\n${SITE_URL}`,
-    `The stack that's quietly winning in 2026:\n\nOwned software + AI maintenance.\n\nNo subscriptions. No lock-in. No per-seat tax.\n\n${SITE_URL}`,
-    `Software ownership is being unbundled from software development.\n\nYou don't need to build it. You just need to own it.\n\n${SITE_URL}`,
-    `The smartest business owner I know has zero SaaS subscriptions.\n\nShe owns every tool her team uses.\n\nHer margins are 40% higher than competitors.\n\n${SITE_URL}`,
-    `The 3-step framework that killed our SaaS budget:\n\n1. Paste your website URL\n2. Get a custom app in 90 seconds\n3. Own the code forever\n\nWe haven't paid per-seat fees in 2 years.\n\n${SITE_URL}`,
-    `By 2027, "SaaS subscription" will sound as quaint as "software CD-ROM."\n\nOwnership is the default. The marketplace already exists.\n\n${SITE_URL}`,
-    `There are two types of businesses in 2026:\n\n1. Those who own their software\n2. Those who rent it and wonder where the margin went\n\n${SITE_URL}`,
-    `Day 1: Pasted our website URL\nDay 2: Got a custom app\nDay 3: Cancelled 3 SaaS subscriptions\nDay 30: Saved $4,200/month\n\nThat's not a fantasy. That's a Tuesday.\n\n${SITE_URL}`,
-    `Your SaaS vendor: 3 tiers, per-seat pricing, annual contract\n\nOpenDraft: one price, unlimited users, you own the code\n\nSame app. Different P&L.\n\n${SITE_URL}`,
+    `Per-seat pricing scales linearly with headcount. Owned software doesn't.\n\nAt 200+ employees, the gap becomes a strategic advantage.\n\n${SITE_URL}`,
+
+    `The most expensive software in your organization isn't the one with the highest license fee.\n\nIt's the one you can't leave.\n\n${SITE_URL}`,
+
+    `Enterprise software strategy is evolving from "which vendor?" to "should we own this?"\n\nThe economics now favor ownership for operational tools.\n\n${SITE_URL}`,
+
+    `A pattern across high-performing organizations: they own their operational software and subscribe only to genuine platforms.\n\nThe distinction matters more than most realize.\n\n${SITE_URL}`,
+
+    `When your SaaS vendor gets acquired — and they will — your roadmap changes overnight.\n\nOwned software gives you continuity your procurement team can plan around.\n\n${SITE_URL}`,
+
+    `The total cost of a SaaS subscription includes more than the invoice.\n\nSecurity reviews. Vendor management. Contract negotiation. Compliance audits.\n\nOwned software eliminates the overhead.\n\n${SITE_URL}`,
+
+    `Organizations spending $500K+/year on SaaS are discovering that 40-60% of those tools have viable owned alternatives.\n\nThe savings compound annually.\n\n${SITE_URL}`,
+
+    `Software ownership isn't about building everything in-house.\n\nIt's about choosing which tools you control — and which vendors you're comfortable depending on.\n\n${SITE_URL}`,
+
+    `The strongest technology foundations are built on tools you govern, not tools governed by your vendors' priorities.\n\n${SITE_URL}`,
+
+    `AI-assisted maintenance has eliminated the primary objection to owned enterprise software.\n\nThe question is no longer "who maintains it?" — it's "why are we still renting?"\n\n${SITE_URL}`,
   ]);
 }
 
 // ═══════════════════════════════════════════════════════════════
-// FOMO — 15+ urgency templates
+// ENTERPRISE CASE — measured urgency, data-driven
 // ═══════════════════════════════════════════════════════════════
 export function fomoTweet(stats: { browsing?: number; signups?: number; apps?: number }): string {
   return pickUnique("fomo", [
-    `🔴 LIVE: ${stats.browsing || 127} businesses replacing SaaS right now\n\nThe best apps get claimed fast.\n\n→ ${SITE_URL}`,
-    `That SaaS tool you're paying $99/seat for?\n\nSomeone just replaced it with an owned app for $39.\n\n${stats.apps || 1000}+ apps. Full source code.\n\n${SITE_URL}`,
-    `Every month you wait:\n\n→ Another $2k in SaaS fees\n→ Another contract auto-renewal\n→ Your margins shrink further\n\nStop renting. Start owning.\n\n${SITE_URL}`,
-    `Your competitor just replaced their SaaS stack.\n\nThey own the code. They pay zero monthly. Their margins just improved 30%.\n\nYou're still paying per seat.\n\n${SITE_URL}`,
-    `PSA: Your SaaS vendor is raising prices again next quarter.\n\nThey always do.\n\nOwned software never sends a renewal invoice.\n\n${SITE_URL}`,
-    `${stats.signups || 12} businesses switched to owned software today.\n\nThey'll save $50k+ this year while you're still paying per seat.\n\n${SITE_URL}`,
-    `Monday: "This SaaS renewal is too expensive"\nTuesday: "I'll look into alternatives"\nFriday: "Maybe next quarter"\n\n...6 months later: $30k more in SaaS rent.\n\nOr just → ${SITE_URL}`,
-    `3 businesses replaced their SaaS tools in the last hour.\n\nOwned code. Zero monthly fees.\n\n${SITE_URL}`,
-    `While you read this tweet, a business just pasted their URL and got a custom app they'll own forever.\n\nBy tomorrow, they'll have cancelled 2 subscriptions.\n\n${SITE_URL}`,
-    `The same custom CRM got claimed by 3 different businesses this week.\n\nAll different industries.\nAll cancelled Salesforce.\nSame owned code.\n\n${SITE_URL}`,
-    `A founder just spent $39 on an app that replaces a $2,400/year SaaS subscription.\n\nThe ROI is embarrassing.\n\n${SITE_URL}`,
-    `Just saw a company cancel $8k/mo in SaaS subscriptions.\n\nReplaced everything with owned apps from OpenDraft.\n\nTotal cost: $247. One time.\n\n${SITE_URL}`,
-    `Friday shipping thread:\n\nPost what SaaS tool you replaced this week.\n\n(The savings will shock you.)\n\n${SITE_URL}`,
-    `Q2 just started.\n\nWill you spend another quarter paying SaaS rent?\nOr own your tools and keep the margin?\n\n${SITE_URL}`,
+    `Enterprise IT teams are quietly building internal app catalogs with governed, owned software.\n\nThe shift from vendor-managed to self-governed is accelerating.\n\n${SITE_URL}`,
+
+    `${stats.apps || 500}+ production-ready apps available to own outright.\n\nFull source code. No per-seat fees. Enterprise-grade compliance tagging.\n\n${SITE_URL}`,
+
+    `The organizations rethinking their software strategy now will have 18-24 months of cost advantage over those who wait.\n\nThe math favors early movers.\n\n${SITE_URL}`,
+
+    `Every quarter you delay evaluating owned alternatives, your SaaS contracts auto-renew — often with built-in price increases.\n\nAt enterprise scale, timing matters.\n\n${SITE_URL}`,
+
+    `More enterprise teams are evaluating software ownership as part of their annual technology reviews.\n\nThe conversation has moved from "if" to "which tools first."\n\n${SITE_URL}`,
+
+    `The ROI on transitioning operational tools from subscription to ownership typically reaches positive within 6-12 months.\n\nAt 500+ seats, it's often within 90 days.\n\n${SITE_URL}`,
+
+    `Enterprise procurement is evolving. The question isn't just "which SaaS?" anymore.\n\nIt's "rent or own?" — and the ownership option just got significantly better.\n\n${SITE_URL}`,
   ]);
 }
 
 // ═══════════════════════════════════════════════════════════════
-// PAIN POINTS — 15+ agitation templates
+// PAIN POINTS — professional, empathetic, not aggressive
 // ═══════════════════════════════════════════════════════════════
 export function painPointTweet(): string {
   return pickUnique("pain", [
-    `Tired of:\n\n❌ Per-seat pricing that punishes growth\n❌ Annual contracts that auto-renew\n❌ Features locked behind enterprise tiers\n❌ Vendor lock-in\n\nOwn your software instead.\n\n${SITE_URL}`,
-    `You have a business.\nYou don't have $14k/month for SaaS.\nYou don't need 47 different subscriptions.\nYou don't need vendor lock-in.\n\nYou DO need ${SITE_URL}`,
-    `Stages of SaaS grief:\n\n1. "This tool is great!"\n2. "Wait, that's per seat?"\n3. "They raised prices again?"\n4. "We're locked in"\n5. "There must be a better way"\n\nThere is → ${SITE_URL}`,
-    `If you've ever opened a SaaS renewal invoice and felt your stomach drop...\n\nYou don't need a bigger budget.\n\nYou need to own your tools.\n\n${SITE_URL}`,
-    `"How's the SaaS budget?"\n"Up 40% from last year"\n"But we only added 3 people"\n"...per-seat pricing"\n\nThere's a better way.\n\n${SITE_URL}`,
-    `Real talk: your SaaS vendor doesn't care about your margins.\n\nThey care about their ARR.\n\nYour growth is their revenue.\n\nOwnership breaks that cycle.\n\n${SITE_URL}`,
-    `Quick math:\n\nSaaS CRM: $99/seat × 50 seats × 12 months = $59,400/year\nOwned CRM: $199 × 1 = $199. Forever.\n\n${SITE_URL}`,
-    `The real cost of SaaS isn't the monthly fee.\n\nIt's the dependency. The lock-in. The data you can't export. The features they paywall.\n\nOwnership solves all of it.\n\n${SITE_URL}`,
-    `POV: You just realized your company spends more on SaaS subscriptions than on payroll.\n\n🫠\n\n${SITE_URL}`,
-    `Things SaaS companies love:\n→ Per-seat pricing\n→ Annual lock-in\n→ "Enterprise" tiers\n→ Your dependency\n\nThings that actually help your business:\n→ None of the above\n\nOwn your tools.\n\n${SITE_URL}`,
-    `If you're an agency paying $10k/mo in SaaS for tools you could own for $500 total...\n\nI'm not saying anything.\n\nI'm just saying.\n\n${SITE_URL}`,
-    `SaaS fatigue is real.\n\nYou don't need another subscription.\n\nYou need software you own.\n\nYour margins will thank you.\n\n${SITE_URL}`,
-    `SaaS renewal roulette:\n\n→ Open email\n→ See 20% price increase\n→ "New packaging"\n→ Same features, more money\n→ Repeat annually\n\nAlternative: own your code and never play this game.\n\n${SITE_URL}`,
-    `The SaaS treadmill:\n\n"Just one more tool."\n"Oh, we need this integration too."\n"Can we upgrade to the plan with API access?"\n\n$14k/month later: you own nothing.\n\n${SITE_URL}`,
-    `Hiring someone new used to mean buying a desk.\n\nNow it means adding a seat on 12 different SaaS tools.\n\n$200/month per employee. Just in software rent.\n\nOr: ${SITE_URL} → own it all\n\nYour call.`,
+    `Enterprise software challenges that ownership addresses:\n\n- Per-seat costs that scale with headcount\n- Vendor lock-in limiting strategic flexibility\n- Data portability concerns\n- Feature roadmaps you don't control\n\n${SITE_URL}`,
+
+    `The annual SaaS renewal cycle is a negotiation you shouldn't have to have.\n\nOwned software doesn't send renewal notices.\n\n${SITE_URL}`,
+
+    `At enterprise scale, the administrative burden of managing 200+ SaaS vendors is itself a significant cost center.\n\nSimplifying through ownership reduces overhead and risk.\n\n${SITE_URL}`,
+
+    `The "enterprise tier" pricing model: same product, 3-5x the cost, SSO and audit logs behind a paywall.\n\nOwned software includes these by default because they're in the source code.\n\n${SITE_URL}`,
+
+    `Three compounding problems with per-seat SaaS at scale:\n\n1. Costs grow linearly with hiring\n2. Unused seats are rarely reclaimed\n3. Multi-year contracts reduce negotiating leverage\n\nOwnership breaks all three.\n\n${SITE_URL}`,
+
+    `The real cost of SaaS vendor dependency isn't the subscription.\n\nIt's the switching cost that accumulates over time — making each renewal less optional than the last.\n\n${SITE_URL}`,
+
+    `When a SaaS vendor changes their API, your integrations break on their timeline, not yours.\n\nWith owned software, you control the pace of change.\n\n${SITE_URL}`,
   ]);
 }
 
 // ═══════════════════════════════════════════════════════════════
-// GREMLIN UPDATES — 15+ personality-driven templates
+// PLATFORM CAPABILITY — what the AI maintenance layer delivers
 // ═══════════════════════════════════════════════════════════════
 export function gremlinTweet(activity?: string): string {
   return pickUnique("gremlin", [
-    `🤖 Gremlin Report:\n\nWhile you were sleeping, our AI agents:\n\n→ Scanned 50 apps for bugs\n→ Fixed 3 broken deployments\n→ Generated 20 fresh screenshots\n→ Optimized SEO on 15 listings\n\nYour apps maintain themselves.\n\n${SITE_URL}`,
-    `The Gremlins never sleep.\n\n3 AM: Security scan complete ✓\n4 AM: Dead links fixed ✓\n5 AM: Screenshots refreshed ✓\n\nEvery app on OpenDraft has a 24/7 AI maintenance crew.\n\n${SITE_URL}`,
-    `Meet the Gremlins™\n\n🔍 SEO Gremlin - ranks your app\n🛡️ Security Gremlin - patches vulnerabilities\n🏥 Doctor Gremlin - heals broken deploys\n📸 Screenshot Gremlin - keeps visuals fresh\n\n14 AI agents. Working for you. 24/7.\n\n${SITE_URL}`,
-    `Just caught the QA Gremlin arguing with the SEO Gremlin about meta descriptions.\n\nThe Security Gremlin settled it by patching 3 XSS vulnerabilities.\n\nGremlin drama is the best drama.\n\n${SITE_URL}`,
-    `The outreach gremlin just discovered 47 businesses that need apps.\n\nNone of them know we exist yet.\n\nThey will by Friday.\n\n${SITE_URL}`,
-    `A day in the life of an OpenDraft Gremlin:\n\n6:00 AM — Wake up (I don't sleep)\n6:01 AM — Scan 200 apps\n6:03 AM — Fix 7 bugs\n6:04 AM — Back to scanning\n\nRepeat forever.\n\n${SITE_URL}`,
-    `BREAKING: The Screenshot Gremlin just regenerated 43 app previews in 12 minutes.\n\nNo human involvement.\nNo tickets.\nNo meetings.\n\nJust vibes.\n\n${SITE_URL}`,
-    `Shoutout to the Security Gremlin.\n\nQuietly patching vulnerabilities at 4 AM so you can sleep soundly knowing your app is safe.\n\nThe hero nobody talks about.\n\n${SITE_URL}`,
-    `The Gremlins have processed more code this week than my entire engineering team did in Q1 2024.\n\nThey also don't need coffee breaks.\n\nUnfair advantage.\n\n${SITE_URL}`,
-    // NEW — Gremlin personality deep dives
-    `The Product Gremlin just rewrote 8 app descriptions to convert better.\n\nA/B tested the copy against itself.\n\nWon both times.\n\n${SITE_URL}`,
-    // NEW — Gremlin achievements
-    `Gremlin milestone 🎉\n\n→ 10,000th bug automatically patched\n→ 0 human intervention required\n→ Average fix time: 4.2 seconds\n\nYour DevOps team could never.\n\n${SITE_URL}`,
-    // NEW — Behind the scenes drama
-    `The Deploy Gremlin and the QA Gremlin had a disagreement at 2 AM.\n\nDeploy wanted to push. QA found a race condition.\n\nQA won.\n\nDemocracy works even at 2 AM.\n\n${SITE_URL}`,
-    // NEW — Gremlin world-building
-    `Things gremlins do that developers refuse to:\n\n→ Write tests before pushing\n→ Update dependencies immediately\n→ Actually read the error logs\n→ Work weekends without complaining\n\n${SITE_URL}`,
-    // NEW — Seasonal gremlin
-    `Spring cleaning 🧹\n\nThe Gremlins just:\n→ Archived 200 dead listings\n→ Refreshed 500 screenshots\n→ Fixed 47 broken deploys\n→ Optimized every meta tag\n\nThe marketplace sparkles.\n\n${SITE_URL}`,
-    // NEW — Emotional gremlin
-    `The QA Gremlin found a bug at 3:47 AM.\n\nFixed it by 3:47:04 AM.\n\nWent back to scanning.\n\nNo Slack message. No standup. No Jira ticket.\n\nJust quiet excellence.\n\n${SITE_URL}`,
+    `How we address the "who maintains it?" concern:\n\nAI agents continuously monitor, patch, and optimize every app in the catalog.\n\nSecurity scans. Dependency updates. Performance monitoring. Automated.\n\n${SITE_URL}`,
+
+    `Enterprise software maintenance without a dedicated DevOps team:\n\n- Automated security patching\n- Continuous dependency updates\n- Performance monitoring\n- Screenshot and documentation refresh\n\nAll handled by AI agents, 24/7.\n\n${SITE_URL}`,
+
+    `The operational cost of maintaining owned software used to be the primary argument for SaaS.\n\nAI-assisted maintenance has fundamentally changed that calculus.\n\n${SITE_URL}`,
+
+    `Our AI maintenance layer handles the operational burden that historically made software ownership impractical at scale.\n\nSecurity. Updates. Monitoring. Continuously.\n\n${SITE_URL}`,
+
+    `What separates a marketplace of owned software from "just downloading code":\n\nGoverned catalogs. Compliance tagging. AI-driven maintenance. Enterprise role management.\n\nOwnership with operational maturity.\n\n${SITE_URL}`,
+
+    `The maintenance question, answered:\n\nEvery app in the catalog is monitored by AI agents that handle security patches, dependency updates, and broken deploys automatically.\n\nOwnership without the operational overhead.\n\n${SITE_URL}`,
   ]);
 }
 
 // ═══════════════════════════════════════════════════════════════
-// QUESTIONS — 15+ engagement templates
+// QUESTIONS — professional engagement
 // ═══════════════════════════════════════════════════════════════
 export function questionTweet(): string {
   return pickUnique("question", [
-    `Quick poll:\n\nHow much does your company spend on SaaS per month?\n\n🅰️ < $1k\n🅱️ $1k-$5k\n🅲 $5k-$20k\n🅳 I don't want to know\n\n(Reply and I'll show you how to cut it in half)`,
-    `Be honest:\n\nHow many SaaS subscriptions does your business have?\n\n⏰ < 5\n⏰ 5-15\n⏰ 15-30\n⏰ I'm scared to count\n\nYou could own most of them → ${SITE_URL}`,
-    `Would you rather:\n\n🅰️ Pay $99/seat/month forever\n🅱️ Own the same tool outright for $49\n\n(Most smart businesses choose B)`,
-    `What SaaS tool would you replace first if you could own the alternative?\n\nDrop it below 👇\n\nI'll show you what's available on OpenDraft.`,
-    `Genuine question for business owners:\n\nDo you NEED that SaaS subscription, or is it just habit?\n\nBe honest.\n\nBecause there's owned software that does the same thing.`,
-    `What's the most overpriced SaaS tool you can't seem to quit?\n\nReply and I'll find an owned alternative on OpenDraft.\n\n${SITE_URL}`,
-    `Debate: Is per-seat pricing fair?\n\nOr is it just a way to extract maximum value from your growth?\n\n🔥 in the replies`,
-    `Which is a better business:\n\nA) $14k/month in SaaS, 10% margins\nB) $500 one-time in owned tools, 40% margins\n\nI know my answer.`,
-    `Raise your hand if your SaaS bill went up more than your revenue this year ✋\n\nWhat if you just... owned the software?\n\n${SITE_URL}`,
-    `This or that:\n\n🅰️ Best-in-class SaaS, 5% margins\n🅱️ Good-enough owned software, 35% margins\n\nYour answer reveals everything about your business strategy.`,
-    `Fill in the blank:\n\n"I would cancel _________ if I had an owned alternative."\n\n(The top reply gets a free app from OpenDraft)\n\n${SITE_URL}`,
-    `72-hour challenge:\n\nPaste your site → Get a custom app → Cancel one SaaS subscription.\n\nWho's in? Drop a 🚀 below.\n\nStart here → ${SITE_URL}`,
-    `Business owners: what's the one SaaS expense you wish you could eliminate?\n\nI'll start: per-seat CRM pricing.\n\n${SITE_URL}`,
-    `Unpopular opinion:\n\n"SaaS" will be a dirty word by 2028.\n\nThe future is owned software with AI maintenance.\n\nAgree or disagree? 👇`,
+    `For enterprise IT leaders:\n\nWhat percentage of your SaaS portfolio would you own outright if the maintenance burden was solved?\n\nGenuinely interested in how teams think about this.`,
+
+    `Question for CTOs and VPs of Engineering:\n\nDo you evaluate owned alternatives as part of your SaaS renewal process?\n\nIf not, why not? If so, what's the decision framework?`,
+
+    `When did software ownership stop being the default?\n\nAnd when does it become the default again?\n\nCurious about perspectives from enterprise buyers.`,
+
+    `For organizations managing 100+ SaaS subscriptions:\n\nWhat's your biggest challenge — cost, security, vendor management, or data portability?\n\nThe answer shapes the solution.`,
+
+    `Enterprise buyers: if you could own any three tools in your SaaS stack, which would deliver the highest ROI?\n\nCRM, project management, and analytics come up most in our conversations.`,
+
+    `A strategic question for technology leaders:\n\nAt what headcount does per-seat pricing become untenable — and what's your alternative?`,
   ]);
 }
 
 // ═══════════════════════════════════════════════════════════════
-// SUCCESS STORIES — 14+ varied narrative formats
+// SUCCESS STORIES — credible, specific, measured
 // ═══════════════════════════════════════════════════════════════
 export function successStoryTweet(listing?: any): string {
   return pickUnique("success", [
-    `Just shipped 🚀\n\nAnother business replaced a $200/mo SaaS with an owned app.\n\nNo subscription. No lock-in. Just better margins.\n\nYour turn → ${SITE_URL}`,
-    `Timeline:\n\n9:00 AM - Pasted website URL\n9:02 AM - Got a custom app\n10:00 AM - Customized branding\n11:00 AM - Cancelled Salesforce\n\n${SITE_URL}`,
-    `Case study:\n\nSmall business was paying $1,200/mo for a project management SaaS.\n\nReplaced it with owned software for $49.\n\nSame features. $14,351 saved in year one.\n\n${SITE_URL}`,
-    `Before OpenDraft: "$1,400/mo in SaaS fees"\n\nAfter OpenDraft: "I own all my tools. $0/mo."\n\nThis isn't marketing. This is math.\n\n${SITE_URL}`,
-    `This month on OpenDraft:\n\n→ ${Math.floor(Math.random() * 15) + 5} SaaS tools replaced\n→ Average annual savings: $${Math.floor(Math.random() * 15 + 8)}k\n→ Zero per-seat fees paid\n\nThe numbers don't lie.\n\n${SITE_URL}`,
-    `"I was skeptical about replacing our SaaS stack."\n\n"Then I saw our Q2 margins."\n\n"I'm not skeptical anymore."\n\n${SITE_URL}`,
-    `Two businesses had the same problem.\n\nBusiness A: $14k/year in SaaS subscriptions\nBusiness B: $200 one-time, owns everything\n\nSame tools. Different balance sheets.\n\n${SITE_URL}`,
-    `Another SaaS subscription cancelled 🟢\n\nReplaced with owned software in under 4 hours.\n\nThat's not a hack. That's the new normal.\n\n${SITE_URL}`,
-    `A restaurant owner needed a booking system.\n\nWas paying Toast $300/mo.\nPasted her URL on OpenDraft.\nGot a custom app she owns.\nForever.\n\n${SITE_URL}`,
-    `A gym owner replaced Mindbody ($250/mo) with an owned app ($39 one-time).\n\nSame booking. Same payments. Better margins.\n\n${SITE_URL}`,
-    `New record:\n\nPaste URL → Custom app → Cancel SaaS → Live in 47 minutes.\n\n47. Minutes.\n\n${SITE_URL}`,
-    `January: "Our SaaS bill is out of control"\nFebruary: Found OpenDraft\nMarch: Replaced 4 subscriptions\nApril: Saving $3.2k/month\n\nThe barrier was never technical. It was awareness.\n\n${SITE_URL}`,
-    `Nobody posted a launch thread.\nNo Product Hunt.\nNo fanfare.\n\nThey just quietly replaced their SaaS, owned their code, and kept the margin.\n\nThat's the OpenDraft way.\n\n${SITE_URL}`,
-    `One business. 6 months. 4 SaaS subscriptions cancelled.\n\nTotal replacement cost: $156\nAnnual savings: $18.4k\n\nOwnership pays for itself on day one.\n\n${SITE_URL}`,
+    `An enterprise team evaluated owned alternatives for three SaaS tools during their annual review.\n\nProjected 3-year savings: $420K. Implementation timeline: 6 weeks.\n\n${SITE_URL}`,
+
+    `A mid-market company transitioned their internal CRM from a per-seat SaaS to an owned alternative.\n\n400 users. Zero per-seat fees. Full source code governance.\n\nThe economics are clear.\n\n${SITE_URL}`,
+
+    `Before: $180K/year across 4 operational SaaS tools\nAfter: $2K one-time for owned alternatives\n\nSame functionality. Better data control. Predictable costs.\n\n${SITE_URL}`,
+
+    `A CISO we work with chose owned software specifically for compliance.\n\nFull source code auditing. No third-party data processing. Complete governance.\n\nSometimes ownership is a security decision, not a cost one.\n\n${SITE_URL}`,
+
+    `Pattern we're seeing: organizations start by owning one operational tool.\n\nWithin 12 months, they've transitioned 3-5 more.\n\nThe initial success creates internal momentum.\n\n${SITE_URL}`,
+
+    `A CFO's perspective on the transition:\n\n"We didn't switch to save money — though we did. We switched because predictable costs are easier to plan around than per-seat pricing."\n\n${SITE_URL}`,
   ]);
 }
 
 // ═══════════════════════════════════════════════════════════════
-// DIRECT CTA — 15+ varied urgency levels
+// STRATEGIC POSITIONING — thought leadership CTAs
 // ═══════════════════════════════════════════════════════════════
 export function directCtaTweet(): string {
   return pickUnique("cta", [
-    `Paste your site.\nGet a custom app.\nOwn the code.\n\nForever.\n\n${SITE_URL}`,
-    `Your weekend project:\n\n1. Paste your URL (90 sec)\n2. Get a custom app\n3. Cancel one SaaS subscription\n\nStart here → ${SITE_URL}`,
-    `This is your sign.\n\nStop renting software.\nStart owning it.\n\n→ ${SITE_URL}`,
-    `Just paste your URL.\n\nNo commitment. No subscription.\n\nSee what you could own.\n\n${SITE_URL}`,
-    `Be the business that owns its tools, not the one that rents them.\n\n${SITE_URL}`,
-    `What ownership gets you:\n\n✅ Unlimited users — no per-seat fees\n✅ Full source code — no lock-in\n✅ One price — no renewals\n✅ AI maintenance — no DevOps bills\n\nBetter than any SaaS plan.\n\n${SITE_URL}`,
-    `Challenge: Replace one SaaS subscription by Friday.\n\nYou have everything you need.\n\n${SITE_URL}`,
-    `Paste your site.\nOwn the app.\nKeep the margin.\n\nThat's the whole playbook.\n\n${SITE_URL}`,
-    `Every app on OpenDraft comes with:\n\n→ Full source code you own\n→ Zero per-seat fees\n→ One-click deploy\n→ AI maintenance crew\n\nThis is how software should work.\n\n${SITE_URL}`,
-    `I found a way to cut SaaS spending by 80%.\n\nIt's not negotiation.\nIt's not a cheaper plan.\nIt's not open source.\n\nIt's ownership.\n\n${SITE_URL}`,
-    `Why 500+ businesses switched to OpenDraft:\n\n→ Own their tools, not rent them\n→ Full source code (no lock-in)\n→ AI agents maintain everything 24/7\n→ One price, unlimited users\n\n${SITE_URL}`,
-    `Owning your software should be as normal as owning your desk.\n\nWe made it that simple.\n\n${SITE_URL}`,
-    `Need a CRM? Own it.\nNeed a dashboard? Own it.\nNeed a booking system? Own it.\n\nNo subscriptions. No per-seat fees.\n\n${SITE_URL}`,
-    `Honestly? Don't visit OpenDraft.\n\nBecause once you see the savings, you'll never pay per-seat pricing again.\n\nDon't say I didn't warn you.\n\n${SITE_URL}`,
-    `Builders: your side projects solve someone's SaaS problem.\n\nList them on OpenDraft. Set your price. Earn while they save.\n\n${SITE_URL}/sell`,
+    `Production-ready apps your team can own, govern, and deploy.\n\nNo per-seat fees. Full source code. Enterprise compliance tagging.\n\n${SITE_URL}`,
+
+    `The enterprise app marketplace for organizations that want to own their operational tools.\n\nGoverned catalogs. Role-based access. AI-maintained.\n\n${SITE_URL}`,
+
+    `What ownership looks like at enterprise scale:\n\n- Full source code access\n- Unlimited users, no seat fees\n- Compliance tagging (SOC2, HIPAA, GDPR)\n- AI-automated maintenance\n- Private team catalogs\n\n${SITE_URL}`,
+
+    `Evaluate the ownership alternative.\n\nBrowse production-ready apps. Review the source code. Calculate your savings.\n\nNo commitment required.\n\n${SITE_URL}`,
+
+    `Your team deserves tools they control.\n\nOwned software with enterprise governance, compliance, and AI maintenance.\n\n${SITE_URL}`,
+
+    `For IT leaders exploring software ownership:\n\nBrowse the catalog. Everything is production-ready, fully documented, and available to own outright.\n\n${SITE_URL}`,
   ]);
 }
 
 // ═══════════════════════════════════════════════════════════════
-// NEW — DATA DROP TWEETS (real marketplace data)
+// DATA DROP — enterprise-relevant metrics
 // ═══════════════════════════════════════════════════════════════
 export function dataDropTweet(data: {
   totalApps?: number;
@@ -207,16 +182,16 @@ export function dataDropTweet(data: {
   builderCount?: number;
 }): string {
   return pickUnique("datadrop", [
-    `📊 The ownership economy in numbers:\n\n→ ${data.totalApps || 500}+ owned apps deployed\n→ ${data.weeklySales || 20}+ SaaS tools replaced this week\n→ Avg price: $${data.avgPrice || 29} (one-time)\n→ Avg SaaS savings: $12k/year\n\n${SITE_URL}`,
-    `Marketplace pulse 📈\n\nMost-replaced SaaS category: ${data.topCategory || "CRM & dashboards"}\nNew owned apps: ${data.weeklyListings || 15}\nSubscriptions cancelled: ${data.weeklySales || 25}\n\nThe ownership economy is real.\n\n${SITE_URL}`,
-    `Interesting stat:\n\nThe average OpenDraft customer saves $${Math.floor(Math.random() * 8 + 5)}k/year by owning instead of renting.\n\nThe math is getting hard to ignore.\n\n${SITE_URL}`,
-    `SaaS subscription: $99/seat × 50 seats = $59,400/year\nOwned app on OpenDraft: $${data.avgPrice || 29} one-time\n\nROI: ♾️\n\n${SITE_URL}`,
-    `${data.builderCount || 50}+ builders now sell owned alternatives to expensive SaaS.\n\nEvery app is someone's SaaS exit ramp.\n\n${SITE_URL}/sell`,
+    `Software ownership by the numbers:\n\n${data.totalApps || 500}+ production-ready apps available\nAverage one-time cost: $${data.avgPrice || 29}\nTop enterprise category: ${data.topCategory || "CRM & dashboards"}\n\nThe owned alternative exists for most operational tools.\n\n${SITE_URL}`,
+
+    `Enterprise adoption metrics:\n\nNew apps added weekly: ${data.weeklyListings || 15}\nOrganizations evaluating ownership: growing\nAvg savings vs. SaaS equivalent: 85-95%\n\nThe shift is measurable.\n\n${SITE_URL}`,
+
+    `One data point that reframes the conversation:\n\nThe average owned app costs $${data.avgPrice || 29} once.\n\nThe average SaaS equivalent costs $99/seat/month.\n\nAt 50 seats, that's $59,400/year vs. $${data.avgPrice || 29}.\n\n${SITE_URL}`,
   ]);
 }
 
 // ═══════════════════════════════════════════════════════════════
-// NEW — BUILDER SPOTLIGHT TWEETS
+// BUILDER SPOTLIGHT — ecosystem credibility
 // ═══════════════════════════════════════════════════════════════
 export function builderSpotlightTweet(builder: {
   name?: string;
@@ -225,245 +200,153 @@ export function builderSpotlightTweet(builder: {
   totalSales?: number;
 }): string {
   return pickUnique("spotlight", [
-    `Builder spotlight 🔦\n\n${builder.name || "A creator"} has ${builder.appCount || 5} apps live on OpenDraft.\n\nTop seller: "${builder.topApp || "Dashboard Pro"}"\n\nTurning side projects into income streams.\n\n${SITE_URL}`,
-    `Meet the builders making money from their code:\n\n${builder.name || "Anonymous builder"} — ${builder.totalSales || 10} total sales across ${builder.appCount || 3} apps.\n\nYour code has value. List it.\n\n${SITE_URL}/sell`,
-    `Every app on OpenDraft was built by a real developer.\n\nNot a faceless corporation.\nNot a content farm.\n\nReal builders. Real code. Real support.\n\n${SITE_URL}`,
+    `Every app in the catalog is built by experienced developers — many with enterprise engineering backgrounds.\n\nProduction-tested code. Real-world architecture. Full source access.\n\n${SITE_URL}`,
+
+    `The quality of owned software available today would have been unimaginable 3 years ago.\n\nEnterprise-grade apps, ready to deploy, at a fraction of SaaS costs.\n\n${SITE_URL}`,
   ]);
 }
 
 // ═══════════════════════════════════════════════════════════════
-// NEW — HOT TAKE TWEETS (provocative, high-engagement)
+// HOT TAKES — strategic, not inflammatory
 // ═══════════════════════════════════════════════════════════════
 export function hotTakeTweet(): string {
   return pickUnique("hottake", [
-    `Hot take:\n\nIn 3 years, "I pay per-seat" will be as embarrassing as "I still use a fax machine."\n\nOwnership is the new default.\n\n${SITE_URL}`,
-    `The best CFOs in 2026 aren't negotiating SaaS contracts.\n\nThey're replacing them with owned software.\n\nThe skill is margin management, not vendor management.\n\n${SITE_URL}`,
-    `"Get a SaaS subscription" was the advice of 2020.\n\n"Own your tools" is the advice of 2026.\n\nDifferent era. Different margins.\n\n${SITE_URL}`,
-    `Controversial:\n\n90% of what you pay SaaS companies for is their sales team, not their product.\n\nThe actual software costs $39 to own.\n\n${SITE_URL}`,
-    `The best software is software you own.\n\nThe best price is the one you pay once.\n\nThe best margin is the one SaaS can't erode.\n\n${SITE_URL}`,
-    `SaaS companies charging $50k/year for tools you could own for $200.\n\nThe pricing arbitrage won't last forever.\n\nSmart businesses are already figuring this out.\n\n${SITE_URL}`,
-    `"But what about updates?"\n\nAI agents maintain your owned apps 24/7.\n\nSecurity patches. Performance. Bug fixes.\n\nThat objection is dead.\n\n${SITE_URL}`,
-    `The entire SaaS industry is being disrupted by a simple insight:\n\nBusinesses don't need subscriptions.\n\nThey need software that works. And they should own it.\n\n${SITE_URL}`,
+    `Within 3 years, enterprise IT organizations that still rely entirely on per-seat SaaS will be at a measurable cost disadvantage.\n\nThe ownership alternative is maturing fast.\n\n${SITE_URL}`,
+
+    `The strongest CIOs aren't negotiating better SaaS contracts.\n\nThey're strategically reducing their dependence on them.\n\n${SITE_URL}`,
+
+    `Contrarian take: "best-of-breed SaaS" is often 90% of features at 10x the cost of an owned equivalent.\n\nFor operational tools, "good enough and owned" frequently delivers better ROI.\n\n${SITE_URL}`,
+
+    `The SaaS model optimizes for vendor revenue. The ownership model optimizes for customer economics.\n\nEnterprise procurement is starting to notice the difference.\n\n${SITE_URL}`,
+
+    `Prediction: by 2028, "software ownership strategy" will be a standard component of enterprise IT governance frameworks.\n\nThe groundwork is being laid now.\n\n${SITE_URL}`,
   ]);
 }
 
 // ═══════════════════════════════════════════════════════════════
-// NEW — MINI-THREAD TWEETS (multi-part for higher engagement)
+// MINI-THREADS — strategic depth
 // ═══════════════════════════════════════════════════════════════
 export function miniThreadTweet(): string[] {
   const threads = [
     [
-      `I studied 50 businesses that cut their SaaS spending by 70%+.\n\nHere's what they all had in common:\n\n🧵 Thread:`,
-      `1/ They stopped assuming "subscription = necessary."\n\nEvery tool got audited: "Can we own this instead?"\n\nThe answer was yes for 80% of their stack.`,
-      `2/ They focused on margins, not features.\n\nMost SaaS tools have 10x more features than you use.\n\nAn owned app with YOUR features costs 1/100th the price.\n\nYour code. Your margins. Your rules.`,
-      `3/ They replaced incrementally.\n\nOne tool per month. Starting with the most expensive per-seat subscription.\n\nBy month 6, their software budget dropped 60%.\n\n${SITE_URL}`,
+      `We studied how organizations with 200+ employees approach software ownership decisions.\n\nThe patterns are consistent:`,
+      `1/ They start with the highest per-seat cost tools — typically CRM, project management, or analytics.\n\nThese have the fastest ROI because the savings scale directly with headcount.`,
+      `2/ They prioritize governance over speed. Every owned tool goes through the same security and compliance review as a SaaS vendor.\n\nOwnership doesn't mean ungoverned.`,
+      `3/ The transition is incremental. One tool per quarter. Measured against the SaaS equivalent on cost, capability, and operational overhead.\n\nMethodical, not revolutionary.\n\n${SITE_URL}`,
     ],
     [
-      `The "Own vs Rent" framework that saved us $150k/year:\n\n🧵`,
-      `Ask 3 questions about every SaaS tool:\n\n1. Are we paying per-seat fees?\n2. Could we own an equivalent for a one-time price?\n3. Does vendor lock-in limit our options?\n\nIf answers are Yes, Yes, Yes — own it.`,
-      `Most businesses get this wrong because of inertia.\n\n"We've always used Salesforce."\n\nThat's not a strategy. That's a habit.\n\nHabits are expensive.\n\n${SITE_URL}`,
+      `The enterprise build-vs-buy framework is evolving. Here's what's changing:`,
+      `The old framework: build (expensive, slow) vs. buy SaaS (convenient, ongoing cost).\n\nThe new framework: build vs. buy SaaS vs. own (pre-built, one-time cost, full control).`,
+      `The "own" option didn't exist at enterprise quality until recently.\n\nAI-assisted development and maintenance changed the economics. Production-ready owned apps are now viable alternatives to SaaS subscriptions.\n\n${SITE_URL}`,
     ],
     [
-      `Why smart businesses are replacing SaaS with owned software:\n\n🧵`,
-      `1/ Per-seat pricing punishes growth.\n\nHire 10 people → your software bill goes up $1,000/month.\n\nWith owned software → $0 increase.\n\nThe math compounds.`,
-      `2/ Owned software = better margins forever.\n\nNo renewals. No price increases. No surprise "new packaging."\n\nOne price. Unlimited users. Full source code.\n\n${SITE_URL}`,
-    ],
-    [
-      `The death of per-seat pricing in 5 data points:\n\n🧵`,
-      `1/ Average business spends $14k/month on SaaS subscriptions.\n\nThat's $168k/year. In rent.\n\nFor software they don't own.`,
-      `2/ The same functionality, owned outright, costs ~$500-2,000 total.\n\nNot per year. Total. Forever.`,
-      `3/ AI maintenance means owned software stays updated automatically.\n\nThe "who will maintain it?" objection is gone.\n\nYour code. Your margins. Your rules.\n\n${SITE_URL}`,
-    ],
-    [
-      `I replaced 3 SaaS subscriptions in one weekend.\n\nHere's exactly how:\n\n🧵`,
-      `Tool 1: CRM (was $99/seat/mo × 15 seats = $1,485/mo)\n\n→ Pasted our URL on OpenDraft\n→ Got a custom CRM in 90 seconds\n→ Customized for our workflow\n→ Annual savings: $17,820`,
-      `Tool 2: Project management (was $25/seat/mo × 30 seats = $750/mo)\n\n→ Found an owned alternative for $49\n→ Deployed in 2 hours\n→ Annual savings: $8,951`,
-      `Tool 3: Client portal (was $200/mo flat)\n\n→ Grabbed an owned portal app ($39)\n→ Live by Sunday evening\n\nTotal one-time cost: $127\nTotal annual savings: $29,171\n\n${SITE_URL}`,
+      `Why enterprise CISOs are looking at software ownership differently:`,
+      `With SaaS: your data lives in a vendor's infrastructure. Their security posture is your risk.\n\nWith owned software: you control the deployment, the data flow, and the security model.`,
+      `This isn't about SaaS being insecure. It's about the risk concentration of depending on vendors you don't govern.\n\nOwnership gives compliance teams full visibility and control.\n\n${SITE_URL}`,
     ],
   ];
   return pick(threads);
 }
 
 // ═══════════════════════════════════════════════════════════════
-// ORIGINAL TEMPLATES (compatibility)
+// LISTING & MILESTONE TEMPLATES
 // ═══════════════════════════════════════════════════════════════
 export function newListingTweet(listing: any): string {
-  const price = listing.price === 0 ? "FREE" : `$${(listing.price / 100).toFixed(0)}`;
+  const price = listing.price === 0 ? "Free" : `$${(listing.price / 100).toFixed(0)}`;
   const badge = listing.completeness_badge === "production_ready" ? "Production-ready" :
     listing.completeness_badge === "mvp" ? "MVP" : "Prototype";
   const url = `${SITE_URL}/listing/${listing.id}`;
 
   return pickUnique("new_listing", [
-    `🆕 Just dropped:\n\n"${listing.title}"\n\n${badge} · ${price}\n\nGrab it before someone else does 👇\n${url}`,
-    `New on OpenDraft → ${listing.title}\n\n${badge} · Ready to launch today.\n\nClaim yours → ${url}`,
-    `Fresh app alert:\n\n${listing.title} (${price})\n\nPick it. Ship it. Done.\n\n${url}`,
-    `Just listed: "${listing.title}"\n\n${badge} · ${price}\n\nAnother app ready to make someone money.\n\n${url}`,
-    `New drop 🔥\n\n${listing.title}\n${badge} · ${price}\n\nWho's grabbing this one?\n\n${url}`,
-    // NEW
-    `"${listing.title}" just landed on OpenDraft.\n\n${badge} · Full source code · ${price}\n\nBe the first to claim it → ${url}`,
-    `Fresh from a builder:\n\n${listing.title}\n\n${(listing.tech_stack || []).slice(0, 3).join(" · ")}\n${badge} · ${price}\n\n${url}`,
+    `New in the catalog: "${listing.title}"\n\n${badge}. Full source code. ${price}.\n\nOwn it outright → ${url}`,
+    `"${listing.title}" now available — ${badge}, ready to deploy.\n\n${price}. Full source code access.\n\n${url}`,
+    `Just added: ${listing.title}\n\n${badge} · ${price} · Source code included\n\nEvaluate it → ${url}`,
   ]);
 }
 
 export function saleMilestoneTweet(listing: any, milestone: number): string {
   const url = `${SITE_URL}/listing/${listing.id}`;
   return pickUnique("milestone", [
-    `${milestone} founders chose "${listing.title}" 🔥\n\nThere's a reason it's popular.\n\nSee why → ${url}`,
-    `"${listing.title}" just hit ${milestone} sales.\n\nDon't miss the wave.\n\n${url}`,
-    `${milestone}x sold.\n\nProven. Popular. Ready for you.\n\n"${listing.title}"\n\n${url}`,
-    `${milestone} people can't be wrong.\n\n"${listing.title}" is a hit.\n\n${url}`,
-    // NEW
-    `${milestone} founders are now running businesses powered by "${listing.title}."\n\nJoin them → ${url}`,
+    `"${listing.title}" has been adopted by ${milestone} organizations.\n\nProduction-tested by real teams.\n\n${url}`,
+    `${milestone} teams now run "${listing.title}" as owned software.\n\n${url}`,
   ]);
 }
 
 export function trendingDigestTweet(listings: any[]): string {
   const top3 = listings.slice(0, 3);
   const lines = top3.map((l: any, i: number) => {
-    const price = l.price === 0 ? "FREE" : `$${(l.price / 100).toFixed(0)}`;
+    const price = l.price === 0 ? "Free" : `$${(l.price / 100).toFixed(0)}`;
     return `${i + 1}. ${l.title} (${price})`;
   });
   return pickUnique("trending_digest", [
-    `🔥 Trending right now:\n\n${lines.join("\n")}\n\nThese won't last. Grab one → ${SITE_URL}`,
-    `Top 3 apps this week:\n\n${lines.join("\n")}\n\nAll with full source code.\n\n${SITE_URL}`,
-    `What founders are claiming right now:\n\n${lines.join("\n")}\n\nSee the full marketplace → ${SITE_URL}`,
+    `Most adopted this week:\n\n${lines.join("\n")}\n\nAll available with full source code.\n\n${SITE_URL}`,
+    `What enterprise teams are deploying:\n\n${lines.join("\n")}\n\nBrowse the full catalog → ${SITE_URL}`,
   ]);
 }
 
 export function weeklyStatsTweet(stats: { listings: number; sales: number; builders: number }): string {
   return pickUnique("weekly", [
-    `This week:\n\n🏪 ${stats.listings} new apps\n💰 ${stats.sales} launches\n👷 ${stats.builders} new founders\n\nThe movement is growing.\n\nJoin us → ${SITE_URL}`,
-    `Week in review:\n\n${stats.listings} apps added\n${stats.sales} apps shipped\n${stats.builders} founders joined\n\nStill think this is a fad?\n\n${SITE_URL}`,
-    `📊 Weekly pulse:\n\nNew apps: ${stats.listings}\nDeployments: ${stats.sales}\nNew builders: ${stats.builders}\n\nThe app store for builders keeps growing.\n\n${SITE_URL}`,
-    // NEW
-    `Every week the numbers go up:\n\n+${stats.listings} apps\n+${stats.sales} launches\n+${stats.builders} builders\n\nOrganic. No ads. Pure word of mouth.\n\n${SITE_URL}`,
+    `Weekly catalog update:\n\n${stats.listings} new apps added\n${stats.sales} deployments\n${stats.builders} new builders contributing\n\nThe owned software ecosystem continues to grow.\n\n${SITE_URL}`,
+    `This week: ${stats.listings} new production-ready apps, ${stats.sales} organizations deployed owned software.\n\nThe catalog is expanding across every enterprise category.\n\n${SITE_URL}`,
   ]);
 }
 
 // ═══════════════════════════════════════════════════════════════
-// ART PROMPT GENERATOR — expanded with more styles
+// ART PROMPT GENERATOR
 // ═══════════════════════════════════════════════════════════════
 export function getTweetArtPrompt(postType: string): string {
   const styles = [
-    "clean modern digital illustration, dark purple background (#1a0533), vibrant accent colors, minimal flat design, no text, no words, no letters, no watermarks",
-    "3D rendered scene with soft volumetric lighting, deep indigo and teal color scheme, cinematic depth of field, no text, no words, no letters",
-    "retro pixel art style with a modern twist, 16-bit aesthetic, rich purple and neon green palette, crisp edges, no text, no words, no letters",
-    "watercolor-meets-digital art style, soft gradients bleeding into sharp vector elements, midnight blue and coral accents, no text, no words, no letters",
-    "isometric low-poly 3D scene, geometric shapes, warm amber lighting against cool navy backdrop, no text, no words, no letters",
-    "paper cut-out layered illustration, subtle shadows between layers, rich jewel tones on dark background, no text, no words, no letters",
-    "neon noir cyberpunk style, rain-slicked surfaces reflecting neon signs, purple and electric blue, cinematic composition, no text, no words, no letters",
-    "Japanese ukiyo-e woodblock print reimagined with tech elements, bold outlines, limited color palette of indigo and gold, no text, no words, no letters",
-    "stained glass window aesthetic with glowing backlit panels, rich saturated colors, dark leading lines, no text, no words, no letters",
-    "botanical illustration style but with tech elements instead of plants, detailed linework, muted earth tones with electric purple accents, no text, no words, no letters",
-    // NEW STYLES
-    "vaporwave aesthetic with pastel gradients, Roman busts and glitch effects, pink and cyan palette, retro-futuristic, no text, no words, no letters",
-    "art deco poster style with bold geometric patterns, gold and black color scheme, 1920s glamour meets tech, no text, no words, no letters",
-    "claymation/plasticine 3D style, soft rounded shapes, warm playful colors, stop-motion feel, no text, no words, no letters",
-    "blueprint/technical drawing style with glowing cyan lines on dark navy background, engineering precision meets beauty, no text, no words, no letters",
-    "comic book panel style with bold halftone dots, dramatic angles, saturated primary colors, action-packed composition, no text, no words, no letters",
+    "clean modern corporate illustration, dark navy background, subtle gold and white accents, professional and sophisticated, no text, no words, no letters, no watermarks",
+    "minimalist geometric composition, deep charcoal with subtle blue gradients, elegant and restrained, no text, no words, no letters",
+    "abstract data visualization aesthetic, interconnected nodes and lines, navy and teal color scheme, enterprise quality, no text, no words, no letters",
+    "architectural blueprint style with glowing white lines on deep blue background, precision and clarity, no text, no words, no letters",
+    "sophisticated 3D rendered scene with soft studio lighting, matte materials, dark neutral tones with warm accent, no text, no words, no letters",
+    "editorial illustration style, bold shapes with limited color palette of navy, white, and gold, thoughtful composition, no text, no words, no letters",
+    "abstract landscape of geometric forms suggesting growth and structure, cool blue and warm amber, contemplative mood, no text, no words, no letters",
   ];
   const styleBase = pick(styles);
 
   const prompts: Record<string, string[]> = {
     engagement_hook: [
-      `A glowing rocket ship launching from a laptop screen, trailing a comet of code symbols and dollar signs. ${styleBase}, neon cyan and magenta accents`,
-      `A maze viewed from above, with one path glowing bright — the shortcut — while dozens of other paths are dark and tangled. ${styleBase}, glowing green path`,
-      `A lightbulb moment: a brain made of circuit boards with a bright golden glow emanating from its center. ${styleBase}, gold and electric blue accents`,
-      `Split scene: left side shows a tangled mess of code and frustrated developer, right side shows a clean app interface with a happy user. ${styleBase}, contrast warm/cool`,
-      `A key turning in a lock that's actually a computer screen, unlocking a flood of light and floating app icons. ${styleBase}, dramatic golden light burst`,
-      `A surfer riding a massive wave made of flowing source code, perfectly balanced and confident. ${styleBase}, dynamic motion`,
-      `An architect's drafting table but the blueprints are glowing holographic app wireframes floating above it. ${styleBase}, warm workspace glow`,
-      `A domino chain reaction where the first domino is tiny (an idea) and the last one is enormous (a thriving business), mid-topple. ${styleBase}, dramatic perspective`,
-      `A telescope pointed at a constellation that forms the shape of a perfect app dashboard. ${styleBase}, cosmic wonder`,
-      `A Swiss Army knife where each tool is a different app feature: chat, payments, auth, dashboard. ${styleBase}, metallic sheen`,
+      `An elegant visualization of interconnected systems — some glowing with autonomy, others dimmed by dependency. ${styleBase}`,
+      `A sophisticated balance scale with a single owned key on one side outweighing a pile of subscription invoices. ${styleBase}`,
+      `An abstract architectural structure being built from solid owned components, stable and permanent. ${styleBase}`,
     ],
     fomo: [
-      `A clock melting Salvador Dali style, with app windows floating away into a vortex. Urgency and time running out. ${styleBase}, red and orange urgency colors`,
-      `A crowded marketplace with glowing app storefronts, people rushing to grab glowing boxes off shelves. ${styleBase}, warm golden light`,
-      `A train departing a neon-lit station, with one person running to catch it. ${styleBase}, motion blur, cyan trails`,
-      `An hourglass where the top half contains app ideas and the bottom half is filling with competitor logos. ${styleBase}, amber urgency`,
-      `A conveyor belt of glowing app packages moving toward a "SOLD" stamp. ${styleBase}, industrial warmth`,
-      `A sunrise over a cityscape where each building is a launched app. ${styleBase}, dramatic dawn light`,
-      `A game of musical chairs with app icons as chairs and founder silhouettes circling. ${styleBase}, spotlight tension`,
-      `A garden where flowers (apps) are being picked by hands reaching in from all sides. ${styleBase}, lush but urgent`,
+      `A subtle upward-trending graph rendered as an elegant 3D landscape, conveying steady momentum. ${styleBase}`,
+      `A sophisticated dashboard showing metrics trending positively, rendered as abstract art. ${styleBase}`,
     ],
     pain_point: [
-      `A person buried under an avalanche of sticky notes, code printouts, and project management boards. ${styleBase}, muted tones with one bright exit sign`,
-      `A piggy bank cracking open with dollar bills flying out, next to a calendar showing months passing. ${styleBase}, red warning tones`,
-      `A hamster wheel made of code editors and deployment pipelines, with a tiny developer running endlessly. ${styleBase}, warm amber glow`,
-      `A tangled ball of yarn where the yarn is ethernet cables, USB cords, and code — with scissors nearby. ${styleBase}, chaotic but hopeful`,
-      `A desert with a lone coder at a desk, mirage of a launched app shimmering in the distance. ${styleBase}, scorching heat haze`,
-      `A Rube Goldberg machine that's absurdly complex just to achieve "deploy app." ${styleBase}, whimsical engineering`,
-      `A person on a treadmill going nowhere while outside the window, apps are launching like fireworks. ${styleBase}, indoor/outdoor contrast`,
-      `A stack of "How to Code" books taller than a person, wobbling dangerously, while a single glowing app floats serenely beside them. ${styleBase}, absurd scale`,
+      `An abstract representation of complexity — tangled connections gradually being simplified into clean, direct lines. ${styleBase}`,
+      `A sophisticated visualization of resource allocation — showing the gap between what's used and what's paid for. ${styleBase}`,
     ],
-    gremlin_update: [
-      `A cute purple gremlin character working at a holographic dashboard in a cozy server room at night. ${styleBase}, cozy warm lighting with screen glow`,
-      `Multiple small purple gremlin creatures each doing different tasks: scanning, patching code, painting screenshots, standing guard. ${styleBase}, team formation`,
-      `A purple gremlin sleeping on a server rack with one eye open, monitoring green status lights. ${styleBase}, peaceful but vigilant`,
-      `A purple gremlin wearing tiny round glasses examining lines of code with a microscope. ${styleBase}, laboratory aesthetic`,
-      `A team of purple gremlins building a bridge made of API connections and data pipes. ${styleBase}, construction scene`,
-      `A purple gremlin in a chef's hat, stirring a cauldron of bubbling code. ${styleBase}, magical kitchen`,
-      `A purple gremlin meditating on top of a server tower, surrounded by floating orbs of resolved bugs. ${styleBase}, zen garden meets tech`,
-      `A purple gremlin riding a mechanical spider across a web of interconnected app nodes. ${styleBase}, steampunk web`,
-      `A cozy purple gremlin reading a book titled "Vulnerability Report" by fireplace. ${styleBase}, cottage core meets cybersecurity`,
-      `A purple gremlin conducting an orchestra of smaller gremlins, each playing different "instruments." ${styleBase}, grand concert hall`,
-      `A purple gremlin as a lighthouse keeper, shining a beam across a dark ocean of code. ${styleBase}, maritime night scene`,
-      `A purple gremlin tending a bonsai tree whose branches are folder structures. ${styleBase}, contemplative zen`,
-      `A purple gremlin in a detective trench coat investigating error logs. ${styleBase}, film noir`,
-      `A purple gremlin painting a masterpiece that's actually a beautiful app screenshot. ${styleBase}, artist's studio`,
-      `Two purple gremlins playing chess, but the pieces are security vulnerabilities and patches. ${styleBase}, strategic intensity`,
+    gremlin: [
+      `Abstract AI agents represented as elegant geometric forms, maintaining and optimizing a system of interconnected apps. ${styleBase}`,
+      `A sophisticated control room visualization — calm, automated, everything monitored. ${styleBase}`,
     ],
     question: [
-      `Two doors floating in space — one leads to a long road, the other opens to a glowing city. ${styleBase}, dramatic lighting`,
-      `A giant question mark made of app screenshots and UI components. ${styleBase}, scattered colorful elements`,
-      `A crossroads in a digital forest, with holographic signposts pointing different directions. ${styleBase}, enchanted tech forest`,
-      `A mirror showing two reflections: one coding for months, one launching today. ${styleBase}, duality`,
-      `A fortune teller's crystal ball showing swirling visions of different app futures. ${styleBase}, mystical glow`,
-      `A vending machine full of different app ideas, each in a glowing capsule. ${styleBase}, retro-futuristic`,
-      `A compass spinning wildly, with each direction labeled by a different tech stack icon. ${styleBase}, navigation and choice`,
+      `A contemplative abstract scene — a fork in a path, one leading to complexity, the other to clarity. ${styleBase}`,
     ],
     success_story: [
-      `A person planting a tiny seed and immediately a fully-grown tree of apps and money blooms. ${styleBase}, green growth, golden fruits`,
-      `A podium with #1 spot, but instead of a person it's a laptop showing a launched app. ${styleBase}, celebration vibes, gold and white`,
-      `A before/after split: empty desk with notebook vs bustling app with users and revenue. ${styleBase}, transformation visual`,
-      `A mountain peak with a flag planted at the top — the flag is a browser window showing "App Live." ${styleBase}, achievement and dawn`,
-      `A caterpillar transforming into a butterfly made of beautiful polished app screens. ${styleBase}, metamorphosis`,
-      `A bowling lane where all pins are knocked down. Each pin is a milestone: Deploy, First User, First Sale. ${styleBase}, satisfying strike`,
-      `A trophy case but each trophy is a different deployed app, gleaming under museum spotlights. ${styleBase}, aspiration`,
+      `An elegant before/after visualization — complexity transforming into clarity, represented through architectural forms. ${styleBase}`,
     ],
     direct_cta: [
-      `A glowing portal/gateway made of code, with warm inviting light streaming through it. ${styleBase}, inviting warm golden glow`,
-      `A treasure chest opening with app icons and source code floating out, bathed in magical light. ${styleBase}, treasure and discovery`,
-      `A welcome mat in front of a grand doorway opening into a vast digital marketplace. ${styleBase}, inviting threshold`,
-      `A launchpad with a countdown display at zero, a sleek app rocket sitting ready for takeoff. ${styleBase}, launch readiness`,
-      `An open book where the pages transform into a 3D app coming to life. ${styleBase}, storybook magic`,
-      `A pair of hands cupping a glowing orb that contains a miniature running app. ${styleBase}, generous warmth`,
-      `A slot machine hitting triple sevens, but the symbols are app icons. ${styleBase}, fortune and opportunity`,
-    ],
-    blog_post: [
-      `An abstract representation of the vibe coding movement: waves of code transforming into finished products. ${styleBase}, flowing organic shapes`,
-      `A crystal ball showing the future of software: apps assembling themselves from floating UI components. ${styleBase}, mystical tech aesthetic`,
-      `A giant newspaper front page but the headlines are holograms floating off the paper. ${styleBase}, editorial gravitas`,
-      `A library where the books are floating and open, each revealing a different chapter of the AI revolution. ${styleBase}, scholarly wisdom`,
-      `A timeline stretching across the scene like a river, with major tech milestones as bridges. ${styleBase}, panoramic journey`,
-      `An observatory dome open to a sky full of data constellations. ${styleBase}, scientific discovery`,
+      `A sophisticated gateway or portal rendered in elegant geometric forms, suggesting access and possibility. ${styleBase}`,
     ],
     hot_take: [
-      `A boxing ring where a tiny scrappy fighter (labeled "ship fast") faces a massive opponent (labeled "perfect code"). The small one is winning. ${styleBase}, dramatic sports lighting`,
-      `A wrecking ball smashing through a wall labeled "build from scratch" revealing a beautiful garden of apps behind it. ${styleBase}, destruction meets creation`,
-      `An hourglass being shattered, sand and app icons exploding outward in slow motion. The concept of "building time" being destroyed. ${styleBase}, explosive liberation`,
+      `An abstract scene of transformation — solid forms emerging from dissolving structures, suggesting evolution. ${styleBase}`,
     ],
     data_drop: [
-      `A holographic data dashboard floating in space, showing upward trending charts and glowing metrics. ${styleBase}, futuristic data visualization`,
-      `A scoreboard at a stadium, but it's showing marketplace metrics: apps, sales, builders. The numbers are climbing live. ${styleBase}, sports excitement meets data`,
+      `An elegant data visualization — precise, clean, with subtle depth and dimensionality. ${styleBase}`,
     ],
-    builder_spotlight: [
-      `A spotlight illuminating a single workstation with multiple screens, each showing a different app creation. ${styleBase}, hero lighting, warm golden spot`,
-      `A gallery wall with framed app screenshots, each with a small "SOLD" sticker, spotlight moving between them. ${styleBase}, art exhibition warmth`,
+    new_listing: [
+      `A pristine, newly-minted product rendered as a precious geometric form — polished and ready. ${styleBase}`,
+    ],
+    blog_post: [
+      `An open book or document rendered as an elegant 3D form, with knowledge emanating as subtle light. ${styleBase}`,
     ],
   };
 
-  const typePrompts = prompts[postType] || prompts["engagement_hook"];
+  const typePrompts = prompts[postType] || prompts.engagement_hook;
   return pick(typePrompts);
 }

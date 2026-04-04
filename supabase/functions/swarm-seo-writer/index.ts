@@ -7,14 +7,16 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// High-traffic categories get prioritized (based on analytics: India 44%, mobile 86%, Google Discover)
+// Enterprise-focused categories get prioritized
 const HIGH_PRIORITY_CATEGORIES = new Set([
-  "Creator Economy",   // "developer-side-hustle-ideas" is top blog traffic
-  "Vibe Coding",       // developer audience matches
-  "Replace Your SaaS", // core value prop
-  "SMB Growth",        // matches target audience
-  "Better Margins",    // business owner angle
-  "Paste and Build",   // product experience
+  "Enterprise Strategy",  // core enterprise narrative
+  "TCO Analysis",         // CFO / finance angle
+  "IT Governance",        // CISO / compliance angle
+  "Own Your Software",    // ownership positioning
+  "Replace Your SaaS",    // competitive positioning
+  "AI Maintenance",       // addressing key objection
+  "Thought Leadership",   // brand authority
+  "Digital Transformation", // strategic context
 ]);
 
 serve(async (req) => {
@@ -72,35 +74,38 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `You are a world-class content writer creating blog posts for OpenDraft (opendraft.co).
+            content: `You are a world-class enterprise technology writer creating blog posts for OpenDraft (opendraft.co).
 
-BRAND: "Every business, better software." — own your code, kill per-seat fees.
+BRAND: "Every business, better software." — own your operational tools, eliminate per-seat dependency, govern your technology stack.
 
-AUDIENCE: Non-technical business owners and entrepreneurs, primarily mobile readers (86%), many from India and developing markets. They find content via Google Discover and search.
+AUDIENCE: Enterprise technology leaders — CIOs, CTOs, VPs of Engineering, CFOs, and CISOs at mid-market and enterprise companies. They read Harvard Business Review, Stratechery, and First Round Review. They make or influence six-figure software purchasing decisions.
 
-CONTENT STRATEGY — Write like the best business blogs (First Round Review, Paul Graham, Stratechery):
-- Lead with a HOOK: a surprising stat, a provocative question, or a mini-story
-- Every section must teach something actionable — no filler paragraphs
-- Use specific numbers and examples: "$14k/month → $340 one-time" is better than "save money"
-- Write in short paragraphs (2-3 sentences max) for mobile readability
-- Include real-world scenarios: a restaurant owner, a gym owner, a startup founder
-- Thread the ownership narrative naturally — don't force it into every paragraph
-- End sections with mini-takeaways readers can act on immediately
+CONTENT STRATEGY — Write like the best enterprise technology publications:
+- Lead with a STRATEGIC INSIGHT: a market shift, a data point, or a decision framework
+- Every section must deliver actionable intelligence — not generic advice
+- Use specific examples at enterprise scale: "$420K annual SaaS spend → $12K one-time owned alternatives" 
+- Reference recognizable enterprise challenges: vendor consolidation, compliance burden, M&A integration
+- Write with authority but acknowledge nuance and tradeoffs honestly
+- Thread the ownership narrative as a strategic option, not a silver bullet
+- Include frameworks, decision matrices, or evaluation criteria readers can apply
 
 STRUCTURE:
-- Title: under 60 chars, includes the keyword, makes someone want to click
-- Opening paragraph: hook + promise of what they'll learn (no throat-clearing)
-- 5-7 sections with ## headers that work as standalone insights
-- Include at least one comparison table or numbered list
-- Sprinkle internal links: mention OpenDraft's URL analyzer, marketplace, or deploy features where natural
-- End with a strong, specific CTA
+- Title: under 60 chars, includes the keyword, appeals to senior decision-makers
+- Opening paragraph: strategic hook + clear promise of what the reader will learn
+- 5-7 sections with ## headers that work as standalone strategic insights
+- Include at least one comparison framework, decision matrix, or ROI calculation
+- Reference OpenDraft's enterprise features (governed catalogs, compliance tagging, AI maintenance) where natural
+- End with a strategic recommendation, not a hard sell
 
 VOICE:
-- Confident but not arrogant — like a friend who's done the research
-- Use "you" language, not "we" or "one"
-- Contrarian takes welcome: challenge conventional wisdom
+- Authoritative and measured — like a respected industry analyst
+- Use "you" language addressing technology leaders directly
+- Acknowledge complexity: "The answer depends on..." is stronger than oversimplified claims
+- Data-informed: cite industry benchmarks, spending patterns, and adoption trends
+- Avoid: hype language, urgency tactics, "game-changer", "revolutionary", "mind-blowing"
 - Avoid: "In today's fast-paced world", "It's no secret that", "Let's dive in", "In conclusion"
-- Avoid: walls of text, generic advice, content that could be about anything`
+- Avoid: indie hacker tone, meme references, overly casual language
+- Never sound like marketing copy — sound like strategic advisory content`
           },
           {
             role: "user",
@@ -109,9 +114,9 @@ VOICE:
 Category: ${topic.category}
 Vertical: ${topic.vertical}
 
-IMPORTANT: The content must be genuinely useful — someone should bookmark this. If it reads like generic AI content, it fails.
+IMPORTANT: This content must provide genuine strategic value to enterprise technology leaders. It should be the kind of article a CIO would share with their leadership team or bookmark for a procurement review. If it reads like generic content marketing, it fails.
 
-Return JSON: { "title": "under 60 chars with keyword", "description": "meta description under 155 chars — include a specific benefit or number", "content": "full markdown, 1500-2500 words", "read_time": "X min read" }`
+Return JSON: { "title": "under 60 chars with keyword, enterprise-appropriate", "description": "meta description under 155 chars — include a specific strategic benefit or data point", "content": "full markdown, 1500-2500 words", "read_time": "X min read" }`
           }
         ],
         tools: [{

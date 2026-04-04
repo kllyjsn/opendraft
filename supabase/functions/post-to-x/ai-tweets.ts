@@ -1,6 +1,7 @@
 /**
  * AI-generated tweet content using Lovable AI Gateway
- * V2: Value-first content, diverse voices, anti-repetition
+ * V3: Enterprise ICP — authentic, measured, authoritative tone
+ * Voice: Thoughtful technology advisor, not a sales account
  */
 
 const SITE_URL = "https://opendraft.co";
@@ -10,59 +11,56 @@ function pick<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-// ── VALUE-FIRST TOPICS (teach something, don't just sell) ──
+// ── ENTERPRISE-FOCUSED VALUE TOPICS ──
 const VALUE_TOPICS = [
-  // Actionable tips (no pitch needed)
-  "a specific tactic to reduce SaaS spend this week",
-  "how to audit your software stack in 30 minutes",
-  "the 3-question framework for build vs buy decisions",
-  "why your per-seat costs compound faster than you think",
-  "a hidden cost of SaaS most founders miss: data portability",
-  "how one founder automated their entire ops with 4 owned tools",
-  // Industry insights
-  "the shift from SaaS subscriptions to owned software in 2026",
-  "why VCs are now asking about software ownership in due diligence",
-  "the margin advantage companies get from owning their tools",
-  "how AI maintenance eliminates the biggest objection to custom software",
-  // Builder/creator angles
-  "how a side project became a $2k/month passive income stream",
-  "the economics of selling code templates vs building SaaS",
-  "why the best developers are becoming product owners",
-  "how vibe coding is creating a new generation of builder-entrepreneurs",
-  // Contrarian/thought leadership
-  "why 'best-in-class SaaS' is often 90% features you'll never use",
-  "the psychology behind why businesses over-pay for software subscriptions",
-  "how the SaaS pricing model was designed to extract maximum revenue, not deliver maximum value",
-  "what the shift from renting to owning means for the future of business software",
+  // IT governance & procurement
+  "how enterprise IT teams evaluate build vs buy in 2026",
+  "the hidden cost of shadow IT — and how to fix it with governed app catalogs",
+  "why procurement cycles for SaaS are getting longer and what it means",
+  "how CIOs are rethinking software ownership as part of cost optimization",
+  "the compliance burden of managing 200+ SaaS vendors",
+  // Software strategy
+  "why forward-thinking CTOs are building internal app marketplaces",
+  "the strategic case for owning your operational software stack",
+  "how to reduce vendor concentration risk in your technology portfolio",
+  "total cost of ownership analysis: subscription vs ownership models at scale",
+  "what happens to your data and workflows when a SaaS vendor gets acquired",
+  // Digital transformation
+  "how AI-assisted development is changing the build vs buy equation",
+  "the rise of composable enterprise software — what it means for IT leaders",
+  "why enterprise software procurement needs a new framework",
+  "how organizations are achieving faster time-to-value with pre-built owned apps",
+  // Operational efficiency
+  "the real math on per-seat pricing at 500+ employees",
+  "how IT leaders are consolidating their SaaS portfolio without losing capability",
+  "why software standardization matters more at scale",
+  "the operational risk of depending on vendors you don't control",
 ];
 
-// ── DIVERSE PERSONAS (not just anti-SaaS crusaders) ──
+// ── ENTERPRISE PERSONAS ──
 const PERSONAS = [
-  "a pragmatic CFO sharing a money-saving insight",
-  "an experienced founder giving genuine advice to early-stage entrepreneurs",
-  "a developer who discovered they could earn more selling code than working a 9-5",
-  "a small business owner who figured out a better way",
-  "a curious analyst breaking down industry economics",
-  "a mentor sharing a lesson they learned the hard way",
-  "a startup advisor who's seen this pattern across 50+ companies",
-  "a builder sharing their weekly revenue numbers transparently",
+  "a CIO sharing a strategic observation about enterprise software",
+  "a VP of Engineering reflecting on a procurement decision",
+  "a technology strategist analyzing market shifts",
+  "a CFO who's rethought their approach to software investment",
+  "an IT governance leader sharing a framework",
+  "a digital transformation consultant sharing a pattern they've seen across clients",
+  "a CISO reflecting on the security implications of vendor sprawl",
+  "a COO who improved margins through smarter technology decisions",
 ];
 
-// ── TWEET STYLES (variety prevents feed fatigue) ──
+// ── TWEET FORMATS ──
 const FORMATS = [
-  "a surprising insight that makes people think differently — no hard sell",
-  "a concrete tip someone can act on today",
-  "a short story (3-4 lines) about a real-world scenario",
-  "a contrarian observation that invites discussion",
-  "a before/after comparison with specific numbers",
-  "a question that sparks genuine conversation in the replies",
-  "a data point or stat with brief analysis",
-  "a lesson learned, told humbly",
+  "a measured strategic insight that demonstrates deep understanding",
+  "a concise framework or mental model for technology decisions",
+  "a brief observation about an enterprise trend, backed by reasoning",
+  "a thought-provoking question for IT and business leaders",
+  "a before/after scenario at an enterprise scale (500+ employees)",
+  "a lesson from a real procurement or technology decision",
+  "a data-informed perspective on software economics",
+  "a nuanced take that acknowledges tradeoffs honestly",
 ];
 
-/**
- * Check recent posts to avoid repetition
- */
 async function getRecentPostTypes(supabaseUrl: string, supabaseKey: string): Promise<string[]> {
   try {
     const headers = { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` };
@@ -83,7 +81,6 @@ async function getRecentPostTypes(supabaseUrl: string, supabaseKey: string): Pro
 export async function generateBlogTweet(supabaseUrl: string, supabaseKey: string): Promise<string> {
   const headers = { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` };
 
-  // Get a recent blog post to promote
   const blogRes = await fetch(
     `${supabaseUrl}/rest/v1/blog_posts?published=eq.true&order=created_at.desc&limit=5&select=title,slug,description,category`,
     { headers }
@@ -92,13 +89,11 @@ export async function generateBlogTweet(supabaseUrl: string, supabaseKey: string
   const post = posts.length > 0 ? pick(posts) : null;
 
   const persona = pick(PERSONAS);
-  const dateContext = new Date().toLocaleString("en-US", { weekday: "long", month: "long" });
-
   const blogUrl = post ? `${SITE_URL}/blog/${post.slug}` : SITE_URL;
-  const blogTitle = post?.title || "software ownership";
+  const blogTitle = post?.title || "software ownership strategy";
   const blogDesc = post?.description || "";
 
-  const prompt = `You are ${persona}. Write ONE tweet promoting a blog post.
+  const prompt = `You are ${persona}. Write ONE tweet sharing a blog post with enterprise decision-makers.
 
 BLOG: "${blogTitle}"
 SUMMARY: ${blogDesc}
@@ -106,13 +101,14 @@ URL: ${blogUrl}
 
 CRITICAL RULES:
 - MUST be under 270 characters including the URL
-- DO NOT just say "New blog post!" — pull out the most interesting INSIGHT from the title/summary
-- Lead with a hook that makes someone curious enough to click
-- The tweet should provide partial value on its own (a teaser insight)
-- Sound like a real person sharing something interesting they read, NOT a brand account
-- Include the URL naturally, ideally at the end
-- No emojis in the first line
-- 0-1 hashtags max
+- Pull out the most strategically interesting insight — not a generic summary
+- Write as someone who found this genuinely valuable for their work
+- Tone: authoritative but approachable, like a respected colleague sharing a resource
+- NO hype language ("game-changer", "mind-blowing", "you won't believe")
+- NO emojis except possibly one at the end
+- NO hashtags
+- Sound like a senior leader, not a marketing account
+- Include the URL at the end
 - Output ONLY the tweet text, nothing else`;
 
   try {
@@ -126,7 +122,7 @@ CRITICAL RULES:
         model: "google/gemini-2.5-flash",
         messages: [{ role: "user", content: prompt }],
         max_tokens: 300,
-        temperature: 1.0,
+        temperature: 0.9,
       }),
     });
 
@@ -144,13 +140,13 @@ CRITICAL RULES:
   }
 
   return post
-    ? `${post.description}\n\n${blogUrl}`
-    : `Own your software. Kill per-seat fees.\n\n${SITE_URL}`;
+    ? `Worth reading for anyone rethinking their software strategy: ${blogUrl}`
+    : `The economics of software ownership are shifting. Worth examining.\n\n${SITE_URL}`;
 }
 
 /**
- * Generate a value-first AI tweet — teaches or provokes thought
- * Only ~30% of these include a direct CTA
+ * Generate enterprise-focused value tweet — strategic insights for IT/business leaders
+ * Only ~25% include a direct CTA
  */
 export async function generateDynamicTweet(supabaseUrl: string, supabaseKey: string): Promise<string> {
   const headers = { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` };
@@ -170,29 +166,29 @@ export async function generateDynamicTweet(supabaseUrl: string, supabaseKey: str
   const format = pick(FORMATS);
   const dateContext = new Date().toLocaleString("en-US", { weekday: "long", month: "long", day: "numeric" });
 
-  // 30% include CTA, 70% are pure value
-  const includeCTA = Math.random() < 0.3;
+  const includeCTA = Math.random() < 0.25;
 
   const prompt = `You are ${persona}. Write ONE tweet as ${format} about "${topic}".
 
 DATE: ${dateContext}
-MARKETPLACE CONTEXT: ${totalApps}+ owned apps available, top: "${trending[0]?.title || "AI Dashboard"}"
+CONTEXT: A marketplace of ${totalApps}+ production-ready apps available for enterprise teams to own outright.
 
 ${includeCTA
-    ? `Include ${SITE_URL} naturally at the end — but the tweet must provide value BEFORE the link.`
-    : `Do NOT include any links or URLs. This tweet should be pure value — an insight, tip, or thought that stands on its own. People will check the profile if they're interested.`
+    ? `Include ${SITE_URL} naturally at the end — but the tweet must provide genuine strategic value first.`
+    : `Do NOT include any links or URLs. This tweet should be pure insight — a strategic observation, framework, or perspective that stands on its own.`
   }
 
-ANTI-REPETITION: Recent post themes to AVOID: ${recentTypes.slice(0, 5).join(", ") || "none"}
+ANTI-REPETITION: Recent themes to AVOID: ${recentTypes.slice(0, 5).join(", ") || "none"}
 
 CRITICAL RULES:
 - MUST be under 270 characters total
-- First line must be a genuine insight or hook — NOT a sales pitch
-- Sound like a real human sharing knowledge, NOT a brand account blasting promos
-- No corporate language ("excited to announce", "check out", "don't miss")
-- No emojis in the first line
-- If it reads like an ad, rewrite it as advice
-- 0-1 hashtags max
+- Write for a CIO, VP Engineering, or CFO audience — not indie hackers
+- Tone: measured, authoritative, thoughtful — like Harvard Business Review, not TechCrunch comments
+- NO hype, NO urgency, NO "game-changer" language
+- NO emojis in first line (0-1 total)
+- NO hashtags
+- Acknowledge complexity and tradeoffs — don't oversimplify
+- If it sounds like marketing copy, rewrite it as strategic analysis
 - Output ONLY the tweet text`;
 
   try {
@@ -206,7 +202,7 @@ CRITICAL RULES:
         model: "google/gemini-2.5-flash",
         messages: [{ role: "user", content: prompt }],
         max_tokens: 300,
-        temperature: 1.0,
+        temperature: 0.9,
       }),
     });
 
@@ -221,26 +217,26 @@ CRITICAL RULES:
     console.error("Dynamic tweet generation failed:", e);
   }
 
-  return `The average business spends $14k/month on SaaS.\n\n80% of those tools could be owned outright for a one-time cost.\n\nThe math is worth checking.`;
+  return `Enterprise software strategy is shifting from managing vendor relationships to owning operational tools.\n\nThe economics are worth examining.`;
 }
 
 export async function generateVibeReportTweet(supabaseUrl: string, supabaseKey: string): Promise<string> {
   const dateContext = new Date().toLocaleString("en-US", { month: "long", day: "numeric", year: "numeric" });
   const persona = pick(PERSONAS);
 
-  const prompt = `You are ${persona}. Write ONE tweet (max 270 chars) sharing an insight from the "Vibe Coding: State of the Market" report.
+  const prompt = `You are ${persona}. Write ONE tweet (max 270 chars) sharing a data point from the "State of the Market" report on AI-assisted software development.
 
 DATE: ${dateContext}
 REPORT URL: ${REPORT_URL}
 
-Key data: 2M+ people now build software using AI coding tools. Non-technical founders are owning their code. The subscription model is being challenged.
+Key data: 2M+ organizations now use AI-assisted development. Non-technical leaders are gaining software ownership. The subscription model faces structural challenges at enterprise scale.
 
 RULES:
-- Lead with the most INTERESTING data point or insight — not "check out our report"
-- Sound like someone genuinely excited by the data, not marketing it
+- Lead with the most strategically relevant data point
+- Write for enterprise technology leaders
+- Sound analytical, not promotional
 - Include ${REPORT_URL} at the end
-- 1 hashtag max (#vibecoding)
-- No emojis in the first line
+- NO hype language, NO emojis, NO hashtags
 - Output ONLY the tweet text`;
 
   try {
@@ -254,7 +250,7 @@ RULES:
         model: "google/gemini-2.5-flash",
         messages: [{ role: "user", content: prompt }],
         max_tokens: 300,
-        temperature: 0.95,
+        temperature: 0.85,
       }),
     });
 
@@ -271,5 +267,5 @@ RULES:
     console.error("AI vibe report tweet failed:", e);
   }
 
-  return `2M+ people now build and own their apps with AI.\n\nThe era of renting software is ending.\n\nFull report → ${REPORT_URL}\n\n#vibecoding`;
+  return `2M+ organizations now build with AI-assisted development tools. The implications for enterprise software procurement are significant.\n\nFull analysis → ${REPORT_URL}`;
 }

@@ -7,10 +7,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { MetaTags } from "@/components/MetaTags";
-import { Check, Loader2, Zap, Sparkles, Building2, ArrowRight, Shield, Headphones } from "lucide-react";
+import { Check, Loader2, Building2, ArrowRight, Shield, Users, LayoutGrid, Lock, Globe } from "lucide-react";
 import { EnterpriseContactForm } from "@/components/EnterpriseContactForm";
 import { cn } from "@/lib/utils";
-import { FREE_TIER, CORE_PAID_TIERS, ENTERPRISE_TIERS, ANNUAL_DISCOUNT, type PricingTier } from "@/lib/pricing-tiers";
+import { FREE_TIER, CORE_PAID_TIERS, ANNUAL_DISCOUNT, type PricingTier } from "@/lib/pricing-tiers";
 import { trackFunnel } from "@/hooks/useFunnelTracker";
 import { PricingTierCard } from "@/components/pricing/PricingTierCard";
 
@@ -18,7 +18,7 @@ export default function Credits() {
   const { user, loading: authLoading } = useAuth();
   const { isSubscribed, subscription, canClaimFree, purchaseCount, loading: subLoading } = useSubscription();
   const [subscribingTier, setSubscribingTier] = useState<string | null>(null);
-  const [annual, setAnnual] = useState(true); // Default to annual for higher LTV
+  const [annual, setAnnual] = useState(true);
 
   async function handleSubscribe(tier: PricingTier, isAnnual: boolean) {
     if (!user) return;
@@ -53,14 +53,14 @@ export default function Credits() {
   return (
     <div className="min-h-screen flex flex-col">
       <MetaTags
-        title="Pricing — Own Production-Ready Software | OpenDraft"
-        description="Get full source code, deploy configs, and direct builder messaging. Start free or scale with enterprise plans."
+        title="Pricing — Own Your Software Stack | OpenDraft"
+        description="Stop paying per-seat SaaS fees. Own production-ready software with full source code. Team workspaces and enterprise plans available."
         path="/credits"
       />
       <Navbar />
       <main className="flex-1 page-enter">
 
-        {/* Hero section */}
+        {/* Hero */}
         <section className="relative overflow-hidden">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-primary/5 blur-[120px] rounded-full pointer-events-none" />
 
@@ -69,12 +69,12 @@ export default function Credits() {
               Pricing
             </p>
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight leading-[1.1] mb-5">
-              Stop renting software.
+              Own your software.
               <br />
-              <span className="text-muted-foreground">Start owning it.</span>
+              <span className="text-muted-foreground">Kill the per-seat tax.</span>
             </h1>
             <p className="text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed">
-              Every plan includes full source code, deploy configs, security audits, and direct builder messaging. You own everything — forever.
+              From solo builders to enterprise teams — get full source code, team workspaces, and compliance-ready apps you own forever.
             </p>
           </div>
         </section>
@@ -83,20 +83,20 @@ export default function Credits() {
         <section className="container mx-auto px-4 max-w-4xl mb-6 sm:mb-10">
           <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm text-muted-foreground">
             {[
-              "Full source code included",
-              "One-click deploy to Netlify & Vercel",
-              "Security-audited",
-              "Cancel anytime",
-            ].map((item) => (
-              <div key={item} className="flex items-center gap-2">
-                <Check className="h-3.5 w-3.5 text-primary" />
-                <span>{item}</span>
+              { icon: Lock, text: "Full source code included" },
+              { icon: LayoutGrid, text: "Team app workspaces" },
+              { icon: Shield, text: "Compliance tagging" },
+              { icon: Globe, text: "Deploy anywhere" },
+            ].map(({ icon: Icon, text }) => (
+              <div key={text} className="flex items-center gap-2">
+                <Icon className="h-3.5 w-3.5 text-primary" />
+                <span>{text}</span>
               </div>
             ))}
           </div>
         </section>
 
-        {/* Annual / Monthly toggle */}
+        {/* Toggle */}
         <section className="container mx-auto px-4 max-w-4xl mb-10 sm:mb-16">
           <div className="flex items-center justify-center gap-2">
             <div className="inline-flex items-center rounded-full bg-muted/60 p-1">
@@ -127,8 +127,8 @@ export default function Credits() {
           </div>
         </section>
 
-        {/* Core pricing grid */}
-        <section className="container mx-auto px-4 max-w-6xl mb-24">
+        {/* Pricing grid */}
+        <section className="container mx-auto px-4 max-w-6xl mb-16">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
             <PricingTierCard
               tier={FREE_TIER}
@@ -147,48 +147,82 @@ export default function Credits() {
           </div>
         </section>
 
-        {/* Enterprise section */}
-        {ENTERPRISE_TIERS.length > 0 && (
-          <section id="enterprise" className="container mx-auto px-4 max-w-6xl mb-24">
-            <div className="flex items-center gap-4 mb-12">
-              <div className="flex-1 h-px bg-border/40" />
-              <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                Enterprise
-              </span>
-              <div className="flex-1 h-px bg-border/40" />
+        {/* Team workspace showcase */}
+        <section className="container mx-auto px-4 max-w-5xl mb-24">
+          <div className="rounded-2xl border border-primary/20 bg-gradient-to-b from-primary/5 to-card p-8 md:p-12">
+            <div className="text-center mb-10">
+              <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-xs font-semibold text-primary mb-4">
+                <Building2 className="h-3.5 w-3.5" /> Team & Enterprise
+              </div>
+              <h2 className="text-2xl md:text-3xl font-black tracking-tight mb-3">
+                Your private app marketplace
+              </h2>
+              <p className="text-muted-foreground max-w-lg mx-auto">
+                Like Okta for software you own. Give every team member access to approved, compliant apps — no per-seat fees.
+              </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-4xl mx-auto">
-              {ENTERPRISE_TIERS.map((tier) => (
-                <PricingTierCard
-                  key={tier.id}
-                  tier={tier}
-                  highlight={tier.badge === "Best value"}
-                  isCurrentPlan={currentPlan === tier.id}
-                  {...sharedCardProps}
-                />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              {[
+                {
+                  icon: LayoutGrid,
+                  title: "App Launcher",
+                  desc: "Okta-style dashboard with all approved apps in one place. Search, filter by department, launch instantly.",
+                },
+                {
+                  icon: Users,
+                  title: "Team Management",
+                  desc: "Invite members, assign roles (Owner, Admin, Builder, Member), and control access at every level.",
+                },
+                {
+                  icon: Shield,
+                  title: "Compliance Built-In",
+                  desc: "Tag apps with SOC2, HIPAA, GDPR. Admin approval workflow before any app enters the catalog.",
+                },
+                {
+                  icon: Lock,
+                  title: "You Own Everything",
+                  desc: "Full source code, deploy configs, security audits. No vendor lock-in, no subscription creep.",
+                },
+              ].map(({ icon: Icon, title, desc }) => (
+                <div key={title} className="rounded-xl border border-border/30 bg-card p-5">
+                  <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center mb-3">
+                    <Icon className="h-4.5 w-4.5 text-primary" />
+                  </div>
+                  <h3 className="text-sm font-bold mb-1.5">{title}</h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{desc}</p>
+                </div>
               ))}
             </div>
-          </section>
-        )}
+
+            <div className="text-center mt-8">
+              <Link to="/enterprise">
+                <Button size="lg" className="bg-foreground text-background hover:bg-foreground/90 rounded-full px-8 font-semibold group">
+                  Explore team workspaces
+                  <ArrowRight className="h-4 w-4 ml-2 transition-transform group-hover:translate-x-1" />
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </section>
 
         {/* SaaS Savings Calculator */}
         <section className="container mx-auto px-4 max-w-3xl mb-24">
-          <div className="rounded-2xl border border-primary/20 bg-primary/5 p-8 md:p-12 text-center">
+          <div className="rounded-2xl border border-border/40 bg-card p-8 md:p-12 text-center">
             <h2 className="text-2xl md:text-3xl font-black tracking-tight mb-3">
-              How much are you spending on SaaS?
+              How much is your team spending on SaaS?
             </h2>
             <p className="text-muted-foreground max-w-lg mx-auto leading-relaxed mb-6">
-              The average small business pays <strong className="text-foreground">$500–$2,000/mo</strong> for generic software they don't own. 
-              With OpenDraft, build custom replacements for <strong className="text-foreground">$20–$50/mo</strong> — and own the code forever.
+              The average team pays <strong className="text-foreground">$2,000–$10,000/mo</strong> for per-seat software they don't own.
+              With OpenDraft, build custom replacements and <strong className="text-foreground">own the code forever</strong>.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-lg mx-auto mb-6">
               {[
-                { saas: "CRM", cost: "$65/mo", save: "$780/yr" },
-                { saas: "Scheduling", cost: "$75/mo", save: "$900/yr" },
-                { saas: "Invoicing", cost: "$40/mo", save: "$480/yr" },
+                { saas: "CRM (10 seats)", cost: "$650/mo", save: "$7,800/yr" },
+                { saas: "PM Tool (10 seats)", cost: "$300/mo", save: "$3,600/yr" },
+                { saas: "Analytics (10 seats)", cost: "$400/mo", save: "$4,800/yr" },
               ].map(({ saas, cost, save }) => (
-                <div key={saas} className="rounded-xl border border-border/40 bg-card p-4">
+                <div key={saas} className="rounded-xl border border-border/40 bg-muted/30 p-4">
                   <p className="text-xs text-muted-foreground font-medium">{saas}</p>
                   <p className="text-sm line-through text-muted-foreground">{cost}</p>
                   <p className="text-sm font-bold text-primary">Save {save}</p>
@@ -196,36 +230,17 @@ export default function Credits() {
               ))}
             </div>
             <p className="text-xs text-muted-foreground">
-              Replace 3 SaaS tools → save <strong className="text-foreground">$2,160/yr</strong> minimum
+              Replace 3 SaaS tools for a team of 10 → save <strong className="text-foreground">$16,200/yr</strong>
             </p>
           </div>
         </section>
 
-        {/* Enterprise Contact Form */}
+        {/* Enterprise Contact */}
         <section className="container mx-auto px-4 max-w-3xl mb-24">
           <EnterpriseContactForm />
         </section>
 
-        {/* Enterprise CTA */}
-        <section className="container mx-auto px-4 max-w-3xl mb-24">
-          <div className="rounded-2xl border border-primary/20 bg-card p-8 md:p-12 text-center">
-            <Building2 className="h-8 w-8 text-primary mx-auto mb-4" />
-            <h2 className="text-2xl md:text-3xl font-black tracking-tight mb-3">
-              Need a private app marketplace for your team?
-            </h2>
-            <p className="text-muted-foreground max-w-lg mx-auto leading-relaxed mb-6">
-              Create a compliant, company-owned catalog of apps your entire organization can deploy — no per-seat SaaS fees, ever.
-            </p>
-            <Link to="/enterprise">
-              <Button size="lg" className="bg-foreground text-background hover:bg-foreground/90 rounded-full px-8 font-semibold group">
-                Explore Enterprise
-                <ArrowRight className="h-4 w-4 ml-2 transition-transform group-hover:translate-x-1" />
-              </Button>
-            </Link>
-          </div>
-        </section>
-
-        {/* Bottom CTA */}
+        {/* Custom work CTA */}
         <section className="container mx-auto px-4 max-w-3xl mb-24">
           <div className="rounded-2xl border border-border/40 bg-card p-8 md:p-12 text-center">
             <h2 className="text-2xl md:text-3xl font-black tracking-tight mb-3">
@@ -248,7 +263,7 @@ export default function Credits() {
         <section className="container mx-auto px-4 max-w-3xl pb-16 text-center">
           <p className="text-xs text-muted-foreground/60 leading-relaxed">
             All plans include marketplace browsing, source code downloads, and direct builder messaging.
-            No development services included — hire builders separately for custom work. Prices in USD.
+            Team workspace available on Team plan and above. Prices in USD.
           </p>
         </section>
 

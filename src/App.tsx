@@ -67,6 +67,7 @@ const AppsVertical = lazy(() => import("./pages/AppsVertical"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Ideas = lazy(() => import("./pages/Ideas"));
 const Hosting = lazy(() => import("./pages/Hosting"));
+const Enterprise = lazy(() => import("./pages/Enterprise"));
 
 
 import { SignupPrompt } from "./components/SignupPrompt";

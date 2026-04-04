@@ -1,7 +1,7 @@
 /**
- * Value-first tweet templates — NO hard sell
- * These provide genuine tips, insights, and discussion starters.
- * Only ~20% include a soft CTA. The rest build trust and followers.
+ * Value-first tweet templates — Enterprise ICP
+ * Authentic, measured tone for IT leaders, CIOs, CFOs, and VPs of Engineering.
+ * Pure strategic value. No hype. No gimmicks.
  */
 
 const SITE_URL = "https://opendraft.co";
@@ -23,90 +23,90 @@ function pickUnique<T>(key: string, arr: T[]): T {
   return arr[idx];
 }
 
-// ── TIPS & TACTICS (pure value, no CTA) ──
+// ── STRATEGIC TIPS (pure value, no CTA) ──
 export function tipTweet(): string {
   return pickUnique("tip", [
-    `Quick SaaS audit trick:\n\nOpen your credit card statement. Search "subscription."\n\nCount the tools. Multiply by 12.\n\nThat number will motivate you to find alternatives.`,
+    `A useful framework for software portfolio reviews:\n\nFor each tool, calculate cost-per-active-user, not cost-per-seat.\n\nThe gap between what you're paying and what you're using is usually 40-60%.`,
 
-    `Framework for evaluating any software tool:\n\n1. Do I use >20% of the features?\n2. Am I paying per seat?\n3. Can I export my data easily?\n\nIf the answers are No, Yes, No — you're overpaying.`,
+    `When evaluating SaaS renewals, ask your vendor one question:\n\n"What happens to our data if we don't renew?"\n\nThe answer reveals whether you're a customer or a hostage.`,
 
-    `Founder tip: before signing any annual SaaS contract, ask:\n\n"What happens to my data if I cancel?"\n\nThe answer tells you everything about the vendor's priorities.`,
+    `The most effective IT cost optimization I've seen isn't negotiating better SaaS rates.\n\nIt's identifying the 30% of tools where owned alternatives exist — and migrating methodically.`,
 
-    `The 10-minute software audit:\n\n1. List every tool your team uses daily\n2. Star the ones charging per-seat\n3. Google "[tool name] owned alternative"\n\nYou'll find options for at least half.`,
+    `Practical tip for enterprise IT leaders:\n\nTrack software cost per employee as a quarterly metric.\n\nMost organizations discover it's $300-500/month — and growing faster than headcount.`,
 
-    `Negotiation hack for SaaS renewals:\n\nBefore the call, find an owned alternative and get a quote.\n\nEven if you don't switch, having a real number gives you leverage.\n\nVendors discount 20-40% when you have options.`,
+    `Before your next SaaS renewal, calculate the 3-year TCO including:\n\n- Per-seat fees at projected headcount\n- Integration maintenance\n- Data export costs if you leave\n\nThe owned alternative often wins on a 24-month horizon.`,
 
-    `Underrated business metric: software cost per employee.\n\nMost companies don't track it.\n\nThe ones that do are usually surprised — it's $200-400/month per person.\n\nMultiply by headcount. That's your optimization opportunity.`,
+    `One of the most underrated IT governance practices: maintaining a clear inventory of which tools have data portability — and which don't.\n\nThis becomes critical during M&A.`,
 
-    `Rule of thumb for SaaS vs owned:\n\nIf you'll use the tool for 2+ years, owning is almost always cheaper.\n\nThe breakeven is usually 3-6 months.`,
+    `Framework for build vs. buy in 2026:\n\nIf it's core to your differentiation → build.\nIf it's operational infrastructure → evaluate ownership.\nIf it's genuinely commodity → subscribe.\n\nMost companies default to subscribe for everything.`,
 
-    `Before buying any business software, ask:\n\n"Would I rather pay $X/month forever, or $Y once?"\n\nIf the one-time option exists, do the math.\n\nIt's rarely close.`,
+    `The strongest signal that your SaaS portfolio needs rationalization:\n\nWhen three different teams are paying for three different tools that do the same thing.\n\nThis is more common than most CTOs realize.`,
 
-    `The best time to audit your SaaS stack is before renewal season.\n\nThe second best time is right now.\n\nPut 30 minutes on your calendar this week.`,
+    `Procurement insight: the enterprise tier of most SaaS tools costs 3-5x the standard tier.\n\nThe delta buys you SSO, audit logs, and a dedicated CSM.\n\nOwned software includes all of that by default.`,
 
-    `Startup tip: your first 10 hires each add ~$300/month in per-seat software costs.\n\n$36k/year. Before they write a line of code.\n\nPlan for this. Or eliminate it.`,
+    `A question worth asking in every technology review:\n\n"If this vendor disappeared tomorrow, how long would it take us to recover?"\n\nThe answer should inform your ownership strategy.`,
   ]);
 }
 
 // ── INDUSTRY INSIGHTS (thought leadership, no CTA) ──
 export function insightTweet(): string {
   return pickUnique("insight", [
-    `Interesting pattern: the fastest-growing SMBs I know all have one thing in common.\n\nThey own their core software.\n\nCoincidence? The margin data says no.`,
+    `An emerging pattern across enterprise IT: the shift from "best-of-breed SaaS" to "owned and governed."\n\nNot because owned is always better — but because the control and cost structure is more predictable.`,
 
-    `The SaaS industry generated $300B in revenue last year.\n\nRoughly $200B of that came from features customers never use.\n\nThat's not a business model. That's a pricing strategy.`,
+    `Enterprise SaaS spending grew 18% last year while headcount grew 3%.\n\nThat ratio is unsustainable. The correction will be structural, not incremental.`,
 
-    `A trend I'm watching: non-technical founders building their own tools with AI.\n\nNot because they want to code.\n\nBecause they're tired of paying $14k/month for software they barely use.`,
+    `Something worth watching: CIOs are starting to treat software ownership as a risk mitigation strategy, not just a cost play.\n\nVendor dependency is now a board-level concern.`,
 
-    `The "enterprise" tier is the biggest markup in software.\n\nSame product. Same features. 5x the price.\n\nThe only difference? A checkbox labeled "SSO" and a PDF invoice.`,
+    `The "enterprise" pricing tier exists because vendors know that once you've integrated, your switching costs exceed the premium.\n\nThis dynamic is starting to change.`,
 
-    `Something shifted in 2025:\n\nBuilding custom software became faster than evaluating SaaS options.\n\nThe sales demo → trial → negotiation → implementation cycle takes months.\n\nAI-built tools take hours.`,
+    `A shift I'm tracking in enterprise procurement:\n\nRFPs increasingly include "data sovereignty" and "source code access" as requirements.\n\nFive years ago, those were edge cases.`,
 
-    `The real cost of SaaS isn't the subscription.\n\nIt's the switching cost that keeps you locked in.\n\nEvery month you use a tool, leaving gets harder.\n\nThat's by design.`,
+    `The average enterprise manages 300+ SaaS vendors.\n\nEach requires security reviews, contract management, and compliance monitoring.\n\nThe administrative overhead alone justifies exploring ownership for stable, core tools.`,
 
-    `Data I keep coming back to:\n\nBusinesses that own their software have 15-30% better margins than competitors using equivalent SaaS.\n\nThe delta compounds over time.`,
+    `Interesting dynamic: as AI makes custom software faster to build, the premium that SaaS vendors charge for "convenience" is eroding.\n\nConvenience was always the main value proposition.`,
 
-    `Prediction: by 2028, "SaaS fatigue" will be a recognized business problem with its own consulting industry.\n\nThe same way "cloud migration" was 10 years ago.`,
+    `The most common objection to owned software — "who maintains it?" — is becoming less relevant.\n\nAI-assisted maintenance is changing the operational economics.`,
 
-    `The average SMB uses 37 SaaS tools.\n\n12 of them overlap in functionality.\n\n8 are used by fewer than 3 people.\n\nEvery company has this problem. Few measure it.`,
+    `Enterprise software is entering a phase similar to cloud migration a decade ago.\n\nNot "everything owned" — but a thoughtful rebalancing of what you rent vs. what you control.`,
 
-    `Counterintuitive: the best software decision is often NOT the "best" tool.\n\nIt's the adequate tool you own and control.\n\n"Good enough + owned" beats "best-in-class + rented" on a 3-year horizon.`,
+    `The companies that will have the strongest technology foundations in 2028 are making ownership decisions today.\n\nNot reactively, when a vendor forces the issue — but proactively, as strategy.`,
   ]);
 }
 
-// ── DISCUSSION STARTERS (engagement bait done well) ──
+// ── DISCUSSION STARTERS (genuine engagement) ──
 export function discussionTweet(): string {
   return pickUnique("discuss", [
-    `Genuine question for founders:\n\nWhat's the one SaaS subscription you'd eliminate first if you had an alternative?\n\nCurious what comes up most.`,
+    `For IT leaders: what percentage of your SaaS portfolio could realistically be replaced with owned alternatives?\n\nGenuinely curious about the range people are seeing.`,
 
-    `Debate this:\n\nIs per-seat pricing fair, or is it just the most effective way to extract revenue?\n\nI have strong opinions but I want to hear yours first.`,
+    `Question for enterprise CTOs:\n\nDo you track the total cost of vendor management (procurement, security reviews, compliance) separately from subscription costs?\n\nIf so, what ratio are you seeing?`,
 
-    `What's your company's software cost per employee?\n\nMost people have no idea.\n\nDrop your number below (or your best guess). I'll share the average.`,
+    `Interested in perspectives: is per-seat pricing a fair reflection of value delivered, or a pricing model optimized for vendor revenue?\n\nI think the answer depends on the tool category.`,
 
-    `Unpopular opinion:\n\nMost SaaS tools are commodities pretending to be luxuries.\n\nThe UI is different. The functionality is identical.\n\nChange my mind.`,
+    `For those managing enterprise software portfolios: which category of tools has the widest gap between what you pay and what you'd need to pay for equivalent owned software?`,
 
-    `Quick poll for business owners:\n\nIf you could own ONE tool you currently rent, which would save you the most money?\n\n🅰️ CRM\n🅱️ Project management\n🅲 Marketing tools\n🅳 Analytics`,
+    `A question I keep coming back to:\n\nAt what company size does the administrative overhead of managing SaaS vendors exceed the cost of the subscriptions themselves?`,
 
-    `Founders: what's the most surprisingly expensive SaaS tool in your stack?\n\nThe one where you looked at the invoice and thought "wait, really?"\n\nI'll start — our analytics tool. $800/mo for data we barely looked at.`,
+    `CIOs: what's your framework for deciding which tools are strategic enough to own vs. commodity enough to subscribe to?\n\nWould appreciate seeing how different orgs think about this.`,
 
-    `Hot take: the best tech stack is the one with the fewest subscriptions.\n\nFewer vendors = less complexity = better margins.\n\nOr am I wrong? Tell me why.`,
+    `Genuine question for enterprise buyers:\n\nHas a SaaS vendor acquisition ever disrupted your operations?\n\nThis seems to be happening more frequently and I'm curious about the impact.`,
 
-    `Thought experiment:\n\nIf every SaaS tool charged a one-time fee instead of monthly, which companies would still exist?\n\nThe answer reveals a lot about where the value actually is.`,
+    `For those who've moved from SaaS to owned software for any tool:\n\nWhat surprised you most about the transition — positively or negatively?`,
   ]);
 }
 
-// ── BUILDER/CREATOR STORIES (community building) ──
+// ── BUILDER/CREATOR STORIES (ecosystem perspective) ──
 export function builderStoryTweet(): string {
   return pickUnique("builder_story", [
-    `A developer I know builds apps on weekends.\n\nHe listed 3 on a marketplace.\n\nOne of them now earns $800/month passively.\n\nThe math on selling code is underrated.`,
+    `An underappreciated trend: experienced enterprise developers are packaging their internal tools as products.\n\nThe code that solved their company's problem often solves it for hundreds of others.`,
 
-    `The indie hacker playbook that actually works:\n\n1. Build something useful for yourself\n2. Realize others have the same problem\n3. Package it\n4. List it\n5. Repeat\n\nNo VC. No marketing team. Just useful software.`,
+    `The economics of selling enterprise-grade templates are compelling:\n\nBuild once, sell repeatedly. No support overhead of custom consulting. No recurring infrastructure costs.\n\nMore developers should consider it.`,
 
-    `Interesting conversation with a developer last week:\n\n"I used to think my side projects were worthless."\n\n"Then I listed one for $49 and made $2k in a month."\n\nYour code has value. Most developers undercharge.`,
+    `Talked to a developer who left a FAANG role to build and sell production-ready app templates.\n\nHe's earning more than his senior engineer salary.\n\nThe market for quality, owned software is real.`,
 
-    `The best side hustle for developers in 2026 isn't freelancing.\n\nIt's building tools once and selling them repeatedly.\n\n$0 marginal cost. Infinite leverage.`,
+    `The best software products often start as internal tools.\n\nWhen an engineering team solves their own problem well enough to productize it — that's a strong signal of quality.`,
 
-    `Met a founder who replaced their entire SaaS stack with 4 custom tools.\n\nTotal cost: $340.\nMonthly savings: $2,800.\nTime to build: 2 weekends.\n\nThe economics are changing fast.`,
+    `A pattern in enterprise software: the gap between what you can buy as SaaS and what you actually need is filled by internal tools.\n\nThose internal tools are increasingly available to own on marketplaces.`,
 
-    `Developer economics, 2026 edition:\n\nFreelancing: trade time for money\nSaaS: trade time for recurring revenue (and recurring headaches)\nSelling owned apps: trade time for passive income\n\nThe last one scales best.`,
+    `Developer side projects that solve real enterprise problems are surprisingly valuable.\n\nNot as SaaS startups — as owned, deployable tools that organizations can govern themselves.`,
   ]);
 }

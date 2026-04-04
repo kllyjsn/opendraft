@@ -62,9 +62,36 @@ export function OrgCatalog({ orgId, isAdmin }: OrgCatalogProps) {
   const [department, setDepartment] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<CatalogSearchResult[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [selectedListing, setSelectedListing] = useState<CatalogSearchResult | null>(null);
+
   useEffect(() => {
     loadListings();
   }, [orgId]);
+
+  // Debounced catalog search
+  useEffect(() => {
+    if (!submitOpen) return;
+    if (searchQuery.trim().length < 2) {
+      setSearchResults([]);
+      return;
+    }
+    const timeout = setTimeout(async () => {
+      setSearching(true);
+      const { data } = await supabase
+        .from("listings")
+        .select("id, title, description, price, category, screenshots")
+        .eq("status", "live")
+        .ilike("title", `%${searchQuery.trim()}%`)
+        .order("sales_count", { ascending: false })
+        .limit(20);
+      setSearchResults((data as CatalogSearchResult[]) ?? []);
+      setSearching(false);
+    }, 250);
+    return () => clearTimeout(timeout);
+  }, [searchQuery, submitOpen]);
 
   async function loadListings() {
     setLoading(true);

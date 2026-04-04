@@ -76,7 +76,7 @@ export function OrgMembers({ orgId, members, isAdmin, onRefresh }: OrgMembersPro
   async function handleRoleChange(memberId: string, newRole: string) {
     const { error } = await supabase
       .from("org_members")
-      .update({ role: newRole })
+      .update({ role: newRole as "admin" | "builder" | "member" | "owner" })
       .eq("id", memberId);
     if (error) {
       toast({ title: "Could not update role", description: error.message, variant: "destructive" });

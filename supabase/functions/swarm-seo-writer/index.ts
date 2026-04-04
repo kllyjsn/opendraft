@@ -114,9 +114,9 @@ VOICE:
 Category: ${topic.category}
 Vertical: ${topic.vertical}
 
-IMPORTANT: The content must be genuinely useful — someone should bookmark this. If it reads like generic AI content, it fails.
+IMPORTANT: This content must provide genuine strategic value to enterprise technology leaders. It should be the kind of article a CIO would share with their leadership team or bookmark for a procurement review. If it reads like generic content marketing, it fails.
 
-Return JSON: { "title": "under 60 chars with keyword", "description": "meta description under 155 chars — include a specific benefit or number", "content": "full markdown, 1500-2500 words", "read_time": "X min read" }`
+Return JSON: { "title": "under 60 chars with keyword, enterprise-appropriate", "description": "meta description under 155 chars — include a specific strategic benefit or data point", "content": "full markdown, 1500-2500 words", "read_time": "X min read" }`
           }
         ],
         tools: [{

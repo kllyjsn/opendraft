@@ -1,117 +1,69 @@
 
-# Enterprise Private App Marketplace
-## Vision: The Okta of Owned Software
+# Enterprise Team Workspace — Full Build Plan
 
-**Thesis**: Every enterprise pays $50–500/seat/month for generic SaaS tools nobody loves. OpenDraft lets companies build a **private marketplace of personalized, compliant apps** their teams own forever — no per-seat taxes, no vendor lock-in.
-
----
-
-## Core Product: Company App Hub
-
-### What It Is
-A branded, SSO-protected internal marketplace where any employee can browse, claim, and deploy pre-approved apps built specifically for their company. Think Okta's app dashboard, but every app is **owned source code** — not a SaaS subscription.
-
-### Key Differentiators vs. Okta/SaaS
-| | Traditional SaaS | OpenDraft Enterprise |
-|---|---|---|
-| Ownership | Rented monthly | Owned forever |
-| Customization | Limited config | Full source code |
-| Per-seat cost | $10–100/user/mo | $0 after build |
-| Compliance | Vendor-dependent | Self-audited, on-prem ready |
-| Vendor risk | Single point of failure | No dependency |
+## Vision
+Transform the enterprise landing page into a fully functional product where teams can create organizations, invite members, curate a private app catalog with admin approval workflows, and manage everything from a central dashboard.
 
 ---
 
-## Architecture
+## Phase 1: Database Enhancements
+**Migration to add missing pieces:**
+- `org_invitations` table — email-based invites with expiry, status (pending/accepted/expired), and token
+- Add `accepted_at` timestamp to `org_members` for tracking
+- RLS policies for invitations (org admins can create, invitees can accept)
 
-### 1. Organization Management
-- **Organizations table**: company name, domain, SSO config, branding
-- **Org members**: role-based access (admin, builder, employee)
-- **SSO/SAML integration**: employees sign in with corporate identity
-- **Custom subdomain**: `acme.opendraft.app` or white-labeled domain
+## Phase 2: Org Creation Flow
+- **Create Organization modal/page** — name, slug (auto-generated), optional logo upload
+- Accessible from the Enterprise page CTA and from the user dashboard
+- Auto-adds creator as `owner` via existing trigger
+- Redirects to org dashboard after creation
 
-### 2. Private App Catalog
-- **Org-scoped listings**: apps visible only to org members
-- **Compliance tags**: SOC2, HIPAA, GDPR, PCI badges per app
-- **Approval workflow**: admin reviews → approved → available to org
-- **Version management**: track deployed versions across teams
-- **Department categories**: Sales, HR, Engineering, Finance, Ops
+## Phase 3: Org Dashboard (`/org/:slug`)
+Central hub with 4 tabs:
+1. **Overview** — org name, member count, app count, quick stats
+2. **Members** — list members, invite new (by email), change roles, remove
+3. **App Catalog** — browse org-approved apps, submit new apps for approval
+4. **Settings** — org name, logo, branding, SSO config (owner/admin only)
 
-### 3. Compliance & Security Layer
-- **Compliance frameworks**: SOC2 Type II, HIPAA, GDPR, FedRAMP readiness
-- **Automated security scanning**: every app audited before publishing
-- **Data residency controls**: choose where app data lives
-- **Audit trail**: who deployed what, when, with full change history
-- **Policy engine**: enforce tech stack requirements, banned packages, license checks
+## Phase 4: Team Invitation System
+- Admin/owner enters email → creates invitation record + sends notification
+- Invitee signs up/logs in → sees pending invitation → accepts → becomes member
+- Invitation banner on dashboard for users with pending invites
+- Invitation expiry (7 days)
 
-### 4. Builder Ecosystem (Internal + External)
-- **Internal builders**: company developers publish to private catalog
-- **Curated external builders**: vetted OpenDraft builders create for the org
-- **Build requests**: employees request apps → routed to approved builders
-- **Template library**: pre-approved, compliant app templates per industry
+## Phase 5: Private App Catalog & Approval Workflow
+- Org members can submit marketplace listings to the org catalog
+- Admins see pending submissions → approve/reject with notes
+- Approved apps appear in the org's private catalog
+- Compliance tags auto-inherited from listing security scans
+- Filter by department, compliance framework, status
 
-### 5. Deployment & Operations
-- **One-click deploy** to company infrastructure (AWS, Azure, GCP)
-- **Self-hosted option**: run entire marketplace on company servers
-- **Managed hosting**: OpenDraft hosts with enterprise SLA
-- **Monitoring dashboard**: uptime, usage, cost savings per app
-
----
-
-## Pricing Model
-
-| Tier | Price | What You Get |
-|---|---|---|
-| **Team** | $999/mo | 50 seats, 25 apps, SSO, compliance dashboard |
-| **Business** | $2,499/mo | 250 seats, unlimited apps, SAML, priority support |
-| **Enterprise** | $4,999+/mo | Unlimited, on-prem, custom SLA, dedicated CSM |
-| **Build Credits** | $500/app | Commission OpenDraft builders for custom apps |
-
-**Revenue math**: 100 enterprise customers × $2,500/mo avg = **$250K MRR** ($3M ARR)
+## Phase 6: Routing & Navigation
+- `/org/new` — create organization
+- `/org/:slug` — org dashboard (tabs: overview, members, catalog, settings)
+- Add "My Organization" link in authenticated nav when user belongs to an org
+- Enterprise page CTAs route to `/org/new` for authenticated users
 
 ---
 
-## Go-to-Market
+## File Structure
+```
+src/pages/OrgNew.tsx          — create org form
+src/pages/OrgDashboard.tsx    — tabbed org dashboard
+src/components/org/
+  OrgOverview.tsx             — stats & quick actions
+  OrgMembers.tsx              — member list & invite
+  OrgCatalog.tsx              — private app catalog
+  OrgSettings.tsx             — org settings
+  OrgInviteBanner.tsx         — pending invite banner
+  InviteMemberDialog.tsx      — invite modal
+  AppApprovalCard.tsx         — approve/reject app card
+  SubmitAppDialog.tsx         — submit listing to org
+src/hooks/useOrg.ts           — org data & membership hook
+```
 
-### Phase 1: Foundation (Now → Q3 2026)
-- [ ] Create `/enterprise` landing page with ROI calculator
-- [ ] Build organization management (orgs, members, roles)
-- [ ] Add org-scoped listings (private catalog)
-- [ ] Implement compliance badge system on listings
-- [ ] Build enterprise inquiry → demo → onboarding pipeline
-
-### Phase 2: Compliance & SSO (Q3–Q4 2026)
-- [ ] SAML/SSO integration (Okta, Azure AD, Google Workspace)
-- [ ] Automated compliance scanning pipeline
-- [ ] Audit trail and access logs
-- [ ] Department-based app categorization
-- [ ] Admin approval workflow for new apps
-
-### Phase 3: Scale (Q1 2027)
-- [ ] Self-hosted / on-prem deployment option
-- [ ] Multi-cloud deploy targets (AWS, Azure, GCP)
-- [ ] Internal build request marketplace
-- [ ] Usage analytics and ROI reporting dashboard
-- [ ] SOC2 Type II certification for the platform itself
-
----
-
-## Competitive Positioning
-
-**"Your company's private app store — every tool custom-built, security-audited, and owned forever."**
-
-Target buyers:
-- **CTO/CIO**: "Cut $500K/yr in SaaS spend, own your stack"
-- **CISO**: "Every app compliant, audited, no third-party data risk"
-- **CFO**: "Eliminate per-seat taxes across 47 SaaS vendors"
-- **VP Eng**: "Ship internal tools 10x faster with pre-built templates"
-
----
-
-## What to Build First (MVP)
-
-1. **Organizations table + member management** — multi-tenant foundation
-2. **Org-scoped listings** — private catalog visibility
-3. **`/enterprise` landing page** — capture high-intent leads
-4. **Compliance badges on listings** — SOC2/HIPAA/GDPR tags
-5. **Admin approval workflow** — gate what enters the private catalog
+## Security
+- All org data protected by RLS using `is_org_member` / `is_org_admin` functions
+- Invitation tokens are UUIDs, single-use
+- Only owners can delete org or transfer ownership
+- Only admins+ can invite, approve apps, change roles

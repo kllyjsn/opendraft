@@ -12,7 +12,9 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 
 const COMPLIANCE_FRAMEWORKS = [
   { name: "SOC 2 Type II", desc: "Full audit trail, access controls, encryption at rest" },
@@ -224,6 +226,7 @@ function ContactForm() {
 }
 
 export default function Enterprise() {
+  const { user } = useAuth();
   return (
     <div className="min-h-screen bg-background">
       <MetaTags
@@ -263,12 +266,21 @@ export default function Enterprise() {
               Stop paying per-seat SaaS taxes across dozens of vendors.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Button size="lg" className="h-12 px-8 font-semibold" asChild>
-                <a href="#contact">
-                  Request a demo
-                  <ArrowRight className="h-4 w-4 ml-2" />
-                </a>
-              </Button>
+              {user ? (
+                <Button size="lg" className="h-12 px-8 font-semibold" asChild>
+                  <Link to="/org/new">
+                    Create your workspace
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Link>
+                </Button>
+              ) : (
+                <Button size="lg" className="h-12 px-8 font-semibold" asChild>
+                  <a href="#contact">
+                    Request a demo
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </a>
+                </Button>
+              )}
               <Button size="lg" variant="outline" className="h-12 px-8 font-semibold" asChild>
                 <a href="#calculator">See your savings</a>
               </Button>

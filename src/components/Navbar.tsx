@@ -3,12 +3,14 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
-import { Menu, X, ShieldCheck, Bot } from "lucide-react";
+import { useMyOrg } from "@/hooks/useOrg";
+import { Menu, X, ShieldCheck, Bot, Building2 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { NotificationBell } from "@/components/NotificationBell";
 import { MessageAlert } from "@/components/MessageAlert";
 import { CreditBadge } from "@/components/CreditBadge";
+import { OrgInviteBanner } from "@/components/org/OrgInviteBanner";
 
 function NavItem({ to, children, onClick }: { to: string; children: React.ReactNode; onClick?: () => void }) {
   const { pathname } = useLocation();
@@ -31,6 +33,7 @@ export function Navbar() {
   const { user, signOut, loading } = useAuth();
   const { isAdmin } = useAdmin();
   const { unreadCount } = useUnreadMessages();
+  const { org: myOrg } = useMyOrg();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -67,6 +70,13 @@ export function Navbar() {
             <>
               <NavItem to="/ideas">Ideas</NavItem>
               <NavItem to="/dashboard">My Apps</NavItem>
+              {myOrg && (
+                <NavItem to={`/org/${myOrg.slug}`}>
+                  <span className="inline-flex items-center gap-1">
+                    <Building2 className="h-3.5 w-3.5" /> My Org
+                  </span>
+                </NavItem>
+              )}
               <NavItem to="/messages">
                 <span className="relative inline-flex items-center">
                   Messages
@@ -156,6 +166,13 @@ export function Navbar() {
             <>
               <NavItem to="/ideas" onClick={() => setMenuOpen(false)}>Ideas</NavItem>
               <NavItem to="/dashboard" onClick={() => setMenuOpen(false)}>My Apps</NavItem>
+              {myOrg && (
+                <NavItem to={`/org/${myOrg.slug}`} onClick={() => setMenuOpen(false)}>
+                  <span className="inline-flex items-center gap-1">
+                    <Building2 className="h-3.5 w-3.5" /> My Org
+                  </span>
+                </NavItem>
+              )}
               <NavItem to="/messages" onClick={() => setMenuOpen(false)}>
                 <span className="relative inline-flex items-center">
                   Messages
@@ -194,6 +211,7 @@ export function Navbar() {
       </div>
     </nav>
     <MessageAlert />
+    {user && <OrgInviteBanner />}
     </>
   );
 }

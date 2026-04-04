@@ -29,6 +29,8 @@ export interface PricingTier {
   popular?: boolean;
   badge?: string;
   features: string[];
+  ctaLabel?: string;     // Override CTA button label
+  ctaLink?: string;      // Override CTA to link instead of checkout
 }
 
 /** Annual discount percentage */
@@ -39,7 +41,7 @@ export const VALUE_PROP = "Production-ready apps with full source code. Claim, d
 
 /** Short CTA taglines by context */
 export const CTA_COPY = {
-  hero: "Claim & deploy production-ready apps in minutes",
+  hero: "Own your software stack. Kill per-seat SaaS fees.",
   pricing: "Every plan includes full source code, deploy configs, and builder support",
   sell: "List once. Earn on every claim. Zero infrastructure.",
   card: "Full source · Deploy-ready · Builder support",
@@ -66,87 +68,61 @@ export const TIERS: PricingTier[] = [
   {
     id: "starter",
     name: "Starter",
-    price: 2000,           // $20/mo
-    annualPrice: 19200,    // $192/yr ($16/mo)
+    price: 2900,           // $29/mo
+    annualPrice: 27840,    // $232/yr ($19.33/mo effective → ~$23.20/mo)
     appLimit: 5,
     appLimitLabel: "5 apps",
-    description: "Claim 5 production-ready apps per month with everything included.",
+    description: "For individuals replacing SaaS tools with owned software.",
     features: [
       "5 fully serviced apps with source code",
       "Deploy configs for Netlify & Vercel",
       "Direct messaging with builders",
-      "Security audits & auto-generated READMEs",
+      "Security audits & READMEs",
       "Lifetime access — yours forever",
     ],
   },
   {
-    id: "growth",
-    name: "Growth",
-    price: 3000,           // $30/mo
-    annualPrice: 28800,    // $288/yr ($24/mo)
-    appLimit: 20,
-    appLimitLabel: "20 apps",
-    description: "Scale with 20 apps/month — ideal for agencies and power users.",
-    popular: true,
-    features: [
-      "20 fully serviced apps with source code",
-      "Deploy configs for Netlify & Vercel",
-      "Priority builder messaging",
-      "Security audits & auto-generated READMEs",
-      "Lifetime access — yours forever",
-    ],
-  },
-  {
-    id: "unlimited",
-    name: "Unlimited",
-    price: 5000,           // $50/mo
-    annualPrice: 48000,    // $480/yr ($40/mo)
-    appLimit: Infinity,
-    appLimitLabel: "Unlimited",
-    description: "No limits. Claim every app on the platform with everything included.",
-    features: [
-      "Unlimited fully serviced apps",
-      "Deploy configs for Netlify & Vercel",
-      "Priority builder messaging",
-      "Security audits & auto-generated READMEs",
-      "Lifetime access — yours forever",
-    ],
-  },
-  {
-    id: "agency",
-    name: "Agency",
+    id: "team",
+    name: "Team",
     price: 9900,           // $99/mo
-    annualPrice: 95000,    // $950/yr (~$79/mo)
+    annualPrice: 95040,    // $792/yr ($79.20/mo)
     appLimit: Infinity,
     appLimitLabel: "Unlimited",
-    badge: "For teams",
-    description: "White-label unlimited apps for your agency. Resell to clients with zero restrictions.",
+    popular: true,
+    badge: "Most popular",
+    description: "A private app workspace for your team. Like Okta, but for software you own.",
     features: [
-      "Unlimited fully serviced apps",
-      "White-label rights — rebrand & resell",
+      "Unlimited apps with full source code",
+      "Team workspace with app launcher",
+      "Invite unlimited team members",
+      "Compliance tagging (SOC2, HIPAA, GDPR)",
+      "Admin approval workflow",
       "Priority builder messaging",
-      "Bulk deploy to client domains",
-      "Team dashboard (coming soon)",
-      "Dedicated onboarding call",
+      "White-label & rebrand rights",
     ],
+    ctaLabel: "Start team workspace",
   },
   {
     id: "enterprise",
     name: "Enterprise",
-    price: 19900,          // $199/mo
-    annualPrice: 190000,   // $1900/yr (~$158/mo)
+    price: 49900,          // $499/mo
+    annualPrice: 478800,   // $3990/yr ($399/mo)
     appLimit: Infinity,
     appLimitLabel: "Unlimited",
-    badge: "Best value",
-    description: "Fleet licensing for agencies managing 50+ clients. Volume pricing included.",
+    badge: "For organizations",
+    description: "Company-wide app marketplace with SSO, governance, and dedicated support.",
     features: [
-      "Everything in Agency",
+      "Everything in Team",
+      "SSO / SAML integration",
+      "Custom domain for workspace",
+      "Department-level app catalogs",
       "API access for bulk operations",
-      "Custom integrations support",
-      "Volume discount on premium listings",
       "Dedicated account manager",
       "SLA-backed response times",
+      "Volume discount on premium apps",
     ],
+    ctaLabel: "Talk to sales",
+    ctaLink: "/enterprise",
   },
 ];
 
@@ -154,10 +130,10 @@ export const TIERS: PricingTier[] = [
 export const PAID_TIERS = TIERS.filter((t) => t.price > 0);
 
 /** Core paid tiers (shown on main pricing) */
-export const CORE_PAID_TIERS = TIERS.filter((t) => t.price > 0 && t.price <= 5000);
+export const CORE_PAID_TIERS = TIERS.filter((t) => t.price > 0);
 
-/** High-ticket tiers (shown separately) */
-export const ENTERPRISE_TIERS = TIERS.filter((t) => t.price > 5000);
+/** High-ticket tiers (shown separately — empty now since all tiers shown together) */
+export const ENTERPRISE_TIERS: PricingTier[] = [];
 
 /** Look up a tier by its Stripe price (cents) */
 export function getTierByPrice(priceCents: number): PricingTier | undefined {

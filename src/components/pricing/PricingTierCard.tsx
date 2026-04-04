@@ -1,4 +1,4 @@
-import { Check, Loader2, Sparkles, Zap, Gift } from "lucide-react";
+import { Check, Loader2, Sparkles, Zap, Gift, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -36,6 +36,7 @@ export function PricingTierCard({
   const isFree = tier.price === 0;
   const effectivePrice = getEffectiveMonthlyPrice(tier, annual);
   const savings = getAnnualSavings(tier);
+  const hasCtaLink = !!tier.ctaLink;
 
   return (
     <div
@@ -49,7 +50,7 @@ export function PricingTierCard({
       {tier.popular && (
         <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-1.5 text-xs font-semibold tracking-wide uppercase text-primary-foreground">
-            <Sparkles className="h-3 w-3" /> Recommended
+            <Sparkles className="h-3 w-3" /> Most Popular
           </span>
         </div>
       )}
@@ -66,19 +67,21 @@ export function PricingTierCard({
           {tier.name}
         </h3>
         <div className="flex items-baseline gap-1 mb-1">
-          <span className="text-5xl font-black tracking-tight">${effectivePrice / 100}</span>
+          <span className="text-5xl font-black tracking-tight">
+            ${Math.round(effectivePrice / 100)}
+          </span>
           {tier.price > 0 && (
-            <span className="text-base text-muted-foreground font-medium">/month</span>
+            <span className="text-base text-muted-foreground font-medium">/mo</span>
           )}
         </div>
         {annual && savings > 0 && (
           <p className="text-xs font-semibold text-primary mb-2">
-            Save ${savings / 100}/yr with annual billing
+            Save ${Math.round(savings / 100)}/yr with annual billing
           </p>
         )}
-        {annual && tier.annualPrice && (
+        {annual && tier.annualPrice && tier.price > 0 && (
           <p className="text-xs text-muted-foreground line-through mb-2">
-            ${tier.price / 100}/mo billed monthly
+            ${Math.round(tier.price / 100)}/mo billed monthly
           </p>
         )}
         <p className="text-sm text-muted-foreground leading-relaxed">{tier.description}</p>
@@ -129,6 +132,21 @@ export function PricingTierCard({
             <Check className="h-4 w-4" /> Current plan
           </p>
         </div>
+      ) : hasCtaLink ? (
+        <Link to={tier.ctaLink!}>
+          <Button
+            className={cn(
+              "w-full h-12 text-sm font-semibold group",
+              highlight
+                ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                : "",
+            )}
+            variant={highlight ? "default" : "outline"}
+          >
+            {tier.ctaLabel ?? "Learn more"}
+            <ArrowRight className="h-4 w-4 ml-2 transition-transform group-hover:translate-x-1" />
+          </Button>
+        </Link>
       ) : user ? (
         <Button
           onClick={() => onSubscribe(tier, annual)}
@@ -146,7 +164,7 @@ export function PricingTierCard({
           ) : isSubscribed ? (
             "Switch plan"
           ) : (
-            <><Zap className="h-4 w-4 mr-2" /> Subscribe</>
+            <><Zap className="h-4 w-4 mr-2" /> {tier.ctaLabel ?? "Subscribe"}</>
           )}
         </Button>
       ) : (
@@ -160,7 +178,7 @@ export function PricingTierCard({
             )}
             variant={highlight ? "default" : "outline"}
           >
-            Sign in to subscribe
+            {tier.ctaLabel ?? "Sign in to subscribe"}
           </Button>
         </Link>
       )}

@@ -97,6 +97,9 @@ export function CompetitorComparison() {
                   <td className="py-3 px-2">
                     <FeatureCell value={f.bolt} />
                   </td>
+                  <td className="py-3 px-2">
+                    <FeatureCell value={f.retool} />
+                  </td>
                 </motion.tr>
               ))}
             </tbody>

@@ -61,6 +61,13 @@ export function Navbar() {
 
         {/* Desktop Nav */}
         <div className="hidden md:flex items-center gap-8">
+          {user && myOrg && (
+            <NavItem to={`/org/${myOrg.slug}`}>
+              <span className="inline-flex items-center gap-1.5">
+                <Building2 className="h-3.5 w-3.5" /> {myOrg.name}
+              </span>
+            </NavItem>
+          )}
           <NavItem to="/category/saas-tool">Browse</NavItem>
           <NavItem to="/credits">Pricing</NavItem>
           <NavItem to="/builders">Builders</NavItem>
@@ -70,13 +77,6 @@ export function Navbar() {
             <>
               <NavItem to="/ideas">Ideas</NavItem>
               <NavItem to="/dashboard">My Apps</NavItem>
-              {myOrg && (
-                <NavItem to={`/org/${myOrg.slug}`}>
-                  <span className="inline-flex items-center gap-1">
-                    <Building2 className="h-3.5 w-3.5" /> My Org
-                  </span>
-                </NavItem>
-              )}
               <NavItem to="/messages">
                 <span className="relative inline-flex items-center">
                   Messages
@@ -164,15 +164,15 @@ export function Navbar() {
           <NavItem to="/enterprise" onClick={() => setMenuOpen(false)}>Enterprise</NavItem>
           {user ? (
             <>
-              <NavItem to="/ideas" onClick={() => setMenuOpen(false)}>Ideas</NavItem>
-              <NavItem to="/dashboard" onClick={() => setMenuOpen(false)}>My Apps</NavItem>
               {myOrg && (
                 <NavItem to={`/org/${myOrg.slug}`} onClick={() => setMenuOpen(false)}>
                   <span className="inline-flex items-center gap-1">
-                    <Building2 className="h-3.5 w-3.5" /> My Org
+                    <Building2 className="h-3.5 w-3.5" /> {myOrg.name}
                   </span>
                 </NavItem>
               )}
+              <NavItem to="/ideas" onClick={() => setMenuOpen(false)}>Ideas</NavItem>
+              <NavItem to="/dashboard" onClick={() => setMenuOpen(false)}>My Apps</NavItem>
               <NavItem to="/messages" onClick={() => setMenuOpen(false)}>
                 <span className="relative inline-flex items-center">
                   Messages

@@ -22,6 +22,7 @@ import { ReturningVisitorBanner } from "@/components/ReturningVisitorBanner";
 import { ROISavingsTracker } from "@/components/ROISavingsTracker";
 import { PricingCalculator } from "@/components/PricingCalculator";
 import { CompetitorComparison } from "@/components/CompetitorComparison";
+import { AppShowcase } from "@/components/AppShowcase";
 
 
 

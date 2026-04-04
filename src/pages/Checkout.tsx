@@ -206,17 +206,17 @@ export default function Checkout() {
           <Button
             onClick={handleClaim}
             disabled={processing}
-            className="w-full gradient-hero text-white border-0 shadow-glow hover:opacity-90 h-12 text-base font-bold"
+            className="w-full bg-foreground text-background hover:bg-foreground/90 h-12 text-base font-bold rounded-full"
           >
             {processing ? (
               <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Claiming…</>
             ) : (
-              <><Gift className="h-4 w-4 mr-2" /> Claim Project</>
+              <><Gift className="h-4 w-4 mr-2" /> Claim for $0.00</>
             )}
           </Button>
 
           <p className="mt-3 text-xs text-muted-foreground text-center">
-            Included with your OpenDraft subscription
+            Included with your plan · Yours forever, even if you cancel
           </p>
         </div>
       </main>

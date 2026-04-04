@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { FREE_TIER, CORE_PAID_TIERS, ANNUAL_DISCOUNT, type PricingTier } from "@/lib/pricing-tiers";
 import { trackFunnel } from "@/hooks/useFunnelTracker";
 import { PricingTierCard } from "@/components/pricing/PricingTierCard";
+import { PaywallFlow } from "@/components/PaywallFlow";
 
 export default function Credits() {
   const { user, loading: authLoading } = useAuth();
@@ -60,7 +61,18 @@ export default function Credits() {
       <Navbar />
       <main className="flex-1 page-enter">
 
-        {/* Hero */}
+        {/* 3-screen paywall for non-subscribers */}
+        {!isSubscribed && !subLoading && !authLoading && user && (
+          <section className="container mx-auto px-4 max-w-lg pt-10 sm:pt-16 pb-8">
+            <PaywallFlow
+              onSelectPlan={(tier, isAnnual) => handleSubscribe(tier, isAnnual)}
+              loading={!!subscribingTier}
+            />
+          </section>
+        )}
+
+        {/* Hero — only show for subscribers or when browsing anonymously */}
+        {(isSubscribed || !user) && (
         <section className="relative overflow-hidden">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-primary/5 blur-[120px] rounded-full pointer-events-none" />
 
@@ -78,7 +90,10 @@ export default function Credits() {
             </p>
           </div>
         </section>
+        )}
 
+        {(isSubscribed || !user) && (
+        <>
         {/* Trust strip */}
         <section className="container mx-auto px-4 max-w-4xl mb-6 sm:mb-10">
           <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm text-muted-foreground">
@@ -146,6 +161,8 @@ export default function Credits() {
             ))}
           </div>
         </section>
+        </>
+        )}
 
         {/* Team workspace showcase */}
         <section className="container mx-auto px-4 max-w-5xl mb-24">

@@ -206,20 +206,86 @@ export function OrgCatalog({ orgId, isAdmin }: OrgCatalogProps) {
                 <Plus className="h-3.5 w-3.5 mr-1.5" /> Add app
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-w-lg">
               <DialogHeader>
                 <DialogTitle>Add app to catalog</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmitApp} className="space-y-4 pt-2">
                 <div>
-                  <Label>Listing ID</Label>
-                  <Input
-                    placeholder="Paste listing ID or URL"
-                    value={listingUrl}
-                    onChange={(e) => setListingUrl(e.target.value)}
-                    required
-                    className="mt-1.5"
-                  />
+                  <Label>Search apps</Label>
+                  {selectedListing ? (
+                    <div className="mt-1.5 flex items-center gap-2 rounded-md border border-input bg-muted/50 px-3 py-2">
+                      <Package className="h-4 w-4 text-muted-foreground shrink-0" />
+                      <span className="text-sm font-medium truncate flex-1">{selectedListing.title}</span>
+                      <span className="text-xs text-muted-foreground">{selectedListing.price === 0 ? "Free" : `$${selectedListing.price}`}</span>
+                      <button
+                        type="button"
+                        onClick={() => { setSelectedListing(null); setSearchQuery(""); }}
+                        className="text-muted-foreground hover:text-foreground"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="mt-1.5">
+                      <Command className="rounded-md border border-input" shouldFilter={false}>
+                        <CommandInput
+                          placeholder="Search by app name…"
+                          value={searchQuery}
+                          onValueChange={setSearchQuery}
+                        />
+                        <CommandList>
+                          {searching && (
+                            <div className="flex items-center justify-center py-4">
+                              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                            </div>
+                          )}
+                          {!searching && searchQuery.length >= 2 && searchResults.length === 0 && (
+                            <CommandEmpty>No apps found for "{searchQuery}"</CommandEmpty>
+                          )}
+                          {!searching && searchResults.length > 0 && (
+                            <CommandGroup heading="Marketplace apps">
+                              {searchResults.map((result) => (
+                                <CommandItem
+                                  key={result.id}
+                                  value={result.id}
+                                  onSelect={() => {
+                                    setSelectedListing(result);
+                                    setSearchQuery(result.title);
+                                  }}
+                                  className="cursor-pointer"
+                                >
+                                  <div className="flex items-center gap-3 w-full min-w-0">
+                                    {result.screenshots?.[0] ? (
+                                      <img
+                                        src={result.screenshots[0]}
+                                        alt=""
+                                        className="h-8 w-8 rounded object-cover shrink-0 bg-muted"
+                                      />
+                                    ) : (
+                                      <div className="h-8 w-8 rounded bg-muted flex items-center justify-center shrink-0">
+                                        <Package className="h-3.5 w-3.5 text-muted-foreground" />
+                                      </div>
+                                    )}
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-sm font-medium truncate">{result.title}</p>
+                                      <p className="text-xs text-muted-foreground truncate">{result.category} · {result.price === 0 ? "Free" : `$${result.price}`}</p>
+                                    </div>
+                                  </div>
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          )}
+                          {!searching && searchQuery.length < 2 && (
+                            <div className="py-4 text-center text-xs text-muted-foreground">
+                              <Search className="h-4 w-4 mx-auto mb-1 opacity-40" />
+                              Type to search the catalog
+                            </div>
+                          )}
+                        </CommandList>
+                      </Command>
+                    </div>
+                  )}
                 </div>
                 <div>
                   <Label>Department <span className="text-muted-foreground font-normal">(optional)</span></Label>
@@ -230,7 +296,7 @@ export function OrgCatalog({ orgId, isAdmin }: OrgCatalogProps) {
                     className="mt-1.5"
                   />
                 </div>
-                <Button type="submit" className="w-full" disabled={submitting}>
+                <Button type="submit" className="w-full" disabled={submitting || !selectedListing}>
                   {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Package className="h-4 w-4 mr-2" />}
                   Submit for approval
                 </Button>

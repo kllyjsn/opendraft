@@ -61,7 +61,18 @@ export default function Credits() {
       <Navbar />
       <main className="flex-1 page-enter">
 
-        {/* Hero */}
+        {/* 3-screen paywall for non-subscribers */}
+        {!isSubscribed && !subLoading && !authLoading && user && (
+          <section className="container mx-auto px-4 max-w-lg pt-10 sm:pt-16 pb-8">
+            <PaywallFlow
+              onSelectPlan={(tier, isAnnual) => handleSubscribe(tier, isAnnual)}
+              loading={!!subscribingTier}
+            />
+          </section>
+        )}
+
+        {/* Hero — only show for subscribers or when browsing anonymously */}
+        {(isSubscribed || !user) && (
         <section className="relative overflow-hidden">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-primary/5 blur-[120px] rounded-full pointer-events-none" />
 
@@ -79,6 +90,7 @@ export default function Credits() {
             </p>
           </div>
         </section>
+        )}
 
         {/* Trust strip */}
         <section className="container mx-auto px-4 max-w-4xl mb-6 sm:mb-10">

@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { FREE_TIER, CORE_PAID_TIERS, ANNUAL_DISCOUNT, type PricingTier } from "@/lib/pricing-tiers";
 import { trackFunnel } from "@/hooks/useFunnelTracker";
 import { PricingTierCard } from "@/components/pricing/PricingTierCard";
+import { PaywallFlow } from "@/components/PaywallFlow";
 
 export default function Credits() {
   const { user, loading: authLoading } = useAuth();

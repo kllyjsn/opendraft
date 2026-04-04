@@ -3,12 +3,14 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
-import { Menu, X, ShieldCheck, Bot } from "lucide-react";
+import { useMyOrg } from "@/hooks/useOrg";
+import { Menu, X, ShieldCheck, Bot, Building2 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { NotificationBell } from "@/components/NotificationBell";
 import { MessageAlert } from "@/components/MessageAlert";
 import { CreditBadge } from "@/components/CreditBadge";
+import { OrgInviteBanner } from "@/components/org/OrgInviteBanner";
 
 function NavItem({ to, children, onClick }: { to: string; children: React.ReactNode; onClick?: () => void }) {
   const { pathname } = useLocation();

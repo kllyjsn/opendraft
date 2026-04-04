@@ -149,15 +149,12 @@ export function OrgCatalog({ orgId, isAdmin }: OrgCatalogProps) {
 
   async function handleSubmitApp(e: React.FormEvent) {
     e.preventDefault();
-    if (!listingUrl.trim()) return;
+    if (!selectedListing) return;
     setSubmitting(true);
-
-    // Extract listing ID from URL or use as-is
-    const listingId = listingUrl.trim().split("/").pop() ?? listingUrl.trim();
 
     const { error } = await supabase.from("org_listings").insert({
       org_id: orgId,
-      listing_id: listingId,
+      listing_id: selectedListing.id,
       department: department.trim() || null,
     } as any);
 
@@ -165,13 +162,14 @@ export function OrgCatalog({ orgId, isAdmin }: OrgCatalogProps) {
       toast({
         title: "Could not submit app",
         description: error.message.includes("foreign key")
-          ? "Invalid listing ID. Please use a valid app ID."
+          ? "Invalid listing. Please select a valid app."
           : error.message,
         variant: "destructive",
       });
     } else {
       toast({ title: "App submitted for approval" });
-      setListingUrl("");
+      setSelectedListing(null);
+      setSearchQuery("");
       setDepartment("");
       setSubmitOpen(false);
       loadListings();

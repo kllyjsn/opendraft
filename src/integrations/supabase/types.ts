@@ -2050,6 +2050,10 @@ export type Database = {
       }
     }
     Functions: {
+      accept_org_invitation: {
+        Args: { _invitation_id: string }
+        Returns: undefined
+      }
       add_credits: {
         Args: {
           p_amount: number

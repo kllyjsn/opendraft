@@ -229,6 +229,7 @@ export default function Enterprise() {
       <MetaTags
         title="Enterprise Private App Marketplace | OpenDraft"
         description="Build a private marketplace of compliant, custom-built apps your teams own forever. The Okta of owned software — no per-seat taxes, no vendor lock-in."
+        path="/enterprise"
       />
       <JsonLd
         data={{

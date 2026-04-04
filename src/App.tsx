@@ -68,6 +68,8 @@ const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Ideas = lazy(() => import("./pages/Ideas"));
 const Hosting = lazy(() => import("./pages/Hosting"));
 const Enterprise = lazy(() => import("./pages/Enterprise"));
+const OrgNew = lazy(() => import("./pages/OrgNew"));
+const OrgDashboard = lazy(() => import("./pages/OrgDashboard"));
 
 
 import { SignupPrompt } from "./components/SignupPrompt";

@@ -4,7 +4,7 @@ import { GoogleSignInButton } from "@/components/GoogleSignInButton";
 import { EmailAuthForm } from "@/components/EmailAuthForm";
 import { useAuth } from "@/hooks/useAuth";
 import { Navigate, Link } from "react-router-dom";
-import { Zap } from "lucide-react";
+
 import { useState } from "react";
 
 const TRUST_POINTS = [

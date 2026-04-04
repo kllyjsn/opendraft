@@ -69,6 +69,9 @@ export function CompetitorComparison() {
                 <th className="text-center py-3 px-2 min-w-[70px]">
                   <span className="text-muted-foreground">Bolt</span>
                 </th>
+                <th className="text-center py-3 px-2 min-w-[70px]">
+                  <span className="text-muted-foreground">Retool</span>
+                </th>
               </tr>
             </thead>
             <tbody>

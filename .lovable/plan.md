@@ -1,118 +1,117 @@
-# OpenDraft — $100K Self-Fund Roadmap (March–September 2026)
 
-## Mission
-**Stop renting software. Start owning it.**
-Every company deserves custom software that they own forever — not generic SaaS they rent monthly.
+# Enterprise Private App Marketplace
+## Vision: The Okta of Owned Software
 
----
-
-## Revenue Target: $100,000 in 6 Months
-
-### Monthly Milestones
-
-| Month | Target  | Cumulative | Strategy                                      |
-|-------|---------|------------|-----------------------------------------------|
-| Apr   | $5,000  | $5,000     | Launch annual plans, optimize conversion       |
-| May   | $10,000 | $15,000    | Enterprise outreach, agency partnerships       |
-| Jun   | $15,000 | $30,000    | Content flywheel + SEO traffic compounds       |
-| Jul   | $20,000 | $50,000    | Referral program, B2B direct sales             |
-| Aug   | $25,000 | $75,000    | Enterprise deals close, managed hosting upsell |
-| Sep   | $25,000 | $100,000   | Retention + expansion revenue                  |
-
-### Revenue Mix (Target at $25k/mo)
-
-| Stream                  | Monthly | % of Rev |
-|-------------------------|---------|----------|
-| Subscriptions (B2C)     | $10,000 | 40%      |
-| Enterprise/Agency plans | $8,000  | 32%      |
-| Managed Hosting ($500)  | $4,000  | 16%      |
-| Marketplace fees        | $3,000  | 12%      |
+**Thesis**: Every enterprise pays $50–500/seat/month for generic SaaS tools nobody loves. OpenDraft lets companies build a **private marketplace of personalized, compliant apps** their teams own forever — no per-seat taxes, no vendor lock-in.
 
 ---
 
-## Pricing Architecture
+## Core Product: Company App Hub
 
-### Individual Plans (Monthly / Annual — 20% discount)
-| Plan      | Monthly | Annual  | Apps/mo  |
-|-----------|---------|---------|----------|
-| Free      | $0      | —       | 1 total  |
-| Starter   | $20     | $192/yr | 5        |
-| Growth    | $30     | $288/yr | 20       |
-| Unlimited | $50     | $480/yr | ∞        |
+### What It Is
+A branded, SSO-protected internal marketplace where any employee can browse, claim, and deploy pre-approved apps built specifically for their company. Think Okta's app dashboard, but every app is **owned source code** — not a SaaS subscription.
 
-### Business Plans
-| Plan       | Monthly | Apps     | Key Feature              |
-|------------|---------|---------|--------------------------|
-| Agency     | $99     | ∞       | White-label + resell     |
-| Enterprise | $199    | ∞       | API + SLA + account mgr  |
-| Managed    | $500    | ∞       | Hosting + MongoDB + ops  |
+### Key Differentiators vs. Okta/SaaS
+| | Traditional SaaS | OpenDraft Enterprise |
+|---|---|---|
+| Ownership | Rented monthly | Owned forever |
+| Customization | Limited config | Full source code |
+| Per-seat cost | $10–100/user/mo | $0 after build |
+| Compliance | Vendor-dependent | Self-audited, on-prem ready |
+| Vendor risk | Single point of failure | No dependency |
 
 ---
 
-## Growth Levers
+## Architecture
 
-### 1. Conversion Optimization (Apr)
-- Annual pricing toggle with 20% discount → increases LTV 2x
-- Post-claim upsell modal → converts free users to $20+/mo
-- Exit-intent popup optimization
-- Sticky mobile CTA A/B testing
+### 1. Organization Management
+- **Organizations table**: company name, domain, SSO config, branding
+- **Org members**: role-based access (admin, builder, employee)
+- **SSO/SAML integration**: employees sign in with corporate identity
+- **Custom subdomain**: `acme.opendraft.app` or white-labeled domain
 
-### 2. Enterprise Pipeline (Apr–May)
-- Direct outreach to agencies managing 10+ client sites
-- "Replace your SaaS stack" calculator on pricing page
-- Enterprise contact form with auto-qualification
-- Case study content targeting CFOs/CTOs
+### 2. Private App Catalog
+- **Org-scoped listings**: apps visible only to org members
+- **Compliance tags**: SOC2, HIPAA, GDPR, PCI badges per app
+- **Approval workflow**: admin reviews → approved → available to org
+- **Version management**: track deployed versions across teams
+- **Department categories**: Sales, HR, Engineering, Finance, Ops
 
-### 3. Content & SEO Flywheel (Ongoing)
-- 3 AI-generated blog posts/day targeting long-tail keywords
-- Industry vertical landing pages (restaurants, dental, fitness, etc.)
-- "SaaS replacement" comparison pages
-- Social media engine: 8 posts/day across personas
+### 3. Compliance & Security Layer
+- **Compliance frameworks**: SOC2 Type II, HIPAA, GDPR, FedRAMP readiness
+- **Automated security scanning**: every app audited before publishing
+- **Data residency controls**: choose where app data lives
+- **Audit trail**: who deployed what, when, with full change history
+- **Policy engine**: enforce tech stack requirements, banned packages, license checks
 
-### 4. Referral Program (Jun)
-- Give $10 credit, get $10 credit per referral
-- Builder referral bonus: 5% commission on referred sales
-- Viral loop: share your app → earn credits
+### 4. Builder Ecosystem (Internal + External)
+- **Internal builders**: company developers publish to private catalog
+- **Curated external builders**: vetted OpenDraft builders create for the org
+- **Build requests**: employees request apps → routed to approved builders
+- **Template library**: pre-approved, compliant app templates per industry
 
-### 5. Retention & Expansion (Jul+)
-- Automated upgrade prompts when hitting plan limits
-- Win-back campaigns for churned subscribers
-- Feature-gate premium capabilities (priority deploy, bulk ops)
-- Managed hosting upsell to Enterprise customers
-
----
-
-## Key Metrics to Track
-
-| Metric              | Current | Target (Sep) |
-|---------------------|---------|--------------|
-| MRR                 | ~$200   | $25,000      |
-| Paying subscribers  | ~10     | 500+         |
-| Enterprise accounts | 0       | 15           |
-| Monthly signups     | ~300    | 2,000        |
-| Free→Paid conv rate | ~2%     | 8%           |
-| Annual plan %       | 0%      | 40%          |
+### 5. Deployment & Operations
+- **One-click deploy** to company infrastructure (AWS, Azure, GCP)
+- **Self-hosted option**: run entire marketplace on company servers
+- **Managed hosting**: OpenDraft hosts with enterprise SLA
+- **Monitoring dashboard**: uptime, usage, cost savings per app
 
 ---
 
-## Anti-SaaS Movement Thesis
-The $300B+ global SaaS market is built on recurring rent extraction. Every business pays $500–$5,000/mo for generic tools they don't own. OpenDraft flips this: pay once, own forever. The savings compound. The career impact is real. **Improve your company. Get promoted.**
+## Pricing Model
+
+| Tier | Price | What You Get |
+|---|---|---|
+| **Team** | $999/mo | 50 seats, 25 apps, SSO, compliance dashboard |
+| **Business** | $2,499/mo | 250 seats, unlimited apps, SAML, priority support |
+| **Enterprise** | $4,999+/mo | Unlimited, on-prem, custom SLA, dedicated CSM |
+| **Build Credits** | $500/app | Commission OpenDraft builders for custom apps |
+
+**Revenue math**: 100 enterprise customers × $2,500/mo avg = **$250K MRR** ($3M ARR)
 
 ---
 
-## Pages / Routes
+## Go-to-Market
 
-- `/` — Landing / Business URL Analyzer
-- `/listing/:id` — App detail page
-- `/sell` — Create new listing (auth required)
-- `/dashboard` — Builder dashboard (auth required)
-- `/profile` — User's apps and purchase history
-- `/login` — Auth page
-- `/success` — Post-purchase confirmation & deploy
-- `/pitch` — Investor deck (password-protected)
-- `/bounties` — Custom build requests
-- `/agents` — Agent API documentation
-- `/developers` — Developer docs
-- `/cloud` — Cloud deployment info
-- `/founders` — Founder First Program
-- `/credits` — Pricing plans
+### Phase 1: Foundation (Now → Q3 2026)
+- [ ] Create `/enterprise` landing page with ROI calculator
+- [ ] Build organization management (orgs, members, roles)
+- [ ] Add org-scoped listings (private catalog)
+- [ ] Implement compliance badge system on listings
+- [ ] Build enterprise inquiry → demo → onboarding pipeline
+
+### Phase 2: Compliance & SSO (Q3–Q4 2026)
+- [ ] SAML/SSO integration (Okta, Azure AD, Google Workspace)
+- [ ] Automated compliance scanning pipeline
+- [ ] Audit trail and access logs
+- [ ] Department-based app categorization
+- [ ] Admin approval workflow for new apps
+
+### Phase 3: Scale (Q1 2027)
+- [ ] Self-hosted / on-prem deployment option
+- [ ] Multi-cloud deploy targets (AWS, Azure, GCP)
+- [ ] Internal build request marketplace
+- [ ] Usage analytics and ROI reporting dashboard
+- [ ] SOC2 Type II certification for the platform itself
+
+---
+
+## Competitive Positioning
+
+**"Your company's private app store — every tool custom-built, security-audited, and owned forever."**
+
+Target buyers:
+- **CTO/CIO**: "Cut $500K/yr in SaaS spend, own your stack"
+- **CISO**: "Every app compliant, audited, no third-party data risk"
+- **CFO**: "Eliminate per-seat taxes across 47 SaaS vendors"
+- **VP Eng**: "Ship internal tools 10x faster with pre-built templates"
+
+---
+
+## What to Build First (MVP)
+
+1. **Organizations table + member management** — multi-tenant foundation
+2. **Org-scoped listings** — private catalog visibility
+3. **`/enterprise` landing page** — capture high-intent leads
+4. **Compliance badges on listings** — SOC2/HIPAA/GDPR tags
+5. **Admin approval workflow** — gate what enters the private catalog

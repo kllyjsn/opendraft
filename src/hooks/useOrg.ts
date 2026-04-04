@@ -164,23 +164,12 @@ export function useMyInvitations() {
   async function acceptInvitation(invitation: OrgInvitation) {
     if (!user) return;
     
-    // Add as member
-    const { error: memberError } = await supabase
-      .from("org_members")
-      .insert({
-        org_id: invitation.org_id,
-        user_id: user.id,
-        role: invitation.role as "owner" | "admin" | "builder" | "member",
-        invited_by: invitation.invited_by,
-      });
+    // Use secure RPC to accept invitation (prevents role escalation)
+    const { error } = await supabase.rpc("accept_org_invitation", {
+      _invitation_id: invitation.id,
+    });
     
-    if (memberError) throw memberError;
-    
-    // Mark invitation as accepted
-    await supabase
-      .from("org_invitations")
-      .update({ status: "accepted", accepted_at: new Date().toISOString() })
-      .eq("id", invitation.id);
+    if (error) throw error;
     
     setInvitations(prev => prev.filter(i => i.id !== invitation.id));
   }

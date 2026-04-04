@@ -70,9 +70,6 @@ export function Navbar() {
           )}
           <NavItem to="/category/saas-tool">Browse</NavItem>
           <NavItem to="/credits">Pricing</NavItem>
-          <NavItem to="/builders">Builders</NavItem>
-          <NavItem to="/faq">FAQ</NavItem>
-          <NavItem to="/enterprise">Enterprise</NavItem>
           {user && (
             <>
               <NavItem to="/ideas">Ideas</NavItem>

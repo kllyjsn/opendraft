@@ -3,16 +3,16 @@ import { Badge } from "@/components/ui/badge";
 import { Check, X, Minus } from "lucide-react";
 
 const FEATURES = [
-  { name: "Business-first audit", od: true, shipper: false, lovable: false, bolt: false },
-  { name: "SaaS replacement engine", od: true, shipper: false, lovable: false, bolt: false },
-  { name: "Own your code (no lock-in)", od: true, shipper: true, lovable: true, bolt: true },
-  { name: "Zero per-seat fees", od: true, shipper: false, lovable: false, bolt: false },
-  { name: "AI Advisor insights", od: true, shipper: true, lovable: false, bolt: false },
-  { name: "One-click deploy", od: true, shipper: true, lovable: true, bolt: true },
-  { name: "Custom integrations", od: true, shipper: "partial", lovable: "partial", bolt: "partial" },
-  { name: "Enterprise-grade security", od: true, shipper: false, lovable: "partial", bolt: false },
-  { name: "Marketplace ecosystem", od: true, shipper: false, lovable: false, bolt: false },
-  { name: "No subscription required", od: true, shipper: false, lovable: false, bolt: false },
+  { name: "Business-first audit", od: true, shipper: false, lovable: false, bolt: false, retool: false },
+  { name: "SaaS replacement engine", od: true, shipper: false, lovable: false, bolt: false, retool: false },
+  { name: "Own your code (no lock-in)", od: true, shipper: true, lovable: true, bolt: true, retool: false },
+  { name: "Zero per-seat fees", od: true, shipper: false, lovable: false, bolt: false, retool: false },
+  { name: "AI Advisor insights", od: true, shipper: true, lovable: false, bolt: false, retool: "partial" },
+  { name: "One-click deploy", od: true, shipper: true, lovable: true, bolt: true, retool: true },
+  { name: "Custom integrations", od: true, shipper: "partial", lovable: "partial", bolt: "partial", retool: true },
+  { name: "Enterprise-grade security", od: true, shipper: false, lovable: "partial", bolt: false, retool: "partial" },
+  { name: "Marketplace ecosystem", od: true, shipper: false, lovable: false, bolt: false, retool: false },
+  { name: "No subscription required", od: true, shipper: false, lovable: false, bolt: false, retool: false },
 ] as const;
 
 type CellValue = boolean | "partial";

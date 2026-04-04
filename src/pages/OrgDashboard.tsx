@@ -3,14 +3,14 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { MetaTags } from "@/components/MetaTags";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useOrg } from "@/hooks/useOrg";
 import { useAuth } from "@/hooks/useAuth";
-import { OrgOverview } from "@/components/org/OrgOverview";
 import { OrgMembers } from "@/components/org/OrgMembers";
 import { OrgCatalog } from "@/components/org/OrgCatalog";
 import { OrgSettings } from "@/components/org/OrgSettings";
-import { Building2, Loader2, Users, Package, Settings, LayoutDashboard } from "lucide-react";
+import { OrgAppGrid } from "@/components/org/OrgAppGrid";
+import { Building2, Loader2, Users, Package, Settings, LayoutGrid, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -22,6 +22,7 @@ export default function OrgDashboard() {
   const [members, setMembers] = useState<any[]>([]);
   const [myRole, setMyRole] = useState<string | null>(null);
   const [appCount, setAppCount] = useState(0);
+  const [approvedCount, setApprovedCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -40,7 +41,6 @@ export default function OrgDashboard() {
       if (!org) { setLoading(false); return; }
       setOrgData(org);
 
-      // Members
       const { data: memberData } = await supabase
         .from("org_members")
         .select("*")
@@ -63,12 +63,18 @@ export default function OrgDashboard() {
         setMyRole(mine?.role ?? null);
       }
 
-      // App count
       const { count } = await supabase
         .from("org_listings")
         .select("id", { count: "exact", head: true })
         .eq("org_id", org.id);
       setAppCount(count ?? 0);
+
+      const { count: approved } = await supabase
+        .from("org_listings")
+        .select("id", { count: "exact", head: true })
+        .eq("org_id", org.id)
+        .eq("status", "approved");
+      setApprovedCount(approved ?? 0);
 
       setLoading(false);
     }
@@ -96,7 +102,7 @@ export default function OrgDashboard() {
         <div className="flex-1 flex items-center justify-center px-4">
           <div className="text-center">
             <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h1 className="text-2xl font-bold mb-2">Sign in to view this organization</h1>
+            <h1 className="text-2xl font-bold mb-2">Sign in to view this workspace</h1>
             <Button onClick={() => navigate("/login")} className="bg-foreground text-background hover:bg-foreground/90 mt-4">
               Sign in
             </Button>
@@ -114,9 +120,9 @@ export default function OrgDashboard() {
         <div className="flex-1 flex items-center justify-center px-4">
           <div className="text-center">
             <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h1 className="text-2xl font-bold mb-2">Organization not found</h1>
+            <h1 className="text-2xl font-bold mb-2">Workspace not found</h1>
             <p className="text-muted-foreground mb-4">
-              You may not have access, or this organization doesn't exist.
+              You may not have access, or this workspace doesn't exist.
             </p>
             <Button variant="outline" onClick={() => navigate("/dashboard")}>
               Back to dashboard
@@ -128,46 +134,68 @@ export default function OrgDashboard() {
     );
   }
 
+  const greeting = getGreeting();
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <MetaTags
-        title={`${orgData.name} — Organization Dashboard | OpenDraft`}
-        description={`Manage ${orgData.name}'s private app catalog, team members, and settings.`}
+        title={`${orgData.name} — Team Workspace | OpenDraft`}
+        description={`Your team's private app workspace. Access approved apps, manage members, and more.`}
         path={`/org/${slug}`}
       />
       <Navbar />
 
       <main className="flex-1">
-        {/* Header */}
-        <div className="border-b border-border/40 bg-card">
-          <div className="container mx-auto px-4 py-8 max-w-5xl">
-            <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                <Building2 className="h-6 w-6 text-primary" />
+        {/* Hero header */}
+        <div className="border-b border-border/30 bg-gradient-to-b from-card to-background">
+          <div className="container mx-auto px-4 py-8 md:py-10 max-w-6xl">
+            <div className="flex items-start justify-between gap-4 flex-wrap">
+              <div className="flex items-center gap-4">
+                <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center ring-1 ring-primary/20">
+                  <Building2 className="h-7 w-7 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">{greeting}</p>
+                  <h1 className="text-xl md:text-2xl font-black tracking-tight">{orgData.name}</h1>
+                </div>
               </div>
-              <div>
-                <h1 className="text-xl font-black tracking-tight">{orgData.name}</h1>
-                <p className="text-sm text-muted-foreground">
-                  {members.length} member{members.length !== 1 ? "s" : ""} · {appCount} app{appCount !== 1 ? "s" : ""} · {(orgData.subscription_tier ?? "team").charAt(0).toUpperCase() + (orgData.subscription_tier ?? "team").slice(1)} plan
-                </p>
+
+              {/* Quick stats */}
+              <div className="flex items-center gap-4">
+                <div className="text-right">
+                  <p className="text-xs text-muted-foreground">Apps</p>
+                  <p className="text-lg font-bold">{approvedCount}</p>
+                </div>
+                <div className="h-8 w-px bg-border/40" />
+                <div className="text-right">
+                  <p className="text-xs text-muted-foreground">Team</p>
+                  <p className="text-lg font-bold">{members.length}</p>
+                </div>
+                <div className="h-8 w-px bg-border/40" />
+                <Badge variant="outline" className="text-xs font-medium capitalize">
+                  <Shield className="h-3 w-3 mr-1" />
+                  {orgData.subscription_tier ?? "team"}
+                </Badge>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="container mx-auto px-4 py-8 max-w-5xl">
-          <Tabs defaultValue="overview">
+        {/* Main content */}
+        <div className="container mx-auto px-4 py-8 max-w-6xl">
+          <Tabs defaultValue="apps">
             <TabsList className="mb-8">
-              <TabsTrigger value="overview" className="gap-1.5">
-                <LayoutDashboard className="h-3.5 w-3.5" /> Overview
+              <TabsTrigger value="apps" className="gap-1.5">
+                <LayoutGrid className="h-3.5 w-3.5" /> My Apps
               </TabsTrigger>
               <TabsTrigger value="members" className="gap-1.5">
-                <Users className="h-3.5 w-3.5" /> Members
+                <Users className="h-3.5 w-3.5" /> Team
               </TabsTrigger>
-              <TabsTrigger value="catalog" className="gap-1.5">
-                <Package className="h-3.5 w-3.5" /> App Catalog
-              </TabsTrigger>
+              {isAdmin && (
+                <TabsTrigger value="catalog" className="gap-1.5">
+                  <Package className="h-3.5 w-3.5" /> Manage Catalog
+                </TabsTrigger>
+              )}
               {isAdmin && (
                 <TabsTrigger value="settings" className="gap-1.5">
                   <Settings className="h-3.5 w-3.5" /> Settings
@@ -175,16 +203,8 @@ export default function OrgDashboard() {
               )}
             </TabsList>
 
-            <TabsContent value="overview">
-              <OrgOverview
-                orgName={orgData.name}
-                memberCount={members.length}
-                appCount={appCount}
-                tier={orgData.subscription_tier}
-                maxSeats={orgData.max_seats}
-                maxApps={orgData.max_apps}
-                members={members}
-              />
+            <TabsContent value="apps">
+              <OrgAppGrid orgId={orgData.id} />
             </TabsContent>
 
             <TabsContent value="members">
@@ -196,9 +216,11 @@ export default function OrgDashboard() {
               />
             </TabsContent>
 
-            <TabsContent value="catalog">
-              <OrgCatalog orgId={orgData.id} isAdmin={isAdmin} />
-            </TabsContent>
+            {isAdmin && (
+              <TabsContent value="catalog">
+                <OrgCatalog orgId={orgData.id} isAdmin={isAdmin} />
+              </TabsContent>
+            )}
 
             {isAdmin && (
               <TabsContent value="settings">
@@ -211,4 +233,11 @@ export default function OrgDashboard() {
       <Footer />
     </div>
   );
+}
+
+function getGreeting() {
+  const h = new Date().getHours();
+  if (h < 12) return "Good morning 👋";
+  if (h < 17) return "Good afternoon 👋";
+  return "Good evening 👋";
 }

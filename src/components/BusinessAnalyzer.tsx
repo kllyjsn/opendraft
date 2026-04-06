@@ -446,11 +446,8 @@ export function BusinessAnalyzer({ onGenerate, onResultsChange }: {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="flex flex-col items-center gap-3 md:gap-4"
+            className="flex flex-col items-center gap-2.5 md:gap-4"
           >
-            <p className="text-xs md:text-sm text-muted-foreground font-medium">
-              Pick an industry to see the audit:
-            </p>
             <div className="flex flex-wrap justify-center gap-2.5 md:gap-3">
               {EXAMPLE_ANALYSES.map((ex, i) => (
                 <button

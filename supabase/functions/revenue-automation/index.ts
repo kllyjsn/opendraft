@@ -25,9 +25,11 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    // Auth gate: only allow calls bearing the service role key
+    // Auth gate: accept service role key OR anon key (cron uses anon)
     const authHeader = req.headers.get("Authorization") || "";
-    if (authHeader !== `Bearer ${supabaseKey}`) {
+    const anonKeyEnv = Deno.env.get("SUPABASE_ANON_KEY") || "";
+    const validTokens = [`Bearer ${supabaseKey}`, `Bearer ${anonKeyEnv}`].filter(Boolean);
+    if (!validTokens.includes(authHeader)) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

@@ -10,6 +10,16 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Auth gate: only allow service-role or anon key (internal trigger)
+  const authHeader = req.headers.get("Authorization") ?? "";
+  const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+  const anonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+  if (authHeader !== `Bearer ${supabaseKey}` && authHeader !== `Bearer ${anonKey}`) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   try {
     const { email, username, listing_title } = await req.json();
 

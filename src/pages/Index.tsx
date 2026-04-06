@@ -190,11 +190,10 @@ export default function Index() {
         className={`relative flex items-center justify-center transition-all duration-700 ease-out ${
           hasResults
             ? "min-h-0 pt-4 pb-2 md:pt-10 md:pb-4"
-            : "flex-1 min-h-0 pt-6 pb-4 md:min-h-[90vh] md:pt-0"
+            : "flex-1 min-h-0 pt-4 pb-3 md:min-h-[90vh] md:pt-0"
         }`}
       >
         {!hasResults && <HeroBeams />}
-        
 
         <div className="container mx-auto px-4 text-center relative z-10">
           {!hasResults && (
@@ -216,31 +215,14 @@ export default function Index() {
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
               >
-                <div className="mb-3 md:mb-10">
-                  <h1 className="text-2xl sm:text-4xl md:text-6xl lg:text-[4.5rem] font-bold tracking-[-0.03em] leading-[1.1] text-foreground">
-                    See what apps
+                <div className="mb-4 md:mb-10">
+                  <h1 className="text-[1.65rem] sm:text-4xl md:text-6xl lg:text-[4.5rem] font-bold tracking-[-0.03em] leading-[1.1] text-foreground">
+                    Replace your SaaS.
                     <br />
-                    your business needs
+                    <span className="text-muted-foreground">Own the software.</span>
                   </h1>
-                  <p className="mt-2 md:mt-3 text-xs md:text-sm text-muted-foreground/70 font-medium">
-                    Pick an industry below — instant results, no signup
-                  </p>
                 </div>
               </motion.div>
-            )}
-          </AnimatePresence>
-
-          <AnimatePresence>
-            {!hasResults && (
-              <motion.p
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.6, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-                className="text-xs md:text-base text-muted-foreground max-w-sm mx-auto mb-4 md:mb-12 leading-relaxed"
-              >
-                We'll find the SaaS you're overpaying for and show you custom replacements you can own.
-              </motion.p>
             )}
           </AnimatePresence>
 
@@ -248,14 +230,33 @@ export default function Index() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.9, delay: hasResults ? 0 : 0.25, ease: [0.16, 1, 0.3, 1] }}
-            className={hasResults ? "mb-4" : "mb-6 md:mb-10"}
+            className={hasResults ? "mb-4" : "mb-4 md:mb-10"}
           >
             <BusinessAnalyzer onGenerate={handleGenerate} onResultsChange={setHasResults} />
           </motion.div>
 
+          {!hasResults && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4 }}
+              className="flex items-center justify-center gap-4 text-[10px] md:text-xs text-muted-foreground mb-3"
+            >
+              <span className="flex items-center gap-1">
+                <Check className="h-3 w-3 text-green-500" /> Free
+              </span>
+              <span className="flex items-center gap-1">
+                <Check className="h-3 w-3 text-green-500" /> No signup
+              </span>
+              <span className="flex items-center gap-1">
+                <Check className="h-3 w-3 text-green-500" /> No credit card
+              </span>
+            </motion.div>
+          )}
+
           {!hasResults && <LiveSocialProof />}
 
-          <div className="mt-10">
+          <div className="mt-6">
             <AnimatePresence>
               <GenerationProgress
                 isInProgress={isInProgress}

@@ -402,7 +402,9 @@ export default function ForPersona() {
             </div>
           </div>
         </section>
-      )
+      )}
+
+      {/* Social proof */}
       <section className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-3 gap-4 max-w-lg mx-auto text-center">
           <div>

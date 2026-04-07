@@ -178,6 +178,11 @@ const personas: Record<string, VerticalConfig> = {
     cta: "Browse healthcare apps",
     searchQuery: "patient portal healthcare booking",
     priceAnchor: "Skip the $20K custom build. Launch this week.",
+    replacements: [
+      { name: "Jane App", monthlyCost: 139 },
+      { name: "SimplePractice", monthlyCost: 99 },
+      { name: "Dentrix (monthly)", monthlyCost: 400 },
+    ],
   },
   realestate: {
     title: "Apps for Real Estate",

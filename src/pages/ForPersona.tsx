@@ -68,6 +68,11 @@ const personas: Record<string, VerticalConfig> = {
     cta: "Browse templates",
     searchQuery: "landing page portfolio",
     priceAnchor: "Agency plan: $99/mo for unlimited white-label apps.",
+    replacements: [
+      { name: "Webflow", monthlyCost: 39 },
+      { name: "Figma (per editor)", monthlyCost: 15 },
+      { name: "Framer", monthlyCost: 30 },
+    ],
   },
   restaurants: {
     title: "Apps for Restaurants",

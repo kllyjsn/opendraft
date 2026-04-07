@@ -46,6 +46,11 @@ const personas: Record<string, VerticalConfig> = {
     cta: "Browse developer tools",
     searchQuery: "saas dashboard auth",
     priceAnchor: "Skip the $10K agency. Get it for the price of lunch.",
+    replacements: [
+      { name: "Retool", monthlyCost: 75 },
+      { name: "Vercel Pro", monthlyCost: 20 },
+      { name: "Firebase Blaze", monthlyCost: 25 },
+    ],
   },
   agencies: {
     title: "OpenDraft for Agencies",

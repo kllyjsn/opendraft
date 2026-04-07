@@ -10,6 +10,11 @@ import { JsonLd } from "@/components/JsonLd";
 import { MetaTags } from "@/components/MetaTags";
 import { Code, Building2, Zap, Rocket, Shield, Users, ArrowRight, Utensils, Scissors, Wrench, Heart, Briefcase, ShoppingBag, GraduationCap, Car, Dog, CalendarDays, Stethoscope } from "lucide-react";
 
+interface SaasReplacement {
+  name: string;
+  monthlyCost: number; // $/mo per seat
+}
+
 interface VerticalConfig {
   title: string;
   headline: string;
@@ -21,6 +26,7 @@ interface VerticalConfig {
   cta: string;
   searchQuery: string;
   priceAnchor: string;
+  replacements?: SaasReplacement[]; // SaaS tools this vertical replaces
 }
 
 const personas: Record<string, VerticalConfig> = {

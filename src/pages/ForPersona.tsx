@@ -112,6 +112,11 @@ const personas: Record<string, VerticalConfig> = {
     cta: "Browse salon apps",
     searchQuery: "booking appointment salon",
     priceAnchor: "Replace your $200/mo booking software. Own it forever.",
+    replacements: [
+      { name: "Vagaro", monthlyCost: 85 },
+      { name: "Fresha Premium", monthlyCost: 0 },
+      { name: "Square Appointments", monthlyCost: 69 },
+    ],
   },
   contractors: {
     title: "Apps for Home Services",

@@ -2,6 +2,7 @@ import { useParams, Link, Navigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { FeaturedListings } from "@/components/FeaturedListings";
 import { HowItWorks } from "@/components/HowItWorks";
@@ -9,6 +10,11 @@ import { CanonicalTag } from "@/components/CanonicalTag";
 import { JsonLd } from "@/components/JsonLd";
 import { MetaTags } from "@/components/MetaTags";
 import { Code, Building2, Zap, Rocket, Shield, Users, ArrowRight, Utensils, Scissors, Wrench, Heart, Briefcase, ShoppingBag, GraduationCap, Car, Dog, CalendarDays, Stethoscope } from "lucide-react";
+
+interface SaasReplacement {
+  name: string;
+  monthlyCost: number; // $/mo per seat
+}
 
 interface VerticalConfig {
   title: string;
@@ -21,6 +27,7 @@ interface VerticalConfig {
   cta: string;
   searchQuery: string;
   priceAnchor: string;
+  replacements?: SaasReplacement[]; // SaaS tools this vertical replaces
 }
 
 const personas: Record<string, VerticalConfig> = {
@@ -40,6 +47,11 @@ const personas: Record<string, VerticalConfig> = {
     cta: "Browse developer tools",
     searchQuery: "saas dashboard auth",
     priceAnchor: "Skip the $10K agency. Get it for the price of lunch.",
+    replacements: [
+      { name: "Retool", monthlyCost: 75 },
+      { name: "Vercel Pro", monthlyCost: 20 },
+      { name: "Firebase Blaze", monthlyCost: 25 },
+    ],
   },
   agencies: {
     title: "OpenDraft for Agencies",
@@ -57,6 +69,11 @@ const personas: Record<string, VerticalConfig> = {
     cta: "Browse templates",
     searchQuery: "landing page portfolio",
     priceAnchor: "Agency plan: $99/mo for unlimited white-label apps.",
+    replacements: [
+      { name: "Webflow", monthlyCost: 39 },
+      { name: "Figma (per editor)", monthlyCost: 15 },
+      { name: "Framer", monthlyCost: 30 },
+    ],
   },
   restaurants: {
     title: "Apps for Restaurants",
@@ -74,6 +91,11 @@ const personas: Record<string, VerticalConfig> = {
     cta: "Browse restaurant apps",
     searchQuery: "restaurant ordering menu",
     priceAnchor: "Skip the $10K agency. Launch for the price of a dinner.",
+    replacements: [
+      { name: "Toast POS", monthlyCost: 75 },
+      { name: "OpenTable", monthlyCost: 249 },
+      { name: "DoorDash (commissions)", monthlyCost: 300 },
+    ],
   },
   salons: {
     title: "Apps for Salons & Spas",
@@ -91,6 +113,11 @@ const personas: Record<string, VerticalConfig> = {
     cta: "Browse salon apps",
     searchQuery: "booking appointment salon",
     priceAnchor: "Replace your $200/mo booking software. Own it forever.",
+    replacements: [
+      { name: "Vagaro", monthlyCost: 85 },
+      { name: "Fresha Premium", monthlyCost: 0 },
+      { name: "Square Appointments", monthlyCost: 69 },
+    ],
   },
   contractors: {
     title: "Apps for Home Services",
@@ -108,6 +135,11 @@ const personas: Record<string, VerticalConfig> = {
     cta: "Browse contractor apps",
     searchQuery: "scheduling invoicing service",
     priceAnchor: "Stop paying $150/mo for Jobber. Own your app forever.",
+    replacements: [
+      { name: "Jobber", monthlyCost: 149 },
+      { name: "Housecall Pro", monthlyCost: 65 },
+      { name: "ServiceTitan", monthlyCost: 250 },
+    ],
   },
   fitness: {
     title: "Apps for Fitness & Wellness",
@@ -125,6 +157,11 @@ const personas: Record<string, VerticalConfig> = {
     cta: "Browse fitness apps",
     searchQuery: "fitness booking gym member",
     priceAnchor: "Replace Mindbody for 1/10th the cost. Own it forever.",
+    replacements: [
+      { name: "Mindbody", monthlyCost: 279 },
+      { name: "Glofox", monthlyCost: 110 },
+      { name: "Zen Planner", monthlyCost: 117 },
+    ],
   },
   healthcare: {
     title: "Apps for Healthcare & Dental",
@@ -142,6 +179,11 @@ const personas: Record<string, VerticalConfig> = {
     cta: "Browse healthcare apps",
     searchQuery: "patient portal healthcare booking",
     priceAnchor: "Skip the $20K custom build. Launch this week.",
+    replacements: [
+      { name: "Jane App", monthlyCost: 139 },
+      { name: "SimplePractice", monthlyCost: 99 },
+      { name: "Dentrix (monthly)", monthlyCost: 400 },
+    ],
   },
   realestate: {
     title: "Apps for Real Estate",
@@ -311,6 +353,57 @@ export default function ForPersona() {
           })}
         </div>
       </section>
+
+      {/* SaaS Replacement Calculator */}
+      {config.replacements && config.replacements.length > 0 && (
+        <section className="container mx-auto px-4 py-16 md:py-20">
+          <div className="max-w-2xl mx-auto">
+            <h2 className="text-center text-sm font-semibold uppercase tracking-widest text-muted-foreground mb-2">
+              Stop renting software
+            </h2>
+            <p className="text-center text-2xl md:text-3xl font-black tracking-tight mb-10">
+              What you're paying <span className="text-destructive">every month</span>
+            </p>
+
+            <div className="rounded-2xl border border-border/40 bg-card overflow-hidden">
+              {config.replacements.map((r, i) => (
+                <div
+                  key={r.name}
+                  className={cn(
+                    "flex items-center justify-between px-6 py-4",
+                    i < config.replacements!.length - 1 && "border-b border-border/30"
+                  )}
+                >
+                  <span className="text-sm font-medium text-foreground">{r.name}</span>
+                  <span className="text-sm font-bold text-destructive line-through">
+                    ${r.monthlyCost}/mo
+                  </span>
+                </div>
+              ))}
+              <div className="border-t-2 border-primary/30 bg-primary/5 px-6 py-4 flex items-center justify-between">
+                <span className="text-sm font-bold text-foreground">
+                  Total you're burning
+                </span>
+                <span className="text-lg font-black text-destructive">
+                  ${config.replacements.reduce((sum, r) => sum + r.monthlyCost, 0)}/mo
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-6 rounded-2xl border-2 border-primary/40 bg-primary/5 px-6 py-5 text-center">
+              <p className="text-sm text-muted-foreground mb-1">With OpenDraft, replace all of them for</p>
+              <p className="text-4xl font-black text-primary">$0</p>
+              <p className="text-xs text-muted-foreground mt-1">Your first app is free. Own the code forever.</p>
+            </div>
+
+            <div className="mt-4 text-center">
+              <p className="text-xs text-muted-foreground">
+                That's <span className="font-bold text-primary">${config.replacements.reduce((sum, r) => sum + r.monthlyCost, 0) * 12}/yr</span> back in your pocket.
+              </p>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Social proof */}
       <section className="container mx-auto px-4 py-12">

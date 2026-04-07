@@ -134,6 +134,11 @@ const personas: Record<string, VerticalConfig> = {
     cta: "Browse contractor apps",
     searchQuery: "scheduling invoicing service",
     priceAnchor: "Stop paying $150/mo for Jobber. Own your app forever.",
+    replacements: [
+      { name: "Jobber", monthlyCost: 149 },
+      { name: "Housecall Pro", monthlyCost: 65 },
+      { name: "ServiceTitan", monthlyCost: 250 },
+    ],
   },
   fitness: {
     title: "Apps for Fitness & Wellness",

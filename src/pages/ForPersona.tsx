@@ -353,7 +353,56 @@ export default function ForPersona() {
         </div>
       </section>
 
-      {/* Social proof */}
+      {/* SaaS Replacement Calculator */}
+      {config.replacements && config.replacements.length > 0 && (
+        <section className="container mx-auto px-4 py-16 md:py-20">
+          <div className="max-w-2xl mx-auto">
+            <h2 className="text-center text-sm font-semibold uppercase tracking-widest text-muted-foreground mb-2">
+              Stop renting software
+            </h2>
+            <p className="text-center text-2xl md:text-3xl font-black tracking-tight mb-10">
+              What you're paying <span className="text-destructive">every month</span>
+            </p>
+
+            <div className="rounded-2xl border border-border/40 bg-card overflow-hidden">
+              {config.replacements.map((r, i) => (
+                <div
+                  key={r.name}
+                  className={cn(
+                    "flex items-center justify-between px-6 py-4",
+                    i < config.replacements!.length - 1 && "border-b border-border/30"
+                  )}
+                >
+                  <span className="text-sm font-medium text-foreground">{r.name}</span>
+                  <span className="text-sm font-bold text-destructive line-through">
+                    ${r.monthlyCost}/mo
+                  </span>
+                </div>
+              ))}
+              <div className="border-t-2 border-primary/30 bg-primary/5 px-6 py-4 flex items-center justify-between">
+                <span className="text-sm font-bold text-foreground">
+                  Total you're burning
+                </span>
+                <span className="text-lg font-black text-destructive">
+                  ${config.replacements.reduce((sum, r) => sum + r.monthlyCost, 0)}/mo
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-6 rounded-2xl border-2 border-primary/40 bg-primary/5 px-6 py-5 text-center">
+              <p className="text-sm text-muted-foreground mb-1">With OpenDraft, replace all of them for</p>
+              <p className="text-4xl font-black text-primary">$0</p>
+              <p className="text-xs text-muted-foreground mt-1">Your first app is free. Own the code forever.</p>
+            </div>
+
+            <div className="mt-4 text-center">
+              <p className="text-xs text-muted-foreground">
+                That's <span className="font-bold text-primary">${config.replacements.reduce((sum, r) => sum + r.monthlyCost, 0) * 12}/yr</span> back in your pocket.
+              </p>
+            </div>
+          </div>
+        </section>
+      )
       <section className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-3 gap-4 max-w-lg mx-auto text-center">
           <div>

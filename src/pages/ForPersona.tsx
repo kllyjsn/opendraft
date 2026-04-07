@@ -156,6 +156,11 @@ const personas: Record<string, VerticalConfig> = {
     cta: "Browse fitness apps",
     searchQuery: "fitness booking gym member",
     priceAnchor: "Replace Mindbody for 1/10th the cost. Own it forever.",
+    replacements: [
+      { name: "Mindbody", monthlyCost: 279 },
+      { name: "Glofox", monthlyCost: 110 },
+      { name: "Zen Planner", monthlyCost: 117 },
+    ],
   },
   healthcare: {
     title: "Apps for Healthcare & Dental",

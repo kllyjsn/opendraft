@@ -90,6 +90,11 @@ const personas: Record<string, VerticalConfig> = {
     cta: "Browse restaurant apps",
     searchQuery: "restaurant ordering menu",
     priceAnchor: "Skip the $10K agency. Launch for the price of a dinner.",
+    replacements: [
+      { name: "Toast POS", monthlyCost: 75 },
+      { name: "OpenTable", monthlyCost: 249 },
+      { name: "DoorDash (commissions)", monthlyCost: 300 },
+    ],
   },
   salons: {
     title: "Apps for Salons & Spas",

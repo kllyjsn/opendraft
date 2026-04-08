@@ -285,7 +285,7 @@ export function OrgAnalytics({ orgId, memberCount }: OrgAnalyticsProps) {
     const totalSpent = apps.reduce((sum, a) => sum + a.price, 0);
     const annualSavings = totalSavingsPerMonth * 12;
     const roiMultiple =
-      totalSpent > 0 ? annualSavings / totalSpent : 0;
+      totalSpent > 0 ? annualSavings / totalSpent : annualSavings > 0 ? Infinity : 0;
     const breakEvenMonths =
       totalSavingsPerMonth > 0
         ? Math.ceil(totalSpent / totalSavingsPerMonth)
@@ -360,7 +360,7 @@ export function OrgAnalytics({ orgId, memberCount }: OrgAnalyticsProps) {
         />
         <StatCard
           icon={BarChart3}
-          value={hasApps ? `${data.roiMultiple.toFixed(1)}x` : "—"}
+          value={hasApps ? (isFinite(data.roiMultiple) ? `${data.roiMultiple.toFixed(1)}x` : "∞") : "—"}
           label="Annual ROI multiple"
           subtext="First-year return on investment"
           trend={hasApps ? "down" : undefined}

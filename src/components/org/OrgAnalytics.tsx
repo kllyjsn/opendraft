@@ -192,7 +192,7 @@ function exportCsv(data: AnalyticsData) {
       `$${((data.totalSavingsPerMonth * 12) / 100).toLocaleString()}`,
     ],
     ["Total Spent (one-time)", `$${(data.totalSpent / 100).toLocaleString()}`],
-    ["ROI Multiple", `${data.roiMultiple.toFixed(1)}x`],
+    ["ROI Multiple", `${isFinite(data.roiMultiple) ? data.roiMultiple.toFixed(1) : "∞"}x`],
     [
       "Break-even",
       data.breakEvenMonths <= 0

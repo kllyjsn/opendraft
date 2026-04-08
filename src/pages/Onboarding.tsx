@@ -242,13 +242,20 @@ export default function Onboarding() {
     setStep(0);
   }, [isEnterprise]);
 
+  // Derive the correct exit destination based on enterprise context
+  function getExitPath() {
+    if (isEnterprise && myOrg) return `/org/${myOrg.slug}`;
+    if (isEnterprise) return "/org/new";
+    return "/";
+  }
+
   // Skip if already completed
   useEffect(() => {
     if (!progress.loading && progress.percentage === 100) {
       localStorage.setItem("opendraft_onboarding_done", "1");
-      navigate("/", { replace: true });
+      navigate(getExitPath(), { replace: true });
     }
-  }, [progress.loading, progress.percentage, navigate]);
+  }, [progress.loading, progress.percentage, navigate, isEnterprise, myOrg]);
 
   if (!authLoading && !user) return <Navigate to="/login" replace />;
 
@@ -266,13 +273,7 @@ export default function Onboarding() {
 
   function finish() {
     localStorage.setItem("opendraft_onboarding_done", "1");
-    if (isEnterprise && myOrg) {
-      navigate(`/org/${myOrg.slug}`);
-    } else if (isEnterprise) {
-      navigate("/org/new");
-    } else {
-      navigate("/");
-    }
+    navigate(getExitPath());
   }
 
   return (

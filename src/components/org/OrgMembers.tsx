@@ -87,12 +87,13 @@ export function OrgMembers({ orgId, members, isAdmin, onRefresh }: OrgMembersPro
     setResendingId(inviteId);
     const { error } = await supabase
       .from("org_invitations")
-      .update({ created_at: new Date().toISOString() })
+      .update({ created_at: new Date().toISOString(), expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() })
       .eq("id", inviteId);
     if (error) {
       toast({ title: "Could not resend", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Invitation resent", description: `Re-sent invite to ${email}` });
+      loadPendingInvites();
     }
     setResendingId(null);
   }
@@ -192,7 +193,6 @@ export function OrgMembers({ orgId, members, isAdmin, onRefresh }: OrgMembersPro
         <div className="space-y-2">
           <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Pending invitations</h4>
           {pendingInvites.map((invite) => {
-            const roleInfo = ROLE_LABELS[invite.role] ?? ROLE_LABELS.member;
             const isExpired = new Date(invite.expires_at) < new Date();
             return (
               <div key={invite.id} className="flex items-center gap-3 p-3 rounded-lg border border-dashed border-border/50 bg-card/50">

@@ -112,12 +112,23 @@ export default function EditListing() {
 
   async function uploadScreenshots(files: FileList) {
     if (!user) return;
+    const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+    const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
     setUploadingScreenshot(true);
     const remaining = 10 - form.screenshots.length;
     const toUpload = Array.from(files).slice(0, remaining);
     const newUrls: string[] = [];
     for (const file of toUpload) {
-      const path = `${user.id}/${Date.now()}-${file.name}`;
+      if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+        toast({ title: "Invalid file type", description: `"${file.name}" must be JPEG, PNG, WebP, or GIF.`, variant: "destructive" });
+        continue;
+      }
+      if (file.size > MAX_IMAGE_SIZE) {
+        toast({ title: "File too large", description: `"${file.name}" exceeds 5MB limit.`, variant: "destructive" });
+        continue;
+      }
+      const sanitizedName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const path = `${user.id}/${Date.now()}-${sanitizedName}`;
       const { data, error } = await supabase.storage.from("listing-screenshots").upload(path, file, { upsert: true });
       if (!error && data) {
         const { data: urlData } = supabase.storage.from("listing-screenshots").getPublicUrl(data.path);
@@ -133,8 +144,19 @@ export default function EditListing() {
 
   async function uploadProjectFile(file: File) {
     if (!user) return;
+    const ALLOWED_ZIP_TYPES = ["application/zip", "application/x-zip-compressed", "application/x-zip"];
+    const MAX_ZIP_SIZE = 100 * 1024 * 1024; // 100MB
+    if (!ALLOWED_ZIP_TYPES.includes(file.type) && !file.name.endsWith(".zip")) {
+      toast({ title: "Invalid file type", description: "Only ZIP files are accepted.", variant: "destructive" });
+      return;
+    }
+    if (file.size > MAX_ZIP_SIZE) {
+      toast({ title: "File too large", description: "ZIP file must be under 100MB.", variant: "destructive" });
+      return;
+    }
     setUploadingFile(true);
-    const path = `${user.id}/${Date.now()}-${file.name}`;
+    const sanitizedName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const path = `${user.id}/${Date.now()}-${sanitizedName}`;
     const { data, error } = await supabase.storage.from("listing-files").upload(path, file, { upsert: true });
     if (!error && data) {
       update("file_path", data.path);

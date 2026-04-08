@@ -103,8 +103,19 @@ export default function Sell() {
 
   async function uploadScreenshot(file: File) {
     if (!user) return;
+    const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+    const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      toast({ title: "Invalid file type", description: "Only JPEG, PNG, WebP, or GIF images are accepted.", variant: "destructive" });
+      return;
+    }
+    if (file.size > MAX_IMAGE_SIZE) {
+      toast({ title: "File too large", description: "Image must be under 5MB.", variant: "destructive" });
+      return;
+    }
     setUploadingScreenshot(true);
-    const path = `${user.id}/${Date.now()}-${file.name}`;
+    const sanitizedName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const path = `${user.id}/${Date.now()}-${sanitizedName}`;
     const { data, error } = await supabase.storage.from("listing-screenshots").upload(path, file, { upsert: true });
     if (error) {
       toast({ title: "Upload failed", description: error.message, variant: "destructive" });
@@ -117,14 +128,25 @@ export default function Sell() {
 
   async function uploadProjectFile(file: File) {
     if (!user) return;
+    const ALLOWED_ZIP_TYPES = ["application/zip", "application/x-zip-compressed", "application/x-zip"];
+    const MAX_ZIP_SIZE = 100 * 1024 * 1024; // 100MB
+    if (!ALLOWED_ZIP_TYPES.includes(file.type) && !file.name.endsWith(".zip")) {
+      toast({ title: "Invalid file type", description: "Only ZIP files are accepted.", variant: "destructive" });
+      return;
+    }
+    if (file.size > MAX_ZIP_SIZE) {
+      toast({ title: "File too large", description: "ZIP file must be under 100MB.", variant: "destructive" });
+      return;
+    }
     setUploadingFile(true);
-    const path = `${user.id}/${Date.now()}-${file.name}`;
+    const sanitizedName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const path = `${user.id}/${Date.now()}-${sanitizedName}`;
     const { data, error } = await supabase.storage.from("listing-files").upload(path, file, { upsert: true });
     if (error) {
       toast({ title: "Upload failed", description: error.message, variant: "destructive" });
     } else {
       update("file_path", data.path);
-      toast({ title: "ZIP uploaded ✓", description: "Buyers will receive this after purchase." });
+      toast({ title: "ZIP uploaded \u2713", description: "Buyers will receive this after purchase." });
     }
     setUploadingFile(false);
   }

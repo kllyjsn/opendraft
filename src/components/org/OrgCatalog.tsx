@@ -70,7 +70,7 @@ export function OrgCatalog({ orgId, isAdmin }: OrgCatalogProps) {
   const [searchResults, setSearchResults] = useState<CatalogSearchResult[]>([]);
   const [searching, setSearching] = useState(false);
   const [selectedListing, setSelectedListing] = useState<CatalogSearchResult | null>(null);
-  const [savingTagsFor, setSavingTagsFor] = useState<string | null>(null);
+  const [savingTagsFor, setSavingTagsFor] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     loadListings();
@@ -187,7 +187,7 @@ export function OrgCatalog({ orgId, isAdmin }: OrgCatalogProps) {
   async function handleToggleTag(orgListingId: string, tag: string) {
     const item = listings.find((l) => l.id === orgListingId);
     if (!item) return;
-    setSavingTagsFor(orgListingId);
+    setSavingTagsFor(prev => new Set(prev).add(orgListingId));
 
     const currentTags = item.compliance_tags;
     const newTags = currentTags.includes(tag)
@@ -207,7 +207,7 @@ export function OrgCatalog({ orgId, isAdmin }: OrgCatalogProps) {
       );
       toast({ title: currentTags.includes(tag) ? `Removed ${tag}` : `Added ${tag}` });
     }
-    setSavingTagsFor(null);
+    setSavingTagsFor(prev => { const next = new Set(prev); next.delete(orgListingId); return next; });
   }
 
   const filtered = filter === "all" ? listings : listings.filter(l => l.status === filter);
@@ -403,7 +403,7 @@ export function OrgCatalog({ orgId, isAdmin }: OrgCatalogProps) {
                                   <button
                                     key={tag}
                                     onClick={() => handleToggleTag(item.id, tag)}
-                                    disabled={savingTagsFor === item.id}
+                                    disabled={savingTagsFor.has(item.id)}
                                     className="flex items-center gap-2 w-full rounded-md px-2 py-1.5 text-xs hover:bg-muted transition-colors text-left"
                                   >
                                     <div className={`h-3.5 w-3.5 rounded border flex items-center justify-center shrink-0 ${

@@ -8,7 +8,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Check, X, Loader2, Package, Shield, Clock, Search } from "lucide-react";
+import { Plus, Check, X, Loader2, Package, Shield, Clock, Search, Tags } from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 
 interface CatalogSearchResult {
@@ -65,6 +70,7 @@ export function OrgCatalog({ orgId, isAdmin }: OrgCatalogProps) {
   const [searchResults, setSearchResults] = useState<CatalogSearchResult[]>([]);
   const [searching, setSearching] = useState(false);
   const [selectedListing, setSelectedListing] = useState<CatalogSearchResult | null>(null);
+  const [savingTagsFor, setSavingTagsFor] = useState<string | null>(null);
 
   useEffect(() => {
     loadListings();
@@ -174,6 +180,34 @@ export function OrgCatalog({ orgId, isAdmin }: OrgCatalogProps) {
       loadListings();
     }
     setSubmitting(false);
+  }
+
+  const AVAILABLE_TAGS = ["SOC2", "HIPAA", "GDPR", "PCI DSS", "FedRAMP", "ISO 27001"];
+
+  async function handleToggleTag(orgListingId: string, tag: string) {
+    const item = listings.find((l) => l.id === orgListingId);
+    if (!item) return;
+    setSavingTagsFor(orgListingId);
+
+    const currentTags = item.compliance_tags;
+    const newTags = currentTags.includes(tag)
+      ? currentTags.filter((t) => t !== tag)
+      : [...currentTags, tag];
+
+    const { error } = await supabase
+      .from("org_listings")
+      .update({ compliance_tags: newTags })
+      .eq("id", orgListingId);
+
+    if (error) {
+      toast({ title: "Could not update tags", description: error.message, variant: "destructive" });
+    } else {
+      setListings((prev) =>
+        prev.map((l) => (l.id === orgListingId ? { ...l, compliance_tags: newTags } : l))
+      );
+      toast({ title: currentTags.includes(tag) ? `Removed ${tag}` : `Added ${tag}` });
+    }
+    setSavingTagsFor(null);
   }
 
   const filtered = filter === "all" ? listings : listings.filter(l => l.status === filter);
@@ -339,7 +373,7 @@ export function OrgCatalog({ orgId, isAdmin }: OrgCatalogProps) {
                         {item.listing.description}
                       </p>
                     )}
-                    <div className="flex items-center gap-3 flex-wrap">
+                    <div className="flex items-center gap-2 flex-wrap">
                       {item.department && (
                         <span className="text-[10px] font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
                           {item.department}
@@ -350,6 +384,44 @@ export function OrgCatalog({ orgId, isAdmin }: OrgCatalogProps) {
                           <Shield className="h-2.5 w-2.5" /> {tag}
                         </span>
                       ))}
+                      {isAdmin && (
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <button
+                              className="text-[10px] font-medium text-muted-foreground hover:text-foreground bg-muted hover:bg-muted/80 px-2 py-0.5 rounded-full flex items-center gap-1 transition-colors"
+                            >
+                              <Tags className="h-2.5 w-2.5" />
+                              {item.compliance_tags.length === 0 ? "Add tags" : "Edit"}
+                            </button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-56 p-2" align="start">
+                            <p className="text-xs font-semibold px-2 py-1.5 text-muted-foreground">Compliance tags</p>
+                            <div className="space-y-0.5">
+                              {AVAILABLE_TAGS.map((tag) => {
+                                const isActive = item.compliance_tags.includes(tag);
+                                return (
+                                  <button
+                                    key={tag}
+                                    onClick={() => handleToggleTag(item.id, tag)}
+                                    disabled={savingTagsFor === item.id}
+                                    className="flex items-center gap-2 w-full rounded-md px-2 py-1.5 text-xs hover:bg-muted transition-colors text-left"
+                                  >
+                                    <div className={`h-3.5 w-3.5 rounded border flex items-center justify-center shrink-0 ${
+                                      isActive
+                                        ? "bg-secondary border-secondary text-secondary-foreground"
+                                        : "border-input"
+                                    }`}>
+                                      {isActive && <Check className="h-2.5 w-2.5" />}
+                                    </div>
+                                    <Shield className="h-3 w-3 text-muted-foreground" />
+                                    <span className={isActive ? "font-medium" : ""}>{tag}</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </PopoverContent>
+                        </Popover>
+                      )}
                       {item.listing?.security_score && (
                         <span className="text-[10px] font-medium text-muted-foreground">
                           Security: {item.listing.security_score}/100

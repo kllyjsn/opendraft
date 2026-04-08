@@ -6,7 +6,6 @@ import {
   TrendingDown,
   DollarSign,
   BarChart3,
-  Users,
   Package,
   Download,
   Loader2,
@@ -96,7 +95,7 @@ function StatCard({
     >
       <div className="flex items-start justify-between mb-3">
         <div className="h-9 w-9 rounded-lg bg-muted/60 flex items-center justify-center">
-          <Icon className="h-4.5 w-4.5 text-muted-foreground" />
+          <Icon className="h-4 w-4 text-muted-foreground" />
         </div>
         {trend && (
           <Badge
@@ -391,7 +390,7 @@ export function OrgAnalytics({ orgId, memberCount }: OrgAnalyticsProps) {
             </span>
           </div>
           <div className="space-y-2">
-            {data.apps
+            {[...data.apps]
               .sort((a, b) => b.estimatedMonthlySaas - a.estimatedMonthlySaas)
               .map((app) => (
                 <AppSavingsRow key={app.id} app={app} />

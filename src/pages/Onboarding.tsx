@@ -223,18 +223,24 @@ function ScreenView({ screen }: { screen: OnboardingScreen }) {
 /* ─── Main Onboarding Page ─── */
 export default function Onboarding() {
   const { user, loading: authLoading } = useAuth();
-  const { org: myOrg } = useMyOrg();
+  const { org: myOrg, loading: orgLoading } = useMyOrg();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const progress = useGremlinProgress();
   const [step, setStep] = useState(0);
 
   // Determine if this is an enterprise onboarding flow
-  const isEnterprise = searchParams.get("plan") === "enterprise" || !!myOrg;
+  // Use URL param immediately; org membership only after loading completes
+  const isEnterprise = searchParams.get("plan") === "enterprise" || (!orgLoading && !!myOrg);
 
   const screens = isEnterprise ? ENTERPRISE_SCREENS : INDIVIDUAL_SCREENS;
   const totalScreens = screens.length;
   const isLast = step === totalScreens - 1;
+
+  // Reset step if enterprise state changes (safety net)
+  useEffect(() => {
+    setStep(0);
+  }, [isEnterprise]);
 
   // Skip if already completed
   useEffect(() => {
@@ -245,6 +251,18 @@ export default function Onboarding() {
   }, [progress.loading, progress.percentage, navigate]);
 
   if (!authLoading && !user) return <Navigate to="/login" replace />;
+
+  // Wait for org loading to settle before rendering screens
+  if (orgLoading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="h-6 w-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+        </div>
+      </div>
+    );
+  }
 
   function finish() {
     localStorage.setItem("opendraft_onboarding_done", "1");

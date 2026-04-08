@@ -115,6 +115,7 @@ export function OrgActivityLog({ orgId }: OrgActivityLogProps) {
     } else {
       setEntries(pageRows);
       setLoading(false);
+      setLoadingMore(false);
     }
     setHasMore(hasMoreRows);
   }, [orgId, filter, entries]);

@@ -140,7 +140,9 @@ function BillingSection({ org, isAdmin }: { org: Org; isAdmin: boolean }) {
                 ? "Free forever"
                 : `$${monthlyPrice}/month`}
               {org.max_seats && <> · {org.max_seats} seats</>}
-              {org.max_apps && <> · {org.max_apps === 999999 ? "Unlimited" : org.max_apps} apps</>}
+              {org.max_apps != null && (
+                <> · {currentTier?.appLimit === Infinity ? "Unlimited" : org.max_apps} apps</>
+              )}
             </p>
           </div>
         </div>

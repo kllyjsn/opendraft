@@ -39,6 +39,7 @@ export function OrgMembers({ orgId, members, isAdmin, onRefresh }: OrgMembersPro
   const [revokingId, setRevokingId] = useState<string | null>(null);
 
   useEffect(() => {
+    setPendingInvites([]);
     if (isAdmin) loadPendingInvites();
   }, [orgId, isAdmin]);
 
@@ -85,10 +86,9 @@ export function OrgMembers({ orgId, members, isAdmin, onRefresh }: OrgMembersPro
 
   async function handleResendInvite(inviteId: string, email: string) {
     setResendingId(inviteId);
-    const { error } = await supabase
-      .from("org_invitations")
-      .update({ created_at: new Date().toISOString(), expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() })
-      .eq("id", inviteId);
+    const { error } = await supabase.rpc("resend_org_invitation", {
+      _invitation_id: inviteId,
+    });
     if (error) {
       toast({ title: "Could not resend", description: error.message, variant: "destructive" });
     } else {
@@ -100,10 +100,9 @@ export function OrgMembers({ orgId, members, isAdmin, onRefresh }: OrgMembersPro
 
   async function handleRevokeInvite(inviteId: string) {
     setRevokingId(inviteId);
-    const { error } = await supabase
-      .from("org_invitations")
-      .update({ status: "revoked" })
-      .eq("id", inviteId);
+    const { error } = await supabase.rpc("revoke_org_invitation", {
+      _invitation_id: inviteId,
+    });
     if (error) {
       toast({ title: "Could not revoke", description: error.message, variant: "destructive" });
     } else {

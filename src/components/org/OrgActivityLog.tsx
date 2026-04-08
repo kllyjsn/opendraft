@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -55,8 +55,11 @@ export function OrgActivityLog({ orgId }: OrgActivityLogProps) {
   const [loadingMore, setLoadingMore] = useState(false);
   const [filter, setFilter] = useState("all");
   const [hasMore, setHasMore] = useState(false);
+  const requestGenRef = useRef(0);
 
   const loadEntries = useCallback(async (append = false) => {
+    const gen = ++requestGenRef.current;
+
     if (append) {
       setLoadingMore(true);
     } else {
@@ -80,6 +83,10 @@ export function OrgActivityLog({ orgId }: OrgActivityLogProps) {
     }
 
     const { data } = await query;
+
+    // Discard stale responses from superseded requests
+    if (gen !== requestGenRef.current) return;
+
     const rows = (data ?? []) as AuditEntry[];
     const hasMoreRows = rows.length > PAGE_SIZE;
     const pageRows = hasMoreRows ? rows.slice(0, PAGE_SIZE) : rows;
@@ -91,6 +98,9 @@ export function OrgActivityLog({ orgId }: OrgActivityLogProps) {
         .from("profiles")
         .select("user_id, username")
         .in("user_id", actorIds);
+
+      if (gen !== requestGenRef.current) return;
+
       const profileMap = new Map(profiles?.map((p) => [p.user_id, p.username]) ?? []);
       for (const row of pageRows) {
         if (row.actor_id) {
@@ -101,12 +111,12 @@ export function OrgActivityLog({ orgId }: OrgActivityLogProps) {
 
     if (append) {
       setEntries((prev) => [...prev, ...pageRows]);
+      setLoadingMore(false);
     } else {
       setEntries(pageRows);
+      setLoading(false);
     }
     setHasMore(hasMoreRows);
-    setLoading(false);
-    setLoadingMore(false);
   }, [orgId, filter, entries]);
 
   useEffect(() => {

@@ -8,6 +8,7 @@
 import { createOAuthHeader } from "./oauth.ts";
 import { uploadMediaToTwitter } from "./media.ts";
 import {
+import { getCorsHeaders } from "../_shared/cors.ts";
   newListingTweet,
   saleMilestoneTweet,
   trendingDigestTweet,
@@ -27,7 +28,6 @@ import {
 } from "./templates.ts";
 import { generateBlogTweet, generateVibeReportTweet, generateDynamicTweet } from "./ai-tweets.ts";
 import { tipTweet, insightTweet, discussionTweet, builderStoryTweet } from "./value-tweets.ts";
-import { getCorsHeaders } from "../_shared/cors.ts";
 
 /**
  * Generate tweet art using Lovable AI image generation

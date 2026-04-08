@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import JSZip from "https://esm.sh/jszip@3.10.1";
+import { getCorsHeaders } from "../_shared/cors.ts";
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -142,7 +143,6 @@ body {
         folder.file("src/App.tsx", `import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles, ArrowRight, Check, Star, Zap, Shield } from 'lucide-react';
-import { getCorsHeaders } from "../_shared/cors.ts";
 
 const features = [
   { icon: <Zap className="w-5 h-5" />, title: "Lightning Fast", desc: "Optimized for speed and performance out of the box." },

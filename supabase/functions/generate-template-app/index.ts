@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import JSZip from "https://esm.sh/jszip@3.10.1";
+import { getCorsHeaders } from "../_shared/cors.ts";
 
 /* ── Base scaffold files every generated project includes ────────── */
 
@@ -751,7 +752,6 @@ These are NON-NEGOTIABLE. Templates that fail these checks are rejected:
 Example secure form pattern:
 \`\`\`tsx
 import { z } from 'zod';
-import { getCorsHeaders } from "../_shared/cors.ts";
 const contactSchema = z.object({
   name: z.string().min(1).max(100),
   email: z.string().email().max(255),

@@ -43,8 +43,9 @@ SET search_path = public
 AS $$
 DECLARE
   _org_id uuid;
+  _email  text;
 BEGIN
-  SELECT org_id INTO _org_id
+  SELECT org_id, email INTO _org_id, _email
     FROM org_invitations
    WHERE id = _invitation_id AND status = 'pending';
 
@@ -55,6 +56,13 @@ BEGIN
   IF NOT is_org_admin(auth.uid(), _org_id) THEN
     RAISE EXCEPTION 'Only org admins can revoke invitations';
   END IF;
+
+  -- Remove any prior revoked row for the same (org_id, email) to avoid
+  -- violating the UNIQUE(org_id, email, status) constraint.
+  DELETE FROM org_invitations
+   WHERE org_id = _org_id
+     AND email  = _email
+     AND status = 'revoked';
 
   UPDATE org_invitations
      SET status = 'revoked'

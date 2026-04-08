@@ -141,7 +141,7 @@ function AppSavingsRow({ app }: { app: AppSaving }) {
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold truncate">{app.title}</p>
         <p className="text-xs text-muted-foreground capitalize">
-          {app.category.replace(/-/g, " ")}
+          {app.category.replace(/_/g, " ")}
         </p>
       </div>
       <div className="text-right shrink-0">
@@ -202,7 +202,7 @@ function exportCsv(data: AnalyticsData) {
   ];
 
   const csv = [headers, ...rows, ...summary]
-    .map((r) => r.map((c) => `"${c}"`).join(","))
+    .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","))
     .join("\n");
 
   const blob = new Blob([csv], { type: "text/csv" });

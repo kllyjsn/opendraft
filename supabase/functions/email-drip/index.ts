@@ -1,3 +1,4 @@
+import { getCorsHeaders } from "../_shared/cors.ts";
 /**
  * Email Drip Engine
  * -----------------
@@ -11,12 +12,6 @@
  *   4. Win-back (Day 14) — "We miss you — here's what's new"
  *   5. Churned subscriber (Day 3 after cancel) — "Come back for 20% off"
  */
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
 
 interface DripEmail {
   subject: string;
@@ -100,6 +95,7 @@ Your free app credit is still waiting if you haven't used it.
 }
 
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {

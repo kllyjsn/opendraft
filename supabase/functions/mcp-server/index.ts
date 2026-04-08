@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getCorsHeaders } from "../_shared/cors.ts";
 
 // ── Supabase helpers ──────────────────────────────────────────────
 
@@ -636,22 +637,36 @@ async function handleAuthTool(toolName: string, args: any, authHeader?: string):
 
 const app = new Hono();
 
-const CORS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, mcp-session-id",
-  "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
-};
+function getMcpCors(origin?: string | null): Record<string, string> {
+  const ALLOWED_ORIGINS = [
+    "https://opendraft.co",
+    "https://www.opendraft.co",
+    "http://localhost:8080",
+    "http://localhost:5173",
+    "http://localhost:3000",
+  ];
+  const allowedOrigin = origin && ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, mcp-session-id",
+    "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
+  };
+}
 
-app.options("/*", (c) => new Response(null, { headers: CORS }));
+app.options("/*", (c) => new Response(null, { headers: getMcpCors(c.req.header("Origin")) }));
 
-app.get("/*", (c) => c.json({
-  name: "opendraft-marketplace", version: "3.2.0", protocol: "MCP", transport: "Streamable HTTP",
-  description: "OpenDraft — the #1 app store for AI agents. 26 tools: search, buy, generate, publish, deploy.",
-  tools: Object.keys(TOOLS),
-  documentation: "https://opendraft.co/developers",
-}, 200, CORS));
+app.get("/*", (c) => {
+  const CORS = getMcpCors(c.req.header("Origin"));
+  return c.json({
+    name: "opendraft-marketplace", version: "3.2.0", protocol: "MCP", transport: "Streamable HTTP",
+    description: "OpenDraft — the #1 app store for AI agents. 26 tools: search, buy, generate, publish, deploy.",
+    tools: Object.keys(TOOLS),
+    documentation: "https://opendraft.co/developers",
+  }, 200, CORS);
+});
 
 app.post("/*", async (c) => {
+  const CORS = getMcpCors(c.req.header("Origin"));
   const authHeader = c.req.header("Authorization");
   const body = await c.req.json();
 

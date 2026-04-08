@@ -23,18 +23,14 @@
 // ---------------------------------------------------------------------------
 import Stripe from "npm:stripe@17.7.0";
 import { sanitizeStripeKey } from "../_shared/sanitize-stripe-key.ts";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import { getCorsHeaders } from "../_shared/cors.ts";
 
 // The percentage of each sale the platform retains (20% = 0.20)
 // PLACEHOLDER: Adjust this to change your platform fee percentage
 const PLATFORM_FEE_PERCENT = 0.2;
 
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {

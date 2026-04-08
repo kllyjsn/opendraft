@@ -2,12 +2,6 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import JSZip from "https://esm.sh/jszip@3.10.1";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
-
 /* ── Base scaffold files every generated project includes ────────── */
 
 const BASE_FILES: Record<string, string> = {
@@ -757,6 +751,7 @@ These are NON-NEGOTIABLE. Templates that fail these checks are rejected:
 Example secure form pattern:
 \`\`\`tsx
 import { z } from 'zod';
+import { getCorsHeaders } from "../_shared/cors.ts";
 const contactSchema = z.object({
   name: z.string().min(1).max(100),
   email: z.string().email().max(255),
@@ -1373,6 +1368,7 @@ Generate a complete marketing kit that helps sell this app internally and extern
 
 /* ── Main handler ────────────────────────────────────────────────── */
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS")
     return new Response(null, { headers: corsHeaders });
 

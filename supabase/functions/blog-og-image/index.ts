@@ -1,13 +1,8 @@
+import { getCorsHeaders } from "../_shared/cors.ts";
 /**
  * blog-og-image — generates a branded SVG OG image for blog posts
  * Query params: ?slug=xxx&title=xxx&category=xxx
  */
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
 
 const CATEGORY_COLORS: Record<string, { bg: string; fg: string }> = {
   "Behind the Build": { bg: "#7c3aed", fg: "#e9d5ff" },
@@ -56,6 +51,7 @@ function wrapText(text: string, maxCharsPerLine: number): string[] {
 }
 
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {

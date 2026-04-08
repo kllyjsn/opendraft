@@ -26,7 +26,7 @@ USING (public.is_org_admin(auth.uid(), org_id));
 -- Org members can insert audit logs for their org
 CREATE POLICY "Org members can insert audit logs"
 ON public.org_audit_log FOR INSERT
-WITH CHECK (public.is_org_member(auth.uid(), org_id));
+WITH CHECK (public.is_org_member(auth.uid(), org_id) AND (actor_id = auth.uid() OR actor_id IS NULL));
 
 -- Platform admins can view all audit logs
 CREATE POLICY "Platform admins can view all audit logs"

@@ -234,7 +234,7 @@ export function OrgAnalytics({ orgId, memberCount }: OrgAnalyticsProps) {
 
   useEffect(() => {
     loadAnalytics();
-  }, [orgId]);
+  }, [orgId, memberCount]);
 
   async function loadAnalytics() {
     setLoading(true);

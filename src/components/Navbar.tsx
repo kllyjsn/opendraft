@@ -33,7 +33,7 @@ export function Navbar() {
   const { user, signOut, loading } = useAuth();
   const { isAdmin } = useAdmin();
   const { unreadCount } = useUnreadMessages();
-  const { org: myOrg } = useMyOrg();
+  const { org: myOrg, loading: orgLoading } = useMyOrg();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -68,7 +68,7 @@ export function Navbar() {
               </span>
             </NavItem>
           )}
-          {user && !myOrg && (
+          {user && !myOrg && !orgLoading && (
             <NavItem to="/org/new">
               <span className="inline-flex items-center gap-1.5">
                 <Building2 className="h-3.5 w-3.5" /> Create Workspace
@@ -169,7 +169,7 @@ export function Navbar() {
               </span>
             </NavItem>
           )}
-          {user && !myOrg && (
+          {user && !myOrg && !orgLoading && (
             <NavItem to="/org/new" onClick={() => setMenuOpen(false)}>
               <span className="inline-flex items-center gap-1.5">
                 <Building2 className="h-3.5 w-3.5" /> Create Workspace

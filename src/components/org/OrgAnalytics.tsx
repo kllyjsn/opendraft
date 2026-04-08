@@ -258,25 +258,30 @@ export function OrgAnalytics({ orgId, memberCount }: OrgAnalyticsProps) {
     const listingIds = orgListings.map((l) => l.listing_id);
     const { data: listings } = await supabase
       .from("listings")
-      .select("id, title, price, category")
+      .select("id, title, price, category, pricing_type")
       .in("id", listingIds);
 
     const listingMap = new Map(listings?.map((l) => [l.id, l]) ?? []);
 
-    // Build per-app savings data
-    const apps: AppSaving[] = orgListings.map((ol) => {
-      const listing = listingMap.get(ol.listing_id);
-      const category = listing?.category ?? "default";
-      return {
-        id: ol.id,
-        listingId: ol.listing_id,
-        title: listing?.title ?? "Unknown App",
-        category,
-        price: listing?.price ?? 0,
-        estimatedMonthlySaas: estimateMonthlySaas(category, memberCount),
-        claimedAt: ol.created_at,
-      };
-    });
+    // Build per-app savings data (only one-time purchases count for own-vs-rent ROI)
+    const apps: AppSaving[] = orgListings
+      .filter((ol) => {
+        const listing = listingMap.get(ol.listing_id);
+        return !listing?.pricing_type || listing.pricing_type === "one_time";
+      })
+      .map((ol) => {
+        const listing = listingMap.get(ol.listing_id);
+        const category = listing?.category ?? "default";
+        return {
+          id: ol.id,
+          listingId: ol.listing_id,
+          title: listing?.title ?? "Unknown App",
+          category,
+          price: listing?.price ?? 0,
+          estimatedMonthlySaas: estimateMonthlySaas(category, memberCount),
+          claimedAt: ol.created_at,
+        };
+      });
 
     const totalSavingsPerMonth = apps.reduce(
       (sum, a) => sum + a.estimatedMonthlySaas,

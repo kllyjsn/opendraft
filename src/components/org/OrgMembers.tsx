@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { logOrgAction } from "@/lib/audit-log";
 import type { OrgMember } from "@/hooks/useOrg";
 
 const ROLE_LABELS: Record<string, { label: string; icon: typeof Crown; color: string }> = {
@@ -55,6 +56,12 @@ export function OrgMembers({ orgId, members, isAdmin, onRefresh }: OrgMembersPro
       });
     } else {
       toast({ title: "Invitation sent!", description: `Invited ${inviteEmail} as ${inviteRole}` });
+      logOrgAction({
+        org_id: orgId,
+        action: "invitation.sent",
+        target_type: "invitation",
+        metadata: { email: inviteEmail.trim().toLowerCase(), role: inviteRole },
+      });
       setInviteEmail("");
       setInviteOpen(false);
     }
@@ -67,7 +74,15 @@ export function OrgMembers({ orgId, members, isAdmin, onRefresh }: OrgMembersPro
     if (error) {
       toast({ title: "Could not remove member", description: error.message, variant: "destructive" });
     } else {
+      const removed = members.find((m) => m.id === memberId);
       toast({ title: "Member removed" });
+      logOrgAction({
+        org_id: orgId,
+        action: "member.removed",
+        target_type: "member",
+        target_id: removed?.user_id,
+        metadata: { member_name: removed?.profile?.username ?? "Unknown" },
+      });
       onRefresh();
     }
     setRemovingId(null);
@@ -81,7 +96,15 @@ export function OrgMembers({ orgId, members, isAdmin, onRefresh }: OrgMembersPro
     if (error) {
       toast({ title: "Could not update role", description: error.message, variant: "destructive" });
     } else {
+      const member = members.find((m) => m.id === memberId);
       toast({ title: "Role updated" });
+      logOrgAction({
+        org_id: orgId,
+        action: "member.role_changed",
+        target_type: "member",
+        target_id: member?.user_id,
+        metadata: { member_name: member?.profile?.username ?? "Unknown", old_role: member?.role, new_role: newRole },
+      });
       onRefresh();
     }
   }

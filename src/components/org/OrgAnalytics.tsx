@@ -41,20 +41,15 @@ interface AnalyticsData {
 /*  Estimated SaaS equivalents by category                             */
 /* ------------------------------------------------------------------ */
 
+// Keyed by the listing_category enum values from the database.
 const SAAS_MONTHLY_ESTIMATES: Record<string, number> = {
-  crm: 6500, // $65/user/mo — typical CRM
-  "project-management": 3000, // $30/user/mo
-  analytics: 4000, // $40/user/mo
-  marketing: 5000, // $50/user/mo
-  "customer-support": 3500,
-  communication: 2500,
-  finance: 4500,
-  hr: 3000,
-  design: 4000,
-  development: 5500,
-  security: 6000,
-  productivity: 2000,
-  default: 3500, // fallback
+  saas_tool: 5000, // $50/user/mo — typical B2B SaaS
+  ai_app: 6000, // $60/user/mo — AI/ML platforms carry a premium
+  landing_page: 2000, // $20/user/mo — page-builder / CMS tools
+  utility: 2500, // $25/user/mo — lightweight utility software
+  game: 1500, // $15/user/mo — gaming / entertainment
+  other: 3500, // $35/user/mo — general fallback
+  default: 3500, // fallback for unknown categories
 };
 
 function estimateMonthlySaas(category: string, memberCount: number): number {

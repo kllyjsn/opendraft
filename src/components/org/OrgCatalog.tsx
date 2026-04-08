@@ -9,6 +9,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Check, X, Loader2, Package, Shield, Clock, Search } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 
 interface CatalogSearchResult {
@@ -65,6 +75,7 @@ export function OrgCatalog({ orgId, isAdmin }: OrgCatalogProps) {
   const [searchResults, setSearchResults] = useState<CatalogSearchResult[]>([]);
   const [searching, setSearching] = useState(false);
   const [selectedListing, setSelectedListing] = useState<CatalogSearchResult | null>(null);
+  const [confirmReject, setConfirmReject] = useState<{ id: string; title: string } | null>(null);
 
   useEffect(() => {
     loadListings();
@@ -372,7 +383,7 @@ export function OrgCatalog({ orgId, isAdmin }: OrgCatalogProps) {
                         size="sm"
                         variant="outline"
                         className="h-8 text-xs text-destructive border-destructive/30 hover:bg-destructive/10"
-                        onClick={() => handleReject(item.id)}
+                        onClick={() => setConfirmReject({ id: item.id, title: item.listing?.title ?? "this app" })}
                       >
                         <X className="h-3 w-3 mr-1" /> Reject
                       </Button>
@@ -384,6 +395,28 @@ export function OrgCatalog({ orgId, isAdmin }: OrgCatalogProps) {
           })}
         </div>
       )}
+      <AlertDialog open={!!confirmReject} onOpenChange={(open) => !open && setConfirmReject(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reject app from catalog</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to reject <span className="font-medium text-foreground">{confirmReject?.title}</span>? The app will be marked as rejected and removed from the approved catalog.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (confirmReject) handleReject(confirmReject.id);
+                setConfirmReject(null);
+              }}
+            >
+              Reject app
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

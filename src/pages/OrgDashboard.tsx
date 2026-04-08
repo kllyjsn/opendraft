@@ -8,7 +8,8 @@ import { OrgMembers } from "@/components/org/OrgMembers";
 import { OrgCatalog } from "@/components/org/OrgCatalog";
 import { OrgSettings } from "@/components/org/OrgSettings";
 import { OrgAppGrid } from "@/components/org/OrgAppGrid";
-import { Building2, Loader2, Users, Package, Settings, LayoutGrid, Shield } from "lucide-react";
+import { OrgAnalytics } from "@/components/org/OrgAnalytics";
+import { Building2, Loader2, Users, Package, Settings, LayoutGrid, Shield, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useState, useEffect } from "react";
@@ -197,6 +198,11 @@ export default function OrgDashboard() {
                 </TabsTrigger>
               )}
               {isAdmin && (
+                <TabsTrigger value="analytics" className="gap-1.5">
+                  <BarChart3 className="h-3.5 w-3.5" /> ROI
+                </TabsTrigger>
+              )}
+              {isAdmin && (
                 <TabsTrigger value="settings" className="gap-1.5">
                   <Settings className="h-3.5 w-3.5" /> Settings
                 </TabsTrigger>
@@ -219,6 +225,12 @@ export default function OrgDashboard() {
             {isAdmin && (
               <TabsContent value="catalog">
                 <OrgCatalog orgId={orgData.id} isAdmin={isAdmin} />
+              </TabsContent>
+            )}
+
+            {isAdmin && (
+              <TabsContent value="analytics">
+                <OrgAnalytics orgId={orgData.id} memberCount={members.length} />
               </TabsContent>
             )}
 

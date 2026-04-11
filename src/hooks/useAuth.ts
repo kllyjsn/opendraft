@@ -13,24 +13,35 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem("opendraft_token");
-    if (!token) {
-      setLoading(false);
-      return;
-    }
-
-    api.get<{ user: AuthUser }>("/auth/me")
-      .then(({ user: u }) => {
-        setUser(u);
-        setSession({ token });
-        localStorage.setItem("opendraft_onboarding_done", "1");
-      })
-      .catch(() => {
-        clearToken();
+    const checkAuth = () => {
+      const token = localStorage.getItem("opendraft_token");
+      if (!token) {
         setUser(null);
         setSession(null);
-      })
-      .finally(() => setLoading(false));
+        setLoading(false);
+        return;
+      }
+
+      api.get<{ user: AuthUser }>("/auth/me")
+        .then(({ user: u }) => {
+          setUser(u);
+          setSession({ token });
+          localStorage.setItem("opendraft_onboarding_done", "1");
+        })
+        .catch(() => {
+          clearToken();
+          setUser(null);
+          setSession(null);
+        })
+        .finally(() => setLoading(false));
+    };
+
+    checkAuth();
+
+    // Re-check auth when token changes (sign-in, sign-up, sign-out)
+    const handleAuthChange = () => checkAuth();
+    window.addEventListener("opendraft_auth_change", handleAuthChange);
+    return () => window.removeEventListener("opendraft_auth_change", handleAuthChange);
   }, []);
 
   const signOut = async () => {

@@ -47,9 +47,14 @@ router.get("/:username", optionalAuth, async (req: AuthenticatedRequest, res: Re
 // PATCH /api/profiles/me — Update current user's profile
 router.patch("/me", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   try {
+    const allowedFields = ['username', 'avatar_url', 'bio', 'website', 'twitter_handle', 'github_handle', 'display_name', 'tagline'];
+    const updates: Record<string, unknown> = {};
+    for (const key of allowedFields) {
+      if (key in req.body) updates[key] = req.body[key];
+    }
     const profile = await Profile.findOneAndUpdate(
       { user_id: req.userId },
-      req.body,
+      updates,
       { new: true }
     );
     res.json({ data: profile });

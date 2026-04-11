@@ -6,10 +6,13 @@ function getToken(): string | null {
 
 export function setToken(token: string) {
   localStorage.setItem("opendraft_token", token);
+  // Dispatch custom event so useAuth can re-check auth state in the same tab
+  window.dispatchEvent(new Event("opendraft_auth_change"));
 }
 
 export function clearToken() {
   localStorage.removeItem("opendraft_token");
+  window.dispatchEvent(new Event("opendraft_auth_change"));
 }
 
 async function request<T = unknown>(

@@ -279,7 +279,14 @@ router.patch("/offers/:id", requireAuth, async (req: AuthenticatedRequest, res: 
       res.status(403).json({ error: "Not authorized" });
       return;
     }
-    const updated = await Offer.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const allowedFields = offer.seller_id === req.userId
+      ? ['status', 'counter_amount', 'seller_message']
+      : ['status', 'message'];
+    const updates: Record<string, unknown> = {};
+    for (const key of allowedFields) {
+      if (key in req.body) updates[key] = req.body[key];
+    }
+    const updated = await Offer.findByIdAndUpdate(req.params.id, updates, { new: true });
     res.json({ data: updated });
   } catch (err) { res.status(500).json({ error: "Failed to update offer" }); }
 });
@@ -568,6 +575,22 @@ router.post("/db/query", optionalAuth, async (req: AuthenticatedRequest, res: Re
       res.status(401).json({ error: "Authentication required for write operations" });
       return;
     }
+
+    // Block writes to sensitive/admin-only tables via the generic endpoint
+    const writeProtectedTables = [
+      "user_roles", "userrole", "userroles",
+      "security_audit_log", "securityauditlog", "securityauditlogs",
+      "credit_balances", "creditbalance", "creditbalances",
+      "credit_transactions", "credittransaction", "credittransactions",
+      "webhook_events", "webhookevent", "webhookevents",
+      "purchases", "purchase",
+      "subscriptions", "subscription",
+    ];
+    if (operation !== "select" && writeProtectedTables.includes(table.toLowerCase())) {
+      res.status(403).json({ error: `Write operations on '${table}' are not allowed via the generic endpoint. Use the dedicated API routes.` });
+      return;
+    }
+
     const mongoose = await import("mongoose");
 
     // Get the model dynamically by table name

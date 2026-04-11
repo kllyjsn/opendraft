@@ -94,7 +94,12 @@ router.patch("/:id", requireAuth, async (req: AuthenticatedRequest, res: Respons
       res.status(403).json({ error: "Not authorized" });
       return;
     }
-    const updated = await Listing.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const allowedFields = ['title', 'description', 'price', 'pricing_type', 'category', 'completeness_badge', 'status', 'file_path', 'demo_url', 'github_url', 'screenshots', 'tech_stack', 'built_with', 'compliance_tags', 'agent_ready', 'tagline', 'features', 'use_cases'];
+    const updates: Record<string, unknown> = {};
+    for (const key of allowedFields) {
+      if (key in req.body) updates[key] = req.body[key];
+    }
+    const updated = await Listing.findByIdAndUpdate(req.params.id, updates, { new: true });
     res.json({ data: updated });
   } catch (err) {
     console.error("Update listing error:", err);

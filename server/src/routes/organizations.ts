@@ -87,6 +87,12 @@ router.post("/accept-invitation", requireAuth, async (req: AuthenticatedRequest,
       return;
     }
 
+    // Verify the invitation is for this user
+    if (invitation.email.toLowerCase() !== req.userEmail?.toLowerCase()) {
+      res.status(403).json({ error: "This invitation is not for your account" });
+      return;
+    }
+
     // Add user to org
     await OrgMember.create({
       org_id: invitation.org_id,

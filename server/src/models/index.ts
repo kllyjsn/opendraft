@@ -3,6 +3,7 @@ export { Profile, type IProfile } from "./Profile.js";
 export { Listing, type IListing, type ListingCategory, type ListingStatus, type CompletenessBadge, type PricingType } from "./Listing.js";
 
 import mongoose, { Schema } from "mongoose";
+import crypto from "crypto";
 
 // ── Activity Log ──
 const ActivityLogSchema = new Schema({
@@ -272,7 +273,7 @@ export const ListingFlag = mongoose.model("ListingFlag", ListingFlagSchema);
 const ListingVerificationSchema = new Schema({
   listing_id: { type: String, required: true, index: true },
   method: { type: String, default: "dns" },
-  token: { type: String, default: () => Math.random().toString(36).substring(2) },
+  token: { type: String, default: () => crypto.randomBytes(32).toString("hex") },
   status: { type: String, default: "pending" },
   verified_at: { type: Date, default: null },
 }, { timestamps: { createdAt: "created_at", updatedAt: false } });
@@ -334,7 +335,7 @@ const OrgInvitationSchema = new Schema({
   email: { type: String, required: true },
   role: { type: String, enum: ["owner", "admin", "builder", "member"], default: "member" },
   invited_by: { type: String, required: true },
-  token: { type: String, default: () => Math.random().toString(36).substring(2) },
+  token: { type: String, default: () => crypto.randomBytes(32).toString("hex") },
   status: { type: String, default: "pending" },
   expires_at: { type: Date, default: () => new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) },
   accepted_at: { type: Date, default: null },

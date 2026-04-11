@@ -16,12 +16,11 @@ router.get("/login", (_req: Request, res: Response) => {
 });
 
 // GET /api/auth/login/google — Google OAuth via WorkOS
-router.get("/login/google", (req: Request, res: Response) => {
-  const redirectTo = (req.query.redirectTo as string) || undefined;
+router.get("/login/google", (_req: Request, res: Response) => {
   const authorizationUrl = workos.userManagement.getAuthorizationUrl({
     provider: "GoogleOAuth",
     clientId: WORKOS_CLIENT_ID,
-    redirectUri: redirectTo || WORKOS_REDIRECT_URI,
+    redirectUri: WORKOS_REDIRECT_URI,
   });
   res.json({ url: authorizationUrl });
 });

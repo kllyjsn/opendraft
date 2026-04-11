@@ -576,6 +576,31 @@ router.post("/db/query", optionalAuth, async (req: AuthenticatedRequest, res: Re
       return;
     }
 
+    // Tables that require authentication even for reads (contain sensitive/private data)
+    const authRequiredTables = [
+      "user", "users",
+      "agentapikey", "agentapikeys", "agent_api_keys", "agent_api_key",
+      "agentwebhook", "agentwebhooks", "agent_webhooks", "agent_webhook",
+      "orginvitation", "orginvitations", "org_invitations", "org_invitation",
+      "message", "messages",
+      "notification", "notifications",
+      "creditbalance", "creditbalances", "credit_balances", "credit_balance",
+      "credittransaction", "credittransactions", "credit_transactions", "credit_transaction",
+      "purchase", "purchases",
+      "subscription", "subscriptions",
+      "userrole", "userroles", "user_roles", "user_role",
+      "securityauditlog", "securityauditlogs", "security_audit_log", "security_audit_logs",
+      "webhookevent", "webhookevents", "webhook_events", "webhook_event",
+      "conversation", "conversations",
+      "savedidea", "savedideas", "saved_ideas", "saved_idea",
+      "generationjob", "generationjobs", "generation_jobs", "generation_job",
+      "deployedsite", "deployedsites", "deployed_sites", "deployed_site",
+    ];
+    if (!req.userId && authRequiredTables.includes(table.toLowerCase())) {
+      res.status(401).json({ error: `Authentication required to access '${table}'` });
+      return;
+    }
+
     // Block writes to sensitive/admin-only tables via the generic endpoint
     const writeProtectedTables = [
       "user_roles", "userrole", "userroles",

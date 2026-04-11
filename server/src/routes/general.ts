@@ -615,13 +615,22 @@ router.post("/db/query", optionalAuth, async (req: AuthenticatedRequest, res: Re
     const mongoFilter: Record<string, any> = {};
     if (filters) {
       for (const f of filters) {
+        // Helper to merge operator conditions on the same column (e.g. .gte("price",10).lte("price",100))
+        const merge = (col: string, op: Record<string, unknown>) => {
+          const existing = mongoFilter[col];
+          if (existing && typeof existing === "object" && !Array.isArray(existing)) {
+            mongoFilter[col] = { ...existing, ...op };
+          } else {
+            mongoFilter[col] = op;
+          }
+        };
         switch (f.type) {
           case "eq": mongoFilter[f.column] = f.value; break;
-          case "neq": mongoFilter[f.column] = { $ne: f.value }; break;
-          case "gt": mongoFilter[f.column] = { $gt: f.value }; break;
-          case "gte": mongoFilter[f.column] = { $gte: f.value }; break;
-          case "lt": mongoFilter[f.column] = { $lt: f.value }; break;
-          case "lte": mongoFilter[f.column] = { $lte: f.value }; break;
+          case "neq": merge(f.column, { $ne: f.value }); break;
+          case "gt": merge(f.column, { $gt: f.value }); break;
+          case "gte": merge(f.column, { $gte: f.value }); break;
+          case "lt": merge(f.column, { $lt: f.value }); break;
+          case "lte": merge(f.column, { $lte: f.value }); break;
           case "like": mongoFilter[f.column] = { $regex: f.value.replace(/%/g, ".*"), $options: "i" }; break;
           case "ilike": mongoFilter[f.column] = { $regex: f.value.replace(/%/g, ".*"), $options: "i" }; break;
           case "is": mongoFilter[f.column] = f.value === null ? null : f.value; break;
@@ -630,8 +639,8 @@ router.post("/db/query", optionalAuth, async (req: AuthenticatedRequest, res: Re
           case "not": {
             const notOp = f.value?.op;
             const notVal = f.value?.value;
-            if (notOp === "eq") mongoFilter[f.column] = { $ne: notVal };
-            else if (notOp === "in") mongoFilter[f.column] = { $nin: notVal };
+            if (notOp === "eq") merge(f.column, { $ne: notVal });
+            else if (notOp === "in") merge(f.column, { $nin: notVal });
             break;
           }
           case "textSearch": mongoFilter["$text"] = { $search: f.value }; break;

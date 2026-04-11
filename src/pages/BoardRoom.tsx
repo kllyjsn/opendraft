@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
@@ -17,6 +16,7 @@ import {
 import { toast } from "sonner";
 import { CanonicalTag } from "@/components/CanonicalTag";
 import { cn } from "@/lib/utils";
+import { api } from "@/lib/api";
 
 const DIRECTOR_CONFIG: Record<string, { title: string; shortTitle: string; icon: any; color: string; bgColor: string }> = {
   ceo: { title: "Chief Executive Officer", shortTitle: "CEO", icon: Crown, color: "text-amber-500", bgColor: "bg-amber-500/10" },
@@ -72,8 +72,7 @@ export default function BoardRoomPage() {
 
   const fetchMeetings = async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from("swarm_tasks")
+    const { data } = await api.from("swarm_tasks")
       .select("*")
       .eq("agent_type", "board_meeting")
       .order("created_at", { ascending: false })
@@ -87,9 +86,7 @@ export default function BoardRoomPage() {
     toast.info("🏛️ Convening the Board of Directors...");
 
     try {
-      const { data, error } = await supabase.functions.invoke("swarm-board-meeting", {
-        body: { include_synthesis: true },
-      });
+      const { data: data, error } = await api.post<{ data: any }>("/functions/swarm-board-meeting", { include_synthesis: true },);
       if (error) throw error;
       toast.success("✅ Board meeting concluded!");
       fetchMeetings();

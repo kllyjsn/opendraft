@@ -4,7 +4,6 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { CompletenessBadge } from "@/components/CompletenessBadge";
@@ -14,6 +13,7 @@ import { Upload, Plus, X, Link as LinkIcon, Github, FileArchive, CheckCircle2, G
 import { Navigate } from "react-router-dom";
 import { logActivity } from "@/lib/activity-logger";
 import { FounderProgramBanner } from "@/components/FounderProgramBanner";
+import { api } from "@/lib/api";
 
 interface RemixParent {
   id: string;
@@ -55,8 +55,7 @@ export default function Sell() {
   // Load remix parent info
   useEffect(() => {
     if (!remixId) return;
-    supabase
-      .from("listings")
+    api.from("listings")
       .select("id, title")
       .eq("id", remixId)
       .single()
@@ -105,12 +104,12 @@ export default function Sell() {
     if (!user) return;
     setUploadingScreenshot(true);
     const path = `${user.id}/${Date.now()}-${file.name}`;
-    const { data, error } = await supabase.storage.from("listing-screenshots").upload(path, file, { upsert: true });
-    if (error) {
-      toast({ title: "Upload failed", description: error.message, variant: "destructive" });
+    const { data, error } = await api.post<{ path: string }>("/storage/upload", { bucket: "listing-screenshots", path, file }).catch((e: any) => ({ data: null, error: e }));
+    if (error || !data) {
+      toast({ title: "Upload failed", description: error?.message || "Upload failed", variant: "destructive" });
     } else {
-      const { data: urlData } = supabase.storage.from("listing-screenshots").getPublicUrl(data.path);
-      update("screenshots", [...form.screenshots, urlData.publicUrl]);
+      const publicUrl = `${import.meta.env.VITE_API_URL || "http://localhost:3001/api"}/storage/public/listing-screenshots/${data.path}`;
+      update("screenshots", [...form.screenshots, publicUrl]);
     }
     setUploadingScreenshot(false);
   }
@@ -119,7 +118,7 @@ export default function Sell() {
     if (!user) return;
     setUploadingFile(true);
     const path = `${user.id}/${Date.now()}-${file.name}`;
-    const { data, error } = await supabase.storage.from("listing-files").upload(path, file, { upsert: true });
+    const { data, error } = await api.post("/storage/upload", { bucket: "listing-files", path: path, file: file });
     if (error) {
       toast({ title: "Upload failed", description: error.message, variant: "destructive" });
     } else {
@@ -148,7 +147,7 @@ export default function Sell() {
     }
     const priceInCents = Math.round(priceFloat * 100);
 
-    const { data: insertedData, error } = await supabase.from("listings").insert([{
+    const { data: insertedData, error } = await api.from("listings").insert([{
       seller_id: user.id,
       title: form.title,
       description: form.description,
@@ -171,7 +170,7 @@ export default function Sell() {
     } else {
       // Create remix chain entry if this is a remix
       if (remixParent && insertedData?.id) {
-        await supabase.from("remix_chains").insert({
+        await api.from("remix_chains").insert({
           parent_listing_id: remixParent.id,
           child_listing_id: insertedData.id,
           remixer_id: user.id,
@@ -179,17 +178,14 @@ export default function Sell() {
       }
 
       // Send creator welcome email for first listing (fire-and-forget)
-      const { count } = await supabase
-        .from("listings")
+      const { count } = await api.from("listings")
         .select("id", { count: "exact", head: true })
         .eq("seller_id", user.id);
       if (count === 1) {
-        supabase.functions.invoke("creator-welcome-email", {
-          body: {
+        api.post("/functions/creator-welcome-email", {
             email: user.email,
-            username: user.user_metadata?.name || user.email?.split("@")[0],
+            username: user.email?.split("@")[0] || "Builder",
             listing_title: form.title,
-          },
         }).catch(() => {}); // fire-and-forget
       }
 

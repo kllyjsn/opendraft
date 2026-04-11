@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { Package, Users, ShoppingBag, Star, Bot, Building2 } from "lucide-react";
+import { api } from "@/lib/api";
 
 interface StatItem {
   icon: typeof Package;
@@ -37,9 +37,9 @@ export function LiveStatsBar() {
   useEffect(() => {
     async function load() {
       const [listingsRes, purchasesRes, profilesRes] = await Promise.all([
-        supabase.from("listings").select("id", { count: "exact", head: true }).eq("status", "live"),
-        supabase.from("purchases").select("id", { count: "exact", head: true }),
-        supabase.from("public_profiles").select("user_id", { count: "exact", head: true }),
+        api.from("listings").select("id", { count: "exact", head: true }).eq("status", "live"),
+        api.from("purchases").select("id", { count: "exact", head: true }),
+        api.from("public_profiles").select("user_id", { count: "exact", head: true }),
       ]);
 
       const appCount = listingsRes.count ?? 0;

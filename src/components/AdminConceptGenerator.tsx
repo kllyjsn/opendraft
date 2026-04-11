@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Sparkles, Loader2, CheckCircle2, Zap, Package, FileCode2 } from "lucide-react";
+import { api } from "@/lib/api";
 
 interface GeneratedConcept {
   title: string;
@@ -46,9 +46,7 @@ export function AdminConceptGenerator() {
     setLoading(true);
     setConceptResults(null);
     try {
-      const { data, error } = await supabase.functions.invoke("generate-listing-concept", {
-        body: { count },
-      });
+      const { data: data, error } = await api.post<{ data: any }>("/functions/generate-listing-concept", { count },);
       if (error) throw new Error(error.message);
       if (!data?.success) throw new Error(data?.error || "Generation failed");
       setConceptResults(data.concepts);
@@ -65,9 +63,7 @@ export function AdminConceptGenerator() {
     setTemplateResult(null);
     try {
       const themes = theme.trim() ? [theme.trim()] : [];
-      const { data, error } = await supabase.functions.invoke("generate-template-app", {
-        body: { count: templateCount, themes },
-      });
+      const { data: data, error } = await api.post<{ data: any }>("/functions/generate-template-app", { count: templateCount, themes },);
       if (error) throw new Error(error.message);
       if (!data?.success) throw new Error(data?.error || "Generation failed");
       setTemplateResult(data);

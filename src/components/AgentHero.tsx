@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Bot, Zap, Search, ShoppingCart, Bell, Key, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { api } from "@/lib/api";
 
 const capabilities = [
   { icon: Search, label: "Search & discover", desc: "Find apps by keyword, category, tech stack, or price" },

@@ -5,8 +5,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { GitFork } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { api } from "@/lib/api";
 
 interface RequestForkDialogProps {
   listingId: string;
@@ -28,12 +28,12 @@ export function RequestForkDialog({ listingId, listingTitle, builderId, builderN
     setSubmitting(true);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { user } = await api.get<{ user: any }>("/auth/me");
       if (!user) throw new Error("Please sign in first");
 
       const budgetCents = budget ? Math.round(parseFloat(budget) * 100) : null;
 
-      const { error } = await supabase.from("fork_requests" as any).insert({
+      const { error } = await api.from("fork_requests" as any).insert({
         listing_id: listingId,
         requester_id: user.id,
         builder_id: builderId,

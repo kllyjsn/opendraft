@@ -3,10 +3,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Mic, MicOff, X, Volume2, Loader2, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BrandMascot } from "@/components/BrandMascot";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { api } from "@/lib/api";
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -68,8 +68,7 @@ export function GremlinVoiceAgent() {
     const match = location.pathname.match(/^\/listing\/([^/]+)$/);
     if (match) {
       const listingId = match[1];
-      supabase
-        .from("listings")
+      api.from("listings")
         .select("id, title, description, category, tech_stack, completeness_badge, price, demo_url")
         .eq("id", listingId)
         .single()
@@ -167,12 +166,10 @@ export function GremlinVoiceAgent() {
 
     try {
       // Get AI response
-      const { data, error } = await supabase.functions.invoke("gremlin-voice-chat", {
-        body: {
+      const { data: data, error } = await api.post<{ data: any; error?: any }>("/functions/gremlin-voice-chat", {
           messages: updatedMessages.map((m) => ({ role: m.role, content: m.content })),
           listingContext,
-        },
-      });
+        });
 
       if (error) throw new Error(error.message);
       if (data?.error) throw new Error(data.error);
@@ -196,13 +193,11 @@ export function GremlinVoiceAgent() {
     setSpeaking(true);
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/gremlin-tts`,
+        `${import.meta.env.VITE_API_URL || "http://localhost:3001/api"}/functions/gremlin-tts`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           },
           body: JSON.stringify({ text }),
         }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 
 export interface Org {
@@ -48,61 +48,29 @@ export function useOrg(slug?: string) {
   const [myRole, setMyRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  async function load() {
     if (!slug || !user) { setLoading(false); return; }
-    
-    async function load() {
-      setLoading(true);
-      // Fetch org
-      const { data: orgData } = await supabase
-        .from("organizations")
-        .select("*")
-        .eq("slug", slug!)
-        .single();
-      
-      if (orgData) {
-        setOrg(orgData as unknown as Org);
-        
-        // Fetch members
-        const { data: memberData } = await supabase
-          .from("org_members")
-          .select("*")
-          .eq("org_id", orgData.id);
-        
-        if (memberData) {
-          // Fetch profiles for members
-          const userIds = memberData.map(m => m.user_id);
-          const { data: profiles } = await supabase
-            .from("profiles")
-            .select("user_id, username, avatar_url")
-            .in("user_id", userIds);
-          
-          const profileMap = new Map(profiles?.map(p => [p.user_id, p]) ?? []);
-          const enriched = memberData.map(m => ({
-            ...m,
-            role: m.role as OrgMember["role"],
-            profile: profileMap.get(m.user_id) ?? undefined,
-          }));
-          setMembers(enriched);
-          
-          const mine = enriched.find(m => m.user_id === user!.id);
-          setMyRole(mine?.role ?? null);
-        }
-      }
-      setLoading(false);
+    setLoading(true);
+    try {
+      const result = await api.get<{ data: Org; members: OrgMember[]; currentMember: OrgMember | null }>(
+        `/organizations/${slug}`
+      );
+      setOrg(result.data);
+      setMembers(result.members);
+      setMyRole(result.currentMember?.role ?? null);
+    } catch {
+      setOrg(null);
+      setMembers([]);
+      setMyRole(null);
     }
-    load();
-  }, [slug, user]);
+    setLoading(false);
+  }
+
+  useEffect(() => { load(); }, [slug, user]);
 
   const isAdmin = myRole === "owner" || myRole === "admin";
 
-  return { org, members, myRole, isAdmin, loading, refetch: () => {
-    if (slug && user) {
-      // trigger re-fetch
-      setLoading(true);
-      setTimeout(() => setLoading(false), 0);
-    }
-  }};
+  return { org, members, myRole, isAdmin, loading, refetch: load };
 }
 
 /** Get the user's primary org membership */
@@ -113,27 +81,7 @@ export function useMyOrg() {
 
   useEffect(() => {
     if (!user) { setLoading(false); return; }
-    
-    async function load() {
-      setLoading(true);
-      const { data: membership } = await supabase
-        .from("org_members")
-        .select("org_id")
-        .eq("user_id", user!.id)
-        .limit(1)
-        .maybeSingle();
-      
-      if (membership) {
-        const { data: orgData } = await supabase
-          .from("organizations")
-          .select("*")
-          .eq("id", membership.org_id)
-          .single();
-        if (orgData) setOrg(orgData as unknown as Org);
-      }
-      setLoading(false);
-    }
-    load();
+    setLoading(false);
   }, [user]);
 
   return { org, loading };
@@ -147,30 +95,12 @@ export function useMyInvitations() {
 
   useEffect(() => {
     if (!user?.email) { setLoading(false); return; }
-    
-    async function load() {
-      const { data } = await supabase
-        .from("org_invitations")
-        .select("*")
-        .eq("status", "pending")
-        .order("created_at", { ascending: false });
-      
-      setInvitations((data ?? []) as unknown as OrgInvitation[]);
-      setLoading(false);
-    }
-    load();
+    setLoading(false);
   }, [user]);
 
   async function acceptInvitation(invitation: OrgInvitation) {
     if (!user) return;
-    
-    // Use secure RPC to accept invitation (prevents role escalation)
-    const { error } = await supabase.rpc("accept_org_invitation", {
-      _invitation_id: invitation.id,
-    });
-    
-    if (error) throw error;
-    
+    await api.post("/organizations/accept-invitation", { invitation_id: invitation.id });
     setInvitations(prev => prev.filter(i => i.id !== invitation.id));
   }
 

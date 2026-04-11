@@ -5,13 +5,13 @@ import { Footer } from "@/components/Footer";
 import { FollowButton } from "@/components/FollowButton";
 import { ListingCard } from "@/components/ListingCard";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { supabase } from "@/integrations/supabase/client";
 import { useFollow } from "@/hooks/useFollow";
 import { Calendar, Package, Users, Star } from "lucide-react";
 import { BuilderStatsCard } from "@/components/BuilderStatsCard";
 import { useAuth } from "@/hooks/useAuth";
 import { JsonLd } from "@/components/JsonLd";
 import { CanonicalTag } from "@/components/CanonicalTag";
+import { api } from "@/lib/api";
 
 interface ProfileData {
   user_id: string;
@@ -52,13 +52,11 @@ export default function BuilderProfile() {
     async function load() {
       setLoading(true);
       const [profileRes, listingsRes] = await Promise.all([
-        supabase
-          .from("public_profiles")
+        api.from("public_profiles")
           .select("user_id, username, avatar_url, bio, total_sales, created_at")
           .eq("user_id", userId)
           .single(),
-        supabase
-          .from("listings")
+        api.from("listings")
           .select("id, title, description, price, completeness_badge, category, tech_stack, screenshots, sales_count, view_count, pricing_type, demo_url, seller_id, security_score, agent_ready")
           .eq("seller_id", userId)
           .eq("status", "live")

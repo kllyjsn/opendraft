@@ -5,11 +5,11 @@ import { BountyCard } from "@/components/BountyCard";
 import { CreateBountyDialog } from "@/components/CreateBountyDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { MetaTags } from "@/components/MetaTags";
 import { Search, Target, SlidersHorizontal } from "lucide-react";
 import { Link } from "react-router-dom";
+import { api } from "@/lib/api";
 
 const CATEGORIES = ["All", "SaaS Tool", "AI App", "Landing Page", "Utility", "Game", "Other"];
 const categoryMap: Record<string, string> = {
@@ -42,8 +42,7 @@ export default function Bounties() {
 
   async function fetchBounties() {
     setLoading(true);
-    let query = supabase
-      .from("bounties")
+    let query = api.from("bounties")
       .select("*")
       .eq("status", "open")
       .order("created_at", { ascending: false });
@@ -62,8 +61,7 @@ export default function Bounties() {
     const posterIds = [...new Set(bountyData.map((b) => b.poster_id))];
     let profileMap: Record<string, string> = {};
     if (posterIds.length > 0) {
-      const { data: profiles } = await supabase
-        .from("public_profiles")
+      const { data: profiles } = await api.from("public_profiles")
         .select("user_id, username")
         .in("user_id", posterIds);
       profileMap = Object.fromEntries((profiles ?? []).map((p) => [p.user_id, p.username ?? "Anonymous"]));

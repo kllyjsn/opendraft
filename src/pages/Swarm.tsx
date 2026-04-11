@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
@@ -13,6 +12,7 @@ import { toast } from "sonner";
 import { CanonicalTag } from "@/components/CanonicalTag";
 import { cn } from "@/lib/utils";
 import { OutreachDashboard } from "@/components/OutreachDashboard";
+import { api } from "@/lib/api";
 
 interface SwarmTask {
   id: string;
@@ -112,8 +112,7 @@ export default function SwarmPage() {
 
   const fetchTasks = async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from("swarm_tasks")
+    const { data } = await api.from("swarm_tasks")
       .select("*")
       .order("created_at", { ascending: false })
       .limit(100);
@@ -129,9 +128,7 @@ export default function SwarmPage() {
     toast.info(`🤖 ${config.label} agent starting...`);
 
     try {
-      const { data, error } = await supabase.functions.invoke(config.functionName, {
-        body: { action, triggered_by: "manual" },
-      });
+      const { data, error } = await api.post<{ data: any; error?: any }>(`/functions/${config.functionName}`, { action, triggered_by: "manual" }).catch((e: any) => ({ data: null, error: e }));
 
       if (error) throw error;
       toast.success(`✅ ${config.label} agent completed!`);

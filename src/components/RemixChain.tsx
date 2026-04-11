@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { GitFork, ChevronRight } from "lucide-react";
+import { api } from "@/lib/api";
 
 interface ChainNode {
   id: string;
@@ -34,22 +34,19 @@ export function RemixChain({ listingId }: RemixChainProps) {
 
     while (currentId && !visited.has(currentId)) {
       visited.add(currentId);
-      const { data: chain } = await supabase
-        .from("remix_chains")
+      const { data: chain } = await api.from("remix_chains")
         .select("parent_listing_id")
         .eq("child_listing_id", currentId)
         .maybeSingle();
 
       if (chain?.parent_listing_id) {
-        const { data: parent } = await supabase
-          .from("listings")
+        const { data: parent } = await api.from("listings")
           .select("id, title, seller_id")
           .eq("id", chain.parent_listing_id)
           .single();
 
         if (parent) {
-          const { data: profile } = await supabase
-            .from("public_profiles")
+          const { data: profile } = await api.from("public_profiles")
             .select("username")
             .eq("user_id", parent.seller_id)
             .single();
@@ -68,23 +65,20 @@ export function RemixChain({ listingId }: RemixChainProps) {
     setAncestors(ancestorList);
 
     // Get direct children (remixes of this listing)
-    const { data: childChains } = await supabase
-      .from("remix_chains")
+    const { data: childChains } = await api.from("remix_chains")
       .select("child_listing_id")
       .eq("parent_listing_id", listingId);
 
     if (childChains && childChains.length > 0) {
       const childIds = childChains.map((c) => c.child_listing_id);
-      const { data: childListings } = await supabase
-        .from("listings")
+      const { data: childListings } = await api.from("listings")
         .select("id, title, seller_id")
         .in("id", childIds)
         .eq("status", "live");
 
       if (childListings) {
         const sellerIds = [...new Set(childListings.map((l) => l.seller_id))];
-        const { data: profiles } = await supabase
-          .from("public_profiles")
+        const { data: profiles } = await api.from("public_profiles")
           .select("user_id, username")
           .in("user_id", sellerIds);
         const profileMap = Object.fromEntries(

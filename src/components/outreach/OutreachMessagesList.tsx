@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,6 +14,7 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import { api } from "@/lib/api";
 
 interface OutreachMessage {
   id: string;
@@ -69,12 +69,12 @@ export function OutreachMessagesList({ campaignId, onStatsChange, defaultFilter 
 
   const fetchData = async () => {
     setLoading(true);
-    let query = supabase.from("outreach_messages").select("*").order("created_at", { ascending: false }).limit(200);
+    let query = api.from("outreach_messages").select("*").order("created_at", { ascending: false }).limit(200);
     if (campaignId) query = query.eq("campaign_id", campaignId);
 
     const [msgsRes, leadsRes] = await Promise.all([
       query,
-      supabase.from("outreach_leads").select("id, business_name, contact_email, industry, lead_status"),
+      api.from("outreach_leads").select("id, business_name, contact_email, industry, lead_status"),
     ]);
 
     setMessages((msgsRes.data as OutreachMessage[]) || []);
@@ -103,7 +103,7 @@ export function OutreachMessagesList({ campaignId, onStatsChange, defaultFilter 
         subject: `Re: ${msg.subject || "Your message"}`,
         text: `Hi there,\n\nThanks for reaching out! We're interested in learning more about what you offer. Could you send over some pricing details?\n\nBest regards,\n${lead.business_name}`,
       };
-      const { error } = await supabase.functions.invoke("outreach-inbound", { body: mockPayload });
+      const { data: data, error } = await api.post<{ data: any }>("/functions/outreach-inbound", mockPayload);
       if (error) throw error;
       toast.success(`Simulated reply from ${lead.business_name}`);
       await fetchData();
@@ -120,7 +120,7 @@ export function OutreachMessagesList({ campaignId, onStatsChange, defaultFilter 
 
   const saveEdit = async (msgId: string) => {
     setSaving(true);
-    const { error } = await supabase.from("outreach_messages").update({ subject: editSubject, body: editBody }).eq("id", msgId);
+    const { error } = await api.from("outreach_messages").update({ subject: editSubject, body: editBody }).eq("id", msgId);
     if (error) { toast.error("Failed to save"); } else {
       toast.success("Draft updated");
       setMessages(prev => prev.map(m => m.id === msgId ? { ...m, subject: editSubject, body: editBody } : m));
@@ -134,9 +134,7 @@ export function OutreachMessagesList({ campaignId, onStatsChange, defaultFilter 
     if (!sendConfirmId) return;
     setSending(true);
     try {
-      const { data, error } = await supabase.functions.invoke("swarm-b2b-outreach", {
-        body: { action: "send_single", message_id: sendConfirmId, triggered_by: "manual" },
-      });
+      const { data: data, error } = await api.post<{ data: any }>("/functions/swarm-b2b-outreach", { action: "send_single", message_id: sendConfirmId, triggered_by: "manual" },);
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       toast.success("Email sent!");
@@ -162,12 +160,10 @@ export function OutreachMessagesList({ campaignId, onStatsChange, defaultFilter 
     if (!replyingTo || !replyBody.trim()) return;
     setReplySending(true);
     try {
-      const { data, error } = await supabase.functions.invoke("swarm-b2b-outreach", {
-        body: {
+      const { data: data, error } = await api.post<{ data: any }>("/functions/swarm-b2b-outreach", {
           action: "reply_to_lead", lead_id: replyingTo.leadId, campaign_id: replyingTo.campaignId,
           subject: replySubject, body: replyBody.trim(), triggered_by: "manual",
-        },
-      });
+        },);
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       toast.success("Reply sent!");

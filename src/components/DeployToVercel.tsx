@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { ExternalLink, Loader2, CheckCircle, AlertCircle, Key, ArrowRight, Globe, Upload, Server, Sparkles, Triangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -76,7 +75,8 @@ export function DeployToVercel({ listingId, listingTitle, hasFile, githubUrl }: 
       }
 
       setCurrentStep("auth");
-      const { data: { session } } = await supabase.auth.getSession();
+      const session = { access_token: localStorage.getItem("opendraft_token") };
+      if (!localStorage.getItem("opendraft_token")) throw new Error("Not authenticated");
 
       setCurrentStep("download");
       await new Promise(r => setTimeout(r, 400));
@@ -86,7 +86,7 @@ export function DeployToVercel({ listingId, listingTitle, hasFile, githubUrl }: 
 
       setCurrentStep("deploy");
 
-      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/deploy-to-vercel`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:3001/api"}/functions/deploy-to-vercel`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

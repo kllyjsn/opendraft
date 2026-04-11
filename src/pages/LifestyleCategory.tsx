@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { ListingCard } from "@/components/ListingCard";
-import { supabase } from "@/integrations/supabase/client";
 import { MetaTags } from "@/components/MetaTags";
 import { JsonLd } from "@/components/JsonLd";
 import { Button } from "@/components/ui/button";
@@ -15,6 +14,7 @@ import healthFitnessImg from "@/assets/category-health-fitness.jpg";
 import personalFinanceImg from "@/assets/category-personal-finance.jpg";
 import productivityImg from "@/assets/category-productivity.jpg";
 import builtForAgentsImg from "@/assets/category-built-for-agents.jpg";
+import { api } from "@/lib/api";
 
 interface LifestyleCategoryMeta {
   label: string;
@@ -100,7 +100,7 @@ export default function LifestyleCategory() {
       // Use search_listings RPC with combined terms for better matching
       const searchQuery = meta!.searchTerms.slice(0, 5).join(" | ");
       
-      const { data } = await supabase.rpc("search_listings", {
+      await api.post("/rpc/search_listings", {
         search_query: searchQuery,
         page_limit: 48,
         page_offset: 0,
@@ -110,8 +110,7 @@ export default function LifestyleCategory() {
       let results = (data ?? []) as unknown as Listing[];
 
       // Also fetch staff picks for this lifestyle category
-      const { data: staffPicks } = await supabase
-        .from("listings")
+      const { data: staffPicks } = await api.from("listings")
         .select("id,title,description,price,completeness_badge,tech_stack,screenshots,sales_count,view_count,built_with,seller_id,security_score,staff_pick,agent_ready")
         .eq("status", "live")
         .eq("staff_pick", true)

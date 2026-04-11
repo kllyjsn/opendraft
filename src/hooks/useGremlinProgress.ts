@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/lib/api";
 import { useAuth } from "./useAuth";
 
 export interface GremlinStep {
@@ -42,28 +42,19 @@ export function useGremlinProgress(): GremlinProgress {
     }
 
     async function check() {
-      const [subRes, purchaseRes, deployRes] = await Promise.all([
-        supabase
-          .from("subscriptions")
-          .select("id")
-          .eq("user_id", user!.id)
-          .eq("status", "active")
-          .limit(1),
-        supabase
-          .from("purchases")
-          .select("id")
-          .eq("buyer_id", user!.id)
-          .limit(1),
-        supabase
-          .from("deployed_sites")
-          .select("id")
-          .eq("user_id", user!.id)
-          .limit(1),
-      ]);
+      try {
+        const [subRes, purchaseRes, deployRes] = await Promise.all([
+          api.get<{ data: any }>("/subscriptions/me"),
+          api.get<{ count: number }>("/purchases/count"),
+          api.get<{ data: any[] }>("/deployed-sites"),
+        ]);
 
-      setHasSubscription((subRes.data?.length ?? 0) > 0);
-      setHasPurchase((purchaseRes.data?.length ?? 0) > 0);
-      setHasDeploy((deployRes.data?.length ?? 0) > 0);
+        setHasSubscription(!!subRes.data);
+        setHasPurchase((purchaseRes.count ?? 0) > 0);
+        setHasDeploy((deployRes.data?.length ?? 0) > 0);
+      } catch {
+        // ignore
+      }
       setLoading(false);
     }
 

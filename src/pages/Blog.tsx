@@ -7,9 +7,9 @@ import { JsonLd } from "@/components/JsonLd";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Share2, Clock, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { BlogInlineCTA } from "@/components/BlogInlineCTA";
 import { motion, useScroll, useSpring } from "framer-motion";
+import { api } from "@/lib/api";
 
 interface BlogPost {
   slug: string;
@@ -431,8 +431,7 @@ function BlogIndex() {
   const [activeCategory, setActiveCategory] = useState<string>("all");
 
   useEffect(() => {
-    supabase
-      .from("blog_posts")
+    api.from("blog_posts")
       .select("slug, title, description, category, read_time, content, created_at")
       .eq("published", true)
       .order("created_at", { ascending: false })
@@ -593,8 +592,7 @@ function BlogPost() {
 
   useEffect(() => {
     if (!slug || staticPost) return;
-    supabase
-      .from("blog_posts")
+    api.from("blog_posts")
       .select("slug, title, description, category, read_time, content, created_at")
       .eq("slug", slug)
       .eq("published", true)
@@ -646,7 +644,7 @@ function BlogPost() {
 
   const ogImageUrl = post.slug === "vibe-coding-state-of-the-market"
     ? "https://opendraft.co/og-vibe-coding-report.png"
-    : `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/blog-og-image?slug=${post.slug}&title=${encodeURIComponent(post.title)}&category=${encodeURIComponent(post.category)}`;
+    : `${import.meta.env.VITE_API_URL || "http://localhost:3001/api"}/functions/blog-og-image?slug=${post.slug}&title=${encodeURIComponent(post.title)}&category=${encodeURIComponent(post.category)}`;
 
   const wordCount = post.content.join(" ").split(/\s+/).length;
 

@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { ScoreRing } from "@/components/ScoreRing";
 import { ConfettiExplosion } from "@/components/ConfettiExplosion";
 import { BrandMascot } from "@/components/BrandMascot";
+import { api } from "@/lib/api";
 import {
   Sparkles, CheckCircle, XCircle, Clock, ChevronDown, ChevronUp,
   Loader2, Zap, Shield, Palette, Accessibility, Bug, Code,
@@ -124,8 +124,7 @@ export function ListingImprovementPanel({ listingId, listingTitle, demoUrl }: Pr
 
   async function loadGoals() {
     if (!user) return;
-    const { data } = await supabase
-      .from("project_goals" as any)
+    const { data } = await api.from("project_goals" as any)
       .select("goals_prompt, auto_improve")
       .eq("listing_id", listingId)
       .eq("user_id", user.id)
@@ -149,10 +148,10 @@ export function ListingImprovementPanel({ listingId, listingTitle, demoUrl }: Pr
       structured_goals: { source: "manual", updated_at: new Date().toISOString() },
     };
     const { error } = hasGoals
-      ? await supabase.from("project_goals" as any)
+      ? await api.from("project_goals" as any)
           .update({ goals_prompt: goalsPrompt, structured_goals: payload.structured_goals })
           .eq("listing_id", listingId).eq("user_id", user.id)
-      : await supabase.from("project_goals" as any).insert(payload);
+      : await api.from("project_goals" as any).insert(payload);
     if (error) {
       toast({ title: "Failed to save goals", description: error.message, variant: "destructive" });
     } else {
@@ -168,10 +167,10 @@ export function ListingImprovementPanel({ listingId, listingTitle, demoUrl }: Pr
     setTogglingAuto(true);
     const newVal = !autoImprove;
     if (hasGoals) {
-      await supabase.from("project_goals" as any).update({ auto_improve: newVal })
+      await api.from("project_goals" as any).update({ auto_improve: newVal })
         .eq("listing_id", listingId).eq("user_id", user.id);
     } else {
-      await supabase.from("project_goals" as any).insert({
+      await api.from("project_goals" as any).insert({
         user_id: user.id, listing_id: listingId,
         goals_prompt: goalsPrompt || listingTitle,
         auto_improve: newVal,
@@ -189,8 +188,7 @@ export function ListingImprovementPanel({ listingId, listingTitle, demoUrl }: Pr
 
   async function loadCycles() {
     if (!user) return;
-    const { data } = await supabase
-      .from("improvement_cycles" as any)
+    const { data } = await api.from("improvement_cycles" as any)
       .select("*")
       .eq("listing_id", listingId)
       .eq("user_id", user.id)
@@ -203,8 +201,7 @@ export function ListingImprovementPanel({ listingId, listingTitle, demoUrl }: Pr
     // Count applied
     let applied = 0;
     for (const c of cycleData) {
-      const { count } = await supabase
-        .from("improvement_changes" as any)
+      const { count } = await api.from("improvement_changes" as any)
         .select("*", { count: "exact", head: true })
         .eq("cycle_id", c.id)
         .eq("approved", true);
@@ -220,8 +217,7 @@ export function ListingImprovementPanel({ listingId, listingTitle, demoUrl }: Pr
 
   async function loadChanges(cycleId: string) {
     if (changes[cycleId]) return;
-    const { data } = await supabase
-      .from("improvement_changes" as any)
+    const { data } = await api.from("improvement_changes" as any)
       .select("*")
       .eq("cycle_id", cycleId);
     setChanges((prev) => ({ ...prev, [cycleId]: (data as any[]) ?? [] }));
@@ -233,9 +229,7 @@ export function ListingImprovementPanel({ listingId, listingTitle, demoUrl }: Pr
     setMessage("");
     setAnalyzing(true);
     try {
-      const { data, error } = await supabase.functions.invoke("swarm-app-analyzer", {
-        body: { listing_id: listingId, trigger: "manual", user_id: user.id, focus_prompt: userMessage || undefined },
-      });
+      const { data: data, error } = await api.post<{ data: any }>("/functions/swarm-app-analyzer", { listing_id: listingId, trigger: "manual", user_id: user.id, focus_prompt: userMessage || undefined },);
       if (error) throw error;
       toast({ title: `Analysis complete — Score: ${data.score}/100 🔍` });
       loadCycles();
@@ -251,8 +245,7 @@ export function ListingImprovementPanel({ listingId, listingTitle, demoUrl }: Pr
   }
 
   async function approveChange(changeId: string, approved: boolean, description?: string) {
-    await supabase
-      .from("improvement_changes" as any)
+    await api.from("improvement_changes" as any)
       .update({ approved, applied_at: approved ? new Date().toISOString() : null })
       .eq("id", changeId);
     setChanges((prev) => {
@@ -276,7 +269,7 @@ export function ListingImprovementPanel({ listingId, listingTitle, demoUrl }: Pr
     let count = 0;
     for (const change of cycleChanges) {
       if (change.approved === null) {
-        await supabase.from("improvement_changes" as any)
+        await api.from("improvement_changes" as any)
           .update({ approved: true, applied_at: new Date().toISOString() })
           .eq("id", change.id);
         count++;
@@ -289,7 +282,7 @@ export function ListingImprovementPanel({ listingId, listingTitle, demoUrl }: Pr
       }
       return updated;
     });
-    await supabase.from("improvement_cycles" as any).update({ status: "approved" }).eq("id", cycleId);
+    await api.from("improvement_cycles" as any).update({ status: "approved" }).eq("id", cycleId);
     setCycles((prev) => prev.map((c) => (c.id === cycleId ? { ...c, status: "approved" } : c)));
     setAppliedCount((p) => p + count);
     setShowConfetti(true);

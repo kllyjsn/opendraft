@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
 import { ListingCard } from "./ListingCard";
 import { Award } from "lucide-react";
+import { api } from "@/lib/api";
 
 interface StaffPickListing {
   id: string;
@@ -35,8 +35,7 @@ export function StaffPicks() {
   useEffect(() => {
     async function load() {
       // Fetch staff picks that have real screenshots (no empty/SVG placeholders)
-      const { data } = await supabase
-        .from("listings")
+      const { data } = await api.from("listings")
         .select("id,title,description,price,pricing_type,completeness_badge,tech_stack,screenshots,sales_count,view_count,built_with,seller_id,security_score")
         .eq("status", "live")
         .eq("staff_pick", true)
@@ -55,8 +54,7 @@ export function StaffPicks() {
       }
 
       // Fallback: top listings with real screenshots
-      const { data: fallback } = await supabase
-        .from("listings")
+      const { data: fallback } = await api.from("listings")
         .select("id,title,description,price,pricing_type,completeness_badge,tech_stack,screenshots,sales_count,view_count,built_with,seller_id,security_score")
         .eq("status", "live")
         .eq("completeness_badge", "production_ready" as any)

@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 
 // Generate a short notification chime using Web Audio API
@@ -8,7 +8,6 @@ function playNotificationSound() {
     const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
     const now = ctx.currentTime;
 
-    // Two-tone chime: C5 → E5
     [523.25, 659.25].forEach((freq, i) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
@@ -21,10 +20,9 @@ function playNotificationSound() {
       osc.stop(now + i * 0.12 + 0.3);
     });
 
-    // Clean up context after sounds finish
     setTimeout(() => ctx.close(), 1000);
   } catch {
-    // Audio not available — silent fallback
+    // Audio not available
   }
 }
 
@@ -35,8 +33,8 @@ function showBrowserNotification(count: number) {
     const notification = new Notification("OpenDraft", {
       body: `You have ${count} new message${count !== 1 ? "s" : ""}`,
       icon: "/favicon.ico",
-      tag: "opendraft-message", // Replaces previous notification
-      silent: true, // We play our own sound
+      tag: "opendraft-message",
+      silent: true,
     });
 
     notification.onclick = () => {
@@ -45,7 +43,6 @@ function showBrowserNotification(count: number) {
       notification.close();
     };
 
-    // Auto-close after 5 seconds
     setTimeout(() => notification.close(), 5000);
   } catch {
     // Notifications not supported
@@ -58,7 +55,6 @@ export function useUnreadMessages() {
   const prevCountRef = useRef(0);
   const initialLoadDone = useRef(false);
 
-  // Request notification permission on first use
   useEffect(() => {
     if (user && "Notification" in window && Notification.permission === "default") {
       Notification.requestPermission();
@@ -68,38 +64,22 @@ export function useUnreadMessages() {
   const fetchUnreadCount = useCallback(async () => {
     if (!user) return;
 
-    const { data: conversations } = await supabase
-      .from("conversations")
-      .select("id")
-      .or(`buyer_id.eq.${user.id},seller_id.eq.${user.id}`);
+    try {
+      const { count } = await api.get<{ count: number }>("/conversations/unread-count");
+      const newCount = count ?? 0;
 
-    if (!conversations || conversations.length === 0) {
-      setUnreadCount(0);
-      prevCountRef.current = 0;
-      return;
+      if (initialLoadDone.current && newCount > prevCountRef.current) {
+        const newMessages = newCount - prevCountRef.current;
+        playNotificationSound();
+        showBrowserNotification(newMessages);
+      }
+
+      prevCountRef.current = newCount;
+      initialLoadDone.current = true;
+      setUnreadCount(newCount);
+    } catch {
+      // ignore
     }
-
-    const conversationIds = conversations.map((c) => c.id);
-
-    const { count } = await supabase
-      .from("messages")
-      .select("id", { count: "exact", head: true })
-      .in("conversation_id", conversationIds)
-      .eq("read", false)
-      .neq("sender_id", user.id);
-
-    const newCount = count ?? 0;
-
-    // Only notify if count increased (new message arrived) and not initial load
-    if (initialLoadDone.current && newCount > prevCountRef.current) {
-      const newMessages = newCount - prevCountRef.current;
-      playNotificationSound();
-      showBrowserNotification(newMessages);
-    }
-
-    prevCountRef.current = newCount;
-    initialLoadDone.current = true;
-    setUnreadCount(newCount);
   }, [user]);
 
   useEffect(() => {
@@ -112,20 +92,9 @@ export function useUnreadMessages() {
 
     fetchUnreadCount();
 
-    const channel = supabase
-      .channel("unread-messages-count")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "messages" },
-        () => {
-          fetchUnreadCount();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    // Poll every 30 seconds instead of realtime subscription
+    const interval = setInterval(fetchUnreadCount, 30000);
+    return () => clearInterval(interval);
   }, [user, fetchUnreadCount]);
 
   return { unreadCount };

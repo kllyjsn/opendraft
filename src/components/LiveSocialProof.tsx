@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { TrendingUp, Users, Zap, Globe, BarChart3 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/lib/api";
 
 interface Stats {
   analyzedToday: number;
@@ -26,19 +26,15 @@ export function LiveSocialProof() {
         const today = new Date().toISOString().split("T")[0];
 
         const [todayResult, totalResult, listingResult, recentResult] = await Promise.all([
-          supabase
-            .from("analyzed_urls")
+          api.from("analyzed_urls")
             .select("id", { count: "exact", head: true })
             .gte("created_at", today),
-          supabase
-            .from("analyzed_urls")
+          api.from("analyzed_urls")
             .select("id", { count: "exact", head: true }),
-          supabase
-            .from("listings")
+          api.from("listings")
             .select("id", { count: "exact", head: true })
             .eq("status", "live"),
-          supabase
-            .from("analyzed_urls")
+          api.from("analyzed_urls")
             .select("business_name, industry, created_at")
             .order("created_at", { ascending: false })
             .limit(5),

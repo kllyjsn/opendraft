@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Building2, Send, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { api } from "@/lib/api";
 
 const TEAM_SIZES = ["1-10", "11-50", "51-200", "200+"];
 const BUDGETS = ["$99-199/mo", "$200-499/mo", "$500+/mo", "Custom / enterprise"];
@@ -28,7 +28,7 @@ export function EnterpriseContactForm() {
     if (!form.name || !form.email) return;
     setLoading(true);
     try {
-      const { error } = await supabase.from("enterprise_inquiries" as any).insert({
+      const { error } = await api.from("enterprise_inquiries" as any).insert({
         name: form.name,
         email: form.email,
         company: form.company || null,

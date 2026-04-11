@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
 import { ListingCard } from "./ListingCard";
 import { TrendingUp } from "lucide-react";
+import { api } from "@/lib/api";
 
 // Curated hero listings — hand-picked for visual impact & category variety
 const CURATED_IDS = [
@@ -43,8 +43,7 @@ export function FeaturedListings() {
   useEffect(() => {
     async function load() {
       // Try curated picks first
-      const { data: curated } = await supabase
-        .from("listings")
+      const { data: curated } = await api.from("listings")
         .select("id,title,description,price,pricing_type,completeness_badge,tech_stack,screenshots,sales_count,view_count,built_with,seller_id,security_score")
         .in("id", CURATED_IDS)
         .eq("status", "live");
@@ -54,8 +53,7 @@ export function FeaturedListings() {
       // If curated list is incomplete, backfill with popular listings
       if (results.length < 4) {
         const excludeIds = results.map((l) => l.id);
-        const { data: fallback } = await supabase
-          .from("listings")
+        const { data: fallback } = await api.from("listings")
           .select("id,title,description,price,pricing_type,completeness_badge,tech_stack,screenshots,sales_count,view_count,built_with,seller_id,security_score")
           .eq("status", "live")
           .not("id", "in", `(${excludeIds.join(",")})`)
@@ -75,8 +73,7 @@ export function FeaturedListings() {
       if (!results.length) return;
 
       const sellerIds = [...new Set(results.map((l) => l.seller_id))];
-      const { data: profiles } = await supabase
-        .from("public_profiles")
+      const { data: profiles } = await api.from("public_profiles")
         .select("user_id, username")
         .in("user_id", sellerIds);
       const map = Object.fromEntries((profiles ?? []).map((p) => [p.user_id, p.username ?? "Anonymous"]));

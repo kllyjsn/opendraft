@@ -12,9 +12,9 @@ import { MetaTags } from "@/components/MetaTags";
 import { JsonLd } from "@/components/JsonLd";
 import { Button } from "@/components/ui/button";
 import { GoogleSignInButton } from "@/components/GoogleSignInButton";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { ArrowRight, Search } from "lucide-react";
+import { api } from "@/lib/api";
 
 interface VerticalConfig {
   title: string;
@@ -110,7 +110,7 @@ export default function AppsVertical() {
     const seenIds = new Set<string>();
 
     for (const term of config.searchTerms.slice(0, 3)) {
-      const { data } = await supabase.rpc("search_listings", {
+      await api.post("/rpc/search_listings", {
         search_query: term,
         page_limit: 12,
         page_offset: 0,
@@ -127,8 +127,7 @@ export default function AppsVertical() {
 
     // Also get general live listings as fallback
     if (allResults.length < 6) {
-      const { data } = await supabase
-        .from("listings")
+      const { data } = await api.from("listings")
         .select("id,title,description,price,completeness_badge,tech_stack,screenshots,sales_count,view_count,built_with,seller_id")
         .eq("status", "live")
         .order("sales_count", { ascending: false })

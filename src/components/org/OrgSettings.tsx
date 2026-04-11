@@ -2,10 +2,10 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Save } from "lucide-react";
 import type { Org } from "@/hooks/useOrg";
+import { api } from "@/lib/api";
 
 interface OrgSettingsProps {
   org: Org;
@@ -24,8 +24,7 @@ export function OrgSettings({ org, isAdmin, onRefresh }: OrgSettingsProps) {
     if (!isAdmin) return;
     setSaving(true);
 
-    const { error } = await supabase
-      .from("organizations")
+    const { error } = await api.from("organizations")
       .update({
         name: name.trim(),
         domain: domain.trim() || null,

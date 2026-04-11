@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search, Shield, Loader2, LayoutGrid, List, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { api } from "@/lib/api";
 
 interface AppItem {
   id: string;
@@ -53,8 +53,7 @@ export function OrgAppGrid({ orgId, orgSlug }: OrgAppGridProps) {
 
   async function loadApps() {
     setLoading(true);
-    const { data } = await supabase
-      .from("org_listings")
+    const { data } = await api.from("org_listings")
       .select("*")
       .eq("org_id", orgId)
       .eq("status", "approved")
@@ -62,8 +61,7 @@ export function OrgAppGrid({ orgId, orgSlug }: OrgAppGridProps) {
 
     if (data && data.length > 0) {
       const listingIds = data.map(d => d.listing_id);
-      const { data: details } = await supabase
-        .from("listings")
+      const { data: details } = await api.from("listings")
         .select("id, title, description, price, screenshots, tech_stack, demo_url, security_score, category")
         .in("id", listingIds);
 

@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -8,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
 import { CompletenessBadge } from "@/components/CompletenessBadge";
 import { Loader2, Gift, ChevronLeft, Crown } from "lucide-react";
+import { api } from "@/lib/api";
 
 interface Listing {
   id: string;
@@ -40,8 +40,7 @@ export default function Checkout() {
   }, [id, user, authLoading, subLoading, isSubscribed, canClaimFree]);
 
   async function fetchListing() {
-    const { data } = await supabase
-      .from("listings")
+    const { data } = await api.from("listings")
       .select("id,title,description,price,pricing_type,completeness_badge,screenshots,tech_stack,seller_id")
       .eq("id", id)
       .single();
@@ -56,8 +55,7 @@ export default function Checkout() {
 
     try {
       // Guard: duplicate purchase check
-      const { data: existingPurchase } = await supabase
-        .from("purchases")
+      const { data: existingPurchase } = await api.from("purchases")
         .select("id")
         .eq("listing_id", listing.id)
         .eq("buyer_id", user.id)
@@ -65,7 +63,7 @@ export default function Checkout() {
       if (existingPurchase) throw new Error("You already own this project");
 
       // Insert purchase record (subscription-based, $0 amount)
-      const { error: purchErr } = await supabase.from("purchases").insert({
+      const { error: purchErr } = await api.from("purchases").insert({
         listing_id: listing.id,
         buyer_id: user.id,
         seller_id: listing.seller_id,
@@ -77,14 +75,13 @@ export default function Checkout() {
 
       // Increment sales counters
       await Promise.all([
-        supabase.rpc("increment_sales_count", { listing_id_param: listing.id }),
-        supabase.rpc("increment_seller_sales", { seller_id_param: listing.seller_id }),
+        await api.post("/rpc/increment_sales_count", { listing_id_param: listing.id }),
+        await api.post("/rpc/increment_seller_sales", { seller_id_param: listing.seller_id }),
       ]);
 
       // Auto-create conversation
       try {
-        const { data: existingConvo } = await supabase
-          .from("conversations")
+        const { data: existingConvo } = await api.from("conversations")
           .select("id")
           .eq("buyer_id", user.id)
           .eq("seller_id", listing.seller_id)
@@ -92,14 +89,13 @@ export default function Checkout() {
           .maybeSingle();
 
         if (!existingConvo) {
-          const { data: newConvo } = await supabase
-            .from("conversations")
+          const { data: newConvo } = await api.from("conversations")
             .insert({ buyer_id: user.id, seller_id: listing.seller_id, listing_id: listing.id })
             .select("id")
             .single();
 
           if (newConvo) {
-            await supabase.from("messages").insert({
+            await api.from("messages").insert({
               conversation_id: newConvo.id,
               sender_id: listing.seller_id,
               content: `Thanks for claiming ${listing.title}! 🎉 I'm your builder — feel free to ask me anything, request features, or set up a support retainer.`,

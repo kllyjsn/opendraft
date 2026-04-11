@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
 import { ListingCard } from "./ListingCard";
 import { Flame, ShoppingBag } from "lucide-react";
+import { api } from "@/lib/api";
 
 interface RailListing {
   id: string;
@@ -35,8 +35,7 @@ const cardVariant = {
 async function enrichWithProfiles(listings: RailListing[]): Promise<RailListing[]> {
   if (!listings.length) return [];
   const sellerIds = [...new Set(listings.map((l) => l.seller_id))];
-  const { data: profiles } = await supabase
-    .from("public_profiles")
+  const { data: profiles } = await api.from("public_profiles")
     .select("user_id, username")
     .in("user_id", sellerIds);
   const map = Object.fromEntries((profiles ?? []).map((p) => [p.user_id, p.username ?? "Anonymous"]));
@@ -52,8 +51,7 @@ export function DiscoveryRails() {
       const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
       // Top 10 shipped this month — newest live listings with screenshots
-      const { data: shipped } = await supabase
-        .from("listings")
+      const { data: shipped } = await api.from("listings")
         .select("id,title,description,price,pricing_type,completeness_badge,tech_stack,screenshots,sales_count,view_count,built_with,seller_id,security_score,agent_ready,updated_at")
         .eq("status", "live")
         .gte("created_at", thirtyDaysAgo)
@@ -68,16 +66,14 @@ export function DiscoveryRails() {
       }
 
       // Recently sold — latest purchases joined with listing data
-      const { data: purchases } = await supabase
-        .from("purchases")
+      const { data: purchases } = await api.from("purchases")
         .select("listing_id, created_at")
         .order("created_at", { ascending: false })
         .limit(20);
 
       if (purchases?.length) {
         const uniqueIds = [...new Set(purchases.map((p) => p.listing_id))].slice(0, 10);
-        const { data: soldListings } = await supabase
-          .from("listings")
+        const { data: soldListings } = await api.from("listings")
           .select("id,title,description,price,pricing_type,completeness_badge,tech_stack,screenshots,sales_count,view_count,built_with,seller_id,security_score,agent_ready,updated_at")
           .in("id", uniqueIds)
           .eq("status", "live");

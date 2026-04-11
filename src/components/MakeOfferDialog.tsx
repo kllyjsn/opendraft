@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
 import { HandCoins, TrendingDown, DollarSign } from "lucide-react";
 
 interface MakeOfferDialogProps {
@@ -61,7 +60,8 @@ export function MakeOfferDialog({ listingId, listingTitle, askingPrice, onOfferS
 
     setSubmitting(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const session = { access_token: localStorage.getItem("opendraft_token") };
+      if (!localStorage.getItem("opendraft_token")) throw new Error("Not authenticated");
       if (!session?.access_token) {
         toast({ title: "Not authenticated", description: "Please log in to place a bid.", variant: "destructive" });
         setSubmitting(false);
@@ -69,11 +69,11 @@ export function MakeOfferDialog({ listingId, listingTitle, askingPrice, onOfferS
       }
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 15000);
-      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/handle-offer`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:3001/api"}/functions/handle-offer`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`,
+          Authorization: `Bearer ${localStorage.getItem("opendraft_token")}`,
         },
         body: JSON.stringify({
           action: "create",

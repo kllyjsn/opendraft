@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Package, Rss } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { api } from "@/lib/api";
 
 interface FeedItem {
   id: string;
@@ -30,8 +30,7 @@ export function ActivityFeed() {
       setLoading(true);
 
       // Get who the user follows
-      const { data: follows } = await supabase
-        .from("follows")
+      const { data: follows } = await api.from("follows")
         .select("following_id")
         .eq("follower_id", user!.id);
 
@@ -44,8 +43,7 @@ export function ActivityFeed() {
       }
 
       // Get recent listings from followed users
-      const { data: listings } = await supabase
-        .from("listings")
+      const { data: listings } = await api.from("listings")
         .select("id, title, price, created_at, seller_id, completeness_badge, category")
         .in("seller_id", followingIds)
         .eq("status", "live")
@@ -60,8 +58,7 @@ export function ActivityFeed() {
 
       // Fetch seller profiles
       const sellerIds = [...new Set(listings.map((l) => l.seller_id))];
-      const { data: profiles } = await supabase
-        .from("public_profiles")
+      const { data: profiles } = await api.from("public_profiles")
         .select("user_id, username, avatar_url")
         .in("user_id", sellerIds);
 

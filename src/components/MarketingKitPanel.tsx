@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Users, Mail, MessageSquare, Target, Megaphone, TrendingUp, ChevronDown, ChevronUp, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import { api } from "@/lib/api";
 
 interface BuyerPersona {
   title: string;
@@ -43,9 +43,7 @@ export function MarketingKitPanel({ listingId }: Props) {
 
   async function fetchPacket() {
     try {
-      const { data, error } = await supabase.functions.invoke("get-marketing-packet", {
-        body: { listingId },
-      });
+      const { data: data } = await api.post<{ data: any }>("/functions/get-marketing-packet", { listingId },);
       if (!error && data?.packet) {
         setPacket(data.packet);
       }

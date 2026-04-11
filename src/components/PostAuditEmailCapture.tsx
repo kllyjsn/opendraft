@@ -3,8 +3,8 @@ import { motion } from "framer-motion";
 import { Mail, Send, Check, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { api } from "@/lib/api";
 
 interface PostAuditEmailCaptureProps {
   businessName: string;
@@ -31,16 +31,14 @@ export function PostAuditEmailCapture({
 
     setLoading(true);
     try {
-      await supabase.functions.invoke("post-audit-drip", {
-        body: {
+      const { data: data } = await api.post<{ data: any }>("/functions/post-audit-drip", {
           email: email.trim(),
           business_name: businessName,
           industry,
           top_app: topApp,
           monthly_savings: monthlySavings,
           url,
-        },
-      });
+        },);
       setSent(true);
       toast.success("We'll email your audit results!");
     } catch {

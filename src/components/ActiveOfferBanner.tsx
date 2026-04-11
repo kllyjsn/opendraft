@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Check, X, Clock, ArrowRightLeft, HandCoins } from "lucide-react";
+import { api } from "@/lib/api";
 
 interface ActiveOffer {
   id: string;
@@ -36,8 +36,7 @@ export function ActiveOfferBanner({ listingId, askingPrice }: ActiveOfferBannerP
   }, [user, listingId]);
 
   async function fetchActiveOffer() {
-    const { data } = await supabase
-      .from("offers")
+    const { data } = await api.from("offers")
       .select("*")
       .eq("listing_id", listingId)
       .eq("buyer_id", user!.id)
@@ -53,8 +52,9 @@ export function ActiveOfferBanner({ listingId, askingPrice }: ActiveOfferBannerP
     if (!offer) return;
     setResponding(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/handle-offer`, {
+      const session = { access_token: localStorage.getItem("opendraft_token") };
+      if (!localStorage.getItem("opendraft_token")) throw new Error("Not authenticated");
+      const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:3001/api"}/functions/handle-offer`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -79,7 +79,7 @@ export function ActiveOfferBanner({ listingId, askingPrice }: ActiveOfferBannerP
     if (!offer) return;
     setResponding(true);
     try {
-      await supabase.from("offers").update({ status: "rejected" }).eq("id", offer.id).eq("buyer_id", user!.id);
+      await api.from("offers").update({ status: "rejected" }).eq("id", offer.id).eq("buyer_id", user!.id);
       toast({ title: "Counter-offer declined" });
       setOffer(null);
     } catch (e) {

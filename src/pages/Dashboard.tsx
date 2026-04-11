@@ -3,7 +3,6 @@ import { Link, Navigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { CompletenessBadge } from "@/components/CompletenessBadge";
 import { StripeConnectPanel } from "@/components/StripeConnectPanel";
@@ -23,6 +22,7 @@ import { ImprovementDashboard } from "@/components/ImprovementDashboard";
 import { ActiveBuilds, ActiveBuildsBanner } from "@/components/ActiveBuilds";
 import { DashboardWelcomeBack } from "@/components/DashboardWelcomeBack";
 import { ROISavingsTracker } from "@/components/ROISavingsTracker";
+import { api } from "@/lib/api";
 
 interface Sale {
   id: string;
@@ -79,8 +79,7 @@ export default function Dashboard() {
     if (!user) return;
 
     async function fetchListings() {
-      const { data } = await supabase
-        .from("listings")
+      const { data } = await api.from("listings")
         .select("id,title,price,completeness_badge,status,sales_count,view_count,created_at,demo_url,github_url,domain_verified")
         .eq("seller_id", user!.id)
         .order("created_at", { ascending: false });
@@ -89,8 +88,7 @@ export default function Dashboard() {
     }
 
     async function fetchSales() {
-      const { data } = await supabase
-        .from("purchases")
+      const { data } = await api.from("purchases")
         .select("id,created_at,amount_paid,seller_amount,platform_fee,listing_id,buyer_id,listings(title)")
         .eq("seller_id", user!.id)
         .order("created_at", { ascending: false })
@@ -98,8 +96,7 @@ export default function Dashboard() {
       const salesData = (data as unknown as Sale[]) ?? [];
       setSales(salesData);
 
-      const { data: profile } = await supabase
-        .from("profiles")
+      const { data: profile } = await api.from("profiles")
         .select("total_sales")
         .eq("user_id", user!.id)
         .single();
@@ -122,7 +119,7 @@ export default function Dashboard() {
   if (!loading && !user) return <Navigate to="/login" replace />;
 
   async function deleteListing(id: string) {
-    const { error } = await supabase.from("listings").delete().eq("id", id);
+    const { error } = await api.from("listings").delete().eq("id", id);
     if (error) {
       toast({ title: "Failed to delete", description: error.message, variant: "destructive" });
     } else {

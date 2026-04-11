@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
 import { ShoppingBag, Eye, Users } from "lucide-react";
+import { api } from "@/lib/api";
 
 interface ActivityItem {
   id: string;
@@ -27,8 +27,7 @@ export function LiveActivityTicker() {
   useEffect(() => {
     async function load() {
       // Fetch recent purchases (public-safe: just listing title + time)
-      const { data: purchases } = await supabase
-        .from("purchases")
+      const { data: purchases } = await api.from("purchases")
         .select("id, created_at, listing_id")
         .order("created_at", { ascending: false })
         .limit(10);
@@ -36,8 +35,7 @@ export function LiveActivityTicker() {
       if (!purchases?.length) return;
 
       const listingIds = [...new Set(purchases.map((p) => p.listing_id))];
-      const { data: listings } = await supabase
-        .from("listings")
+      const { data: listings } = await api.from("listings")
         .select("id, title")
         .in("id", listingIds);
 
@@ -51,8 +49,7 @@ export function LiveActivityTicker() {
       }));
 
       // Add some browsing activity flavor
-      const { count } = await supabase
-        .from("listings")
+      const { count } = await api.from("listings")
         .select("id", { count: "exact", head: true })
         .eq("status", "live");
 

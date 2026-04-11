@@ -10,12 +10,12 @@ import { Navigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { useAdmin } from "@/hooks/useAdmin";
-import { supabase } from "@/integrations/supabase/client";
 import {
   Loader2, TrendingUp, Users, DollarSign, ShoppingBag, ArrowUpRight,
   ArrowDownRight, BarChart3, Target, Building2, Layers, Calculator,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { api } from "@/lib/api";
 
 // ── Types ──
 
@@ -421,14 +421,14 @@ export default function AdminRevenue() {
         subsResult, profilesResult, purchasesResult, recentPurchasesResult,
         funnelResult, orgsResult, orgMembersResult, orgListingsResult,
       ] = await Promise.all([
-        supabase.from("subscriptions").select("*").eq("status", "active"),
-        supabase.from("profiles").select("user_id, created_at").order("created_at", { ascending: false }).limit(1000),
-        supabase.from("purchases").select("buyer_id, listing_id, amount_paid, created_at, platform_fee").order("created_at", { ascending: false }).limit(1000),
-        supabase.from("purchases").select("buyer_id, listing_id, amount_paid, created_at").order("created_at", { ascending: false }).limit(10),
-        supabase.from("activity_log").select("event_type, created_at").like("event_type", "funnel:%").gte("created_at", thirtyDaysAgo.toISOString()).limit(1000),
-        supabase.from("organizations").select("id", { count: "exact", head: true }),
-        supabase.from("org_members").select("id", { count: "exact", head: true }),
-        supabase.from("org_listings").select("id", { count: "exact", head: true }),
+        api.from("subscriptions").select("*").eq("status", "active"),
+        api.from("profiles").select("user_id, created_at").order("created_at", { ascending: false }).limit(1000),
+        api.from("purchases").select("buyer_id, listing_id, amount_paid, created_at, platform_fee").order("created_at", { ascending: false }).limit(1000),
+        api.from("purchases").select("buyer_id, listing_id, amount_paid, created_at").order("created_at", { ascending: false }).limit(10),
+        api.from("activity_log").select("event_type, created_at").like("event_type", "funnel:%").gte("created_at", thirtyDaysAgo.toISOString()).limit(1000),
+        api.from("organizations").select("id", { count: "exact", head: true }),
+        api.from("org_members").select("id", { count: "exact", head: true }),
+        api.from("org_listings").select("id", { count: "exact", head: true }),
       ]);
 
       const subs = subsResult.data || [];

@@ -15,10 +15,10 @@
  */
 
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CheckCircle, Loader2, Package, Plus } from "lucide-react";
+import { api } from "@/lib/api";
 
 interface CreatedProduct {
   id: string;
@@ -59,14 +59,12 @@ export function CreateProductPanel() {
 
     setCreating(true);
     try {
-      const { data, error: fnError } = await supabase.functions.invoke("create-product", {
-        body: {
+      const { data: data } = await api.post<{ data: any }>("/functions/create-product", {
           name: name.trim(),
           description: description.trim() || undefined,
           priceInCents,
           currency: "usd",
-        },
-      });
+        },);
 
       if (fnError) throw new Error(fnError.message);
       if (data?.error) throw new Error(data.error);

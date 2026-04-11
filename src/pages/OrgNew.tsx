@@ -7,9 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Building2, ArrowRight, Loader2 } from "lucide-react";
+import { api } from "@/lib/api";
 
 function slugify(name: string) {
   return name
@@ -40,8 +40,7 @@ export default function OrgNew() {
     if (!user || !name.trim() || !slug.trim()) return;
 
     setCreating(true);
-    const { data, error } = await supabase
-      .from("organizations")
+    const { data, error } = await api.from("organizations")
       .insert({
         name: name.trim(),
         slug: slug.trim(),

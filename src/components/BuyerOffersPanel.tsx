@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { HandCoins, Check, X, ExternalLink, Clock, ArrowRightLeft } from "lucide-react";
+import { api } from "@/lib/api";
 
 interface BuyerOffer {
   id: string;
@@ -36,16 +36,14 @@ export function BuyerOffersPanel() {
 
   async function fetchOffers() {
     if (!user) return;
-    const { data } = await supabase
-      .from("offers")
+    const { data } = await api.from("offers")
       .select("*")
       .eq("buyer_id", user.id)
       .order("created_at", { ascending: false });
 
     if (data) {
       const listingIds = [...new Set(data.map((o: any) => o.listing_id))];
-      const { data: listings } = await supabase
-        .from("listings")
+      const { data: listings } = await api.from("listings")
         .select("id, title")
         .in("id", listingIds);
 
@@ -60,8 +58,9 @@ export function BuyerOffersPanel() {
   async function handleAcceptCounter(offerId: string) {
     setResponding(offerId);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/handle-offer`, {
+      const session = { access_token: localStorage.getItem("opendraft_token") };
+      if (!localStorage.getItem("opendraft_token")) throw new Error("Not authenticated");
+      const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:3001/api"}/functions/handle-offer`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -89,8 +88,7 @@ export function BuyerOffersPanel() {
     setResponding(offerId);
     try {
       // We'll update the offer status to "rejected" from the buyer side
-      const { error } = await supabase
-        .from("offers")
+      const { error } = await api.from("offers")
         .update({ status: "rejected" })
         .eq("id", offerId)
         .eq("buyer_id", user!.id);

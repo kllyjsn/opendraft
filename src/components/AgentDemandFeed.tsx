@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Bot, TrendingUp, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "react-router-dom";
+import { api } from "@/lib/api";
 
 interface DemandSignal {
   query: string;
@@ -17,8 +17,7 @@ export function AgentDemandFeed() {
   const [signals, setSignals] = useState<DemandSignal[]>([]);
 
   useEffect(() => {
-    supabase
-      .from("agent_demand_signals")
+    api.from("agent_demand_signals")
       .select("query, category, tech_stack, created_at, source")
       .order("created_at", { ascending: false })
       .limit(15)

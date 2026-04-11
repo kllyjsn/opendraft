@@ -2,13 +2,13 @@ import { useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { CompletenessBadge } from "@/components/CompletenessBadge";
 import { Button } from "@/components/ui/button";
 import { ChatDrawer } from "@/components/ChatDrawer";
 import { Download, Github, Star, Loader2, MessageSquare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { api } from "@/lib/api";
 
 interface Purchase {
   id: string;
@@ -48,8 +48,7 @@ export default function Profile() {
     if (!user) return;
 
     async function fetchPurchases() {
-      const { data } = await supabase
-        .from("purchases")
+      const { data } = await api.from("purchases")
         .select("id,created_at,amount_paid,listing_id,seller_id,listings(id,title,completeness_badge,github_url,screenshots)")
         .eq("buyer_id", user!.id)
         .order("created_at", { ascending: false });
@@ -60,8 +59,7 @@ export default function Profile() {
       // Fetch seller usernames
       const sellerIds = [...new Set(purchases.map(p => p.seller_id))];
       if (sellerIds.length > 0) {
-        const { data: profiles } = await supabase
-          .from("public_profiles")
+        const { data: profiles } = await api.from("public_profiles")
           .select("user_id, username")
           .in("user_id", sellerIds);
         const map: Record<string, string> = {};
@@ -71,8 +69,7 @@ export default function Profile() {
     }
 
     async function fetchReviews() {
-      const { data } = await supabase
-        .from("reviews")
+      const { data } = await api.from("reviews")
         .select("id,rating,review_text,purchase_id")
         .eq("buyer_id", user!.id);
       setReviews((data as Review[]) ?? []);
@@ -90,9 +87,7 @@ export default function Profile() {
     if (!user) return;
     setDownloadingId(listingId);
     try {
-      const { data, error } = await supabase.functions.invoke("get-download-url", {
-        body: { listingId },
-      });
+      const { data: data, error } = await api.post<{ data: any }>("/functions/get-download-url", { listingId },);
       if (error || data?.error) throw new Error(error?.message ?? data?.error);
 
       if (data.signedUrl) {
@@ -119,7 +114,7 @@ export default function Profile() {
     const purchase = purchases.find((p) => p.id === reviewForm.purchaseId);
     if (!purchase) return;
 
-    const { error } = await supabase.from("reviews").insert([{
+    const { error } = await api.from("reviews").insert([{
       listing_id: purchase.listing_id,
       buyer_id: user.id,
       purchase_id: reviewForm.purchaseId,

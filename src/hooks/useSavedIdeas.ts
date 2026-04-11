@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
@@ -24,12 +24,12 @@ export function useSavedIdeas() {
   const fetchIdeas = useCallback(async () => {
     if (!user) return;
     setLoading(true);
-    const { data } = await supabase
-      .from("saved_ideas")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false });
-    if (data) setIdeas(data as SavedIdea[]);
+    try {
+      const { data } = await api.get<{ data: SavedIdea[] }>("/saved-ideas");
+      if (data) setIdeas(data);
+    } catch {
+      // ignore
+    }
     setLoading(false);
   }, [user]);
 
@@ -44,35 +44,41 @@ export function useSavedIdeas() {
     source_url?: string;
   }) => {
     if (!user) { toast.error("Sign in to save ideas"); return false; }
-    const { error } = await supabase.from("saved_ideas").insert({
-      user_id: user.id,
-      name: idea.name,
-      description: idea.description,
-      category: idea.category,
-      priority: idea.priority,
-      search_query: idea.search_query,
-      source_url: idea.source_url || null,
-    });
-    if (error) { toast.error("Failed to save idea"); return false; }
-    toast.success("Idea saved!");
-    fetchIdeas();
-    return true;
+    try {
+      await api.post("/saved-ideas", {
+        name: idea.name,
+        description: idea.description,
+        category: idea.category,
+        priority: idea.priority,
+        search_query: idea.search_query,
+        source_url: idea.source_url || null,
+      });
+      toast.success("Idea saved!");
+      fetchIdeas();
+      return true;
+    } catch {
+      toast.error("Failed to save idea");
+      return false;
+    }
   }, [user, fetchIdeas]);
 
   const updateIdea = useCallback(async (id: string, updates: Partial<Pick<SavedIdea, "notes" | "status" | "name" | "description">>) => {
-    const { error } = await supabase
-      .from("saved_ideas")
-      .update({ ...updates, updated_at: new Date().toISOString() })
-      .eq("id", id);
-    if (error) { toast.error("Update failed"); return; }
-    fetchIdeas();
+    try {
+      await api.patch(`/saved-ideas/${id}`, updates);
+      fetchIdeas();
+    } catch {
+      toast.error("Update failed");
+    }
   }, [fetchIdeas]);
 
   const deleteIdea = useCallback(async (id: string) => {
-    const { error } = await supabase.from("saved_ideas").delete().eq("id", id);
-    if (error) { toast.error("Delete failed"); return; }
-    toast.success("Idea removed");
-    fetchIdeas();
+    try {
+      await api.delete(`/saved-ideas/${id}`);
+      toast.success("Idea removed");
+      fetchIdeas();
+    } catch {
+      toast.error("Delete failed");
+    }
   }, [fetchIdeas]);
 
   return { ideas, loading, saveIdea, updateIdea, deleteIdea, refetch: fetchIdeas };

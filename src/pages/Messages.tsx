@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
 import { ChatDrawer } from "@/components/ChatDrawer";
 import { usePresence } from "@/hooks/usePubNub";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -13,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { NotificationsList } from "@/components/NotificationsList";
 import { cn } from "@/lib/utils";
+import { api } from "@/lib/api";
 
 interface Conversation {
   id: string;
@@ -60,8 +60,7 @@ export default function Messages() {
     if (!user) return;
     setLoading(true);
 
-    const { data: convos } = await supabase
-      .from("conversations")
+    const { data: convos } = await api.from("conversations")
       .select("*")
       .or(`buyer_id.eq.${user.id},seller_id.eq.${user.id}`)
       .order("updated_at", { ascending: false });
@@ -76,14 +75,13 @@ export default function Messages() {
     const otherUserIds = [...new Set(convos.map((c) => (c.buyer_id === user.id ? c.seller_id : c.buyer_id)))];
 
     const [profilesRes, messagesRes, listingsRes] = await Promise.all([
-      supabase.from("public_profiles").select("user_id, username").in("user_id", otherUserIds),
-      supabase
-        .from("messages")
+      api.from("public_profiles").select("user_id, username").in("user_id", otherUserIds),
+      api.from("messages")
         .select("conversation_id, content, created_at, read, sender_id")
         .in("conversation_id", convos.map((c) => c.id))
         .order("created_at", { ascending: false }),
       listingIds.length > 0
-        ? supabase.from("listings").select("id, title").in("id", listingIds)
+        ? api.from("listings").select("id, title").in("id", listingIds)
         : Promise.resolve({ data: [] as { id: string; title: string }[] }),
     ]);
 
@@ -133,8 +131,7 @@ export default function Messages() {
       return;
     }
     setSearching(true);
-    const { data } = await supabase
-      .from("public_profiles")
+    const { data } = await api.from("public_profiles")
       .select("user_id, username, avatar_url")
       .ilike("username", `%${query.trim()}%`)
       .neq("user_id", user?.id ?? "")

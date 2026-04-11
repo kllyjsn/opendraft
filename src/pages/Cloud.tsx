@@ -4,7 +4,6 @@ import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { supabase } from "@/integrations/supabase/client";
 import {
   Cloud,
   Database,
@@ -17,6 +16,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { toast } from "sonner";
+import { api } from "@/lib/api";
 
 const FEATURES = [
   {
@@ -74,7 +74,7 @@ export default function CloudPage() {
     if (!email.trim()) return;
     setSubmitting(true);
 
-    const { error } = await supabase.from("cloud_waitlist").insert({
+    const { error } = await api.from("cloud_waitlist").insert({
       email: email.trim(),
       company_name: company.trim() || null,
       message: message.trim() || null,

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import PubNub from "pubnub";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/lib/api";
 
 interface PubNubConfig {
   subscribeKey: string;
@@ -31,14 +31,15 @@ function notifyPresenceListeners() {
 async function initGlobalPresence() {
   if (globalPubnub) return;
 
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return;
+  const token = localStorage.getItem("opendraft_token");
+  if (!token) return;
 
   const res = await fetch(
-    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat-config`,
+    `${import.meta.env.VITE_API_URL || "http://localhost:3001/api"}/functions/chat-config`,
     {
+      method: "POST",
       headers: {
-        Authorization: `Bearer ${session.access_token}`,
+        Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
     }
@@ -193,20 +194,19 @@ export function usePubNub(conversationId: string | null) {
   // Mark messages as read & notify sender via signal
   const markAsRead = useCallback(async (convoId: string) => {
     if (!globalConfig) return;
-    const myId = globalConfig.userId;
+    if (!globalConfig) return;
 
-    // Update DB: mark unread messages from the other person as read
-    await supabase
-      .from("messages")
-      .update({ read: true })
-      .eq("conversation_id", convoId)
-      .eq("read", false)
-      .neq("sender_id", myId);
+    // Update via API
+    try {
+      await api.post(`/conversations/${convoId}/mark-read`);
+    } catch {
+      // ignore
+    }
 
     // Update local state
     setMessages((prev) =>
       prev.map((m) =>
-        m.conversation_id === convoId && m.sender_id !== myId && !m.read
+        m.conversation_id === convoId && m.sender_id !== globalConfig?.userId && !m.read
           ? { ...m, read: true }
           : m
       )
@@ -217,19 +217,19 @@ export function usePubNub(conversationId: string | null) {
       const channel = `chat_${convoId}`;
       pubnubRef.current.signal({
         channel,
-        message: { type: "read_receipt", userId: myId },
+        message: { type: "read_receipt", userId: globalConfig.userId },
       }).catch(() => {});
     }
   }, []);
 
-  // Load existing messages from DB
+  // Load existing messages from API
   const loadMessages = useCallback(async (convoId: string) => {
-    const { data } = await supabase
-      .from("messages")
-      .select("*")
-      .eq("conversation_id", convoId)
-      .order("created_at", { ascending: true });
-    if (data) setMessages(data as ChatMessage[]);
+    try {
+      const { data } = await api.get<{ data: ChatMessage[] }>(`/conversations/${convoId}/messages`);
+      if (data) setMessages(data);
+    } catch {
+      // ignore
+    }
 
     // Auto-mark as read on load
     await markAsRead(convoId);
@@ -239,35 +239,31 @@ export function usePubNub(conversationId: string | null) {
     if (conversationId) loadMessages(conversationId);
   }, [conversationId, loadMessages]);
 
-  // Send message via edge function
+  // Send message via API
   const sendMessage = useCallback(
     async (content: string, listingId?: string, sellerId?: string, recipientId?: string) => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("Not authenticated");
+      const token = localStorage.getItem("opendraft_token");
+      if (!token) throw new Error("Not authenticated");
 
       sendStopTyping();
 
-      const res = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-message`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            conversationId,
-            listingId,
-            sellerId,
-            recipientId,
-            content,
-          }),
-        }
-      );
+      // If no conversation yet, create one first
+      let convoId = conversationId;
+      if (!convoId && sellerId) {
+        const { data: conv } = await api.post<{ data: { _id: string } }>("/conversations", {
+          seller_id: sellerId,
+          listing_id: listingId,
+        });
+        convoId = conv._id;
+      }
 
-      const result = await res.json();
-      if (!res.ok) throw new Error(result.error);
-      return result;
+      if (!convoId) throw new Error("No conversation");
+
+      const { data: msg } = await api.post<{ data: ChatMessage }>(`/conversations/${convoId}/messages`, {
+        content,
+      });
+
+      return msg;
     },
     [conversationId, sendStopTyping]
   );

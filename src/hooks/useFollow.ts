@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 
 export function useFollow(targetUserId: string | undefined) {
@@ -14,30 +14,17 @@ export function useFollow(targetUserId: string | undefined) {
   useEffect(() => {
     if (!targetUserId) return;
 
-    // Fetch follower/following counts from profile
-    supabase
-      .from("public_profiles")
-      .select("followers_count, following_count")
-      .eq("user_id", targetUserId)
-      .single()
-      .then(({ data }) => {
-        if (data) {
-          setFollowersCount((data as any).followers_count ?? 0);
-          setFollowingCount((data as any).following_count ?? 0);
-        }
-      });
+    api.get<{ followers: number; following: number }>(`/follows/count/${targetUserId}`)
+      .then(({ followers, following }) => {
+        setFollowersCount(followers ?? 0);
+        setFollowingCount(following ?? 0);
+      })
+      .catch(() => {});
 
-    // Check if current user follows this target
     if (user && !isSelf) {
-      supabase
-        .from("follows")
-        .select("id")
-        .eq("follower_id", user.id)
-        .eq("following_id", targetUserId)
-        .maybeSingle()
-        .then(({ data }) => {
-          setIsFollowing(!!data);
-        });
+      api.get<{ isFollowing: boolean }>(`/follows/check?following_id=${targetUserId}`)
+        .then(({ isFollowing: f }) => setIsFollowing(f))
+        .catch(() => {});
     }
   }, [user, targetUserId, isSelf]);
 
@@ -45,28 +32,19 @@ export function useFollow(targetUserId: string | undefined) {
     if (!user || !targetUserId || isSelf || loading) return;
     setLoading(true);
 
-    if (isFollowing) {
-      const { error } = await supabase
-        .from("follows")
-        .delete()
-        .eq("follower_id", user.id)
-        .eq("following_id", targetUserId);
-      if (!error) {
+    try {
+      if (isFollowing) {
+        await api.delete(`/follows/${targetUserId}`);
         setIsFollowing(false);
         setFollowersCount((c) => Math.max(0, c - 1));
-      }
-    } else {
-      const { error } = await supabase
-        .from("follows")
-        .insert({ follower_id: user.id, following_id: targetUserId });
-      if (!error) {
+      } else {
+        await api.post("/follows", { following_id: targetUserId });
         setIsFollowing(true);
         setFollowersCount((c) => c + 1);
-        // Send follow notification (fire-and-forget)
-        supabase.functions.invoke("notify-follow", {
-          body: { followingId: targetUserId },
-        }).catch(() => {});
+        api.post("/functions/notify-follow", { followingId: targetUserId }).catch(() => {});
       }
+    } catch {
+      // ignore
     }
 
     setLoading(false);

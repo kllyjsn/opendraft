@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 
 export function useSubscription() {
@@ -12,29 +12,24 @@ export function useSubscription() {
   async function fetchSubscription() {
     if (!user) { setIsSubscribed(false); setLoading(false); setPurchaseCount(0); return; }
 
-    // Fetch subscription and purchase count in parallel
-    const [subResult, countResult] = await Promise.all([
-      supabase
-        .from("subscriptions")
-        .select("*")
-        .eq("user_id", user.id)
-        .eq("status", "active")
-        .maybeSingle(),
-      supabase
-        .from("purchases")
-        .select("id", { count: "exact", head: true })
-        .eq("buyer_id", user.id),
-    ]);
+    try {
+      const [subResult, countResult] = await Promise.all([
+        api.get<{ data: any }>("/subscriptions/me"),
+        api.get<{ count: number }>("/purchases/count"),
+      ]);
 
-    setSubscription(subResult.data);
-    setIsSubscribed(!!subResult.data);
-    setPurchaseCount(countResult.count ?? 0);
+      setSubscription(subResult.data);
+      setIsSubscribed(!!subResult.data);
+      setPurchaseCount(countResult.count ?? 0);
+    } catch {
+      setIsSubscribed(false);
+      setPurchaseCount(0);
+    }
     setLoading(false);
   }
 
   useEffect(() => { fetchSubscription(); }, [user]);
 
-  // Derived helpers
   const plan = subscription?.plan as string | null;
   const appLimit = plan === "unlimited" || plan === "agency" || plan === "enterprise" || plan === "pro" ? Infinity : plan === "growth" ? 20 : plan === "starter" ? 5 : 1;
   const canClaimFree = !isSubscribed && purchaseCount < 1;

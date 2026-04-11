@@ -13,8 +13,8 @@ import { useEffect, useState } from "react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
 import { ShoppingCart, Loader2, Package, AlertCircle } from "lucide-react";
+import { api } from "@/lib/api";
 
 interface Product {
   id: string;
@@ -48,7 +48,7 @@ export default function Storefront() {
     setLoading(true);
     setError(null);
     try {
-      const { data, error: fnError } = await supabase.functions.invoke("get-products");
+      const { data: data, error } = await api.post<{ data: any }>("/functions/get-products");
       if (fnError) throw new Error(fnError.message);
       if (data?.error) throw new Error(data.error);
       setProducts(data?.products ?? []);
@@ -67,9 +67,7 @@ export default function Storefront() {
   async function handleBuy(product: Product) {
     setBuyingId(product.id);
     try {
-      const { data, error: fnError } = await supabase.functions.invoke("create-checkout-session", {
-        body: { productId: product.id },
-      });
+      const { data: data, error } = await api.post<{ data: any }>("/functions/create-checkout-session", { productId: product.id },);
       if (fnError) throw new Error(fnError.message);
       if (data?.error) throw new Error(data.error);
       // Redirect to Stripe's hosted checkout page

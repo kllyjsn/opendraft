@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, TrendingUp, Search, Target, Lightbulb, DollarSign, Zap, BarChart3, Globe, Flame, Clock, Eye, Sparkles } from "lucide-react";
+import { api } from "@/lib/api";
 
 interface UnmetDemand {
   need: string;
@@ -89,7 +89,7 @@ export function AdminMarketResearch() {
     setLoading(true);
     setResult(null);
     try {
-      const { data, error } = await supabase.functions.invoke("market-research");
+      const { data: data, error } = await api.post<{ data: any }>("/functions/market-research");
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       setResult(data);
@@ -104,9 +104,7 @@ export function AdminMarketResearch() {
   async function autoBuild(rec: RecommendedBuild, idx: number) {
     setGeneratingIdx(idx);
     try {
-      const { data, error } = await supabase.functions.invoke("generate-listing-concept", {
-        body: { count: 1, themes: [rec.title] },
-      });
+      const { data: data, error } = await api.post<{ data: any }>("/functions/generate-listing-concept", { count: 1, themes: [rec.title] },);
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       toast({ title: `"${rec.title}" generated!`, description: "Check pending listings." });

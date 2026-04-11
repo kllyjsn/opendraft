@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Target, Plus, Save, Loader2 } from "lucide-react";
+import { api } from "@/lib/api";
 
 interface ProjectGoalsEditorProps {
   listingId: string;
@@ -23,8 +23,7 @@ export function ProjectGoalsEditor({ listingId }: ProjectGoalsEditorProps) {
   }, [user, listingId]);
 
   async function loadGoals() {
-    const { data } = await supabase
-      .from("project_goals" as any)
+    const { data } = await api.from("project_goals" as any)
       .select("goals_prompt")
       .eq("listing_id", listingId)
       .eq("user_id", user!.id)
@@ -49,12 +48,11 @@ export function ProjectGoalsEditor({ listingId }: ProjectGoalsEditorProps) {
     };
 
     const { error } = hasExisting
-      ? await supabase
-          .from("project_goals" as any)
+      ? await api.from("project_goals" as any)
           .update({ goals_prompt: goalsPrompt, structured_goals: payload.structured_goals })
           .eq("listing_id", listingId)
           .eq("user_id", user.id)
-      : await supabase.from("project_goals" as any).insert(payload);
+      : await api.from("project_goals" as any).insert(payload);
 
     if (error) {
       toast({ title: "Failed to save goals", description: error.message, variant: "destructive" });

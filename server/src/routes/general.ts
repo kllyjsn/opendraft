@@ -616,6 +616,36 @@ router.post("/db/query", optionalAuth, async (req: AuthenticatedRequest, res: Re
       return;
     }
 
+    // Row-level security: for user-owned tables, auto-scope queries to req.userId
+    // This mirrors Supabase RLS policies that enforced user_id = auth.uid()
+    const userScopedTables: Record<string, string> = {
+      notification: "user_id", notifications: "user_id",
+      message: "sender_id", messages: "sender_id",
+      savedidea: "user_id", savedideas: "user_id", saved_idea: "user_id", saved_ideas: "user_id",
+      generationjob: "user_id", generationjobs: "user_id", generation_job: "user_id", generation_jobs: "user_id",
+      deployedsite: "user_id", deployedsites: "user_id", deployed_site: "user_id", deployed_sites: "user_id",
+      agentapikey: "user_id", agentapikeys: "user_id", agent_api_key: "user_id", agent_api_keys: "user_id",
+      agentwebhook: "user_id", agentwebhooks: "user_id", agent_webhook: "user_id", agent_webhooks: "user_id",
+      creditbalance: "user_id", creditbalances: "user_id", credit_balance: "user_id", credit_balances: "user_id",
+      credittransaction: "user_id", credittransactions: "user_id", credit_transaction: "user_id", credit_transactions: "user_id",
+      subscription: "user_id", subscriptions: "user_id",
+      analyzedurl: "user_id", analyzedurls: "user_id", analyzed_url: "user_id", analyzed_urls: "user_id",
+      projectgoal: "user_id", projectgoals: "user_id", project_goal: "user_id", project_goals: "user_id",
+    };
+    const userScopeField = userScopedTables[table.toLowerCase()];
+    if (req.userId && userScopeField) {
+      // Inject user_id filter so users can only access their own rows
+      if (!filters) {
+        req.body.filters = [{ type: "eq", column: userScopeField, value: req.userId }];
+      } else {
+        // Only inject if the filter doesn't already scope to the user
+        const hasUserFilter = filters.some((f: any) => f.column === userScopeField && f.value === req.userId);
+        if (!hasUserFilter) {
+          filters.push({ type: "eq", column: userScopeField, value: req.userId });
+        }
+      }
+    }
+
     const mongoose = await import("mongoose");
 
     // Get the model dynamically by table name

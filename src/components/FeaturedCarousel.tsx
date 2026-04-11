@@ -29,13 +29,13 @@ interface FeaturedListing {
 
 export function FeaturedCarousel() {
   const [listings, setListings] = useState<FeaturedListing[]>([]);
-  const [api, setApi] = useState<CarouselApi>();
+  const [carouselApi, setCarouselApi] = useState<CarouselApi>();
   const [canPrev, setCanPrev] = useState(false);
   const [canNext, setCanNext] = useState(false);
 
   useEffect(() => {
     async function load() {
-      await api.post("/rpc/get_featured_listings");
+      const { data, error } = await api.post("/rpc/get_featured_listings");
       if (error || !data?.length) return;
 
       const sellerIds = [...new Set(data.map((l: any) => l.seller_id))];
@@ -54,18 +54,18 @@ export function FeaturedCarousel() {
   }, []);
 
   useEffect(() => {
-    if (!api) return;
+    if (!carouselApi) return;
     const onSelect = () => {
-      setCanPrev(api.canScrollPrev());
-      setCanNext(api.canScrollNext());
+      setCanPrev(carouselApi.canScrollPrev());
+      setCanNext(carouselApi.canScrollNext());
     };
     onSelect();
-    api.on("select", onSelect);
-    api.on("reInit", onSelect);
+    carouselApi.on("select", onSelect);
+    carouselApi.on("reInit", onSelect);
     return () => {
-      api.off("select", onSelect);
+      carouselApi.off("select", onSelect);
     };
-  }, [api]);
+  }, [carouselApi]);
 
   if (listings.length === 0) return null;
 
@@ -86,7 +86,7 @@ export function FeaturedCarousel() {
             size="icon"
             className="h-7 w-7 rounded-full border-border/40"
             disabled={!canPrev}
-            onClick={() => api?.scrollPrev()}
+            onClick={() => carouselApi?.scrollPrev()}
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
@@ -95,7 +95,7 @@ export function FeaturedCarousel() {
             size="icon"
             className="h-7 w-7 rounded-full border-border/40"
             disabled={!canNext}
-            onClick={() => api?.scrollNext()}
+            onClick={() => carouselApi?.scrollNext()}
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
@@ -103,7 +103,7 @@ export function FeaturedCarousel() {
       </div>
 
       <Carousel
-        setApi={setApi}
+        setApi={setCarouselApi}
         opts={{ align: "start", loop: false }}
         className="w-full"
       >

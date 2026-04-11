@@ -184,7 +184,7 @@ export default function Sell() {
       if (count === 1) {
         api.post("/functions/creator-welcome-email", {
             email: user.email,
-            username: user.user_metadata?.name || user.email?.split("@")[0],
+            username: user.email?.split("@")[0] || "Builder",
             listing_title: form.title,
         }).catch(() => {}); // fire-and-forget
       }

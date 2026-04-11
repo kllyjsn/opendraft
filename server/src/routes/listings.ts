@@ -29,7 +29,8 @@ router.get("/", optionalAuth, async (req: AuthenticatedRequest, res: Response) =
     else query = query.sort({ created_at: -1 });
 
     const data = await query.skip(Number(offset)).limit(Number(limit));
-    const total = await Listing.countDocuments(filter);
+    const countFilter = search ? { ...filter, $text: { $search: search as string } } : filter;
+    const total = await Listing.countDocuments(countFilter);
 
     res.json({ data, total });
   } catch (err) {

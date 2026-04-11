@@ -43,9 +43,11 @@ router.post("/follows", requireAuth, async (req: AuthenticatedRequest, res: Resp
 
 router.delete("/follows/:followingId", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   try {
-    await Follow.deleteOne({ follower_id: req.userId, following_id: req.params.followingId });
-    await Profile.updateOne({ user_id: req.params.followingId }, { $inc: { followers_count: -1 } });
-    await Profile.updateOne({ user_id: req.userId }, { $inc: { following_count: -1 } });
+    const result = await Follow.deleteOne({ follower_id: req.userId, following_id: req.params.followingId });
+    if (result.deletedCount > 0) {
+      await Profile.updateOne({ user_id: req.params.followingId }, { $inc: { followers_count: -1 } });
+      await Profile.updateOne({ user_id: req.userId }, { $inc: { following_count: -1 } });
+    }
     res.json({ success: true });
   } catch (err) { res.status(500).json({ error: "Failed to unfollow" }); }
 });
@@ -128,7 +130,7 @@ router.get("/notifications", requireAuth, async (req: AuthenticatedRequest, res:
 
 router.patch("/notifications/:id/read", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   try {
-    await Notification.findByIdAndUpdate(req.params.id, { read: true });
+    await Notification.findOneAndUpdate({ _id: req.params.id, user_id: req.userId }, { read: true });
     res.json({ success: true });
   } catch (err) { res.status(500).json({ error: "Failed to mark notification as read" }); }
 });
@@ -557,9 +559,15 @@ router.get("/webhook-events", requireAuth, async (req: AuthenticatedRequest, res
 });
 
 // ── Generic DB Query (mirrors Supabase query builder) ──
-router.post("/db/query", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+router.post("/db/query", optionalAuth, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { table, operation, select, filters, order, limit: limitVal, single, maybeSingle, body, count } = req.body;
+
+    // Write operations require authentication
+    if (operation !== "select" && !req.userId) {
+      res.status(401).json({ error: "Authentication required for write operations" });
+      return;
+    }
     const mongoose = await import("mongoose");
 
     // Get the model dynamically by table name

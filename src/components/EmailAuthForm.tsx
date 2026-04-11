@@ -30,10 +30,11 @@ export function EmailAuthForm({ defaultMode = "signup" }: EmailAuthFormProps) {
         toast.success("Check your email for a password reset link.");
         setMode("signin");
       } else if (mode === "signup") {
-        const { error } = await api.post<{ error?: string }>("/auth/signup", {
+        const { token, error } = await api.post<{ token: string; error?: string }>("/auth/signup", {
           email: email.trim(),
           password,
-        }).catch((e: any) => ({ error: e.message }));
+        }).catch((e: any) => ({ token: "", error: e.message }));
+        if (token) setToken(token);
         if (error) throw error;
         toast.success("Account created! You're all set.");
       } else {

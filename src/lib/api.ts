@@ -55,10 +55,15 @@ class QueryBuilder<T = unknown> {
     this._table = table;
   }
 
-  select(columns = "*", opts?: { count?: "exact" }) {
-    this._op = "select";
+  select(columns = "*", opts?: { count?: "exact"; head?: boolean }) {
+    // Only set op to "select" if no prior write op (insert/update/upsert) was set.
+    // This preserves the Supabase pattern: .insert({...}).select("id").single()
+    if (this._op === "select") {
+      this._op = "select";
+    }
     this._select = columns;
     if (opts?.count) this._count = opts.count;
+    if (opts?.head) this._limitVal = 0;
     return this;
   }
 

@@ -557,7 +557,7 @@ router.get("/webhook-events", requireAuth, async (req: AuthenticatedRequest, res
 });
 
 // ── Generic DB Query (mirrors Supabase query builder) ──
-router.post("/db/query", optionalAuth, async (req: AuthenticatedRequest, res: Response) => {
+router.post("/db/query", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { table, operation, select, filters, order, limit: limitVal, single, maybeSingle, body, count } = req.body;
     const mongoose = await import("mongoose");
@@ -670,7 +670,20 @@ router.post("/db/query", optionalAuth, async (req: AuthenticatedRequest, res: Re
       }
     } else if (operation === "insert") {
       const doc = await Model.create(body);
-      res.json({ data: Array.isArray(doc) ? doc : doc });
+      const result = Array.isArray(doc) ? doc : doc.toObject ? doc.toObject() : doc;
+      // If select columns were specified, filter the returned fields
+      if (select && select !== "*" && !Array.isArray(result)) {
+        const fields = select.split(",").map((f: string) => f.trim());
+        const filtered: Record<string, unknown> = {};
+        for (const field of fields) {
+          if (field in result) filtered[field] = result[field];
+        }
+        // Always include id
+        if (result._id) filtered.id = result._id;
+        res.json({ data: filtered });
+      } else {
+        res.json({ data: result });
+      }
     } else if (operation === "update") {
       if (single || maybeSingle) {
         const doc = await Model.findOneAndUpdate(mongoFilter, { $set: body }, { new: true });

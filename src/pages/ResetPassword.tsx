@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -7,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Loader2, CheckCircle, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { api } from "@/lib/api";
 
 export default function ResetPassword() {
   const [password, setPassword] = useState("");
@@ -31,7 +31,7 @@ export default function ResetPassword() {
     }
     setLoading(true);
     try {
-      const { error } = await supabase.auth.updateUser({ password });
+      const { error } = await api.post("/auth/update-user", { password }).catch((e: any) => ({ error: e.message }));
       if (error) throw error;
       setDone(true);
       toast.success("Password updated!");

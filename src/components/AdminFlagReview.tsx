@@ -5,13 +5,13 @@
  */
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Flag, CheckCircle, XCircle, ShieldCheck, Loader2, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { api } from "@/lib/api";
 
 interface FlagRow {
   id: string;
@@ -38,8 +38,7 @@ export function AdminFlagReview() {
   async function fetchFlags() {
     setLoading(true);
     // Fetch flags — admin can see all via RLS policy
-    const { data } = await supabase
-      .from("listing_flags" as any)
+    const { data } = await api.from("listing_flags" as any)
       .select("*")
       .eq("status", "pending")
       .order("created_at", { ascending: false })
@@ -48,8 +47,7 @@ export function AdminFlagReview() {
     if (data && data.length > 0) {
       // Fetch listing titles
       const listingIds = [...new Set((data as any[]).map((f: any) => f.listing_id))];
-      const { data: listings } = await supabase
-        .from("listings")
+      const { data: listings } = await api.from("listings")
         .select("id, title")
         .in("id", listingIds);
 
@@ -67,8 +65,7 @@ export function AdminFlagReview() {
 
   async function handleAction(flagId: string, action: "reviewed" | "dismissed") {
     setActionLoading(flagId);
-    const { error } = await supabase
-      .from("listing_flags" as any)
+    const { error } = await api.from("listing_flags" as any)
       .update({ status: action, reviewed_by: user?.id } as any)
       .eq("id", flagId);
 
@@ -84,8 +81,9 @@ export function AdminFlagReview() {
   async function handleVerifyAdmin(listingId: string) {
     setActionLoading("verify-" + listingId);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verify-listing`, {
+      const session = { access_token: localStorage.getItem("opendraft_token") };
+      if (!localStorage.getItem("opendraft_token")) throw new Error("Not authenticated");
+      const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:3001/api"}/functions/verify-listing`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

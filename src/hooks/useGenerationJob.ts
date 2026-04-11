@@ -4,7 +4,7 @@
  */
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 
 export interface GenJob {
@@ -47,31 +47,21 @@ export function useGenerationJob() {
     }
   }, [genJob?.status, genJob?.listing_id, navigate]);
 
-  // Subscribe to generation job updates
+  // Poll for generation job updates
   useEffect(() => {
     if (!genJob || genJob.status === "complete" || genJob.status === "failed") return;
 
-    const channel = supabase
-      .channel(`browse-job-${genJob.id}`)
-      .on("postgres_changes", {
-        event: "UPDATE",
-        schema: "public",
-        table: "generation_jobs",
-        filter: `id=eq.${genJob.id}`,
-      }, (payload) => {
-        const updated = payload.new as GenJob;
-        setGenJob(updated);
-        if (updated.status === "complete" || updated.status === "failed") setGenerating(false);
-      })
-      .subscribe();
-
     const poll = setInterval(async () => {
-      const { data } = await supabase.from("generation_jobs").select("id, status, stage, listing_id, listing_title, error").eq("id", genJob.id).single();
-      if (data) {
-        setGenJob(data as GenJob);
-        if (data.status === "complete" || data.status === "failed") { setGenerating(false); clearInterval(poll); }
+      try {
+        const { data } = await api.get<{ data: GenJob }>(`/generation-jobs/${genJob.id}`);
+        if (data) {
+          setGenJob(data);
+          if (data.status === "complete" || data.status === "failed") { setGenerating(false); clearInterval(poll); }
+        }
+      } catch {
+        // ignore polling errors
       }
-    }, 5000);
+    }, 3000);
 
     const timeout = setTimeout(() => {
       setGenJob(prev => {
@@ -83,12 +73,11 @@ export function useGenerationJob() {
       });
     }, 180000);
 
-    return () => { supabase.removeChannel(channel); clearInterval(poll); clearTimeout(timeout); };
+    return () => { clearInterval(poll); clearTimeout(timeout); };
   }, [genJob?.id, genJob?.status]);
 
   const handleGenerate = useCallback(async (prompt: string, brandContext?: Record<string, string>) => {
     if (!user) {
-      // Save prompt so it resumes after login
       if (prompt.trim()) sessionStorage.setItem("opendraft_pending_generate", prompt);
       navigate("/login");
       return;
@@ -98,22 +87,19 @@ export function useGenerationJob() {
     setGenJob(null);
 
     try {
-      const { data: jobRow, error: jobErr } = await supabase
-        .from("generation_jobs")
-        .insert({ user_id: user.id, prompt, status: "pending", stage: "queued" })
-        .select("id, status, stage, listing_id, listing_title, error")
-        .single();
+      const { data: jobRow } = await api.post<{ data: GenJob }>("/generation-jobs", {
+        prompt, status: "pending", stage: "queued",
+      });
 
-      if (jobErr || !jobRow) throw new Error("Failed to create generation job");
-      setGenJob(jobRow as GenJob);
+      if (!jobRow) throw new Error("Failed to create generation job");
+      setGenJob(jobRow);
 
-      supabase.functions.invoke("generate-template-app", {
-        body: {
-          count: 1,
-          themes: [prompt],
-          job_id: jobRow.id,
-          ...(brandContext ? { brand_context: brandContext } : {}),
-        },
+      // Fire-and-forget: trigger the generation function
+      api.post("/functions/generate-template-app", {
+        count: 1,
+        themes: [prompt],
+        job_id: jobRow.id,
+        ...(brandContext ? { brand_context: brandContext } : {}),
       }).catch(console.error);
     } catch (err) {
       setGenJob({ id: "", status: "failed", stage: "error", listing_id: null, listing_title: null, error: err instanceof Error ? err.message : "Unknown error" });

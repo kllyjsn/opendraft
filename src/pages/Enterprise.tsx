@@ -10,11 +10,11 @@ import {
   Building2, Shield, Lock, Users, BarChart3, Globe,
   ArrowRight, Check, ChevronDown, Minus
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
+import { api } from "@/lib/api";
 
 const COMPLIANCE_FRAMEWORKS = [
   { name: "SOC 2 Type II", desc: "Full audit trail, access controls, encryption at rest" },
@@ -153,7 +153,7 @@ function ContactForm() {
     e.preventDefault();
     setLoading(true);
     const form = new FormData(e.currentTarget);
-    const { error } = await supabase.from("enterprise_inquiries").insert({
+    const { error } = await api.from("enterprise_inquiries").insert({
       name: form.get("name") as string,
       email: form.get("email") as string,
       company: form.get("company") as string,

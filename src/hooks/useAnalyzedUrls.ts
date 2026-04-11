@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 
 export interface AnalyzedUrl {
@@ -22,12 +22,12 @@ export function useAnalyzedUrls() {
   const fetchAnalyses = useCallback(async () => {
     if (!user) return;
     setLoading(true);
-    const { data } = await (supabase as any)
-      .from("analyzed_urls")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false });
-    if (data) setAnalyses(data as AnalyzedUrl[]);
+    try {
+      const { data } = await api.get<{ data: AnalyzedUrl[] }>("/analyzed-urls");
+      if (data) setAnalyses(data);
+    } catch {
+      // ignore
+    }
     setLoading(false);
   }, [user]);
 

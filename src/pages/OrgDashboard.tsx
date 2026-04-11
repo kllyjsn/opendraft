@@ -12,7 +12,7 @@ import { Building2, Loader2, Users, Package, Settings, LayoutGrid, Shield } from
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/lib/api";
 
 export default function OrgDashboard() {
   const { slug } = useParams<{ slug: string }>();
@@ -32,8 +32,7 @@ export default function OrgDashboard() {
     async function load() {
       setLoading(true);
 
-      const { data: org } = await supabase
-        .from("organizations")
+      const { data: org } = await api.from("organizations")
         .select("*")
         .eq("slug", slug!)
         .single();
@@ -41,15 +40,13 @@ export default function OrgDashboard() {
       if (!org) { setLoading(false); return; }
       setOrgData(org);
 
-      const { data: memberData } = await supabase
-        .from("org_members")
+      const { data: memberData } = await api.from("org_members")
         .select("*")
         .eq("org_id", org.id);
 
       if (memberData) {
         const userIds = memberData.map(m => m.user_id);
-        const { data: profiles } = await supabase
-          .from("profiles")
+        const { data: profiles } = await api.from("profiles")
           .select("user_id, username, avatar_url")
           .in("user_id", userIds);
 
@@ -63,14 +60,12 @@ export default function OrgDashboard() {
         setMyRole(mine?.role ?? null);
       }
 
-      const { count } = await supabase
-        .from("org_listings")
+      const { count } = await api.from("org_listings")
         .select("id", { count: "exact", head: true })
         .eq("org_id", org.id);
       setAppCount(count ?? 0);
 
-      const { count: approved } = await supabase
-        .from("org_listings")
+      const { count: approved } = await api.from("org_listings")
         .select("id", { count: "exact", head: true })
         .eq("org_id", org.id)
         .eq("status", "approved");

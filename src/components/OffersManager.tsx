@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Check, X, ArrowRightLeft, HandCoins } from "lucide-react";
+import { api } from "@/lib/api";
 
 interface Offer {
   id: string;
@@ -38,8 +38,7 @@ export function OffersManager() {
   async function fetchOffers() {
     if (!user) return;
     // Fetch offers where user is seller
-    const { data } = await supabase
-      .from("offers")
+    const { data } = await api.from("offers")
       .select("*")
       .eq("seller_id", user.id)
       .order("created_at", { ascending: false });
@@ -47,8 +46,7 @@ export function OffersManager() {
     if (data) {
       // Fetch listing titles
       const listingIds = [...new Set(data.map((o: any) => o.listing_id))];
-      const { data: listings } = await supabase
-        .from("listings")
+      const { data: listings } = await api.from("listings")
         .select("id, title")
         .in("id", listingIds);
 
@@ -63,7 +61,8 @@ export function OffersManager() {
   async function respond(offerId: string, action: "accept" | "reject" | "counter") {
     setResponding(offerId);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const session = { access_token: localStorage.getItem("opendraft_token") };
+      if (!localStorage.getItem("opendraft_token")) throw new Error("Not authenticated");
       const body: any = { action, offerId, sellerMessage: sellerMessages[offerId] || null };
       if (action === "counter") {
         const amt = parseFloat(counterAmounts[offerId] || "0");
@@ -71,7 +70,7 @@ export function OffersManager() {
         body.counterAmount = Math.round(amt * 100);
       }
 
-      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/handle-offer`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:3001/api"}/functions/handle-offer`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

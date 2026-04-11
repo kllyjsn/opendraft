@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { ChangelogFeed } from "@/components/ChangelogFeed";
 import { motion, AnimatePresence } from "framer-motion";
+import { api } from "@/lib/api";
 import {
   Sparkles, CheckCircle, XCircle, Clock, ChevronDown, ChevronUp,
   Loader2, Zap, Shield, Palette, Accessibility, Bug, Code, GitCommit,
@@ -245,9 +245,9 @@ export function ImprovementDashboard() {
   const loadData = useCallback(async () => {
     if (!user) return;
     const [{ data: cycleData }, { data: listingData }] = await Promise.all([
-      supabase.from("improvement_cycles" as any).select("*")
+      api.from("improvement_cycles" as any).select("*")
         .eq("user_id", user.id).order("created_at", { ascending: false }).limit(20),
-      supabase.from("listings").select("id, title, demo_url")
+      api.from("listings").select("id, title, demo_url")
         .eq("seller_id", user.id).eq("status", "live"),
     ]);
     setCycles((cycleData as any[]) ?? []);
@@ -262,8 +262,7 @@ export function ImprovementDashboard() {
 
   async function loadChanges(cycleId: string) {
     if (changes[cycleId]) return;
-    const { data } = await supabase
-      .from("improvement_changes" as any).select("*").eq("cycle_id", cycleId);
+    const { data } = await api.from("improvement_changes" as any).select("*").eq("cycle_id", cycleId);
     setChanges((prev) => ({ ...prev, [cycleId]: (data as any[]) ?? [] }));
   }
 
@@ -271,9 +270,7 @@ export function ImprovementDashboard() {
     if (!user) return;
     setAnalyzingListing(listingId);
     try {
-      const { data, error } = await supabase.functions.invoke("swarm-app-analyzer", {
-        body: { listing_id: listingId, trigger: "manual", user_id: user.id },
-      });
+      const { data: data, error } = await api.post<{ data: any }>("/functions/swarm-app-analyzer", { listing_id: listingId, trigger: "manual", user_id: user.id },);
       if (error) throw error;
       toast({ title: `Analysis complete — Score: ${data.score}/100` });
       loadData();
@@ -285,7 +282,7 @@ export function ImprovementDashboard() {
   }
 
   async function approveChange(changeId: string, approved: boolean) {
-    await supabase.from("improvement_changes" as any).update({ approved }).eq("id", changeId);
+    await api.from("improvement_changes" as any).update({ approved }).eq("id", changeId);
     setChanges((prev) => {
       const updated = { ...prev };
       for (const cycleId in updated) {
@@ -302,7 +299,7 @@ export function ImprovementDashboard() {
     for (const change of cycleChanges) {
       if (change.approved === null) await approveChange(change.id, true);
     }
-    await supabase.from("improvement_cycles" as any).update({ status: "approved" }).eq("id", cycleId);
+    await api.from("improvement_cycles" as any).update({ status: "approved" }).eq("id", cycleId);
     setCycles((prev) => prev.map((c) => (c.id === cycleId ? { ...c, status: "approved" } : c)));
   }
 
@@ -318,9 +315,7 @@ export function ImprovementDashboard() {
 
     try {
       await approveAllInCycle(cycleId);
-      const { data, error } = await supabase.functions.invoke("swarm-apply-fixes", {
-        body: { cycle_id: cycleId, listing_id: listingId, user_id: user.id, mode: "preview" },
-      });
+      const { data: data, error } = await api.post<{ data: any }>("/functions/swarm-apply-fixes", { cycle_id: cycleId, listing_id: listingId, user_id: user.id, mode: "preview" },);
       if (error) throw error;
 
       setCycles((prev) =>
@@ -350,9 +345,7 @@ export function ImprovementDashboard() {
     if (!user) return;
     setPromotingCycle(cycleId);
     try {
-      const { data, error } = await supabase.functions.invoke("swarm-apply-fixes", {
-        body: { cycle_id: cycleId, listing_id: listingId, user_id: user.id, mode: "promote" },
-      });
+      const { data: data, error } = await api.post<{ data: any }>("/functions/swarm-apply-fixes", { cycle_id: cycleId, listing_id: listingId, user_id: user.id, mode: "promote" },);
       if (error) throw error;
       toast({ title: "Live! Your changes are in production." });
       setCycles((prev) => prev.map((c) => c.id === cycleId ? { ...c, status: "applied" } : c));

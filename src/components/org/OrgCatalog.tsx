@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -10,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Check, X, Loader2, Package, Shield, Clock, Search } from "lucide-react";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { api } from "@/lib/api";
 
 interface CatalogSearchResult {
   id: string;
@@ -79,8 +79,7 @@ export function OrgCatalog({ orgId, isAdmin }: OrgCatalogProps) {
     }
     const timeout = setTimeout(async () => {
       setSearching(true);
-      const { data } = await supabase
-        .from("listings")
+      const { data } = await api.from("listings")
         .select("id, title, description, price, category, screenshots")
         .eq("status", "live")
         .ilike("title", `%${searchQuery.trim()}%`)
@@ -94,8 +93,7 @@ export function OrgCatalog({ orgId, isAdmin }: OrgCatalogProps) {
 
   async function loadListings() {
     setLoading(true);
-    const { data } = await supabase
-      .from("org_listings")
+    const { data } = await api.from("org_listings")
       .select("*")
       .eq("org_id", orgId)
       .order("created_at", { ascending: false });
@@ -103,8 +101,7 @@ export function OrgCatalog({ orgId, isAdmin }: OrgCatalogProps) {
     if (data && data.length > 0) {
       // Fetch listing details
       const listingIds = data.map(d => d.listing_id);
-      const { data: listingDetails } = await supabase
-        .from("listings")
+      const { data: listingDetails } = await api.from("listings")
         .select("id, title, description, price, screenshots, tech_stack, security_score")
         .in("id", listingIds);
 
@@ -121,8 +118,7 @@ export function OrgCatalog({ orgId, isAdmin }: OrgCatalogProps) {
   }
 
   async function handleApprove(orgListingId: string) {
-    const { error } = await supabase
-      .from("org_listings")
+    const { error } = await api.from("org_listings")
       .update({ status: "approved", approved_by: user!.id, approved_at: new Date().toISOString() })
       .eq("id", orgListingId);
     if (error) {
@@ -134,8 +130,7 @@ export function OrgCatalog({ orgId, isAdmin }: OrgCatalogProps) {
   }
 
   async function handleReject(orgListingId: string) {
-    const { error } = await supabase
-      .from("org_listings")
+    const { error } = await api.from("org_listings")
       .update({ status: "rejected" })
       .eq("id", orgListingId);
     if (error) {
@@ -151,7 +146,7 @@ export function OrgCatalog({ orgId, isAdmin }: OrgCatalogProps) {
     if (!selectedListing) return;
     setSubmitting(true);
 
-    const { error } = await supabase.from("org_listings").insert({
+    const { error } = await api.from("org_listings").insert({
       org_id: orgId,
       listing_id: selectedListing.id,
       department: department.trim() || null,

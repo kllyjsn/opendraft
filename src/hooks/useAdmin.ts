@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 
 export function useAdmin() {
@@ -15,14 +15,13 @@ export function useAdmin() {
       return;
     }
 
-    supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id)
-      .eq("role", "admin")
-      .maybeSingle()
-      .then(({ data }) => {
-        setIsAdmin(!!data);
+    api.get<{ isAdmin: boolean }>("/user-roles/me")
+      .then(({ isAdmin: admin }) => {
+        setIsAdmin(admin);
+        setLoading(false);
+      })
+      .catch(() => {
+        setIsAdmin(false);
         setLoading(false);
       });
   }, [user, authLoading]);

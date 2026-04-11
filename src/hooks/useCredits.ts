@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 
 export function useCredits() {
@@ -9,12 +9,12 @@ export function useCredits() {
 
   async function fetchBalance() {
     if (!user) { setBalance(null); setLoading(false); return; }
-    const { data } = await supabase
-      .from("credit_balances" as any)
-      .select("balance")
-      .eq("user_id", user.id)
-      .single();
-    setBalance((data as any)?.balance ?? 0);
+    try {
+      const { balance: b } = await api.get<{ balance: number }>("/credits/balance");
+      setBalance(b ?? 0);
+    } catch {
+      setBalance(0);
+    }
     setLoading(false);
   }
 

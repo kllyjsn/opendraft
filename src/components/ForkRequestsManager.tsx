@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { GitFork, DollarSign, Clock, CheckCircle, MessageSquare, X, Loader2, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
+import { api } from "@/lib/api";
 
 interface ForkRequest {
   id: string;
@@ -48,8 +48,7 @@ export function ForkRequestsManager() {
     setLoading(true);
 
     // Get fork requests where I'm the builder
-    const { data: reqs } = await supabase
-      .from("fork_requests" as any)
+    const { data: reqs } = await api.from("fork_requests" as any)
       .select("*")
       .eq("builder_id", user.id)
       .order("created_at", { ascending: false });
@@ -65,8 +64,8 @@ export function ForkRequestsManager() {
     const requesterIds = [...new Set((reqs as any[]).map((r: any) => r.requester_id))];
 
     const [{ data: listings }, { data: profiles }] = await Promise.all([
-      supabase.from("listings").select("id, title").in("id", listingIds),
-      supabase.from("public_profiles").select("user_id, username").in("user_id", requesterIds),
+      api.from("listings").select("id, title").in("id", listingIds),
+      api.from("public_profiles").select("user_id, username").in("user_id", requesterIds),
     ]);
 
     const listingMap = Object.fromEntries((listings ?? []).map((l) => [l.id, l.title]));
@@ -88,8 +87,7 @@ export function ForkRequestsManager() {
     const feeCents = Math.round(parseFloat(feeStr) * 100);
     if (feeCents <= 0) return;
 
-    const { error } = await supabase
-      .from("fork_requests" as any)
+    const { error } = await api.from("fork_requests" as any)
       .update({ builder_fee: feeCents, status: "quoted" })
       .eq("id", requestId);
 
@@ -102,8 +100,7 @@ export function ForkRequestsManager() {
   }
 
   async function updateStatus(requestId: string, status: string) {
-    const { error } = await supabase
-      .from("fork_requests" as any)
+    const { error } = await api.from("fork_requests" as any)
       .update({ status })
       .eq("id", requestId);
 
@@ -220,9 +217,7 @@ export function ForkRequestsManager() {
                   onClick={async () => {
                     setAutoBuilding(req.id);
                     try {
-                      const { data, error } = await supabase.functions.invoke("swarm-fork-autobuilder", {
-                        body: { fork_request_id: req.id },
-                      });
+                      const { data: data, error } = await api.post<{ data: any }>("/functions/swarm-fork-autobuilder", { fork_request_id: req.id },);
                       if (error) throw error;
                       toast({ title: "Fork auto-built! 🤖", description: `Created "${data.title}" with ${data.changed_files} modified files.` });
                       loadRequests();

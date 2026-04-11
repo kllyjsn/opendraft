@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
@@ -7,6 +6,7 @@ import {
 } from "recharts";
 import { TrendingUp, Eye, ShoppingCart, DollarSign, ArrowUpRight, ArrowDownRight, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { api } from "@/lib/api";
 
 interface ListingAnalytics {
   id: string;
@@ -56,8 +56,7 @@ export function SellerAnalytics() {
       setLoading(true);
       const threshold = getDateThreshold(timeRange);
 
-      let purchaseQuery = supabase
-        .from("purchases")
+      let purchaseQuery = api.from("purchases")
         .select("listing_id, seller_amount, created_at")
         .eq("seller_id", user!.id)
         .order("created_at", { ascending: true });
@@ -67,8 +66,7 @@ export function SellerAnalytics() {
       }
 
       const [{ data: listings }, { data: purchases }] = await Promise.all([
-        supabase
-          .from("listings")
+        api.from("listings")
           .select("id, title, view_count, sales_count")
           .eq("seller_id", user!.id),
         purchaseQuery,

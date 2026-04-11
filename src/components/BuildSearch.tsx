@@ -1,12 +1,12 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
 import { Link, useNavigate } from "react-router-dom";
 import { CompletenessBadge } from "@/components/CompletenessBadge";
 import { ArrowRight, Sparkles, Loader2, ShoppingCart, X, Wand2, CheckCircle, AlertCircle, ExternalLink, Search, Zap, TrendingUp, Clock, Star, Filter } from "lucide-react";
 import { logActivity } from "@/lib/activity-logger";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { api } from "@/lib/api";
 
 const PLACEHOLDERS = [
   "an AI email writer SaaS...",
@@ -118,7 +118,7 @@ export function BuildSearch() {
     }
 
     try {
-      const { data } = await supabase.rpc("search_listings", {
+      await api.post("/rpc/search_listings", {
         search_query: query,
         page_limit: 8,
         page_offset: 0,
@@ -208,29 +208,9 @@ export function BuildSearch() {
   useEffect(() => {
     if (!job || job.status === "complete" || job.status === "failed") return;
 
-    const channel = supabase
-      .channel(`job-${job.id}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "generation_jobs",
-          filter: `id=eq.${job.id}`,
-        },
-        (payload) => {
-          const updated = payload.new as GenerationJob;
-          setJob(updated);
-          if (updated.status === "complete" || updated.status === "failed") {
-            setGenerating(false);
-          }
-        }
-      )
-      .subscribe();
-
+    // Poll for job updates (replaces Supabase realtime)
     const pollInterval = setInterval(async () => {
-      const { data } = await supabase
-        .from("generation_jobs")
+      const { data } = await api.from("generation_jobs")
         .select("id, status, stage, listing_id, listing_title, error")
         .eq("id", job.id)
         .single();
@@ -254,7 +234,6 @@ export function BuildSearch() {
     }, 180000);
 
     return () => {
-      supabase.removeChannel(channel);
       clearInterval(pollInterval);
       clearTimeout(safetyTimeout);
     };
@@ -274,9 +253,7 @@ export function BuildSearch() {
     addRecentSearch(prompt.trim());
 
     try {
-      const { data, error: fnError } = await supabase.functions.invoke("match-listings", {
-        body: { prompt: prompt.trim() },
-      });
+      const { data: data, error } = await api.post<{ data: any }>("/functions/match-listings", { prompt: prompt.trim() },);
 
       if (fnError) throw new Error(fnError.message);
       if (data?.error) throw new Error(data.error);
@@ -325,8 +302,7 @@ export function BuildSearch() {
     setJob(null);
 
     try {
-      const { data: jobRow, error: jobErr } = await supabase
-        .from("generation_jobs")
+      const { data: jobRow, error: jobErr } = await api.from("generation_jobs")
         .insert({
           user_id: user.id,
           prompt: prompt.trim(),
@@ -342,9 +318,7 @@ export function BuildSearch() {
 
       setJob(jobRow as GenerationJob);
 
-      supabase.functions.invoke("generate-template-app", {
-        body: { count: 1, themes: [prompt.trim()], job_id: jobRow.id },
-      }).catch((err) => {
+      api.post("/functions/generate-template-app", { count: 1, themes: [prompt.trim()], job_id: jobRow.id }).catch((err: any) => {
         console.error("Edge function call failed:", err);
         setJob(prev => prev ? { ...prev, status: "failed", stage: "error", error: "Network error — check your dashboard, the build may still complete." } : prev);
         setGenerating(false);

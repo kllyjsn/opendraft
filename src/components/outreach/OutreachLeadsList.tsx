@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,6 +12,7 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import { api } from "@/lib/api";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
@@ -78,8 +78,7 @@ export function OutreachLeadsList({ campaignId, industry }: Props) {
 
   const fetchData = async () => {
     setLoading(true);
-    let leadsQuery = supabase
-      .from("outreach_leads")
+    let leadsQuery = api.from("outreach_leads")
       .select("*")
       .order("score", { ascending: false })
       .limit(200);
@@ -89,7 +88,7 @@ export function OutreachLeadsList({ campaignId, industry }: Props) {
 
     const [leadsRes, msgsRes] = await Promise.all([
       leadsQuery,
-      supabase.from("outreach_messages").select("id, lead_id, subject, body, message_status").limit(500),
+      api.from("outreach_messages").select("id, lead_id, subject, body, message_status").limit(500),
     ]);
 
     setLeads((leadsRes.data as Lead[]) || []);
@@ -111,13 +110,11 @@ export function OutreachLeadsList({ campaignId, industry }: Props) {
     }
     setAddingProspect(true);
     try {
-      const { data, error } = await supabase.functions.invoke("swarm-b2b-outreach", {
-        body: {
+      const { data: data } = await api.post<{ data: any }>("/functions/swarm-b2b-outreach", {
           action: "add_prospect",
           ...newProspect,
           campaign_id: campaignId,
-        },
-      });
+        },);
       if (error) throw error;
       if (data?.result?.error) throw new Error(data.result.error);
       toast.success(`Added ${data?.result?.lead?.business_name || "prospect"}`);
@@ -135,14 +132,12 @@ export function OutreachLeadsList({ campaignId, industry }: Props) {
     if (!importUrl) { toast.error("Enter a URL"); return; }
     setImportingUrl(true);
     try {
-      const { data, error } = await supabase.functions.invoke("swarm-b2b-outreach", {
-        body: {
+      const { data: data } = await api.post<{ data: any }>("/functions/swarm-b2b-outreach", {
           action: "import_from_url",
           url: importUrl,
           industry: importIndustry,
           campaign_id: campaignId,
-        },
-      });
+        },);
       if (error) throw error;
       if (data?.result?.error) throw new Error(data.result.error);
       toast.success(`Imported ${data?.result?.imported_count || 0} prospects`);

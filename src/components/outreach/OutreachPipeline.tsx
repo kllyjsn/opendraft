@@ -1,5 +1,4 @@
 import { useEffect, useState, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -13,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { OutreachLeadsList } from "./OutreachLeadsList";
 import { OutreachMessagesList } from "./OutreachMessagesList";
+import { api } from "@/lib/api";
 
 interface Campaign {
   id: string;
@@ -79,9 +79,9 @@ export function OutreachPipeline() {
     const campaignFilter = selectedCampaign !== "all" ? selectedCampaign : null;
 
     const [campaignsRes, leadsRes, messagesRes] = await Promise.all([
-      supabase.from("outreach_campaigns").select("*").order("created_at", { ascending: false }),
-      supabase.from("outreach_leads").select("id, score, lead_status, industry, campaign_id"),
-      supabase.from("outreach_messages").select("id, message_status, campaign_id, lead_id, direction"),
+      api.from("outreach_campaigns").select("*").order("created_at", { ascending: false }),
+      api.from("outreach_leads").select("id, score, lead_status, industry, campaign_id"),
+      api.from("outreach_messages").select("id, message_status, campaign_id, lead_id, direction"),
     ]);
 
     setCampaigns((campaignsRes.data as Campaign[]) || []);
@@ -127,14 +127,12 @@ export function OutreachPipeline() {
     setRunningStep(action);
     toast.info(`Running ${action.replace(/_/g, " ")}...`);
     try {
-      const { data, error } = await supabase.functions.invoke("swarm-b2b-outreach", {
-        body: {
+      const { data: data } = await api.post<{ data: any }>("/functions/swarm-b2b-outreach", {
           action,
           triggered_by: "manual",
           campaign_id: selectedCampaign !== "all" ? selectedCampaign : null,
           industry: selectedIndustry !== "all" ? selectedIndustry : null,
-        },
-      });
+        },);
       if (error) throw error;
       toast.success(`${action.replace(/_/g, " ")} completed`);
       fetchStats();

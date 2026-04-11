@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Navigate, Link } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -12,6 +11,7 @@ import { AdminDiscountCodes } from "@/components/AdminDiscountCodes";
 import { AdminFlagReview } from "@/components/AdminFlagReview";
 import { AdminConceptGenerator } from "@/components/AdminConceptGenerator";
 import { AdminMarketResearch } from "@/components/AdminMarketResearch";
+import { api } from "@/lib/api";
 
 interface PendingListing {
   id: string;
@@ -45,8 +45,9 @@ function BackfillZipsPanel() {
     setRunning(true);
     setResult(null);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/backfill-template-zips`, {
+      const session = { access_token: localStorage.getItem("opendraft_token") };
+      if (!localStorage.getItem("opendraft_token")) throw new Error("Not authenticated");
+      const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:3001/api"}/functions/backfill-template-zips`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -113,8 +114,9 @@ function PatchDeployConfigsPanel() {
     setRunning(true);
     setResult(null);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/patch-deploy-configs`, {
+      const session = { access_token: localStorage.getItem("opendraft_token") };
+      if (!localStorage.getItem("opendraft_token")) throw new Error("Not authenticated");
+      const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:3001/api"}/functions/patch-deploy-configs`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -191,9 +193,10 @@ function GenerateScreenshotsPanel() {
     let totalProcessed = 0;
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const session = { access_token: localStorage.getItem("opendraft_token") };
+      if (!localStorage.getItem("opendraft_token")) throw new Error("Not authenticated");
       while (true) {
-        const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-unique-screenshots`, {
+        const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:3001/api"}/functions/generate-unique-screenshots`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -286,8 +289,7 @@ export default function Admin() {
   }, [isAdmin, filter]);
 
   async function fetchStats() {
-    const { data } = await supabase
-      .from("listings")
+    const { data } = await api.from("listings")
       .select("status");
     if (data) {
       const pending = data.filter((l) => l.status === "pending").length;
@@ -299,8 +301,7 @@ export default function Admin() {
 
   async function fetchListings() {
     setDataLoading(true);
-    const { data } = await supabase
-      .from("listings")
+    const { data } = await api.from("listings")
       .select("*")
       .eq("status", filter)
       .order("created_at", { ascending: false });
@@ -310,8 +311,7 @@ export default function Admin() {
 
   async function updateStatus(id: string, status: "live" | "hidden" | "pending") {
     setActionLoading(id + status);
-    const { error } = await supabase
-      .from("listings")
+    const { error } = await api.from("listings")
       .update({ status })
       .eq("id", id);
 

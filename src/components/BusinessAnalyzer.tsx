@@ -7,7 +7,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { supabase } from "@/integrations/supabase/client";
 import { logActivity } from "@/lib/activity-logger";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -18,6 +17,7 @@ import { AdvisorPanel } from "@/components/AdvisorPanel";
 import { IntegrationPicker, getIntegrationNames } from "@/components/IntegrationPicker";
 import { AppPreviewMockup } from "@/components/AppPreviewMockup";
 import { PostAuditEmailCapture } from "@/components/PostAuditEmailCapture";
+import { api } from "@/lib/api";
 
 interface Insight {
   title: string;
@@ -211,8 +211,8 @@ function clearAnalysis() {
 
 async function saveAnalysisToDb(result: AnalysisResult, isFallback: boolean) {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    await (supabase as any).from("analyzed_urls").insert({
+    const { user } = await api.get<{ user: any }>("/auth/me");
+    await api.from("analyzed_urls").insert({
       user_id: user?.id ?? null,
       url: result.url,
       business_name: result.business_name,
@@ -347,9 +347,7 @@ export function BusinessAnalyzer({ onGenerate, onResultsChange }: {
     logActivity({ event_type: "url_entered", event_data: { url: normalizedUrl }, page: "/" });
 
     try {
-      const invokePromise = supabase.functions.invoke("analyze-business-url", {
-        body: { url: normalizedUrl },
-      });
+      const invokePromise = api.post<{ data: any; error?: any }>("/functions/analyze-business-url", { url: normalizedUrl });
 
       const timeoutPromise = new Promise<never>((_, reject) => {
         window.setTimeout(() => reject(new Error("Analysis is taking longer than expected.")), 22000);

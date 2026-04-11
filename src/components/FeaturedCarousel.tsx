@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { ListingCard } from "./ListingCard";
 import { Star, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { api } from "@/lib/api";
 import {
   Carousel,
   CarouselContent,
@@ -35,12 +35,11 @@ export function FeaturedCarousel() {
 
   useEffect(() => {
     async function load() {
-      const { data, error } = await supabase.rpc("get_featured_listings");
+      await api.post("/rpc/get_featured_listings");
       if (error || !data?.length) return;
 
       const sellerIds = [...new Set(data.map((l: any) => l.seller_id))];
-      const { data: profiles } = await supabase
-        .from("public_profiles")
+      const { data: profiles } = await api.from("public_profiles")
         .select("user_id, username")
         .in("user_id", sellerIds);
       const map = Object.fromEntries(

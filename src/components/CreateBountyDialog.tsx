@@ -4,10 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Plus } from "lucide-react";
+import { api } from "@/lib/api";
 
 const CATEGORIES = [
   { value: "saas_tool", label: "SaaS Tool" },
@@ -46,7 +46,7 @@ export function CreateBountyDialog({ onCreated }: Props) {
     setSaving(true);
     const tags = techStack.split(",").map((t) => t.trim()).filter(Boolean);
 
-    const { error } = await supabase.from("bounties").insert({
+    const { error } = await api.from("bounties").insert({
       poster_id: user.id,
       title: title.trim(),
       description: description.trim(),

@@ -5,13 +5,13 @@
  */
 
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Flag, Loader2, CheckCircle2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { api } from "@/lib/api";
 
 interface FlagListingButtonProps {
   listingId: string;
@@ -42,7 +42,7 @@ export function FlagListingButton({ listingId, sellerId }: FlagListingButtonProp
     if (!reason.trim()) return;
     setSubmitting(true);
     try {
-      const { error } = await supabase.from("listing_flags" as any).insert({
+      const { error } = await api.from("listing_flags" as any).insert({
         listing_id: listingId,
         reporter_id: user!.id,
         reason,

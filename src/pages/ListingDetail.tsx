@@ -1,6 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { CompletenessBadge } from "@/components/CompletenessBadge";
@@ -28,6 +27,7 @@ import { AgentReadyBadge } from "@/components/AgentReadyBadge";
 import { PostClaimUpsell } from "@/components/PostClaimUpsell";
 
 import { GoogleSignInButton } from "@/components/GoogleSignInButton";
+import { api } from "@/lib/api";
 const BUILT_WITH_LABELS: Record<string, string> = {
   lovable: "Lovable",
   claude_code: "Claude Code",
@@ -106,30 +106,30 @@ export default function ListingDetail() {
 
   async function fetchListing() {
     setLoading(true);
-    const { data } = await supabase.from("listings").select("*").eq("id", id).single();
+    const { data } = await api.from("listings").select("*").eq("id", id).single();
     if (data) {
       setListing(data as Listing);
-      await supabase.from("listings").update({ view_count: (data.view_count ?? 0) + 1 }).eq("id", id);
-      const { data: profile } = await supabase.from("public_profiles").select("username,avatar_url,total_sales,verified").eq("user_id", data.seller_id).single();
+      await api.from("listings").update({ view_count: (data.view_count ?? 0) + 1 }).eq("id", id);
+      const { data: profile } = await api.from("public_profiles").select("username,avatar_url,total_sales,verified").eq("user_id", data.seller_id).single();
       setSeller(profile);
     }
     setLoading(false);
   }
 
   async function fetchReviews() {
-    const { data } = await supabase.from("reviews").select("*").eq("listing_id", id).order("created_at", { ascending: false });
+    const { data } = await api.from("reviews").select("*").eq("listing_id", id).order("created_at", { ascending: false });
     setReviews((data as Review[]) ?? []);
   }
 
   async function checkPurchase() {
     if (!user || !id) return;
     // Sellers are treated as owners too
-    const { data: listingData } = await supabase.from("listings").select("seller_id").eq("id", id).single();
+    const { data: listingData } = await api.from("listings").select("seller_id").eq("id", id).single();
     if (listingData?.seller_id === user.id) {
       setPurchased(true);
       return;
     }
-    const { data } = await supabase.from("purchases").select("id").eq("listing_id", id).eq("buyer_id", user.id).maybeSingle();
+    const { data } = await api.from("purchases").select("id").eq("listing_id", id).eq("buyer_id", user.id).maybeSingle();
     setPurchased(!!data);
   }
 
@@ -137,8 +137,9 @@ export default function ListingDetail() {
     if (!user || !listing) return;
     setDownloading(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-download-url`, {
+      const session = { access_token: localStorage.getItem("opendraft_token") };
+      if (!localStorage.getItem("opendraft_token")) throw new Error("Not authenticated");
+      const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:3001/api"}/functions/get-download-url`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -171,8 +172,9 @@ export default function ListingDetail() {
     setClaiming(true);
     try {
       // All claims go through the edge function for server-side validation
-      const { data: { session } } = await supabase.auth.getSession();
-      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/claim-free-listing`, {
+      const session = { access_token: localStorage.getItem("opendraft_token") };
+      if (!localStorage.getItem("opendraft_token")) throw new Error("Not authenticated");
+      const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:3001/api"}/functions/claim-free-listing`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -185,8 +187,7 @@ export default function ListingDetail() {
 
       // Auto-create conversation so buyer and builder can chat immediately
       try {
-        const { data: existingConvo } = await supabase
-          .from("conversations")
+        const { data: existingConvo } = await api.from("conversations")
           .select("id")
           .eq("buyer_id", user.id)
           .eq("seller_id", listing.seller_id)
@@ -194,14 +195,13 @@ export default function ListingDetail() {
           .maybeSingle();
 
         if (!existingConvo) {
-          const { data: newConvo } = await supabase
-            .from("conversations")
+          const { data: newConvo } = await api.from("conversations")
             .insert({ buyer_id: user.id, seller_id: listing.seller_id, listing_id: listing.id })
             .select("id")
             .single();
 
           if (newConvo) {
-            await supabase.from("messages").insert({
+            await api.from("messages").insert({
               conversation_id: newConvo.id,
               sender_id: listing.seller_id,
               content: `Thanks for claiming ${listing.title}! 🎉 I'm your builder — feel free to ask me anything, request features, or set up a support retainer.`,

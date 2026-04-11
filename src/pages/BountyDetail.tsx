@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, Navigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -9,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Target, ChevronLeft, Clock, Users, DollarSign, CheckCircle, XCircle } from "lucide-react";
+import { api } from "@/lib/api";
 
 const CATEGORY_LABELS: Record<string, string> = {
   saas_tool: "SaaS Tool", ai_app: "AI App", landing_page: "Landing Page",
@@ -49,18 +49,17 @@ export default function BountyDetail() {
 
   async function fetchBounty() {
     setLoading(true);
-    const { data } = await supabase.from("bounties").select("*").eq("id", id).single();
+    const { data } = await api.from("bounties").select("*").eq("id", id).single();
     if (!data) { setLoading(false); return; }
     setBounty(data as any);
 
     // Fetch poster profile
-    const { data: profile } = await supabase.from("public_profiles").select("username").eq("user_id", data.poster_id).single();
+    const { data: profile } = await api.from("public_profiles").select("username").eq("user_id", data.poster_id).single();
     setPoster(profile);
 
     // Fetch submissions if poster or submitter
     if (user && (data.poster_id === user.id)) {
-      const { data: subs } = await supabase
-        .from("bounty_submissions")
+      const { data: subs } = await api.from("bounty_submissions")
         .select("*")
         .eq("bounty_id", id)
         .order("created_at", { ascending: false });
@@ -71,8 +70,8 @@ export default function BountyDetail() {
         const sellerIds = [...new Set(subs.map((s) => s.seller_id))];
 
         const [{ data: listings }, { data: profiles }] = await Promise.all([
-          supabase.from("listings").select("id, title").in("id", listingIds),
-          supabase.from("public_profiles").select("user_id, username").in("user_id", sellerIds),
+          api.from("listings").select("id, title").in("id", listingIds),
+          api.from("public_profiles").select("user_id, username").in("user_id", sellerIds),
         ]);
 
         const listingMap = Object.fromEntries((listings ?? []).map((l) => [l.id, l.title]));
@@ -88,8 +87,7 @@ export default function BountyDetail() {
 
     // Check if current user already submitted
     if (user) {
-      const { data: mySub } = await supabase
-        .from("bounty_submissions")
+      const { data: mySub } = await api.from("bounty_submissions")
         .select("id")
         .eq("bounty_id", id)
         .eq("seller_id", user.id)
@@ -98,8 +96,7 @@ export default function BountyDetail() {
 
       // Fetch user's live listings for submission
       if (data.poster_id !== user.id) {
-        const { data: listings } = await supabase
-          .from("listings")
+        const { data: listings } = await api.from("listings")
           .select("id, title")
           .eq("seller_id", user.id)
           .eq("status", "live");
@@ -114,7 +111,7 @@ export default function BountyDetail() {
     if (!user || !bounty || !selectedListing) return;
     setSubmitting(true);
 
-    const { error } = await supabase.from("bounty_submissions").insert({
+    const { error } = await api.from("bounty_submissions").insert({
       bounty_id: bounty.id,
       seller_id: user.id,
       listing_id: selectedListing,
@@ -133,8 +130,7 @@ export default function BountyDetail() {
 
   async function handleAward(submissionId: string, listingId: string, sellerId: string) {
     if (!bounty) return;
-    const { error } = await supabase
-      .from("bounties")
+    const { error } = await api.from("bounties")
       .update({ status: "completed", winner_listing_id: listingId, winner_id: sellerId })
       .eq("id", bounty.id);
 
@@ -143,16 +139,15 @@ export default function BountyDetail() {
       return;
     }
 
-    await supabase.from("bounty_submissions").update({ status: "accepted" }).eq("id", submissionId);
+    await api.from("bounty_submissions").update({ status: "accepted" }).eq("id", submissionId);
     // Reject others
-    await supabase
-      .from("bounty_submissions")
+    await api.from("bounty_submissions")
       .update({ status: "rejected" })
       .eq("bounty_id", bounty.id)
       .neq("id", submissionId);
 
     // Notify winner
-    await supabase.from("notifications").insert({
+    await api.from("notifications").insert({
       user_id: sellerId,
       type: "bounty_won",
       title: "You won a bounty! 🏆",

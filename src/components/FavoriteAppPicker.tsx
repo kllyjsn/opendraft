@@ -6,10 +6,10 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { logActivity } from "@/lib/activity-logger";
 import { X } from "lucide-react";
+import { api } from "@/lib/api";
 
 const PICKER_STORAGE_KEY = "opendraft_fav_picker_shown";
 
@@ -39,8 +39,7 @@ export function FavoriteAppPicker() {
 
   async function loadPicks() {
     // Get staff picks or top listings with screenshots
-    const { data } = await supabase
-      .from("listings")
+    const { data } = await api.from("listings")
       .select("id, title, screenshots, description")
       .eq("status", "live")
       .not("screenshots", "is", null)

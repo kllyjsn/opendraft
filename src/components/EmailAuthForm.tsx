@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, Mail } from "lucide-react";
 import { toast } from "sonner";
+import { api, setToken } from "@/lib/api";
 
 interface EmailAuthFormProps {
   defaultMode?: "signin" | "signup";
@@ -22,25 +22,26 @@ export function EmailAuthForm({ defaultMode = "signup" }: EmailAuthFormProps) {
 
     try {
       if (mode === "forgot") {
-        const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        const { error } = await api.post<{ error?: string }>("/auth/reset-password", {
+          email: email.trim(),
           redirectTo: `${window.location.origin}/reset-password`,
-        });
+        }).catch((e: any) => ({ error: e.message }));
         if (error) throw error;
         toast.success("Check your email for a password reset link.");
         setMode("signin");
       } else if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        const { error } = await api.post<{ error?: string }>("/auth/register", {
           email: email.trim(),
           password,
-          options: { emailRedirectTo: window.location.origin },
-        });
+        }).catch((e: any) => ({ error: e.message }));
         if (error) throw error;
         toast.success("Account created! You're all set.");
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { token, error } = await api.post<{ token: string; error?: string }>("/auth/login", {
           email: email.trim(),
           password,
-        });
+        }).catch((e: any) => ({ token: "", error: e.message }));
+      if (token) setToken(token);
         if (error) throw error;
       }
     } catch (err: any) {

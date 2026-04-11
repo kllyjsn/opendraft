@@ -5,7 +5,7 @@
  * Fire-and-forget — errors are silently caught so they never break the UI.
  */
 
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/lib/api";
 
 interface LogEvent {
   event_type: string;
@@ -15,10 +15,7 @@ interface LogEvent {
 
 export async function logActivity({ event_type, event_data = {}, page }: LogEvent) {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    await (supabase as any).from("activity_log").insert({
-      user_id: user.id,
+    await api.post("/activity-log", {
       event_type,
       event_data,
       page: page ?? window.location.pathname,

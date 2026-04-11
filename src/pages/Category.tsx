@@ -3,10 +3,10 @@ import { useParams, Link } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { ListingCard } from "@/components/ListingCard";
-import { supabase } from "@/integrations/supabase/client";
 import { MetaTags } from "@/components/MetaTags";
 import { JsonLd } from "@/components/JsonLd";
 import { Button } from "@/components/ui/button";
+import { api } from "@/lib/api";
 
 const CATEGORY_META: Record<string, { label: string; dbValue: string; description: string; longDescription: string }> = {
   "saas-tool": {
@@ -73,8 +73,7 @@ export default function Category() {
   useEffect(() => {
     if (!meta) return;
     setLoading(true);
-    supabase
-      .from("listings")
+    api.from("listings")
       .select("id,title,description,price,completeness_badge,tech_stack,screenshots,sales_count,view_count,built_with,seller_id,security_score,agent_ready")
       .eq("status", "live")
       .eq("category", meta.dbValue as "saas_tool" | "ai_app" | "landing_page" | "utility" | "game" | "other")

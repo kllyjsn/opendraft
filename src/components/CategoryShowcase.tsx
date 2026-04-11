@@ -2,8 +2,8 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Bot, LayoutDashboard, Globe, Gamepad2, Wrench, Sparkles, ArrowRight } from "lucide-react";
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { ListingCard } from "./ListingCard";
+import { api } from "@/lib/api";
 
 const categories = [
   { icon: Bot, label: "AI Apps", slug: "ai_app", urlSlug: "ai-app" },
@@ -51,8 +51,7 @@ export function CategoryShowcase() {
     async function load() {
       // Parallel queries instead of sequential for-loop
       const promises = categories.map((cat) =>
-        supabase
-          .from("listings")
+        api.from("listings")
           .select("id,title,description,screenshots,price,tech_stack,completeness_badge,sales_count,view_count,built_with,seller_id,security_score", { count: "exact" })
           .eq("status", "live")
           .eq("category", cat.slug as any)

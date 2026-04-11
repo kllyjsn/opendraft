@@ -8,6 +8,7 @@ import { JsonLd } from "@/components/JsonLd";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Code, Terminal, Zap, Key, BookOpen, ExternalLink, Copy, Check, Globe, Bot, ArrowRight, Workflow, ShoppingCart } from "lucide-react";
 import { useState } from "react";
+import { api } from "@/lib/api";
 
 const MCP_URL = "https://api.opendraft.co/mcp";
 const API_URL = "https://api.opendraft.co/v1";

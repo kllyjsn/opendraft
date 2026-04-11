@@ -3,10 +3,10 @@ import { useParams, useNavigate, Navigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { CompletenessBadge } from "@/components/CompletenessBadge";
+import { api } from "@/lib/api";
 import {
   Upload, Plus, X, Github, FileArchive, CheckCircle2, Loader2,
   Save, ArrowLeft, Send, Sparkles, Eye, Settings2, Image as ImageIcon,
@@ -67,8 +67,7 @@ export default function EditListing() {
 
   useEffect(() => {
     if (!user || !id) return;
-    supabase
-      .from("listings")
+    api.from("listings")
       .select("*")
       .eq("id", id)
       .eq("seller_id", user.id)
@@ -118,10 +117,10 @@ export default function EditListing() {
     const newUrls: string[] = [];
     for (const file of toUpload) {
       const path = `${user.id}/${Date.now()}-${file.name}`;
-      const { data, error } = await supabase.storage.from("listing-screenshots").upload(path, file, { upsert: true });
+      const { data, error } = await api.post<{ path: string }>("/storage/upload", { bucket: "listing-screenshots", path, file }).catch((e: any) => ({ data: null, error: e }));
       if (!error && data) {
-        const { data: urlData } = supabase.storage.from("listing-screenshots").getPublicUrl(data.path);
-        newUrls.push(urlData.publicUrl);
+        const publicUrl = `${import.meta.env.VITE_API_URL || "http://localhost:3001/api"}/storage/public/listing-screenshots/${data.path}`;
+        newUrls.push(publicUrl);
       }
     }
     if (newUrls.length) {
@@ -135,7 +134,7 @@ export default function EditListing() {
     if (!user) return;
     setUploadingFile(true);
     const path = `${user.id}/${Date.now()}-${file.name}`;
-    const { data, error } = await supabase.storage.from("listing-files").upload(path, file, { upsert: true });
+    const { data, error } = await api.post("/storage/upload", { bucket: "listing-files", path: path, file: file });
     if (!error && data) {
       update("file_path", data.path);
       toast({ title: "ZIP uploaded" });
@@ -153,8 +152,7 @@ export default function EditListing() {
       return;
     }
 
-    const { error } = await supabase
-      .from("listings")
+    const { error } = await api.from("listings")
       .update({
         title: form.title,
         description: form.description,
@@ -187,9 +185,7 @@ export default function EditListing() {
     setAiPrompt("");
     setAiLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("swarm-app-analyzer", {
-        body: { listing_id: id, trigger: "manual", user_id: user.id, focus_prompt: prompt },
-      });
+      const { data: data, error } = await api.post<{ data: any }>("/functions/swarm-app-analyzer", { listing_id: id, trigger: "manual", user_id: user.id, focus_prompt: prompt },);
       if (error) throw error;
       toast({ title: `Analysis complete — Score: ${data.score}/100` });
     } catch (e: any) {

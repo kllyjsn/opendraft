@@ -4,7 +4,6 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { MetaTags } from "@/components/MetaTags";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
 import {
@@ -14,6 +13,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { api } from "@/lib/api";
 
 interface DeployedSite {
   id: string;
@@ -50,8 +50,7 @@ export default function Hosting() {
 
   async function loadSites() {
     setLoading(true);
-    const { data } = await supabase
-      .from("deployed_sites")
+    const { data } = await api.from("deployed_sites")
       .select("*, listings:listing_id(title)")
       .eq("user_id", user!.id)
       .order("created_at", { ascending: false });
@@ -66,9 +65,7 @@ export default function Hosting() {
   async function triggerHealthCheck(siteId: string) {
     toast({ title: "Health check triggered", description: "Site Doctor is scanning your site…" });
     try {
-      await supabase.functions.invoke("site-doctor", {
-        body: { site_id: siteId },
-      });
+      const { data: data } = await api.post<{ data: any }>("/functions/site-doctor", { site_id: siteId },);
       setTimeout(loadSites, 5000);
     } catch {
       toast({ title: "Check failed", variant: "destructive" });

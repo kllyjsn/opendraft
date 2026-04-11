@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CheckCircle, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { logActivity } from "@/lib/activity-logger";
+import { api } from "@/lib/api";
 
 export function EmailCapture() {
   const { user } = useAuth();
@@ -36,7 +36,7 @@ export function EmailCapture() {
 
     setLoading(true);
     try {
-      await supabase.from("cloud_waitlist").insert({
+      await api.from("cloud_waitlist").insert({
         email: email.trim(),
         message: "homepage_email_capture",
       });

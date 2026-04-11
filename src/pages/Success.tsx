@@ -19,10 +19,10 @@ import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { ChatDrawer } from "@/components/ChatDrawer";
 import { CheckCircle, ShoppingBag, ArrowRight, Loader2, AlertCircle, Package, MessageSquare, RefreshCw, Wrench, Shield, Infinity, Lightbulb } from "lucide-react";
+import { api } from "@/lib/api";
 
 interface SessionDetails {
   status: string;
@@ -52,8 +52,7 @@ export default function Success() {
   useEffect(() => {
     if (!isCreditPurchase || !creditListingId) return;
     async function loadCreditPurchaseInfo() {
-      const { data: listing } = await supabase
-        .from("listings")
+      const { data: listing } = await api.from("listings")
         .select("title, seller_id, price, screenshots")
         .eq("id", creditListingId!)
         .single();
@@ -84,14 +83,12 @@ export default function Success() {
     if (!session || !session.metadata?.listing_id) return;
     const listingId = session.metadata.listing_id;
     async function fetchSellerInfo() {
-      const { data: listing } = await supabase
-        .from("listings")
+      const { data: listing } = await api.from("listings")
         .select("seller_id, title")
         .eq("id", listingId)
         .single();
       if (!listing) return;
-      const { data: profile } = await supabase
-        .from("public_profiles")
+      const { data: profile } = await api.from("public_profiles")
         .select("username")
         .eq("user_id", listing.seller_id)
         .single();
@@ -108,9 +105,7 @@ export default function Success() {
   async function verifySession(sid: string) {
     setLoading(true);
     try {
-      const { data, error: fnError } = await supabase.functions.invoke("get-checkout-session", {
-        body: { sessionId: sid },
-      });
+      const { data: data, error } = await api.post<{ data: any }>("/functions/get-checkout-session", { sessionId: sid },);
       if (fnError) throw new Error(fnError.message);
       if (data?.error) throw new Error(data.error);
       setSession(data);

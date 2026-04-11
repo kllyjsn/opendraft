@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +11,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { api } from "@/lib/api";
 
 interface Campaign {
   id: string;
@@ -74,9 +74,9 @@ export function OutreachDashboard() {
     setLoading(true);
 
     const [campaignsRes, leadsRes, messagesRes] = await Promise.all([
-      supabase.from("outreach_campaigns").select("*").order("created_at", { ascending: false }),
-      supabase.from("outreach_leads").select("*").order("score", { ascending: false }).limit(200),
-      supabase.from("outreach_messages").select("*").order("created_at", { ascending: false }).limit(100),
+      api.from("outreach_campaigns").select("*").order("created_at", { ascending: false }),
+      api.from("outreach_leads").select("*").order("score", { ascending: false }).limit(200),
+      api.from("outreach_messages").select("*").order("created_at", { ascending: false }).limit(100),
     ]);
 
     setCampaigns((campaignsRes.data as Campaign[]) || []);
@@ -90,14 +90,12 @@ export function OutreachDashboard() {
     toast.info(`🤖 Running ${action.replace(/_/g, " ")}...`);
 
     try {
-      const { data, error } = await supabase.functions.invoke("swarm-b2b-outreach", {
-        body: { 
+      const { data: data } = await api.post<{ data: any }>("/functions/swarm-b2b-outreach", { 
           action, 
           triggered_by: "manual",
           campaign_id: selectedCampaign,
           ...extra 
-        },
-      });
+        },);
 
       if (error) throw error;
       toast.success(`✅ ${action.replace(/_/g, " ")} completed!`);

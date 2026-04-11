@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { GitCommit, FileCode, ChevronDown, ChevronRight, Clock, Zap, Shield, Wrench, Check } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { api } from "@/lib/api";
 
 interface ChangeEntry {
   id: string;
@@ -58,8 +58,7 @@ export function ChangelogFeed({ listingId, limit = 20, compact = false }: Change
     setLoading(true);
 
     // First get improvement_cycles for this listing (or all user's listings)
-    let cycleQuery = supabase
-      .from("improvement_cycles")
+    let cycleQuery = api.from("improvement_cycles")
       .select("id, created_at, trigger, status, listing_id")
       .order("created_at", { ascending: false })
       .limit(50);
@@ -78,8 +77,7 @@ export function ChangelogFeed({ listingId, limit = 20, compact = false }: Change
     const cycleIds = cycles.map(c => c.id);
 
     // Get changes for those cycles
-    const { data: rawChanges } = await supabase
-      .from("improvement_changes")
+    const { data: rawChanges } = await api.from("improvement_changes")
       .select("*")
       .in("cycle_id", cycleIds)
       .order("applied_at", { ascending: false });
@@ -94,8 +92,7 @@ export function ChangelogFeed({ listingId, limit = 20, compact = false }: Change
     let listingTitles: Record<string, string> = {};
     if (!listingId) {
       const listingIds = [...new Set(cycles.map(c => c.listing_id))];
-      const { data: listings } = await supabase
-        .from("listings")
+      const { data: listings } = await api.from("listings")
         .select("id, title")
         .in("id", listingIds);
       if (listings) {

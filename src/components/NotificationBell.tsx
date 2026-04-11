@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { Bell } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
+import { api } from "@/lib/api";
 
 export function NotificationBell() {
   const { user } = useAuth();
@@ -11,8 +11,7 @@ export function NotificationBell() {
 
   useEffect(() => {
     if (!user) return;
-    supabase
-      .from("notifications")
+    api.from("notifications")
       .select("id", { count: "exact", head: true })
       .eq("user_id", user.id)
       .eq("read", false)

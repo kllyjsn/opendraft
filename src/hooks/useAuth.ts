@@ -1,35 +1,43 @@
 import { useEffect, useState } from "react";
-import { User, Session } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
+import { api, clearToken } from "@/lib/api";
+
+export interface AuthUser {
+  id: string;
+  email: string;
+  email_verified: boolean;
+}
 
 export function useAuth() {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [session, setSession] = useState<{ token: string } | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
-        // Auto-mark onboarding done so new users go straight to browsing
-        if (session?.user) {
-          localStorage.setItem("opendraft_onboarding_done", "1");
-        }
-      }
-    );
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    const token = localStorage.getItem("opendraft_token");
+    if (!token) {
       setLoading(false);
-    });
+      return;
+    }
 
-    return () => subscription.unsubscribe();
+    api.get<{ user: AuthUser }>("/auth/me")
+      .then(({ user: u }) => {
+        setUser(u);
+        setSession({ token });
+        localStorage.setItem("opendraft_onboarding_done", "1");
+      })
+      .catch(() => {
+        clearToken();
+        setUser(null);
+        setSession(null);
+      })
+      .finally(() => setLoading(false));
   }, []);
 
-  const signOut = () => supabase.auth.signOut();
+  const signOut = async () => {
+    clearToken();
+    setUser(null);
+    setSession(null);
+  };
 
-  return { user, session, loading, signOut };
+  return { user, session, loading, signOut, setUser, setSession };
 }

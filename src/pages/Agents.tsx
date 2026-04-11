@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CanonicalTag } from "@/components/CanonicalTag";
 import { JsonLd } from "@/components/JsonLd";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import {
@@ -16,6 +15,7 @@ import {
   Activity, Target, Rocket, Brain
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { api } from "@/lib/api";
 
 const MCP_URL = "https://api.opendraft.co/mcp";
 const API_URL = "https://api.opendraft.co/v1";
@@ -63,8 +63,7 @@ export default function Agents() {
   const [demandSignals, setDemandSignals] = useState<{ query: string; category: string | null; created_at: string }[]>([]);
 
   useEffect(() => {
-    supabase
-      .from("agent_demand_signals")
+    api.from("agent_demand_signals")
       .select("query, category, created_at")
       .order("created_at", { ascending: false })
       .limit(10)
@@ -81,7 +80,7 @@ export default function Agents() {
       const hashArray = Array.from(new Uint8Array(hashBuffer));
       const keyHash = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
 
-      const { error } = await supabase.from("agent_api_keys").insert({
+      const { error } = await api.from("agent_api_keys").insert({
         user_id: user.id,
         key_hash: keyHash,
         key_prefix: rawKey.slice(0, 10),

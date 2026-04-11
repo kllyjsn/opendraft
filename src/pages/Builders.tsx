@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
-import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { FollowButton } from "@/components/FollowButton";
@@ -14,6 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Search, Users, MessageCircle, ArrowRight, Sparkles, TrendingUp, Package } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import { api } from "@/lib/api";
 
 interface Builder {
   user_id: string;
@@ -46,8 +46,7 @@ export default function Builders() {
   useEffect(() => {
     async function load() {
       setLoading(true);
-      let query = supabase
-        .from("public_profiles")
+      let query = api.from("public_profiles")
         .select("user_id, username, avatar_url, bio, total_sales, followers_count")
         .order("total_sales", { ascending: false })
         .limit(50);
@@ -60,8 +59,7 @@ export default function Builders() {
       if (!profiles?.length) { setBuilders([]); setLoading(false); return; }
 
       const userIds = profiles.map((p) => p.user_id);
-      const { data: listings } = await supabase
-        .from("listings")
+      const { data: listings } = await api.from("listings")
         .select("seller_id")
         .eq("status", "live")
         .in("seller_id", userIds);

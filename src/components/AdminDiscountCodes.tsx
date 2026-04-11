@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Plus, Trash2, Tag, Percent, DollarSign } from "lucide-react";
+import { api } from "@/lib/api";
 
 interface DiscountCode {
   id: string;
@@ -31,8 +31,7 @@ export function AdminDiscountCodes() {
 
   async function fetchCodes() {
     // Admins can see all codes via the admin policy (including inactive)
-    const { data } = await supabase
-      .from("discount_codes")
+    const { data } = await api.from("discount_codes")
       .select("*")
       .order("created_at", { ascending: false });
     setCodes((data as DiscountCode[]) ?? []);
@@ -48,7 +47,7 @@ export function AdminDiscountCodes() {
     if (discountType === "percentage" && val > 100) return toast({ title: "Percentage can't exceed 100", variant: "destructive" });
 
     setCreating(true);
-    const { error } = await supabase.from("discount_codes").insert({
+    const { error } = await api.from("discount_codes").insert({
       code: trimmed,
       discount_type: discountType,
       discount_value: discountType === "fixed" ? val : val, // for fixed, value is in cents
@@ -66,12 +65,12 @@ export function AdminDiscountCodes() {
   }
 
   async function toggleActive(id: string, active: boolean) {
-    await supabase.from("discount_codes").update({ active: !active }).eq("id", id);
+    await api.from("discount_codes").update({ active: !active }).eq("id", id);
     setCodes((prev) => prev.map((c) => (c.id === id ? { ...c, active: !active } : c)));
   }
 
   async function deleteCode(id: string) {
-    await supabase.from("discount_codes").delete().eq("id", id);
+    await api.from("discount_codes").delete().eq("id", id);
     setCodes((prev) => prev.filter((c) => c.id !== id));
     toast({ title: "Code deleted" });
   }

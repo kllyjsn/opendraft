@@ -6,7 +6,6 @@
  */
 
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ShieldCheck, Copy, CheckCircle2, Loader2, AlertCircle, Code, Github } from "lucide-react";
@@ -32,8 +31,9 @@ export function VerifyListingPanel({ listingId, demoUrl, githubUrl, domainVerifi
     setMethod(selectedMethod);
     setStatus("loading");
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verify-listing`, {
+      const session = { access_token: localStorage.getItem("opendraft_token") };
+      if (!localStorage.getItem("opendraft_token")) throw new Error("Not authenticated");
+      const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:3001/api"}/functions/verify-listing`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -55,8 +55,9 @@ export function VerifyListingPanel({ listingId, demoUrl, githubUrl, domainVerifi
   async function checkVerification() {
     setStatus("checking");
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verify-listing`, {
+      const session = { access_token: localStorage.getItem("opendraft_token") };
+      if (!localStorage.getItem("opendraft_token")) throw new Error("Not authenticated");
+      const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:3001/api"}/functions/verify-listing`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

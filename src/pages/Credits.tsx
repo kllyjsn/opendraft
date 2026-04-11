@@ -3,7 +3,6 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { MetaTags } from "@/components/MetaTags";
@@ -14,6 +13,7 @@ import { FREE_TIER, CORE_PAID_TIERS, ANNUAL_DISCOUNT, type PricingTier } from "@
 import { trackFunnel } from "@/hooks/useFunnelTracker";
 import { PricingTierCard } from "@/components/pricing/PricingTierCard";
 import { PaywallFlow } from "@/components/PaywallFlow";
+import { api } from "@/lib/api";
 
 export default function Credits() {
   const { user, loading: authLoading } = useAuth();
@@ -27,9 +27,7 @@ export default function Credits() {
     trackFunnel("subscribe_started", { tier: tier.id, price: tier.price, billing: isAnnual ? "annual" : "monthly" });
     try {
       const amount = isAnnual && tier.annualPrice ? tier.annualPrice : tier.price;
-      const { data, error } = await supabase.functions.invoke("create-credit-checkout", {
-        body: { amount, mode: "subscription", tierId: tier.id, billing: isAnnual ? "annual" : "monthly" },
-      });
+      const { data: data, error } = await api.post<{ data: any }>("/functions/create-credit-checkout", { amount, mode: "subscription", tierId: tier.id, billing: isAnnual ? "annual" : "monthly" },);
       if (error) throw error;
       if (data?.url) window.location.href = data.url;
     } catch {

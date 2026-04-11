@@ -1,8 +1,8 @@
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { api } from "@/lib/api";
 
 interface GoogleSignInButtonProps {
   label?: string;
@@ -17,12 +17,7 @@ export function GoogleSignInButton({ label = "Continue with Google", redirectTo,
   const handleSignIn = async () => {
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: redirectTo ?? window.location.origin,
-        },
-      });
+      window.location.href = `${import.meta.env.VITE_API_URL || "http://localhost:3001/api"}/auth/oauth/google`;
       if (error) {
         toast({ title: "Sign in failed", description: error.message, variant: "destructive" });
       }

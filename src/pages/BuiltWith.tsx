@@ -3,11 +3,11 @@ import { useParams, Link } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { ListingCard } from "@/components/ListingCard";
-import { supabase } from "@/integrations/supabase/client";
 import { MetaTags } from "@/components/MetaTags";
 import { JsonLd } from "@/components/JsonLd";
 import { Button } from "@/components/ui/button";
 import { Rocket } from "lucide-react";
+import { api } from "@/lib/api";
 
 const TOOL_META: Record<string, { label: string; description: string }> = {
   lovable: {
@@ -67,8 +67,7 @@ export default function BuiltWith() {
   useEffect(() => {
     if (!dbValue) return;
     setLoading(true);
-    supabase
-      .from("listings")
+    api.from("listings")
       .select("id,title,description,price,completeness_badge,tech_stack,screenshots,sales_count,view_count,built_with,seller_id,security_score,agent_ready")
       .eq("status", "live")
       .eq("built_with", dbValue)

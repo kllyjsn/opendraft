@@ -6,11 +6,11 @@
  */
 
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { logActivity } from "@/lib/activity-logger";
+import { api } from "@/lib/api";
 
 interface ScrapedListing {
   title: string;
@@ -56,9 +56,7 @@ export function MagicImport({ onImport }: MagicImportProps) {
     }, 1800);
 
     try {
-      const { data, error: fnError } = await supabase.functions.invoke("scrape-listing", {
-        body: { url: url.trim() },
-      });
+      const { data: data } = await api.post<{ data: any }>("/functions/scrape-listing", { url: url.trim() },);
 
       clearInterval(interval);
 
@@ -72,11 +70,11 @@ export function MagicImport({ onImport }: MagicImportProps) {
 
       // Auto-create draft listing from scraped data
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const { user } = await api.get<{ user: any }>("/auth/me");
         if (user && data.listing) {
           const l = data.listing;
           const priceInCents = 0; // Draft — seller sets price later
-          await (supabase as any).from("listings").insert({
+          await api.from("listings").insert({
             seller_id: user.id,
             title: l.title || "Untitled Import",
             description: l.description || "",

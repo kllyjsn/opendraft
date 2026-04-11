@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import {
   Rocket, ExternalLink, Loader2, CheckCircle, AlertCircle, Key,
@@ -12,6 +11,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import { api } from "@/lib/api";
 
 interface DeployPanelProps {
   listingId: string;
@@ -112,17 +112,18 @@ export function DeployPanel({ listingId, listingTitle, hasFile, githubUrl }: Dep
         return;
       }
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const session = { access_token: localStorage.getItem("opendraft_token") };
+      if (!localStorage.getItem("opendraft_token")) throw new Error("Not authenticated");
         const body: any = { deployId };
         // For opendraft deploys, use platform token on backend; for user deploys, pass their token
         if (vToken) body.vercelToken = vToken;
         else body.usePlatformToken = true;
 
-        const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/check-vercel-deploy`, {
+        const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:3001/api"}/functions/check-vercel-deploy`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+            ...(session?.access_token ? { Authorization: `Bearer ${localStorage.getItem("opendraft_token")}` } : {}),
           },
           body: JSON.stringify(body),
         });
@@ -140,12 +141,12 @@ export function DeployPanel({ listingId, listingTitle, hasFile, githubUrl }: Dep
           setResult({ siteUrl: liveSiteUrl, adminUrl: data.adminUrl || adminUrl, provider: providerLabel });
           toast({ title: "Deployed successfully! 🚀", description: `${listingTitle} is now live.` });
           try {
-            await supabase.from("deployed_sites").update({ status: "healthy", site_url: liveSiteUrl }).eq("deploy_id", deployId);
+            await api.from("deployed_sites").update({ status: "healthy", site_url: liveSiteUrl }).eq("deploy_id", deployId);
           } catch { /* best effort */ }
         } else if (state === "error" || state === "canceled" || state === "failed") {
           stopPolling();
           setDeployState("error");
-          try { await supabase.from("deployed_sites").update({ status: "error" }).eq("deploy_id", deployId); } catch {}
+          try { await api.from("deployed_sites").update({ status: "error" }).eq("deploy_id", deployId); } catch {}
           setError(data.errorMessage || "Build failed — check the build log below.");
           setBuildLog(data.buildLog || null);
         }
@@ -172,7 +173,7 @@ export function DeployPanel({ listingId, listingTitle, hasFile, githubUrl }: Dep
         return;
       }
       try {
-        const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/check-netlify-deploy`, {
+        const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:3001/api"}/functions/check-netlify-deploy`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ siteId, deployId, netlifyToken: nToken }),
@@ -201,14 +202,15 @@ export function DeployPanel({ listingId, listingTitle, hasFile, githubUrl }: Dep
     setCurrentStep("auth");
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const session = { access_token: localStorage.getItem("opendraft_token") };
+      if (!localStorage.getItem("opendraft_token")) throw new Error("Not authenticated");
       setCurrentStep("download");
       await new Promise(r => setTimeout(r, 400));
       setCurrentStep("create");
       await new Promise(r => setTimeout(r, 300));
       setCurrentStep("deploy");
 
-      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/deploy-to-opendraft`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:3001/api"}/functions/deploy-to-opendraft`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -247,7 +249,8 @@ export function DeployPanel({ listingId, listingTitle, hasFile, githubUrl }: Dep
 
     try {
       if (saveToken) localStorage.setItem(TOKEN_KEYS[activeTab as "netlify" | "vercel"], currentToken.trim());
-      const { data: { session } } = await supabase.auth.getSession();
+      const session = { access_token: localStorage.getItem("opendraft_token") };
+      if (!localStorage.getItem("opendraft_token")) throw new Error("Not authenticated");
       setCurrentStep("download");
       await new Promise(r => setTimeout(r, 400));
       setCurrentStep("create");
@@ -257,7 +260,7 @@ export function DeployPanel({ listingId, listingTitle, hasFile, githubUrl }: Dep
       const fnName = activeTab === "netlify" ? "deploy-to-netlify" : "deploy-to-vercel";
       const tokenField = activeTab === "netlify" ? "netlifyToken" : "vercelToken";
 
-      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${fnName}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:3001/api"}/functions/${fnName}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

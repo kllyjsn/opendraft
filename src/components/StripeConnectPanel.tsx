@@ -13,10 +13,10 @@
  */
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, Loader2, Zap, AlertCircle, Clock } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
+import { api } from "@/lib/api";
 
 interface ConnectStatus {
   onboarded: boolean;
@@ -52,7 +52,7 @@ export function StripeConnectPanel() {
   async function checkStatus() {
     setLoading(true);
     try {
-      const { data, error: fnError } = await supabase.functions.invoke("check-connect-status");
+      const { data: data, error } = await api.post<{ data: any }>("/functions/check-connect-status");
       if (fnError) throw new Error(fnError.message);
       if (data?.error) throw new Error(data.error);
       setStatus(data);
@@ -74,7 +74,7 @@ export function StripeConnectPanel() {
     setConnecting(true);
     setError(null);
     try {
-      const { data, error: fnError } = await supabase.functions.invoke("create-connect-account");
+      const { data: data, error } = await api.post<{ data: any }>("/functions/create-connect-account");
       if (fnError) throw new Error(fnError.message);
       if (data?.error) throw new Error(data.error);
       // Redirect to Stripe's hosted onboarding UI

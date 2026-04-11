@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { Bell, Loader2, Check, ShoppingCart, Star, UserPlus, Megaphone, Gift, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { api } from "@/lib/api";
 
 interface Notification {
   id: string;
@@ -34,8 +34,7 @@ export function NotificationsList({ userId }: { userId: string }) {
 
   async function fetchNotifications() {
     setLoading(true);
-    const { data } = await supabase
-      .from("notifications")
+    const { data } = await api.from("notifications")
       .select("*")
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
@@ -45,7 +44,7 @@ export function NotificationsList({ userId }: { userId: string }) {
   }
 
   async function markRead(id: string) {
-    await supabase.from("notifications").update({ read: true }).eq("id", id);
+    await api.from("notifications").update({ read: true }).eq("id", id);
     setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, read: true } : n));
   }
 
@@ -53,7 +52,7 @@ export function NotificationsList({ userId }: { userId: string }) {
     const unread = notifications.filter((n) => !n.read).map((n) => n.id);
     if (unread.length === 0) return;
     for (const id of unread) {
-      await supabase.from("notifications").update({ read: true }).eq("id", id);
+      await api.from("notifications").update({ read: true }).eq("id", id);
     }
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   }

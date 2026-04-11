@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
 import { TrendingUp } from "lucide-react";
+import { api } from "@/lib/api";
 
 interface TrendingBuilder {
   user_id: string;
@@ -26,8 +26,7 @@ export function TrendingBuilders() {
 
   useEffect(() => {
     async function load() {
-      const { data: profiles } = await supabase
-        .from("public_profiles")
+      const { data: profiles } = await api.from("public_profiles")
         .select("user_id, username, avatar_url, total_sales")
         .order("total_sales", { ascending: false })
         .limit(8);
@@ -35,8 +34,7 @@ export function TrendingBuilders() {
       if (!profiles?.length) return;
 
       const userIds = profiles.map((p) => p.user_id);
-      const { data: listings } = await supabase
-        .from("listings")
+      const { data: listings } = await api.from("listings")
         .select("seller_id")
         .eq("status", "live")
         .in("seller_id", userIds);

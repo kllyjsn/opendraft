@@ -5,10 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import type { OrgMember } from "@/hooks/useOrg";
+import { api } from "@/lib/api";
 
 const ROLE_LABELS: Record<string, { label: string; icon: typeof Crown; color: string }> = {
   owner: { label: "Owner", icon: Crown, color: "text-amber-500" },
@@ -38,7 +38,7 @@ export function OrgMembers({ orgId, members, isAdmin, onRefresh }: OrgMembersPro
     if (!inviteEmail.trim()) return;
     setInviting(true);
 
-    const { error } = await supabase.from("org_invitations").insert({
+    const { error } = await api.from("org_invitations").insert({
       org_id: orgId,
       email: inviteEmail.trim().toLowerCase(),
       role: inviteRole,
@@ -63,7 +63,7 @@ export function OrgMembers({ orgId, members, isAdmin, onRefresh }: OrgMembersPro
 
   async function handleRemove(memberId: string) {
     setRemovingId(memberId);
-    const { error } = await supabase.from("org_members").delete().eq("id", memberId);
+    const { error } = await api.from("org_members").delete().eq("id", memberId);
     if (error) {
       toast({ title: "Could not remove member", description: error.message, variant: "destructive" });
     } else {
@@ -74,8 +74,7 @@ export function OrgMembers({ orgId, members, isAdmin, onRefresh }: OrgMembersPro
   }
 
   async function handleRoleChange(memberId: string, newRole: string) {
-    const { error } = await supabase
-      .from("org_members")
+    const { error } = await api.from("org_members")
       .update({ role: newRole as "admin" | "builder" | "member" | "owner" })
       .eq("id", memberId);
     if (error) {

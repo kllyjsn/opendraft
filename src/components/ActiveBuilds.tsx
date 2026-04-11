@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { STAGE_MAP } from "@/hooks/useGenerationJob";
 import { Loader2, CheckCircle2, XCircle, ExternalLink, Rocket, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { api } from "@/lib/api";
 
 interface BuildJob {
   id: string;
@@ -27,8 +27,7 @@ export function ActiveBuilds() {
     if (!user) return;
 
     async function fetchJobs() {
-      const { data } = await supabase
-        .from("generation_jobs")
+      const { data } = await api.from("generation_jobs")
         .select("id, prompt, status, stage, listing_id, listing_title, error, created_at")
         .eq("user_id", user!.id)
         .order("created_at", { ascending: false })
@@ -39,29 +38,10 @@ export function ActiveBuilds() {
 
     fetchJobs();
 
-    // Subscribe to real-time updates for active jobs
-    const channel = supabase
-      .channel("dashboard-builds")
-      .on("postgres_changes", {
-        event: "UPDATE",
-        schema: "public",
-        table: "generation_jobs",
-        filter: `user_id=eq.${user.id}`,
-      }, (payload) => {
-        const updated = payload.new as BuildJob;
-        setJobs(prev => prev.map(j => j.id === updated.id ? updated : j));
-      })
-      .on("postgres_changes", {
-        event: "INSERT",
-        schema: "public",
-        table: "generation_jobs",
-        filter: `user_id=eq.${user.id}`,
-      }, (payload) => {
-        setJobs(prev => [payload.new as BuildJob, ...prev]);
-      })
-      .subscribe();
+    // Poll for real-time updates (replaces Supabase realtime)
+    const pollInterval = setInterval(() => { fetchJobs(); }, 5000);
 
-    return () => { supabase.removeChannel(channel); };
+    return () => { clearInterval(pollInterval); };
   }, [user]);
 
   if (loading) {
@@ -180,8 +160,7 @@ export function ActiveBuildsBanner() {
     if (!user) return;
 
     async function check() {
-      const { count } = await supabase
-        .from("generation_jobs")
+      const { count } = await api.from("generation_jobs")
         .select("id", { count: "exact", head: true })
         .eq("user_id", user!.id)
         .not("status", "in", '("complete","failed")');
@@ -190,17 +169,10 @@ export function ActiveBuildsBanner() {
 
     check();
 
-    const channel = supabase
-      .channel("build-banner")
-      .on("postgres_changes", {
-        event: "*",
-        schema: "public",
-        table: "generation_jobs",
-        filter: `user_id=eq.${user.id}`,
-      }, () => { check(); })
-      .subscribe();
+    // Poll for updates (replaces Supabase realtime)
+    const pollInterval = setInterval(() => { check(); }, 5000);
 
-    return () => { supabase.removeChannel(channel); };
+    return () => { clearInterval(pollInterval); };
   }, [user]);
 
   if (activeCount === 0) return null;

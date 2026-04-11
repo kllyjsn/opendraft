@@ -568,7 +568,8 @@ router.get("/webhook-events", requireAuth, async (req: AuthenticatedRequest, res
 // ── Generic DB Query (mirrors Supabase query builder) ──
 router.post("/db/query", optionalAuth, async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { table, operation, select, filters, order, limit: limitVal, single, maybeSingle, body, count } = req.body;
+    const { table, operation, select, filters: rawFilters, order, limit: limitVal, single, maybeSingle, body, count } = req.body;
+    let filters = rawFilters;
 
     // Write operations require authentication
     if (operation !== "select" && !req.userId) {
@@ -636,7 +637,7 @@ router.post("/db/query", optionalAuth, async (req: AuthenticatedRequest, res: Re
     if (req.userId && userScopeField) {
       // Inject user_id filter so users can only access their own rows
       if (!filters) {
-        req.body.filters = [{ type: "eq", column: userScopeField, value: req.userId }];
+        filters = [{ type: "eq", column: userScopeField, value: req.userId }];
       } else {
         // Only inject if the filter doesn't already scope to the user
         const hasUserFilter = filters.some((f: any) => f.column === userScopeField && f.value === req.userId);

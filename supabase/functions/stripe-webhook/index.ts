@@ -39,12 +39,7 @@
 // ---------------------------------------------------------------------------
 import Stripe from "https://esm.sh/stripe@17.7.0";
 import { sanitizeStripeKey } from "../_shared/sanitize-stripe-key.ts";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, stripe-signature, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import { getCorsHeaders } from "../_shared/cors.ts";
 
 // Helper: Generate a signed download URL from storage (valid 24 hours)
 async function getSignedDownloadUrl(supabaseUrl: string, supabaseServiceKey: string, filePath: string): Promise<string | null> {
@@ -304,6 +299,7 @@ async function logWebhookEvent(
 }
 
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   let supabaseUrl = "";

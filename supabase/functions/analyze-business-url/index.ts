@@ -1,15 +1,10 @@
+import { getCorsHeaders } from "../_shared/cors.ts";
 /**
  * analyze-business-url Edge Function
  * Scrapes a company URL via Firecrawl, then uses AI to analyze the business
  * and recommend software builds + industry insights.
  * Falls back to AI-only analysis if Firecrawl is unavailable.
  */
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
 
 const FETCH_TIMEOUT_MS = 20000;
 const SCRAPE_TIMEOUT_MS = 9000;
@@ -253,6 +248,7 @@ const TOOL_SCHEMA = {
 };
 
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {

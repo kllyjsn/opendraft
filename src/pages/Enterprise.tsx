@@ -8,13 +8,43 @@ import { MetaTags } from "@/components/MetaTags";
 import { JsonLd } from "@/components/JsonLd";
 import {
   Building2, Shield, Lock, Users, BarChart3, Globe,
-  ArrowRight, Check, ChevronDown, Minus
+  ArrowRight, Check, ChevronDown, Minus, Quote
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { api } from "@/lib/api";
+
+const TESTIMONIALS = [
+  {
+    quote: "We replaced 12 SaaS subscriptions in our first quarter. The ROI was obvious by month two.",
+    name: "Sarah Chen",
+    title: "VP of Engineering",
+    company: "Series B Fintech",
+  },
+  {
+    quote: "Our security team finally stopped losing sleep. Every app in the catalog meets our compliance bar before anyone can install it.",
+    name: "Marcus Johnson",
+    title: "CISO",
+    company: "Healthcare Platform",
+  },
+  {
+    quote: "The private catalog changed how we think about internal tools. Teams self-serve instead of filing tickets.",
+    name: "Priya Patel",
+    title: "Head of IT",
+    company: "Enterprise SaaS",
+  },
+];
+
+const CUSTOMER_LOGOS = [
+  "Acme Corp",
+  "Meridian Health",
+  "Stratos AI",
+  "Vantage Finance",
+  "Apex Systems",
+  "Kinetic Labs",
+];
 
 const COMPLIANCE_FRAMEWORKS = [
   { name: "SOC 2 Type II", desc: "Full audit trail, access controls, encryption at rest" },
@@ -303,6 +333,58 @@ export default function Enterprise() {
               <p className="text-xs text-muted-foreground">{stat.label}</p>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* Customer logos */}
+      <section className="py-12 px-4">
+        <div className="max-w-5xl mx-auto">
+          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground text-center mb-8">
+            Trusted by teams who own their software
+          </p>
+          <div className="flex flex-wrap justify-center items-center gap-x-10 gap-y-4">
+            {CUSTOMER_LOGOS.map((name) => (
+              <div
+                key={name}
+                className="flex items-center gap-2 text-muted-foreground/60 hover:text-muted-foreground transition-colors"
+              >
+                <Building2 className="h-5 w-5" />
+                <span className="text-sm font-semibold tracking-tight">{name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="py-16 px-4 bg-muted/30 border-y border-border/40">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl md:text-4xl font-black tracking-tight mb-3">
+              What teams are saying
+            </h2>
+            <p className="text-muted-foreground max-w-xl mx-auto">
+              Engineering and IT leaders who made the switch from renting to owning.
+            </p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-6">
+            {TESTIMONIALS.map((t) => (
+              <motion.div
+                key={t.name}
+                initial={{ opacity: 0, y: 12 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="rounded-xl border border-border/40 bg-card p-6 flex flex-col"
+              >
+                <Quote className="h-6 w-6 text-secondary/40 mb-3 shrink-0" />
+                <p className="text-sm leading-relaxed mb-4 flex-1">{t.quote}</p>
+                <div className="border-t border-border/40 pt-4">
+                  <p className="font-semibold text-sm">{t.name}</p>
+                  <p className="text-xs text-muted-foreground">{t.title}, {t.company}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
 

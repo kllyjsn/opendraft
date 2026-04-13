@@ -33,7 +33,7 @@ export function Navbar() {
   const { user, signOut, loading } = useAuth();
   const { isAdmin } = useAdmin();
   const { unreadCount } = useUnreadMessages();
-  const { org: myOrg } = useMyOrg();
+  const { org: myOrg, loading: orgLoading } = useMyOrg();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -68,7 +68,15 @@ export function Navbar() {
               </span>
             </NavItem>
           )}
+          {user && !myOrg && !orgLoading && (
+            <NavItem to="/org/new">
+              <span className="inline-flex items-center gap-1.5">
+                <Building2 className="h-3.5 w-3.5" /> Create Workspace
+              </span>
+            </NavItem>
+          )}
           <NavItem to="/category/saas-tool">Browse</NavItem>
+          <NavItem to="/enterprise">Enterprise</NavItem>
           <NavItem to="/credits">Pricing</NavItem>
           {user && (
             <>
@@ -161,7 +169,15 @@ export function Navbar() {
               </span>
             </NavItem>
           )}
+          {user && !myOrg && !orgLoading && (
+            <NavItem to="/org/new" onClick={() => setMenuOpen(false)}>
+              <span className="inline-flex items-center gap-1.5">
+                <Building2 className="h-3.5 w-3.5" /> Create Workspace
+              </span>
+            </NavItem>
+          )}
           <NavItem to="/category/saas-tool" onClick={() => setMenuOpen(false)}>Browse</NavItem>
+          <NavItem to="/enterprise" onClick={() => setMenuOpen(false)}>Enterprise</NavItem>
           <NavItem to="/credits" onClick={() => setMenuOpen(false)}>Pricing</NavItem>
           {user ? (
             <>

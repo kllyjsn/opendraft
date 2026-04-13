@@ -17,12 +17,18 @@ import { Link } from "react-router-dom";
 import { api } from "@/lib/api";
 
 const COMPLIANCE_FRAMEWORKS = [
-  { name: "SOC 2 Type II", desc: "Full audit trail, access controls, encryption at rest" },
-  { name: "HIPAA", desc: "PHI safeguards, BAA-ready, data residency controls" },
-  { name: "GDPR", desc: "Data minimization, right to erasure, consent management" },
-  { name: "PCI DSS", desc: "Cardholder data isolation, secure transmission" },
-  { name: "FedRAMP", desc: "Federal security standards, NIST 800-53 controls" },
+  { name: "SOC 2 Type II", desc: "Full audit trail, access controls, encryption at rest", status: "in_progress" as const },
+  { name: "HIPAA", desc: "PHI safeguards, BAA-ready, data residency controls", status: "planned" as const },
+  { name: "GDPR", desc: "Data minimization, right to erasure, consent management", status: "in_progress" as const },
+  { name: "PCI DSS", desc: "Cardholder data isolation, secure transmission", status: "planned" as const },
+  { name: "FedRAMP", desc: "Federal security standards, NIST 800-53 controls", status: "planned" as const },
 ];
+
+const COMPLIANCE_STATUS_LABELS = {
+  in_progress: { label: "In progress", color: "bg-amber-500/10 text-amber-600 border-amber-500/30" },
+  planned: { label: "On roadmap", color: "bg-muted text-muted-foreground border-border/40" },
+  certified: { label: "Certified", color: "bg-emerald-500/10 text-emerald-600 border-emerald-500/30" },
+};
 
 const FEATURES = [
   {
@@ -33,7 +39,7 @@ const FEATURES = [
   {
     icon: Shield,
     title: "Compliance Built In",
-    desc: "Every app is security-audited against SOC2, HIPAA, GDPR, and PCI frameworks before entering your catalog.",
+    desc: "Every app is reviewed against SOC2, HIPAA, GDPR, and PCI framework guidelines before entering your catalog.",
   },
   {
     icon: Lock,
@@ -343,25 +349,36 @@ export default function Enterprise() {
               Compliance-first architecture
             </h2>
             <p className="text-muted-foreground max-w-xl mx-auto">
-              Every app in your private catalog is audited against industry standards before it reaches your team.
+              We're building toward full compliance certification. Here's where we are today.
             </p>
           </div>
           <div className="space-y-3">
-            {COMPLIANCE_FRAMEWORKS.map((fw) => (
-              <div
-                key={fw.name}
-                className="flex items-start gap-4 rounded-xl border border-border/40 bg-card p-5"
-              >
-                <div className="shrink-0 mt-0.5">
-                  <Shield className="h-5 w-5 text-secondary" />
+            {COMPLIANCE_FRAMEWORKS.map((fw) => {
+              const statusInfo = COMPLIANCE_STATUS_LABELS[fw.status];
+              return (
+                <div
+                  key={fw.name}
+                  className="flex items-start gap-4 rounded-xl border border-border/40 bg-card p-5"
+                >
+                  <div className="shrink-0 mt-0.5">
+                    <Shield className="h-5 w-5 text-secondary" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <h4 className="font-semibold">{fw.name}</h4>
+                      <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${statusInfo.color}`}>
+                        {statusInfo.label}
+                      </span>
+                    </div>
+                    <p className="text-sm text-muted-foreground">{fw.desc}</p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="font-semibold">{fw.name}</h4>
-                  <p className="text-sm text-muted-foreground">{fw.desc}</p>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
+          <p className="text-xs text-muted-foreground text-center mt-6">
+            Compliance certifications are actively in progress. Contact us for the latest status and timeline.
+          </p>
         </div>
       </section>
 

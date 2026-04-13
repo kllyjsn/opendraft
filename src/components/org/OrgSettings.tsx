@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Save } from "lucide-react";
+import { logOrgAction } from "@/lib/audit-log";
 import type { Org } from "@/hooks/useOrg";
 import { api } from "@/lib/api";
 
@@ -35,6 +36,17 @@ export function OrgSettings({ org, isAdmin, onRefresh }: OrgSettingsProps) {
       toast({ title: "Could not update", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Organization updated" });
+      const changes: string[] = [];
+      if (name.trim() !== org.name) changes.push("name");
+      if ((domain.trim() || null) !== (org.domain ?? null)) changes.push("domain");
+      if (changes.length > 0) {
+        logOrgAction({
+          org_id: org.id,
+          action: "settings.updated",
+          target_type: "settings",
+          metadata: { fields: changes },
+        });
+      }
       onRefresh();
     }
     setSaving(false);

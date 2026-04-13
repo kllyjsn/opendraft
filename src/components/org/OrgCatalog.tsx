@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Check, X, Loader2, Package, Shield, Clock, Search } from "lucide-react";
+import { logOrgAction } from "@/lib/audit-log";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { api } from "@/lib/api";
 
@@ -125,6 +126,14 @@ export function OrgCatalog({ orgId, isAdmin }: OrgCatalogProps) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "App approved for catalog" });
+      const item = listings.find((l) => l.id === orgListingId);
+      logOrgAction({
+        org_id: orgId,
+        action: "app.approved",
+        target_type: "app",
+        target_id: item?.listing_id,
+        metadata: { app_name: item?.listing?.title ?? "Unknown" },
+      });
       loadListings();
     }
   }
@@ -137,6 +146,14 @@ export function OrgCatalog({ orgId, isAdmin }: OrgCatalogProps) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "App rejected" });
+      const item = listings.find((l) => l.id === orgListingId);
+      logOrgAction({
+        org_id: orgId,
+        action: "app.rejected",
+        target_type: "app",
+        target_id: item?.listing_id,
+        metadata: { app_name: item?.listing?.title ?? "Unknown" },
+      });
       loadListings();
     }
   }
@@ -162,6 +179,13 @@ export function OrgCatalog({ orgId, isAdmin }: OrgCatalogProps) {
       });
     } else {
       toast({ title: "App submitted for approval" });
+      logOrgAction({
+        org_id: orgId,
+        action: "app.submitted",
+        target_type: "app",
+        target_id: selectedListing.id,
+        metadata: { app_name: selectedListing.title },
+      });
       setSelectedListing(null);
       setSearchQuery("");
       setDepartment("");

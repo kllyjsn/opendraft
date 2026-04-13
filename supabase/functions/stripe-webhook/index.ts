@@ -323,6 +323,7 @@ Deno.serve(async (req) => {
 
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not configured");
     stripeKey = sanitizeStripeKey(stripeKey);
+    if (!webhookSecret) throw new Error("STRIPE_WEBHOOK_SECRET is not configured — webhook signature verification is required");
     if (!supabaseUrl || !supabaseServiceKey) throw new Error("Supabase vars not configured");
 
     // ------------------------------------------------------------------
@@ -372,12 +373,7 @@ Deno.serve(async (req) => {
     if (isV2ThinEvent) {
       let thinEvent: { id: string; type: string };
       try {
-        if (webhookSecret) {
-          thinEvent = stripeClient.parseThinEvent(body, sig, webhookSecret) as { id: string; type: string };
-        } else {
-          console.warn("WARNING: No STRIPE_WEBHOOK_SECRET set. Skipping thin event signature verification.");
-          thinEvent = { id: parsedBody.id as string, type: eventType };
-        }
+        thinEvent = stripeClient.parseThinEvent(body, sig, webhookSecret) as { id: string; type: string };
       } catch (sigErr) {
         throw new Error(`Thin event signature verification failed: ${sigErr}`);
       }
@@ -396,12 +392,7 @@ Deno.serve(async (req) => {
     } else {
       let event: Stripe.Event;
 
-      if (webhookSecret) {
-        event = stripeClient.webhooks.constructEvent(body, sig, webhookSecret);
-      } else {
-        console.warn("WARNING: No STRIPE_WEBHOOK_SECRET set. Skipping V1 event signature verification.");
-        event = parsedBody as unknown as Stripe.Event;
-      }
+      event = stripeClient.webhooks.constructEvent(body, sig, webhookSecret);
 
       console.log(`Processing V1 event: ${event.type}`);
 

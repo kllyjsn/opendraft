@@ -1,7 +1,7 @@
 # Fly.io deploy config for the OpenDraft API (api.opendraft.co)
 # Deploy with: `flyctl deploy --config server/fly.toml --dockerfile server/Dockerfile`
 
-app = "opendraft-api"
+app = "opendraft"
 primary_region = "sjc"
 
 [build]

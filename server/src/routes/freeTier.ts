@@ -129,27 +129,44 @@ freeTierRouter.post(
       }
 
       // Insert the purchase record (free claim → all amounts zero).
-      // Purchase.listing_id has a non-unique index, so we rely on the
-      // explicit duplicate-check above to prevent double-claims.
-      await Purchase.create({
-        listing_id: listingIdStr,
-        buyer_id: req.userId,
-        seller_id: listing.seller_id,
-        amount_paid: 0,
-        platform_fee: 0,
-        seller_amount: 0,
-        payout_transferred: true,
-      });
+      // The (listing_id, buyer_id) unique index closes the TOCTOU gap
+      // between the findOne check above and this insert.
+      try {
+        await Purchase.create({
+          listing_id: listingIdStr,
+          buyer_id: req.userId,
+          seller_id: listing.seller_id,
+          amount_paid: 0,
+          platform_fee: 0,
+          seller_amount: 0,
+          payout_transferred: true,
+        });
+      } catch (insertErr) {
+        if (
+          insertErr &&
+          typeof insertErr === "object" &&
+          "code" in insertErr &&
+          (insertErr as { code?: number }).code === 11000
+        ) {
+          res.status(400).json({ error: "You already own this project" });
+          return;
+        }
+        throw insertErr;
+      }
 
       // Bump counters. Non-critical — if either update fails we still
       // return success; the purchase is what matters for entitlement.
-      await Promise.all([
-        Listing.updateOne({ _id: listing._id }, { $inc: { sales_count: 1 } }),
-        Profile.updateOne(
-          { user_id: listing.seller_id },
-          { $inc: { total_sales: 1 } }
-        ),
-      ]);
+      try {
+        await Promise.all([
+          Listing.updateOne({ _id: listing._id }, { $inc: { sales_count: 1 } }),
+          Profile.updateOne(
+            { user_id: listing.seller_id },
+            { $inc: { total_sales: 1 } }
+          ),
+        ]);
+      } catch (counterErr) {
+        console.error("Non-critical counter update failed:", counterErr);
+      }
 
       res.json({ success: true, listingId: listingIdStr });
     } catch (err) {

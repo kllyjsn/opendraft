@@ -9,6 +9,7 @@ import conversationRoutes from "./routes/conversations.js";
 import organizationRoutes from "./routes/organizations.js";
 import generalRoutes from "./routes/general.js";
 import { stripeRouter, handleStripeWebhook } from "./routes/stripe.js";
+import { freeTierRouter } from "./routes/freeTier.js";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -51,9 +52,10 @@ app.use("/api/listings", listingRoutes);
 app.use("/api/profiles", profileRoutes);
 app.use("/api/conversations", conversationRoutes);
 app.use("/api/organizations", organizationRoutes);
-// Stripe-backed functions (checkout, session lookup, products) — must be
-// mounted BEFORE the generalRoutes catch-all for /functions/:functionName.
+// Named /api/functions routes must mount BEFORE the generalRoutes
+// catch-all for /functions/:functionName.
 app.use("/api/functions", stripeRouter);
+app.use("/api/functions", freeTierRouter);
 app.use("/api", generalRoutes);
 
 async function start() {

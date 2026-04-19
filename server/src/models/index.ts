@@ -453,6 +453,10 @@ const PurchaseSchema = new Schema({
   stripe_session_id: { type: String, default: null },
   stripe_payment_intent_id: { type: String, default: null },
 }, { timestamps: { createdAt: "created_at", updatedAt: false } });
+// A buyer can own a given listing at most once. Enforced at the DB
+// layer so concurrent claim requests can't race past the application-
+// level duplicate-check.
+PurchaseSchema.index({ listing_id: 1, buyer_id: 1 }, { unique: true });
 export const Purchase = mongoose.model("Purchase", PurchaseSchema);
 
 // ── Remix Chains ──

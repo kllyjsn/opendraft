@@ -164,8 +164,10 @@ router.post("/reset-password", async (req: Request, res: Response) => {
     }
 
     // WorkOS handles password reset emails
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
     await workos.userManagement.sendPasswordResetEmail({
       email,
+      passwordResetUrl: `${frontendUrl}/reset-password`,
     });
 
     res.json({ success: true });
@@ -190,7 +192,7 @@ router.post("/update-password", requireAuth, async (req: AuthenticatedRequest, r
       return;
     }
 
-    await workos.userManagement.updateUser(user.workos_id, { password });
+    await workos.userManagement.updateUser({ userId: user.workos_id, password });
     res.json({ success: true });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Password update failed";

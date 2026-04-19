@@ -1,8 +1,9 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET) throw new Error("JWT_SECRET environment variable is required");
+const JWT_SECRET_RAW = process.env.JWT_SECRET;
+if (!JWT_SECRET_RAW) throw new Error("JWT_SECRET environment variable is required");
+const JWT_SECRET: string = JWT_SECRET_RAW;
 
 export interface AuthenticatedRequest extends Request {
   userId?: string;

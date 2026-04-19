@@ -8,6 +8,7 @@ import profileRoutes from "./routes/profiles.js";
 import conversationRoutes from "./routes/conversations.js";
 import organizationRoutes from "./routes/organizations.js";
 import generalRoutes from "./routes/general.js";
+import { freeTierRouter } from "./routes/freeTier.js";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -42,6 +43,9 @@ app.use("/api/listings", listingRoutes);
 app.use("/api/profiles", profileRoutes);
 app.use("/api/conversations", conversationRoutes);
 app.use("/api/organizations", organizationRoutes);
+// Free-tier backed functions (claim free listing, get download URL) — must
+// be mounted BEFORE the generalRoutes catch-all for /functions/:functionName.
+app.use("/api/functions", freeTierRouter);
 app.use("/api", generalRoutes);
 
 async function start() {

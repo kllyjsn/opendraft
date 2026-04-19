@@ -152,7 +152,23 @@ const CreditTransactionSchema = new Schema({
   description: { type: String, default: null },
   listing_id: { type: String, default: null },
   stripe_session_id: { type: String, default: null },
+  // Whether this ledger row has been reflected in CreditBalance. Rows
+  // flip from false -> true atomically with the balance $inc inside a
+  // Mongo transaction so a mid-op crash leaves the ledger recoverable.
+  // Default true so pre-existing rows are treated as finalized.
+  fulfilled: { type: Boolean, default: true },
 }, { timestamps: { createdAt: "created_at", updatedAt: false } });
+// Partial unique index so only real string session IDs are dedup'd.
+// A plain sparse index would still include explicit nulls (the schema
+// default is null, so Mongoose always writes the field), which would
+// collide when non-top-up rows — spends, claim grants — are added.
+CreditTransactionSchema.index(
+  { stripe_session_id: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { stripe_session_id: { $type: "string" } },
+  }
+);
 export const CreditTransaction = mongoose.model("CreditTransaction", CreditTransactionSchema);
 
 // ── Deployed Sites ──
@@ -484,7 +500,11 @@ export const SecurityAuditLog = mongoose.model("SecurityAuditLog", SecurityAudit
 
 // ── Subscriptions ──
 const SubscriptionSchema = new Schema({
-  user_id: { type: String, required: true, index: true },
+  // Unique so the Stripe webhook's upsert on user_id serializes under
+  // concurrent writes and cannot create duplicate rows. Without this,
+  // two concurrent checkout.session.completed deliveries could both
+  // miss an existing row and both insert.
+  user_id: { type: String, required: true, unique: true, index: true },
   plan: { type: String, default: "free" },
   status: { type: String, default: "active" },
   stripe_customer_id: { type: String, default: null },

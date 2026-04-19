@@ -152,6 +152,11 @@ const CreditTransactionSchema = new Schema({
   description: { type: String, default: null },
   listing_id: { type: String, default: null },
   stripe_session_id: { type: String, default: null },
+  // Whether this ledger row has been reflected in CreditBalance. Rows
+  // flip from false -> true atomically with the balance $inc inside a
+  // Mongo transaction so a mid-op crash leaves the ledger recoverable.
+  // Default true so pre-existing rows are treated as finalized.
+  fulfilled: { type: Boolean, default: true },
 }, { timestamps: { createdAt: "created_at", updatedAt: false } });
 // Sparse+unique so null values (non-top-up transactions, e.g. spends)
 // don't collide, while Stripe session IDs are dedup'd across webhook

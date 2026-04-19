@@ -203,40 +203,56 @@ export async function handleStripeWebhook(req: Request, res: Response) {
       return;
     }
 
-    // Idempotency: record the event id; skip if we've seen it before.
-    try {
-      await WebhookEvent.create({
+    // Idempotency: only skip events we've already FULLY processed. Events
+    // previously stuck in `processing` or `failed` must be retryable.
+    const existing = await WebhookEvent.findOne({ stripe_event_id: event.id });
+    if (existing?.processing_status === "processed") {
+      res.json({ received: true, duplicate: true });
+      return;
+    }
+    await WebhookEvent.updateOne(
+      { stripe_event_id: event.id },
+      {
         stripe_event_id: event.id,
         event_type: event.type,
         payload: event.data.object,
         processing_status: "processing",
-      });
-    } catch {
-      // Duplicate event — ack 200 so Stripe doesn't retry.
-      res.json({ received: true, duplicate: true });
-      return;
-    }
+        error_message: null,
+      },
+      { upsert: true }
+    );
 
-    switch (event.type) {
-      case "checkout.session.completed": {
-        const session = event.data.object as Stripe.Checkout.Session;
-        await handleCheckoutCompleted(session);
-        break;
+    try {
+      switch (event.type) {
+        case "checkout.session.completed": {
+          const session = event.data.object as Stripe.Checkout.Session;
+          await handleCheckoutCompleted(session);
+          break;
+        }
+        case "customer.subscription.updated":
+        case "customer.subscription.deleted": {
+          const sub = event.data.object as Stripe.Subscription;
+          await handleSubscriptionChange(sub);
+          break;
+        }
+        default:
+          // No-op; we ack unhandled events so Stripe doesn't retry forever.
+          break;
       }
-      case "customer.subscription.updated":
-      case "customer.subscription.deleted": {
-        const sub = event.data.object as Stripe.Subscription;
-        await handleSubscriptionChange(sub);
-        break;
-      }
-      default:
-        // No-op; we ack unhandled events so Stripe doesn't retry forever.
-        break;
+    } catch (handlerErr) {
+      const message = handlerErr instanceof Error ? handlerErr.message : "Handler failed";
+      await WebhookEvent.updateOne(
+        { stripe_event_id: event.id },
+        { processing_status: "failed", error_message: message }
+      );
+      // 500 → Stripe will retry with exponential backoff.
+      res.status(500).json({ error: message });
+      return;
     }
 
     await WebhookEvent.updateOne(
       { stripe_event_id: event.id },
-      { processing_status: "processed", processed_at: new Date() }
+      { processing_status: "processed", processed_at: new Date(), error_message: null }
     );
 
     res.json({ received: true });
@@ -251,6 +267,15 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const type = meta.type;
   const userId = meta.user_id;
   if (!userId) return;
+  // Delayed payment methods (ACH, bank debits, etc.) fire
+  // checkout.session.completed BEFORE payment clears. Only provision access
+  // once payment_status is paid (or no_payment_required for promo flows).
+  if (
+    session.payment_status !== "paid" &&
+    session.payment_status !== "no_payment_required"
+  ) {
+    return;
+  }
 
   if (type === "credit_subscription") {
     const tierId = meta.tier_id || "starter";

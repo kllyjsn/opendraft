@@ -153,6 +153,10 @@ const CreditTransactionSchema = new Schema({
   listing_id: { type: String, default: null },
   stripe_session_id: { type: String, default: null },
 }, { timestamps: { createdAt: "created_at", updatedAt: false } });
+// Sparse+unique so null values (non-top-up transactions, e.g. spends)
+// don't collide, while Stripe session IDs are dedup'd across webhook
+// retries.
+CreditTransactionSchema.index({ stripe_session_id: 1 }, { unique: true, sparse: true });
 export const CreditTransaction = mongoose.model("CreditTransaction", CreditTransactionSchema);
 
 // ── Deployed Sites ──

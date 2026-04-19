@@ -317,18 +317,34 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   if (type === "credit_top_up") {
     const creditAmount = Number(meta.credit_amount || 0);
     if (!creditAmount) return;
+    // Dedup by stripe_session_id: the CreditTransaction row is the
+    // source-of-truth ledger entry. If it already exists for this
+    // session, a previous delivery already credited the balance; don't
+    // re-$inc on retry.
+    const existingTxn = await CreditTransaction.findOne({ stripe_session_id: session.id });
+    if (existingTxn) return;
+    // Create the ledger entry FIRST so a concurrent retry racing
+    // past the read-check gets a duplicate-key error (unique index on
+    // stripe_session_id in CreditTransactionSchema) before we touch
+    // the balance.
+    try {
+      await CreditTransaction.create({
+        user_id: userId,
+        amount: creditAmount,
+        type: "top_up",
+        description: `Top-up via Stripe (${session.id})`,
+        stripe_session_id: session.id,
+      });
+    } catch (err: unknown) {
+      const e = err as { code?: number };
+      if (e?.code === 11000) return; // concurrent retry; balance already credited
+      throw err;
+    }
     await CreditBalance.findOneAndUpdate(
       { user_id: userId },
       { $inc: { balance: creditAmount } },
       { upsert: true, new: true }
     );
-    await CreditTransaction.create({
-      user_id: userId,
-      amount: creditAmount,
-      type: "top_up",
-      description: `Top-up via Stripe (${session.id})`,
-      stripe_session_id: session.id,
-    });
   }
 }
 

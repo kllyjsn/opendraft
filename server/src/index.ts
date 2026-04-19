@@ -8,6 +8,7 @@ import profileRoutes from "./routes/profiles.js";
 import conversationRoutes from "./routes/conversations.js";
 import organizationRoutes from "./routes/organizations.js";
 import generalRoutes from "./routes/general.js";
+import { stripeRouter, handleStripeWebhook } from "./routes/stripe.js";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -29,6 +30,14 @@ app.use(
     credentials: true,
   })
 );
+// Stripe webhook MUST receive the raw request body so its signature header can
+// be verified. This must be registered BEFORE the global express.json().
+app.post(
+  "/api/functions/stripe-webhook",
+  express.raw({ type: "application/json" }),
+  handleStripeWebhook
+);
+
 app.use(express.json({ limit: "10mb" }));
 
 // Health check
@@ -42,6 +51,9 @@ app.use("/api/listings", listingRoutes);
 app.use("/api/profiles", profileRoutes);
 app.use("/api/conversations", conversationRoutes);
 app.use("/api/organizations", organizationRoutes);
+// Stripe-backed functions (checkout, session lookup, products) — must be
+// mounted BEFORE the generalRoutes catch-all for /functions/:functionName.
+app.use("/api/functions", stripeRouter);
 app.use("/api", generalRoutes);
 
 async function start() {

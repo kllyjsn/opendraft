@@ -493,7 +493,11 @@ export const SecurityAuditLog = mongoose.model("SecurityAuditLog", SecurityAudit
 
 // ── Subscriptions ──
 const SubscriptionSchema = new Schema({
-  user_id: { type: String, required: true, index: true },
+  // Unique so the Stripe webhook's upsert on user_id serializes under
+  // concurrent writes and cannot create duplicate rows. Without this,
+  // two concurrent checkout.session.completed deliveries could both
+  // miss an existing row and both insert.
+  user_id: { type: String, required: true, unique: true, index: true },
   plan: { type: String, default: "free" },
   status: { type: String, default: "active" },
   stripe_customer_id: { type: String, default: null },

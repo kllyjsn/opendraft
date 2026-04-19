@@ -158,10 +158,17 @@ const CreditTransactionSchema = new Schema({
   // Default true so pre-existing rows are treated as finalized.
   fulfilled: { type: Boolean, default: true },
 }, { timestamps: { createdAt: "created_at", updatedAt: false } });
-// Sparse+unique so null values (non-top-up transactions, e.g. spends)
-// don't collide, while Stripe session IDs are dedup'd across webhook
-// retries.
-CreditTransactionSchema.index({ stripe_session_id: 1 }, { unique: true, sparse: true });
+// Partial unique index so only real string session IDs are dedup'd.
+// A plain sparse index would still include explicit nulls (the schema
+// default is null, so Mongoose always writes the field), which would
+// collide when non-top-up rows — spends, claim grants — are added.
+CreditTransactionSchema.index(
+  { stripe_session_id: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { stripe_session_id: { $type: "string" } },
+  }
+);
 export const CreditTransaction = mongoose.model("CreditTransaction", CreditTransactionSchema);
 
 // ── Deployed Sites ──

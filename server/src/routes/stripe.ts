@@ -175,41 +175,41 @@ stripeRouter.get("/get-products", async (_req: Request, res: Response) => {
 });
 
 // ── POST /api/functions/stripe-webhook ──
-// Receives Stripe events. Must be mounted with raw-body parsing (see index.ts)
-// so the signature header can be verified against the exact payload bytes.
-export async function handleStripeWebhook(req: Request, res: Response) {
+// Receives Stripe events. Core processing function is framework-agnostic:
+// takes a raw body Buffer + signature header, returns the response shape.
+// Both the Express wrapper (below) and Vercel serverless function delegate
+// to this so webhook semantics stay identical across deploy targets.
+export type StripeWebhookResult = {
+  status: number;
+  body: Record<string, unknown>;
+};
+
+export async function processStripeWebhook(
+  rawBody: Buffer,
+  signature: string | undefined
+): Promise<StripeWebhookResult> {
   try {
     const stripe = requireStripe();
-    const signature = req.headers["stripe-signature"] as string | undefined;
     if (!signature) {
-      res.status(400).json({ error: "Missing stripe-signature header" });
-      return;
+      return { status: 400, body: { error: "Missing stripe-signature header" } };
     }
     if (!STRIPE_WEBHOOK_SECRET) {
-      res.status(500).json({ error: "STRIPE_WEBHOOK_SECRET not configured" });
-      return;
+      return { status: 500, body: { error: "STRIPE_WEBHOOK_SECRET not configured" } };
     }
 
-    // req.body here is a Buffer (express.raw() was applied upstream).
     let event: Stripe.Event;
     try {
-      event = stripe.webhooks.constructEvent(
-        req.body as Buffer,
-        signature,
-        STRIPE_WEBHOOK_SECRET
-      );
+      event = stripe.webhooks.constructEvent(rawBody, signature, STRIPE_WEBHOOK_SECRET);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Invalid signature";
-      res.status(400).json({ error: `Webhook signature failed: ${message}` });
-      return;
+      return { status: 400, body: { error: `Webhook signature failed: ${message}` } };
     }
 
     // Idempotency: only skip events we've already FULLY processed. Events
     // previously stuck in `processing` or `failed` must be retryable.
     const existing = await WebhookEvent.findOne({ stripe_event_id: event.id });
     if (existing?.processing_status === "processed") {
-      res.json({ received: true, duplicate: true });
-      return;
+      return { status: 200, body: { received: true, duplicate: true } };
     }
     await WebhookEvent.updateOne(
       { stripe_event_id: event.id },
@@ -247,8 +247,7 @@ export async function handleStripeWebhook(req: Request, res: Response) {
         { processing_status: "failed", error_message: message }
       );
       // 500 → Stripe will retry with exponential backoff.
-      res.status(500).json({ error: message });
-      return;
+      return { status: 500, body: { error: message } };
     }
 
     await WebhookEvent.updateOne(
@@ -256,11 +255,19 @@ export async function handleStripeWebhook(req: Request, res: Response) {
       { processing_status: "processed", processed_at: new Date(), error_message: null }
     );
 
-    res.json({ received: true });
+    return { status: 200, body: { received: true } };
   } catch (err) {
     const message = err instanceof Error ? err.message : "Webhook handler failed";
-    res.status(500).json({ error: message });
+    return { status: 500, body: { error: message } };
   }
+}
+
+// Express adapter for long-lived Node servers / local dev.
+export async function handleStripeWebhook(req: Request, res: Response) {
+  const signature = req.headers["stripe-signature"] as string | undefined;
+  // req.body here is a Buffer (express.raw() was applied upstream).
+  const result = await processStripeWebhook(req.body as Buffer, signature);
+  res.status(result.status).json(result.body);
 }
 
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
